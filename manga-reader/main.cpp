@@ -312,7 +312,7 @@ struct Reader {
         auto cleaned=co_await ctx->fs().remove("manga-source.tmp");(void)cleaned;cleaned=co_await ctx->fs().remove("manga-image.tmp");(void)cleaned;
         auto loaded_cache=co_await load_cache();(void)loaded_cache;ready=true;if(storage_ok)message(shelf_status());co_return Result<void>{};}
     void action(Act act,int arg=0){if(!ready)return;sync_clock();if(screen==reading)bar_deadline=now_us+6000000;
-        if(act==retry_buffer){prefetch_retry=0;if(strip_notice==StripNotice::failed&&strip_end()+1<pages.size())requested_page=strip_end()+1;changed();return;}
+        if(act==retry_buffer){prefetch_retry=0;if(arg<0&&page)requested_page=page-1;else if(strip_notice==StripNotice::failed&&strip_end()+1<pages.size())requested_page=strip_end()+1;changed();return;}
         if(act==cancel){enter_from_bottom=false;stop();if(image){page=rendered_page;message(page_label());}else{bars=true;message("已取消，可重试");failure="已取消";}return;}
         if(act==show_settings){settings_prior=screen;stop();screen=settings_screen;message(cache.limit?"自动管理最近阅读过的页面":"空间不足或不可用，暂不新增缓存");changed();return;}
         if(act==toggle_cache){cache.enabled=!cache.enabled;cache_prepare=cache.enabled&&!cache.limit;begin(save_cache_settings());return;}
@@ -352,6 +352,7 @@ struct Reader {
     void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=std::max(now_us,tick.timestamp_us);if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy)start(save_state(),false);
         if(needs_prefetch()){prefetch_running=true;start(prefetch_pages());}
         auto notice=strip_notice_state();if(notice!=strip_notice){strip_notice=notice;changed();}
+        notice=strip_notice_state(true);if(notice!=previous_notice){previous_notice=notice;changed();}
         if(exit_pending&&!save_busy&&!save_pending){exit_pending=false;(void)ctx->window().request_back();}
         if(ui_dirty){ui_dirty=false;revision.update([](auto n){return n+1;});auto a=area();float d=density()/ui_factor();bool edit=screen==discover||screen==page_jump;
             input_box.set(TextInputBox{{int((a.x+8)/d),int((a.y+40)/d),int(std::max(1,a.width-16-(screen==discover?52:screen==page_jump?80:0))/d),int(28/d)},edit,Font::label,0x20382fff});}

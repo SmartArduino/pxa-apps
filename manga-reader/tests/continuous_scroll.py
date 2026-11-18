@@ -150,6 +150,25 @@ for name,options in [('network-partial',['--noise']),('network-lossy',['--webp-l
    results[name]={'passed':True,'single_request_per_first_three_images':True,'wire_partial_response_reused':name=='network-partial','lossy_webp_jpeg_conversion':name=='network-lossy','cancel_and_resume':True}
    print(name,'PASS',flush=True)
  finally:server.terminate();server.wait(timeout=5)
+server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','8','--delay-ms','1500'],stdout=(out/'previous-edge-fixture.log').open('w'),stderr=subprocess.STDOUT)
+try:
+ time.sleep(.3);os.environ['PXA_RESOURCE_EXTERNAL_BYTES']=str(8*1024*1024)
+ with Sim('continuous-previous-edge',320,240,125) as d:
+  enter(d,True)
+  for i in range(20):
+   swipe(d,-180)
+   if position(d)>=2:break
+   time.sleep(.2)
+  wait_for(lambda:position(d)>=2);saved=position(d)
+  d.pointer('DOWN',160,120,0);time.sleep(.15);d.pointer('UP',160,120,0);d.wait('≡');d.tap('≡');d.wait('返回');d.tap('返回');d.wait('设置');before=text(d).count('MANGA page_ready_us=');d.tap('触摸测试漫画');wait_for(lambda:text(d).count('MANGA page_ready_us=')>before)
+  saved=position(d);end=hold(d,180);d.wait('正在加载上一页…','text');centered_notice(d,'正在加载上一页…');d.wait('没有上一页','text',count=0);d.shot('previous-loading-while-held');wait_for(lambda:position(d)==saved-1);release(d,end)
+  for i in range(30):
+   swipe(d,190);time.sleep(.15)
+   if any(n.get('visible') and n.get('text')=='没有上一页' for n in d.tree()['nodes']):break
+  d.wait('没有上一页','text');centered_notice(d,'没有上一页');d.wait('正在加载上一页…','text',count=0);d.shot('chapter-start-notice');swipe(d,-160);d.wait('没有上一页','text',count=0)
+  results['previous-edge']={'passed':True,'previous_loaded_without_cache':True,'loading_centered_while_held':True,'no_false_start_while_loading':True,'true_start_centered':True,'hidden_when_scrolling_forward':True}
+  print('previous edge PASS',flush=True)
+finally:server.terminate();server.wait(timeout=5)
 for name,w,h,dpi,pages,height in [('strip-end-small',320,240,125,3,400),('strip-end-large',480,854,254,1,64)]:
  server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages',str(pages),'--height',str(height)],stdout=(out/(name+'-fixture.log')).open('w'),stderr=subprocess.STDOUT)
  try:
@@ -163,6 +182,7 @@ for name,w,h,dpi,pages,height in [('strip-end-small',320,240,125,3,400),('strip-
      if position(d)==pages-1:break
     swipe(d,-h*.8)
    d.wait('没有下一页','text');centered_notice(d,'没有下一页');d.wait('正在加载下一页…','text',count=0);d.shot('chapter-end-notice')
+   if pages==1:d.wait('没有上一页','text');centered_notice(d,'没有上一页')
    if pages>1:
     swipe(d,h*.8);d.wait('没有下一页','text',count=0)
    assert text(d).count('MANGA page_ready_us=')==1

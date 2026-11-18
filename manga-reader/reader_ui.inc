@@ -39,14 +39,17 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
             .align(Align::center).justify(Justify::center).render(owner,parent)&&ok;
     };
     if(screen==reading){
-        if(app->waiting_scroll<0&&!app->prefetch_running&&app->prefetch_retry>app->now_us)button(x+w-38,y+h-66,38,30,"↻",retry_buffer);
-        if(app->strip_notice!=StripNotice::hidden){
-            const bool failed=app->strip_notice==StripNotice::failed;
-            const std::string_view label=app->strip_notice==StripNotice::end?"没有下一页":failed?"加载失败，点此重试":"正在加载下一页…";
-            const int width=std::min(w,app->strip_notice==StripNotice::end?144:216),xx=x+(w-width)/2,yy=y+h-((app->bars||!app->failure.empty())?66:34);
-            if(failed)button(xx,yy,width,30,label,retry_buffer);
+        auto edge_notice=[&](StripNotice notice,bool previous){
+            if(notice==StripNotice::hidden)return;
+            const bool failed=notice==StripNotice::failed;
+            const std::string_view label=notice==StripNotice::end?(previous?"没有上一页":"没有下一页"):
+                failed?(previous?"上一页加载失败，重试":"加载失败，点此重试"):(previous?"正在加载上一页…":"正在加载下一页…");
+            const int width=std::min(w,notice==StripNotice::end?144:216),xx=x+(w-width)/2;
+            const int yy=previous?y+(app->bars?36:0):y+h-((app->bars||!app->failure.empty())?66:34);
+            if(failed)button(xx,yy,width,30,label,retry_buffer,previous?-1:1);
             else centered_panel(xx,yy,width,30,label);
-        }
+        };
+        edge_notice(app->strip_notice,false);edge_notice(app->previous_notice,true);
         if(app->bars||!app->failure.empty()){
             button(x,y,38,30,"≡",go_back);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));button(x+w-38,y,38,30,"?",show_help);
             button(x,y+h-30,38,30,"<",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,">",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
