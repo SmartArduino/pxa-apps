@@ -127,9 +127,9 @@ try:
   enter(d,True);wait_for(lambda:'MANGA prefetched=7 ' in text(d));time.sleep(.5)
   old=text(d);crossings=old.count('MANGA strip_page=');saves=old.count('MANGA progress_saved=')
   for gesture in range(4):
-   d.pointer('DOWN',260,450,0)
-   for i in range(1,13):d.pointer('MOVE',260,450-i*30,0);time.sleep(.015)
-   d.pointer('UP',260,90,0)
+   # Schedule the gesture in the bridge; per-point control round trips can
+   # turn a fast swipe into seconds of idle time on a busy build machine.
+   d.c.request('INPUT SWIPE 260 450 260 90 180 13')
   time.sleep(1.8);log=text(d);crossings=log.count('MANGA strip_page=')-crossings;saves=log.count('MANGA progress_saved=')-saves
   last=int(re.findall(r'MANGA strip_page=(\d+)',log)[-1]);assert position(d)==last
   assert crossings>=6 and 1<=saves<=4,(crossings,saves)

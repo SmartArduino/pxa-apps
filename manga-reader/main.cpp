@@ -120,7 +120,10 @@ struct Reader {
         float width=float(v.width)/d.width,height=float(v.height)/d.height;
         scale=zoom_mode==0?std::min(width,height):width*(zoom_mode==3?custom_zoom:zoom_mode==2?2.f:1.f);clamp();dirty=true;}
     void clamp(){if(!image)return;auto v=viewport();auto d=image->descriptor();pan_x=std::clamp(pan_x,0.f,std::max(0.f,d.width*scale-v.width));
-        float low=0,high=d.height*scale-v.height;if(vertical()){const float z=strip_zoom();if(page){auto p=buffered_slot(page-1);if(p>=0)low=-strip_height(*buffered[p].asset)*z;}for(unsigned i=page+1;i<=strip_end();++i)high+=strip_height(*buffered[buffered_slot(i)].asset)*z;}
+        float low=0,high=d.height*scale-v.height;if(vertical()){const float z=strip_zoom();if(page){auto p=buffered_slot(page-1);if(p>=0)low=-strip_height(*buffered[p].asset)*z;}for(unsigned i=page+1;i<=strip_end();++i)high+=strip_height(*buffered[buffered_slot(i)].asset)*z;
+            // A few tiny neighbors may not fill the viewport under pressure.
+            // Reach the next loaded panel so the old large image can retire.
+            if(buffered_slot(page+1)>=0&&strip_end()+1<pages.size())high=std::max(high,d.height*scale);}
         pan_y=std::clamp(pan_y,low,std::max(0.f,high));}
     void pointer(const CanvasPointer& e){if(screen!=reading)return;sync_clock();const float x=e.x*density(),y=e.y*density();
         auto before=touches.count();bool mixed=touches.mixed;if(!touches.update(e.pointer_id,unsigned(e.phase),x,y))return;
