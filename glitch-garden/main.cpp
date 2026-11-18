@@ -22,7 +22,7 @@
 namespace garden {
 
 constexpr auto cream=rgb(249,241,205),gold=rgb(239,196,90),forest=rgb(23,49,40),moss=rgb(54,87,51),border=rgb(119,143,69),red=rgb(210,100,74);
-constexpr size_t memory_limit=6*1024*1024;
+constexpr size_t memory_limit=GARDEN_MEMORY_BYTES;
 enum class Screen {home,play,pause,help,won,lost};
 
 struct App {
@@ -64,7 +64,8 @@ struct App {
   size_t used=art.bytes.size()+frame_memory+encoded+262144+size_t(std::ceil(3720*scale*scale))*2+hud_underlay.pixels.size()*2+garden_art::source_rows.size()*sizeof(garden_art::SourceRow)+garden_art::source_first.size()*sizeof(unsigned);
   if(used+131072>memory_limit)co_return std::unexpected(pxa::Error::resource_limit);
   if(!baked_geometry&&used+pixels*2+512*1024<=memory_limit){base_backdrop.resize(pixels);used+=pixels*2;}
-  art.cache_budget=std::min(size_t(1536*1024),size_t(memory_limit)-used);
+  float ratio=layout.cell*scale/(25.f*480.f/296.f);size_t preferred=std::clamp(size_t(1536*1024*ratio*ratio),size_t(1536*1024),size_t(4*1024*1024));preferred=(preferred+262143)&~size_t(262143);
+  art.cache_budget=std::min(preferred,size_t(memory_limit)-used);
   pxa::SurfaceOptions options{.width=uint16_t(display.width),.height=uint16_t(display.height),.buffers=2,.direct_scanout=true,.max_buffer_bytes=2*1024*1024};
   auto made=co_await ctx->surface().create_mapped(options);if(!made)co_return std::unexpected(made.error());surface.emplace(std::move(*made));
   auto configured=co_await surface->configure({.width=options.width,.height=options.height});if(!configured)co_return configured;

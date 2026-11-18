@@ -88,8 +88,8 @@
   "format": "pxa-package-source-0.1",
   "id": "pxa-glitch-garden",
   "name": "露芽守卫",
-  "release_sequence": 14,
-  "version": "0.2.8",
+  "release_sequence": 15,
+  "version": "0.2.9",
   "description": "原创手绘花园塔防：七种植物、四种怪物、十二关；连续变形的角色动画、专用字样，可随包分发。",
   "icon": "assets/icon.png",
   "min_sdk": [

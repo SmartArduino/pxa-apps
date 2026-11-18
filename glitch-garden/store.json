@@ -11,8 +11,8 @@
     "触屏",
     "手柄"
   ],
-  "description": "用七种植物组合五路防线：收集露珠、发射种子、减速敌人、范围攻击、恢复生命或阻挡前进，守住十二关花园。四种小怪各有行走、攻击和退场动作，铜壳虫还能跃过阻挡。\n\n原创手绘角色、草地、木牌界面与专用图像字样，保留脚底阴影和完整动作。支持触屏与手柄、暂停重开、关卡解锁保存；默认请求横屏，按设备实际尺寸调整布局，种子列表空间不足时可翻页。\n\n已在 ESP-Mosaico 验证。设备需提供足够内存运行 6 MiB 应用及系统显示、音频服务；密集战斗的帧率受板卡和元素数量影响。\n\n代码和合成音效使用 MIT；原创美术及字样在贡献者持有的适用权利范围内以 CC0 提供，可随游戏或独立复制、修改和分发。源码、原始素材、生成工具和许可：https://github.com/SmartArduino/pxa-apps/tree/main/glitch-garden 。",
+  "description": "用七种植物组合五路防线：收集露珠、发射种子、减速敌人、范围攻击、恢复生命或阻挡前进，守住十二关花园。四种小怪各有行走、攻击和退场动作，铜壳虫还能跃过阻挡。\n\n原创手绘角色、草地、木牌界面与专用图像字样，保留脚底阴影和完整动作。支持触屏与手柄、暂停重开、关卡解锁保存；默认请求横屏，按设备实际尺寸调整布局，种子列表空间不足时可翻页。\n\n已在 ESP-Mosaico 和 espp4-a 验证。S3/S31 包使用 6 MiB 应用内存，P4 包使用 12 MiB；设备还需为系统显示、音频服务保留足够内存；密集战斗的帧率受板卡和元素数量影响。\n\n代码和合成音效使用 MIT；原创美术及字样在贡献者持有的适用权利范围内以 CC0 提供，可随游戏或独立复制、修改和分发。源码、原始素材、生成工具和许可：https://github.com/SmartArduino/pxa-apps/tree/main/glitch-garden 。",
   "icon": "assets/icon.png",
   "cover": "art/generated/store-cover-v1.png",
-  "changelog": "新增 ESP32-P4 独立安装包，并补充与游戏画风一致的原创商城封面。保留卡片切换优化、密集战斗缓存、完整角色动画、七种植物、四种怪物和十二关。\n\nAdds a separate ESP32-P4 package and an original illustrated store cover matching the game. Retains faster plant-card selection, crowded-battle caching, complete character animations, seven plants, four enemies and twelve stages."
+  "changelog": "优化 P4 大屏密集战斗：使用独立内存配置和随画面尺寸调整的动画缓存，减少重复过滤与缓存淘汰。保留完整角色动作、阴影和半透明边缘。S3/S31 保持原有内存配置。\n\nImproves crowded battles on large P4 displays with a separate memory profile, size-aware animation caching. Preserves complete animations, shadows and smooth translucent edges. S3/S31 memory limits remain unchanged."
 }
