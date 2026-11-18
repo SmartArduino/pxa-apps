@@ -21,6 +21,7 @@ SECOND_CHAPTER = '44444444-4444-4444-4444-444444444444'
 PROGRESSIVE = False
 NOISE = False
 PANEL_HEIGHT = 640
+FIRST_HEIGHT = 0
 PANEL_WIDTH = 320
 WEBP = False
 WEBP_LOSSY = False
@@ -30,7 +31,7 @@ def panel(index):
     if NOISE:
         image = Image.frombytes('RGB', (320, 400), random.Random(index).randbytes(320*400*3))
         out = io.BytesIO(); image.save(out, format='PNG'); return out.getvalue()
-    image = Image.new('RGB', (PANEL_WIDTH, PANEL_HEIGHT), '#f5f0df')
+    image = Image.new('RGB', (PANEL_WIDTH, FIRST_HEIGHT if index==0 and FIRST_HEIGHT else PANEL_HEIGHT), '#f5f0df')
     draw = ImageDraw.Draw(image)
     for i in range(3):
         top = 20 + i * 205
@@ -99,6 +100,7 @@ if __name__ == '__main__':
     parser.add_argument('--pages',type=int,default=3)
     parser.add_argument('--noise',action='store_true',help='Use larger original panels to exercise persistent cache beyond 2 MiB')
     parser.add_argument('--height',type=int,default=640)
+    parser.add_argument('--first-height',type=int,default=0)
     parser.add_argument('--width',type=int,default=320)
     parser.add_argument('--webp',action='store_true')
     parser.add_argument('--webp-lossy',action='store_true')
@@ -109,6 +111,7 @@ if __name__ == '__main__':
     PROGRESSIVE = args.progressive
     NOISE = args.noise
     PANEL_HEIGHT = min(2048,max(64,args.height))
+    FIRST_HEIGHT = min(2048,max(64,args.first_height)) if args.first_height else 0
     PANEL_WIDTH = min(1024,max(64,args.width))
     WEBP = args.webp or args.webp_lossy
     WEBP_LOSSY = args.webp_lossy

@@ -1,6 +1,6 @@
     struct BufferedPage {unsigned index=0;std::optional<Asset> asset;};
-    std::array<BufferedPage,12> buffered{};
-    unsigned buffer_slots=12,buffer_limit=4*1024*1024+65536,buffer_page_bytes=262144;
+    std::array<BufferedPage,24> buffered{};
+    unsigned buffer_slots=24,buffer_limit=4*1024*1024+65536,buffer_page_bytes=262144;
     bool prefetch_running=false,cache_prepare=false;std::uint64_t prefetch_retry=0;float waiting_scroll=0;
     int requested_page=-1,prefetch_page=-1;
     enum class StripNotice {hidden,loading,failed,end};
@@ -12,18 +12,28 @@
     void trim_buffers(unsigned extra=0){
         while(buffered_count()&&(buffered_count()>=buffer_slots||buffered_bytes()+extra>buffer_limit)){
             int victim=-1;unsigned distance=0;
-            for(unsigned i=0;i<buffered.size();++i)if(buffered[i].asset){auto at=buffered[i].index;unsigned score=(at>page?at-page:page-at)+unsigned(at<page)*2;if(victim<0||score>distance){victim=i;distance=score;}}
+                for(unsigned i=0;i<buffered.size();++i)if(buffered[i].asset){auto at=buffered[i].index;unsigned score=(at>page?at-page:page-at)+unsigned(at<page)*2+(at+1<page?1000000u:0u);if(victim<0||score>distance){victim=i;distance=score;}}
             buffered[victim].asset.reset();
         }
     }
     void remember(unsigned index,Asset asset){
         auto bytes=std::max(asset.descriptor().resident_bytes,asset.descriptor().decoded_bytes);
-        buffer_page_bytes=std::max(buffer_page_bytes,bytes);
+        // Follow the most recent panel size: one large cover must not keep
+        // limiting every subsequent tiny strip segment to a few buffers.
+        buffer_page_bytes=std::max(1u,bytes);
         if(!buffer_slots||bytes>buffer_limit)return;
         auto slot=buffered_slot(index);if(slot>=0)buffered[slot].asset.reset();trim_buffers(bytes);
         for(auto& p:buffered)if(!p.asset){p.index=index;p.asset.emplace(std::move(asset));return;}
     }
     unsigned ahead_pages()const{return buffer_limit<buffer_page_bytes?0:std::min({4u,buffer_slots,buffer_limit/buffer_page_bytes});}
+    unsigned buffer_capacity()const{
+        unsigned slots=std::min<unsigned>(buffered.size(),buffer_slots);if(!slots||buffer_limit<buffer_page_bytes)return 0;
+        auto previous=page?buffered_slot(page-1):-1;unsigned retained=previous<0?0:std::max(buffered[previous].asset->descriptor().resident_bytes,buffered[previous].asset->descriptor().decoded_bytes);
+        if(retained&&slots>1)--slots;
+        unsigned reserve=std::max(524288u,buffer_page_bytes),available=buffer_limit>reserve+retained?buffer_limit-reserve-retained:0;
+        // The last candidate is not resident yet; reserve its decode space.
+        return std::min(slots,1+available/std::max(1u,buffer_page_bytes));
+    }
     std::optional<Asset> take_buffered(unsigned index){auto slot=buffered_slot(index);if(slot<0)return {};auto result=std::move(buffered[slot].asset);buffered[slot].asset.reset();return result;}
     void memory_pressure(bool critical){
         buffer_slots=critical?0:1;buffer_limit=critical?0:1048576;clear_buffers();buffer_page_bytes=262144;prefetch_retry=now_us+30000000;
@@ -63,7 +73,7 @@
     }
     void normalize_strip(){
         if(!image||!vertical())return;const float z=strip_zoom();
-        for(unsigned n=0;n<12;++n){auto h=strip_height(*image)*z;bool forward=pan_y>=h;bool backward=pan_y<0&&page;
+        for(unsigned n=0;n<buffered.size();++n){auto h=strip_height(*image)*z;bool forward=pan_y>=h;bool backward=pan_y<0&&page;
             if(!forward&&!backward)break;unsigned next=forward?page+1:page-1;auto asset=take_buffered(next);if(!asset)break;
             if(forward)pan_y-=h;else pan_y+=strip_height(*asset)*z;
             auto old=rendered_page;auto previous=std::move(*image);image.emplace(std::move(*asset));page=rendered_page=next;remember(old,std::move(previous));
@@ -74,10 +84,10 @@
     int next_buffer_page()const{
         if(requested_page>=0&&unsigned(requested_page)<pages.size()&&unsigned(requested_page)!=page&&buffered_slot(requested_page)<0)return requested_page;
         const unsigned ahead=ahead_pages();
-        float covered=image?image->descriptor().height*scale:0;
-        const unsigned capacity=buffer_limit<buffer_page_bytes?0:std::min({12u,buffer_slots,buffer_limit/buffer_page_bytes});
+        float covered=image?image->descriptor().height*scale-pan_y:0;
+        const unsigned capacity=buffer_capacity();
         for(unsigned i=page+1;i<pages.size()&&i<=page+capacity;++i){auto slot=buffered_slot(i);if(slot>=0)covered+=strip_height(*buffered[slot].asset)*strip_zoom();
-            else if(i<=page+ahead||(vertical()&&covered<metrics.height*1.5f))return i;else break;}
+            else if(i<=page+ahead||(vertical()&&covered<metrics.height*3.f))return i;else break;}
         return -1;
     }
     int next_wire_page(unsigned index)const{
