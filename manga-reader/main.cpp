@@ -388,14 +388,21 @@ struct Reader {
             if(strip){const float z=strip_zoom();if(page&&yy>0){auto p=buffered_slot(page-1);if(p>=0){auto& asset=*buffered[p].asset;int ph=std::max(1,int(strip_height(asset)*z));draw.image(logical({xx,yy-ph,w,ph}),asset,ImageFit::stretch,255,ImageSampling::nearest);}}
                 yy+=h;for(unsigned i=page+1;i<=strip_end()&&yy<v.height;++i){auto& asset=*buffered[buffered_slot(i)].asset;int ph=std::max(1,int(strip_height(asset)*z));draw.image(logical({xx,yy,w,ph}),asset,ImageFit::stretch,255,dragging?ImageSampling::nearest:ImageSampling::smooth);yy+=ph;}}
             draw.pop_clip();}
-        if(screen==reading&&(bars||!failure.empty())){
+        const bool source_arrows=screen==source_screen;
+        const auto list_size=screen==shelf_screen?shelf.size():screen==discover?results.size():screen==contents?chapters.size():0;
+        const bool list_arrows=(screen==shelf_screen||screen==discover||screen==contents)&&!busy&&failure.empty()&&list_size;
+        if((screen==reading&&(bars||!failure.empty()))||source_arrows||list_arrows){
             const auto a=area();const float unit=ui_factor()/density();
-            const int top=int((a.y+a.height-30)*unit),height=std::max(1,int(30*unit)),width=std::max(1,int(38*unit));
+            const bool reader=screen==reading;const int button_w=reader?38:36,button_h=reader?30:28;
+            const int top=int((a.y+a.height-button_h)*unit),height=std::max(1,int(button_h*unit)),width=std::max(1,int(button_w*unit));
+            unsigned start=source_arrows?std::min<unsigned>(source_start,((manga::sources.size()-1)/source_rows())*source_rows()):list_start;
             for(unsigned side=0;side<2;++side){
-                const int left=int((side?a.x+a.width-38:a.x)*unit),cx=left+width/2,cy=top+height/2;
+                const int left=int((side?a.x+a.width-button_w:a.x)*unit),cx=left+width/2,cy=top+height/2;
                 const int dx=std::max(2,int(std::round(4*unit))),dy=std::max(3,int(std::round(7*unit))),direction=side?1:-1;
-                const auto color=!busy&&ready&&(side?page+1<pages.size():page>0)?0xf5f6eeffu:0x748178ffu;
-                draw.rect(left,top,width,height,0x14251edc,6);
+                bool enabled=reader?(side?page+1<pages.size():page>0):source_arrows?(side?start+source_rows()<manga::sources.size():start>0):
+                    side?(list_start+row_count()<list_size||(remote_list()&&offset+batch_size()<total)):(list_start||offset);
+                const auto color=!busy&&ready&&enabled?(reader?0xf5f6eeffu:0x243b31ffu):0x748178ffu;
+                draw.rect(left,top,width,height,reader?0x14251edc:0xfffefaff,6);
                 draw.line(cx-direction*dx,cy-dy,cx+direction*dx,cy,color,std::max(1,int(std::round(2*unit))));
                 draw.line(cx+direction*dx,cy,cx-direction*dx,cy+dy,color,std::max(1,int(std::round(2*unit))));
             }
