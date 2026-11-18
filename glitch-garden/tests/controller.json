@@ -1,0 +1,154 @@
+{
+  "pai-touch": [
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "place-one",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "right",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "down",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "place-two",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "change-seed",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "right-two",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "place-shield",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "controller-field",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "resumed",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause-help",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "help-select",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help-open",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "screenshot"
+    },
+    {
+      "name": "help-back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "to-restart-one",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "restart",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "capture-restart",
+      "action": "screenshot"
+    },
+    {
+      "name": "wait-for-loss-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "wait-for-loss-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "wait-for-loss-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "wait-for-loss-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "lost",
+      "action": "screenshot"
+    },
+    {
+      "name": "retry",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "retried",
+      "action": "screenshot"
+    }
+  ]
+}

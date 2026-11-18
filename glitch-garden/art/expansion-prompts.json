@@ -1,0 +1,31 @@
+{
+  "generator": "built-in image_gen",
+  "layout": "6 columns by 4 rows",
+  "assets": [
+    {
+      "file": "art/generated/frostbell.png",
+      "prompt_specification": "Create ONE original hand-painted storybook garden defense production sprite sheet, style reference only coralflower/dustimp. Warm gouache texture and olive brown outlines. Exactly 6 equal columns by 4 equal rows, 24 full body square-cell poses with generous transparent padding and feet at 85 percent cell height, fixed scale and pivot. Row 1 six distinct idle/walk poses; row 2 six distinct sequential action poses; row 3 six damage/recovery poses; row 4 six nonviolent defeat/wilt/dissolve poses, shrinking naturally about the feet. Genuine transparent background, no floor, shadow, text, labels or grid. Not pixel/vector/3D art. No recognizable commercial game characters. ice-blue bellflower, mint leaves, right-facing; swaying idle, opening bell to shoot crystal, hurt/recover, wilting into frost",
+      "reference": "art/generated/coralflower.png"
+    },
+    {
+      "file": "art/generated/emberpod.png",
+      "prompt_specification": "Create ONE original hand-painted storybook garden defense production sprite sheet, style reference only coralflower/dustimp. Warm gouache texture and olive brown outlines. Exactly 6 equal columns by 4 equal rows, 24 full body square-cell poses with generous transparent padding and feet at 85 percent cell height, fixed scale and pivot. Row 1 six distinct idle/walk poses; row 2 six distinct sequential action poses; row 3 six damage/recovery poses; row 4 six nonviolent defeat/wilt/dissolve poses, shrinking naturally about the feet. Genuine transparent background, no floor, shadow, text, labels or grid. Not pixel/vector/3D art. No recognizable commercial game characters. amber orange seedpod, coral ridges, olive leaves, right-facing; idle bob, opening pod to launch pollen orb, hurt, folding to seed husk",
+      "reference": "art/generated/coralflower.png"
+    },
+    {
+      "file": "art/generated/cloverling.png",
+      "prompt_specification": "Create ONE original hand-painted storybook garden defense production sprite sheet, style reference only coralflower/dustimp. Warm gouache texture and olive brown outlines. Exactly 6 equal columns by 4 equal rows, 24 full body square-cell poses with generous transparent padding and feet at 85 percent cell height, fixed scale and pivot. Row 1 six distinct idle/walk poses; row 2 six distinct sequential action poses; row 3 six damage/recovery poses; row 4 six nonviolent defeat/wilt/dissolve poses, shrinking naturally about the feet. Genuine transparent background, no floor, shadow, text, labels or grid. Not pixel/vector/3D art. No recognizable commercial game characters. mint jade three-heart-leaf clover, cream face, pink bud antenna, right-facing; idle, healing yellow green dew halo, hurt, curl into clover bud",
+      "reference": "art/generated/coralflower.png"
+    },
+    {
+      "file": "art/generated/armorsnail.png",
+      "prompt_specification": "Create ONE original hand-painted storybook garden defense production sprite sheet, style reference only coralflower/dustimp. Warm gouache texture and olive brown outlines. Exactly 6 equal columns by 4 equal rows, 24 full body square-cell poses with generous transparent padding and feet at 85 percent cell height, fixed scale and pivot. Row 1 six distinct idle/walk poses; row 2 six distinct sequential action poses; row 3 six damage/recovery poses; row 4 six nonviolent defeat/wilt/dissolve poses, shrinking naturally about the feet. Genuine transparent background, no floor, shadow, text, labels or grid. Not pixel/vector/3D art. No recognizable commercial game characters. left-facing moss green snail with slate stone armor shell and copper seams; crawling, nibbling, retracting after hit, crumble into mossy pebbles",
+      "reference": "art/generated/dustimp.png"
+    },
+    {
+      "file": "art/generated/swiftmoth.png",
+      "prompt_specification": "Create ONE original hand-painted storybook garden defense production sprite sheet, style reference only coralflower/dustimp. Warm gouache texture and olive brown outlines. Exactly 6 equal columns by 4 equal rows, 24 full body square-cell poses with generous transparent padding and feet at 85 percent cell height, fixed scale and pivot. Row 1 six distinct idle/walk poses; row 2 six distinct sequential action poses; row 3 six damage/recovery poses; row 4 six nonviolent defeat/wilt/dissolve poses, shrinking naturally about the feet. Genuine transparent background, no floor, shadow, text, labels or grid. Not pixel/vector/3D art. No recognizable commercial game characters. left-facing fast plum fuzzy moth with amber eyes and mint pink leaf wings; running flutter, nibbling lunge, recoil, dissolve into dust",
+      "reference": "art/generated/dustimp.png"
+    }
+  ]
+}

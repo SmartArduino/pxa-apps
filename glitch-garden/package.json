@@ -1,0 +1,142 @@
+{
+  "build": {
+    "linear_memory": {
+      "maximum_bytes": 6291456,
+      "pinned": true
+    },
+    "system": "cmake"
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            5
+          ]
+        },
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "log",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        },
+        {
+          "name": "storage",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "permission",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "surface",
+          "min_version": [
+            0,
+            2
+          ]
+        }
+      ],
+      "wasi": {
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ],
+        "libc": "wasi-libc",
+        "version": "preview1"
+      }
+    }
+  ],
+  "format": "pxa-package-source-0.1",
+  "id": "pxa-glitch-garden",
+  "name": "露芽守卫",
+  "release_sequence": 13,
+  "version": "0.2.7",
+  "description": "原创手绘花园塔防：七种植物、四种怪物、十二关；连续变形的角色动画、专用字样，可随包分发。",
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    }
+  ],
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "contacts": 1,
+        "requires": {
+          "tap": "tap"
+        }
+      },
+      {
+        "id": "gamepad",
+        "kind": "controller",
+        "complete": true,
+        "requires": {
+          "up": "tap",
+          "down": "tap",
+          "left": "tap",
+          "right": "tap",
+          "a": "tap",
+          "b": "tap",
+          "x": "tap"
+        }
+      }
+    ]
+  }
+}

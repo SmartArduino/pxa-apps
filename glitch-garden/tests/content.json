@@ -1,0 +1,73 @@
+{
+  "pai-touch": [
+    {
+      "name": "campaign",
+      "action": "screenshot"
+    },
+    {
+      "name": "stage12",
+      "action": "tap",
+      "x": 230,
+      "y": 156
+    },
+    {
+      "name": "new-roster",
+      "action": "screenshot"
+    },
+    {
+      "name": "actions",
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "name": "animated-roster",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 282,
+      "y": 35
+    },
+    {
+      "name": "help",
+      "action": "tap",
+      "x": 148,
+      "y": 95
+    },
+    {
+      "name": "help-basic",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-help",
+      "action": "tap",
+      "x": 272,
+      "y": 222
+    },
+    {
+      "name": "help-plants",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-help-two",
+      "action": "tap",
+      "x": 272,
+      "y": 222
+    },
+    {
+      "name": "help-monsters",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-help",
+      "action": "tap",
+      "x": 148,
+      "y": 222
+    },
+    {
+      "name": "pause-return",
+      "action": "screenshot"
+    }
+  ]
+}

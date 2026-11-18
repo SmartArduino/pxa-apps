@@ -1,0 +1,26 @@
+露芽守卫 / Dewbud Guard
+
+PXA game code, rendering adapter, build tools, and procedural sound effects:
+MIT. Full license: LICENSE-PXA-MIT.txt.
+
+Original scene, character sheets, UI art, title/button lettering and glyph atlas:
+generated with the built-in image_gen tool for this project from original
+prompts. The complete prompts are in art/prompts.json and
+art/refinement-prompts.json in the source release.
+To the extent any copyrights or related rights are held by the contributors,
+these original art assets are dedicated under CC0 1.0 Universal; full dedication
+is in CC0-ART.txt. No exclusivity or copyrightability of AI output is asserted.
+They may be copied, modified and redistributed with or separately from this game.
+
+No artwork, fonts, music, character likenesses or logos from Plants vs. Zombies
+or Glitch are included. The game does not require the original games or Unity.
+The generated lettering is a fixed game UI phrase/glyph collection, not a
+complete general-purpose Unicode font. No system/common font is requested by
+the game's renderer.
+
+PXA SDK and shared MIT audio support notice follows.
+
+
+Expansion: art/expansion-prompts.json; frostbell, emberpod, cloverling, armorsnail and swiftmoth sheets. Original generated art dedicated under CC0 to the extent of rights held.
+
+In-between poses: art/inbetween-prompts.json; 11 original generated transition sheets retained as design references. Runtime animation uses 45 twelve-frame clips (540 frames) derived from fixed original character textures with continuous rooted mesh deformation and 4x supersampling (tools/coherent_motion.py). This avoids alternating independently redrawn outlines/materials. Derived art uses the same CC0 dedication to the extent of rights held; tool code remains MIT.

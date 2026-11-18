@@ -1,0 +1,18 @@
+{
+  "name": "露芽守卫",
+  "summary": "在五路草地上种植防御植物、收集露珠，抵挡四种小怪并挑战十二关。",
+  "kind": "game",
+  "category": "strategy",
+  "tags": [
+    "塔防",
+    "策略",
+    "花园",
+    "原创",
+    "触屏",
+    "手柄"
+  ],
+  "description": "用七种植物组合五路防线：收集露珠、发射种子、减速敌人、范围攻击、恢复生命或阻挡前进，守住十二关花园。四种小怪各有行走、攻击和退场动作，铜壳虫还能跃过阻挡。\n\n原创手绘角色、草地、木牌界面与专用图像字样，保留脚底阴影和完整动作。支持触屏与手柄、暂停重开、关卡解锁保存；默认请求横屏，按设备实际尺寸调整布局，种子列表空间不足时可翻页。\n\n已在 ESP-Mosaico 验证。设备需提供足够内存运行 6 MiB 应用及系统显示、音频服务；密集战斗的帧率受板卡和元素数量影响。\n\n代码和合成音效使用 MIT；原创美术及字样在贡献者持有的适用权利范围内以 CC0 提供，可随游戏或独立复制、修改和分发。源码、原始素材、生成工具和许可：https://github.com/SmartArduino/pxa-apps/tree/main/glitch-garden 。",
+  "icon": "assets/icon.png",
+  "cover": null,
+  "changelog": "优化卡片切换：地图、固定顶栏与卡片状态分别更新，减少选择植物时的停顿。改进密集战斗的动画缓存、背景刷新和碰撞查询，保留完整行走、攻击、受击动画、原生分辨率及阴影。包含七种植物、四种怪物、十二关、横屏适配与种子卡片滚动。\n\nReduces plant-card selection stalls by updating the map, fixed HUD and card state independently. Improves animation caching, background restoration and collision queries in crowded battles while preserving full movement and combat animations, native resolution and shadows. Includes seven plants, four enemies and twelve stages."
+}

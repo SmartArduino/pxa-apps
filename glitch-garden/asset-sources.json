@@ -1,0 +1,318 @@
+{
+  "generator": "built-in image_gen",
+  "animation_generator": "tools/coherent_motion.py; continuous cutout mesh, 4x supersampling",
+  "art_license": "CC0-1.0 to the extent of rights held",
+  "files": [
+    {
+      "file": "art/generated/dewflower.png",
+      "sha256": "711fe646a10046b644d10f3017ec7cdb5940e292ece4c16f13afc53ae5c9ce00",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/coralflower.png",
+      "sha256": "dc96090470102b96b636cf43a6afcb4533d3fb09bcbca46794ff42760f963afc",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/leafshield.png",
+      "sha256": "7998a5a55e099b43feff4f0dfdad5ca44519fe3e95bb6d7cc58f19843561062b",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/pinwheel.png",
+      "sha256": "87225217527fc6ffbdef7d46ed8934f85ef7296d9d664f01d47973be7f5cfebf",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/dustimp.png",
+      "sha256": "fa6309520441a235af75076ac9886f97656ba98df3d740e664f336bb1a22a98f",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/copperbeetle.png",
+      "sha256": "c00969bcad41a69574a2e93ed154e7358b16533e8627704a8738008a4b46a48d",
+      "size": [
+        1374,
+        1145
+      ]
+    },
+    {
+      "file": "art/generated/frostbell.png",
+      "sha256": "942f8969fa69477f581625fe9e662ad1e8106b44b8fc93fd9df106ba12f960a4",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/emberpod.png",
+      "sha256": "90af27938ae520bfa10931b38c7cf7d704b3f01e29c50321e0d9c491a1e21f25",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/cloverling.png",
+      "sha256": "56de9a1db1e21e73870cb34c2fe0dcc1d7fa3490b4ce5f42ca0413ea763a613b",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/armorsnail.png",
+      "sha256": "bfa0dab13718b0b5ae7825abffb4699b5cb38597384b450161e82faff6f6d945",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/swiftmoth.png",
+      "sha256": "833d2607b5d33f69406fac882970274d5ad0512a99df35775583fbd5a0f31851",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/garden-v2.png",
+      "sha256": "b2f1c2af1ebf4425ec6a071a97b6bd98575c7f8750490a82a7772b772bbc9e66",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "art/generated/ui.png",
+      "sha256": "cb6794083d453ea1fc34dceb6a485e2b5c8e53ccfe349cb2a3e50c2298dd311a",
+      "size": [
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "art/generated/ui-v2.png",
+      "sha256": "8edc30903d81b0a4c798403df8fd914b89bfe26b5922c1e20010e908a01617c0",
+      "size": [
+        1024,
+        1536
+      ]
+    },
+    {
+      "file": "art/generated/focus-leaf.png",
+      "sha256": "5855043fc4fd5d86a69ce3639381a92727651a3d47a2d3703cf79da658d4ba62",
+      "size": [
+        1536,
+        1024
+      ]
+    },
+    {
+      "file": "art/generated/lettering.png",
+      "sha256": "2d1cac37d35c4b2c3a7e0549cbb01498546f2038b1efd4bdd8a84ae8e2eb2819",
+      "size": [
+        1374,
+        1145
+      ]
+    },
+    {
+      "file": "art/generated/digits.png",
+      "sha256": "b4b268ce22702e529b0663874d27a892f9e2f448bfb390f80588c0965c40d2f2",
+      "size": [
+        1254,
+        1254
+      ]
+    }
+  ],
+  "reference_sheets": [
+    {
+      "file": "art/generated/armorsnail-inbetween.png",
+      "sha256": "6a9e9687b31ff65b7ad19a353d860774e81302cfdc21f7367d1c673b1a5d7468",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/cloverling-inbetween.png",
+      "sha256": "10b818a209a5be1c9b40ae39a908f4ecde820ba12e0ac0a155738fb47e650b7a",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/copperbeetle-inbetween.png",
+      "sha256": "d21a6755f698dc283433a560d707f71f4b58f56f8e2716d02f2bc29d6c63f31d",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/coralflower-inbetween.png",
+      "sha256": "2da333d86176a77c149210e986c8162b6cc57bcfb3b36cb9721447facfe5cee0",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/dewflower-inbetween.png",
+      "sha256": "5428a861d257440824c932e3801c223b4b5e24e224beb6c52929324181c6b1c9",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/dustimp-inbetween.png",
+      "sha256": "062f3ed540a994d8a2a16d96d84bb369ec45592c8ab473bd2319fa2854157498",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/emberpod-inbetween.png",
+      "sha256": "15ae31854bc8d90a0d2a2ba412dfda9b9f92f57fc43c2ea7cf745f4b475cdb8d",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/frostbell-inbetween.png",
+      "sha256": "21b385188cf0483f3d02104685d3ca0917af56c0c29418fca7c69a84d32bd903",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/leafshield-inbetween.png",
+      "sha256": "437587a08eb6604b3e33f7e65f3ce12ce6929652fe9ea528f8860d1f07425974",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/pinwheel-inbetween.png",
+      "sha256": "24740ff77ea7e9ebb505980566863e91d16fe32edc597d0d5ea058bf544fcab2",
+      "usage": "design reference; not alternated during playback"
+    },
+    {
+      "file": "art/generated/swiftmoth-inbetween.png",
+      "sha256": "fee79c50fe5e40a8152b0dd8d77e114f08591f7e9c2ab219a8b6715387b661e7",
+      "usage": "design reference; not alternated during playback"
+    }
+  ],
+  "frames": 614,
+  "atlas_pages": 24,
+  "decoded_texture_bytes": 1426940,
+  "runtime_source_bytes": 921736,
+  "animation_frames": 540,
+  "animation_clips": 45,
+  "animation_rigs": [
+    {
+      "character": "dewflower",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "coralflower",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "leafshield",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "pinwheel",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "dustimp",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "copperbeetle",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "frostbell",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 48,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "emberpod",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "cloverling",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "armorsnail",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    },
+    {
+      "character": "swiftmoth",
+      "source_pose": [
+        0,
+        0
+      ],
+      "alpha_floor": 0,
+      "motion": "continuous-rooted-cutout",
+      "supersampling": 4
+    }
+  ]
+}

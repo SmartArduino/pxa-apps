@@ -1,0 +1,287 @@
+{
+  "pai-touch": [
+    {
+      "name": "home",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 148,
+      "y": 200
+    },
+    {
+      "name": "plant-0-0",
+      "action": "tap",
+      "x": 47,
+      "y": 79
+    },
+    {
+      "name": "plant-0-1",
+      "action": "tap",
+      "x": 73,
+      "y": 79
+    },
+    {
+      "name": "plant-1-0",
+      "action": "tap",
+      "x": 47,
+      "y": 105
+    },
+    {
+      "name": "plant-1-1",
+      "action": "tap",
+      "x": 73,
+      "y": 105
+    },
+    {
+      "name": "plant-2-0",
+      "action": "tap",
+      "x": 47,
+      "y": 131
+    },
+    {
+      "name": "plant-2-1",
+      "action": "tap",
+      "x": 73,
+      "y": 131
+    },
+    {
+      "name": "plant-3-0",
+      "action": "tap",
+      "x": 47,
+      "y": 157
+    },
+    {
+      "name": "plant-3-1",
+      "action": "tap",
+      "x": 73,
+      "y": 157
+    },
+    {
+      "name": "plant-4-0",
+      "action": "tap",
+      "x": 47,
+      "y": 183
+    },
+    {
+      "name": "plant-4-1",
+      "action": "tap",
+      "x": 73,
+      "y": 183
+    },
+    {
+      "name": "defense",
+      "action": "screenshot"
+    },
+    {
+      "name": "defend-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-4",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-5",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-6",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-7",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-8",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-9",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-10",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-11",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-12",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-13",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defend-14",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "victory",
+      "action": "screenshot"
+    },
+    {
+      "name": "save",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "unlocked-stage2",
+      "action": "screenshot"
+    },
+    {
+      "name": "stage2",
+      "action": "tap",
+      "x": 125,
+      "y": 95
+    },
+    {
+      "name": "second-stage",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 282,
+      "y": 35
+    },
+    {
+      "name": "open-help",
+      "action": "tap",
+      "x": 148,
+      "y": 95
+    },
+    {
+      "name": "help",
+      "action": "screenshot"
+    },
+    {
+      "name": "new-plants",
+      "action": "tap",
+      "x": 272,
+      "y": 222
+    },
+    {
+      "name": "plant-guide",
+      "action": "screenshot"
+    },
+    {
+      "name": "new-monsters",
+      "action": "tap",
+      "x": 272,
+      "y": 222
+    },
+    {
+      "name": "monster-guide",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "first-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 392
+    },
+    {
+      "name": "plant-0",
+      "action": "tap",
+      "x": 81,
+      "y": 170
+    },
+    {
+      "name": "plant-1",
+      "action": "tap",
+      "x": 81,
+      "y": 211
+    },
+    {
+      "name": "plant-2",
+      "action": "tap",
+      "x": 81,
+      "y": 251
+    },
+    {
+      "name": "plant-3",
+      "action": "tap",
+      "x": 81,
+      "y": 292
+    },
+    {
+      "name": "plant-4",
+      "action": "tap",
+      "x": 81,
+      "y": 332
+    },
+    {
+      "name": "battle",
+      "action": "screenshot"
+    },
+    {
+      "name": "warm-battle",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 445,
+      "y": 55
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 240,
+      "y": 141
+    },
+    {
+      "name": "resumed",
+      "action": "screenshot"
+    }
+  ]
+}

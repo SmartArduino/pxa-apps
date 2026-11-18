@@ -1,0 +1,144 @@
+{
+  "pai-touch": [
+    {
+      "name": "first-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 148,
+      "y": 200
+    },
+    {
+      "name": "plant-0",
+      "action": "tap",
+      "x": 47,
+      "y": 79
+    },
+    {
+      "name": "plant-1",
+      "action": "tap",
+      "x": 47,
+      "y": 105
+    },
+    {
+      "name": "plant-2",
+      "action": "tap",
+      "x": 47,
+      "y": 131
+    },
+    {
+      "name": "plant-3",
+      "action": "tap",
+      "x": 47,
+      "y": 157
+    },
+    {
+      "name": "plant-4",
+      "action": "tap",
+      "x": 47,
+      "y": 183
+    },
+    {
+      "name": "battle",
+      "action": "screenshot"
+    },
+    {
+      "name": "warm-battle",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 282,
+      "y": 35
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 148,
+      "y": 63
+    },
+    {
+      "name": "resumed",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "first-home",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 392
+    },
+    {
+      "name": "plant-0",
+      "action": "tap",
+      "x": 81,
+      "y": 170
+    },
+    {
+      "name": "plant-1",
+      "action": "tap",
+      "x": 81,
+      "y": 211
+    },
+    {
+      "name": "plant-2",
+      "action": "tap",
+      "x": 81,
+      "y": 251
+    },
+    {
+      "name": "plant-3",
+      "action": "tap",
+      "x": 81,
+      "y": 292
+    },
+    {
+      "name": "plant-4",
+      "action": "tap",
+      "x": 81,
+      "y": 332
+    },
+    {
+      "name": "battle",
+      "action": "screenshot"
+    },
+    {
+      "name": "warm-battle",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 445,
+      "y": 55
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 240,
+      "y": 141
+    },
+    {
+      "name": "resumed",
+      "action": "screenshot"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+露芽守卫 / Dewbud Guard
+
+PXA game code, rendering adapter, build tools, and procedural sound effects:
+MIT. Full license: LICENSE-PXA-MIT.txt.
+
+Original scene, character sheets, UI art, title/button lettering and glyph atlas:
+generated with the built-in image_gen tool for this project from original
+prompts. The complete prompts are in art/prompts.json in the source release.
+To the extent any copyrights or related rights are held by the contributors,
+these original art assets are dedicated under CC0 1.0 Universal; full dedication
+is in CC0-ART.txt. No exclusivity or copyrightability of AI output is asserted.
+They may be copied, modified and redistributed with or separately from this game.
+
+No artwork, fonts, music, character likenesses or logos from Plants vs. Zombies
+or Glitch are included. The game does not require the original games or Unity.
+The generated lettering is a fixed game UI phrase/glyph collection, not a
+complete general-purpose Unicode font. No system/common font is requested by
+the game's renderer.
+
+PXA SDK and shared MIT audio support notice follows.
+
+MIT License
+
+Copyright (c) 2026 PXA System contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
