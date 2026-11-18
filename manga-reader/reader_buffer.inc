@@ -3,6 +3,8 @@
     unsigned buffer_slots=12,buffer_limit=4*1024*1024+65536,buffer_page_bytes=262144;
     bool prefetch_running=false,cache_prepare=false;std::uint64_t prefetch_retry=0;float waiting_scroll=0;
     int requested_page=-1,prefetch_page=-1;
+    enum class StripNotice {hidden,loading,failed,end};
+    StripNotice strip_notice=StripNotice::hidden;
     int buffered_slot(unsigned index)const{for(unsigned i=0;i<buffered.size();++i)if(buffered[i].asset&&buffered[i].index==index)return int(i);return -1;}
     unsigned buffered_bytes()const{unsigned n=0;for(auto& p:buffered)if(p.asset)n+=std::max(p.asset->descriptor().resident_bytes,p.asset->descriptor().decoded_bytes);return n;}
     unsigned buffered_count()const{unsigned n=0;for(auto& p:buffered)n+=bool(p.asset);return n;}
@@ -38,6 +40,14 @@
     float strip_zoom()const{return image?scale*image->descriptor().width/metrics.width:1.f;}
     unsigned strip_end()const{unsigned last=page;while(last+1<pages.size()&&last<page+buffered.size()&&buffered_slot(last+1)>=0)++last;return last;}
     float strip_source_height()const{float h=image->descriptor().height;for(unsigned i=page+1;i<=strip_end();++i)h+=strip_height(*buffered[buffered_slot(i)].asset)*image->descriptor().width/metrics.width;return h;}
+    StripNotice strip_notice_state()const{
+        if(screen!=reading||busy||!failure.empty()||!image||rendered_page!=page||!vertical()||pages.empty()||waiting_scroll<0)return StripNotice::hidden;
+        const unsigned end=strip_end();const float z=strip_zoom();float bottom=strip_height(*image)*z-pan_y;
+        for(unsigned i=page+1;i<=end;++i)bottom+=strip_height(*buffered[buffered_slot(i)].asset)*z;
+        if(bottom>metrics.height+1)return StripNotice::hidden;
+        if(end+1==pages.size())return StripNotice::end;
+        return !prefetch_running&&(!buffer_slots||prefetch_retry>now_us)?StripNotice::failed:StripNotice::loading;
+    }
     void queue_strip_edge(){
         int next=-1;if(waiting_scroll>0&&strip_end()+1<pages.size())next=strip_end()+1;
         if(waiting_scroll<0&&page&&buffered_slot(page-1)<0)next=page-1;

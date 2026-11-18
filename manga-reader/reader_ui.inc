@@ -33,14 +33,26 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         }
     };
     auto feedback=[&](int yy){text(x,yy,w,22,app->status,Font::caption,muted);};
+    auto centered_panel=[&](int xx,int yy,int ww,int hh,std::string_view label){
+        ok=Box(WidgetStyle{box(xx,yy,ww,hh),0,0x14251edc,Font::caption,6},
+            Text(label).font(Font::caption).rgba(0xe2ede6ff).text_align(TextAlign::center))
+            .align(Align::center).justify(Justify::center).render(owner,parent)&&ok;
+    };
     if(screen==reading){
-        if(!app->busy&&app->waiting_scroll&&!app->prefetch_running&&app->prefetch_retry>app->now_us)button(x+w-38,y+h-66,38,30,"↻",retry_buffer);
+        if(app->waiting_scroll<0&&!app->prefetch_running&&app->prefetch_retry>app->now_us)button(x+w-38,y+h-66,38,30,"↻",retry_buffer);
+        if(app->strip_notice!=StripNotice::hidden){
+            const bool failed=app->strip_notice==StripNotice::failed;
+            const std::string_view label=app->strip_notice==StripNotice::end?"没有下一页":failed?"加载失败，点此重试":"正在加载下一页…";
+            const int width=std::min(w,app->strip_notice==StripNotice::end?144:216),xx=x+(w-width)/2,yy=y+h-((app->bars||!app->failure.empty())?66:34);
+            if(failed)button(xx,yy,width,30,label,retry_buffer);
+            else centered_panel(xx,yy,width,30,label);
+        }
         if(app->bars||!app->failure.empty()){
             button(x,y,38,30,"≡",go_back);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));button(x+w-38,y,38,30,"?",show_help);
             button(x,y+h-30,38,30,"<",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,">",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
             button(x+42,y+h-30,w-84,30,app->page_label(),jump_page,0,false,!app->busy&&!app->pages.empty());
         }
-        if(app->busy){rect(x+42,y+h-70,w-84,34,0x14251edc,6);text(x+45,y+h-66,w-90,24,app->status,Font::caption,0xe2ede6ff,1);button(x+w-86,y,44,30,"取消",cancel);}
+        if(app->busy){centered_panel(x+42,y+h-70,w-84,34,app->status);button(x+w-86,y,44,30,"取消",cancel);}
         else if(!app->failure.empty()){rect(x,y+h/2-38,w,72,0x14251edc,6);text(x,y+h/2-34,w,24,app->status,Font::caption,0xe2ede6ff,1);button(x+(w-80)/2,y+h/2-4,80,30,"重试",retry);}
         return ok;
     }

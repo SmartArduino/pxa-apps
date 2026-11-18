@@ -76,6 +76,11 @@ def enter(d,disk_off=False):
  wait_for(lambda:'MANGA page_ready_us=' in text(d))
 def colours(path):
  values=list(Image.open(path).convert('RGB').getdata());return [sum(sum(abs(a-b) for a,b in zip(pixel,c))<15 for pixel in values) for c in [(204,221,194),(216,223,235),(237,205,185)]]
+def centered_notice(d,label):
+ nodes=d.tree()['nodes'];text_node=next(n for n in nodes if n.get('visible') and n.get('text')==label and n['type']=='text');panel=next(n for n in nodes if n['id']==text_node['parent'] and n['surface']==text_node['surface']);a=text_node['bounds'];b=panel['bounds']
+ for axis,size in [('x','width'),('y','height')]:
+  assert abs((a[axis]+a[size]/2)-(b[axis]+b[size]/2))<=1,(label,a,b)
+  assert b[axis]<=a[axis] and a[axis]+a[size]<=b[axis]+b[size],(label,a,b)
 results={}
 for name,w,h,dpi in [('continuous-small',320,240,125),('continuous-mosaico',480,480,305)]:
  server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','24','--height','64'],stdout=(out/(name+'-fixture.log')).open('w'),stderr=subprocess.STDOUT)
@@ -102,14 +107,15 @@ server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py
 try:
  time.sleep(.3)
  with Sim('continuous-slow-edge',320,240,125) as d:
-  enter(d);swipe(d,-150);swipe(d,-150);end=hold(d,-190);d.shot('waiting-while-held')
+  enter(d);swipe(d,-150);swipe(d,-150);end=hold(d,-190);d.wait('正在加载下一页…','text');centered_notice(d,'正在加载下一页…');d.wait('没有下一页','text',count=0);d.shot('waiting-while-held')
   wait_for(lambda:'MANGA prefetched=1 ' in text(d));time.sleep(.2);d.shot('loaded-without-release')
   assert sum(n>500 for n in colours(d.state/'loaded-without-release.png'))>=2
   release(d,end);assert text(d).count('MANGA page_ready_us=')==1
   end=hold(d,-180);wait_for(lambda:position(d)>=1);d.shot('next-image-before-release');release(d,end)
   end=hold(d,180);wait_for(lambda:position(d)==0);d.shot('previous-image-before-release');release(d,end)
+  d.wait('正在加载下一页…','text',count=0)
   assert text(d).count('MANGA page_ready_us=')==1
-  results['slow-edge']={'passed':True,'delay_ms':2500,'kept_current_image':True,'joined_without_finger_release':True,'backward_without_page_reload':True}
+  results['slow-edge']={'passed':True,'delay_ms':2500,'kept_current_image':True,'joined_without_finger_release':True,'backward_without_page_reload':True,'visible_loading_notice':True,'loading_not_mistaken_for_end':True,'notice_hidden_away_from_edge':True}
   print('slow edge PASS',flush=True)
 finally:server.terminate();server.wait(timeout=5)
 server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages','12'],stdout=(out/'low-budget-fixture.log').open('w'),stderr=subprocess.STDOUT)
@@ -142,6 +148,25 @@ for name,options in [('network-partial',['--noise']),('network-lossy',['--webp-l
    else:assert ' jpeg=1 ' in text(d) and 'MANGA wire_consumed_bytes=' in text(d)
    d.shot('network-ready');d.pointer('DOWN',240,240,0);time.sleep(.15);d.pointer('UP',240,240,0);d.wait('≡');d.tap('≡');d.wait('返回');d.tap('返回');d.wait('设置');before=text(d).count('MANGA page_ready_us=');d.tap('触摸测试漫画');wait_for(lambda:text(d).count('MANGA page_ready_us=')>before,40);d.shot('after-cancel-and-reopen')
    results[name]={'passed':True,'single_request_per_first_three_images':True,'wire_partial_response_reused':name=='network-partial','lossy_webp_jpeg_conversion':name=='network-lossy','cancel_and_resume':True}
+   print(name,'PASS',flush=True)
+ finally:server.terminate();server.wait(timeout=5)
+for name,w,h,dpi,pages,height in [('strip-end-small',320,240,125,3,400),('strip-end-large',480,854,254,1,64)]:
+ server=subprocess.Popen([sys.executable,str(Path(__file__).with_name('fixture.py')),'--port','18929','--pages',str(pages),'--height',str(height)],stdout=(out/(name+'-fixture.log')).open('w'),stderr=subprocess.STDOUT)
+ try:
+  time.sleep(.3);os.environ['PXA_RESOURCE_EXTERNAL_BYTES']=str(8*1024*1024)
+  with Sim(name,w,h,dpi) as d:
+   enter(d,True)
+   if pages>1:
+    wait_for(lambda:'MANGA prefetched=2 ' in text(d));d.wait('没有下一页','text',count=0)
+    for i in range(20):
+     swipe(d,-h*.7)
+     if position(d)==pages-1:break
+    swipe(d,-h*.8)
+   d.wait('没有下一页','text');centered_notice(d,'没有下一页');d.wait('正在加载下一页…','text',count=0);d.shot('chapter-end-notice')
+   if pages>1:
+    swipe(d,h*.8);d.wait('没有下一页','text',count=0)
+   assert text(d).count('MANGA page_ready_us=')==1
+   results[name]={'passed':True,'known_end_visible':True,'no_loading_at_end':True,'single_short_image':pages==1,'hidden_when_scrolling_back':pages>1}
    print(name,'PASS',flush=True)
  finally:server.terminate();server.wait(timeout=5)
 (out/'continuous-result.json').write_text(json.dumps(results,indent=2));print('All continuous scrolling cases PASS',flush=True)
