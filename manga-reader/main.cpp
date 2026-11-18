@@ -33,7 +33,7 @@ struct Reader {
     };
     Context* ctx=nullptr;
     DisplayMetrics metrics;
-    CanvasRef canvas;CanvasCommands<768> draw;
+    CanvasRef canvas;CanvasCommands<1024> draw;
     State<std::uint32_t> revision{0};
     State<std::string> input{""};TextInputRef input_ref;
     State<TextInputBox> input_box{TextInputBox{{},false,Font::body,0x20382fff}};
@@ -380,6 +380,18 @@ struct Reader {
             if(strip){const float z=strip_zoom();if(page&&yy>0){auto p=buffered_slot(page-1);if(p>=0){auto& asset=*buffered[p].asset;int ph=std::max(1,int(strip_height(asset)*z));draw.image(logical({xx,yy-ph,w,ph}),asset,ImageFit::stretch,255,ImageSampling::nearest);}}
                 yy+=h;for(unsigned i=page+1;i<=strip_end()&&yy<v.height;++i){auto& asset=*buffered[buffered_slot(i)].asset;int ph=std::max(1,int(strip_height(asset)*z));draw.image(logical({xx,yy,w,ph}),asset,ImageFit::stretch,255,dragging?ImageSampling::nearest:ImageSampling::smooth);yy+=ph;}}
             draw.pop_clip();}
+        if(screen==reading&&(bars||!failure.empty())){
+            const auto a=area();const float unit=ui_factor()/density();
+            const int top=int((a.y+a.height-30)*unit),height=std::max(1,int(30*unit)),width=std::max(1,int(38*unit));
+            for(unsigned side=0;side<2;++side){
+                const int left=int((side?a.x+a.width-38:a.x)*unit),cx=left+width/2,cy=top+height/2;
+                const int dx=std::max(2,int(std::round(4*unit))),dy=std::max(3,int(std::round(7*unit))),direction=side?1:-1;
+                const auto color=!busy&&ready&&(side?page+1<pages.size():page>0)?0xf5f6eeffu:0x748178ffu;
+                draw.rect(left,top,width,height,0x14251edc,6);
+                draw.line(cx-direction*dx,cy-dy,cx+direction*dx,cy,color,std::max(1,int(std::round(2*unit))));
+                draw.line(cx+direction*dx,cy,cx-direction*dx,cy+dy,color,std::max(1,int(std::round(2*unit))));
+            }
+        }
         auto r=canvas.present(draw);if(!r)error(r.error());}
 };
 #include "reader_ui.inc"

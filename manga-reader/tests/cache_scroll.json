@@ -247,7 +247,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "<"
+        "text": "上一页"
       }
     },
     {
@@ -711,7 +711,7 @@
       "action": "tap-node",
       "selector": {
         "type": "button",
-        "text": "<"
+        "text": "上一页"
       }
     },
     {

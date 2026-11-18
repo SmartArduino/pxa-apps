@@ -13,8 +13,9 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
     auto button=[&] [[gnu::noinline]] (int xx,int yy,int ww,int hh,std::string_view label,Act action,int arg=0,bool selected=false,bool enabled=true,bool silent=false){
         if(n==callbacks.size()){ok=owner.fail(Error::resource_limit);return;}auto& cb=callbacks[n++];cb={app,action,arg};
         bool icon=screen==reading&&label.size()<=3;
-        ok=Button(label,WidgetStyle{box(xx,yy,ww,hh),silent?0u:screen==reading?0xf5f6eeff:enabled?(selected?0xffffffff:ink):muted,
-            screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled&&app->ready).render(owner,parent)&&ok;
+        const bool arrow=screen==reading&&(action==previous_page||action==next_page);
+        ok=Button(label,WidgetStyle{box(xx,yy,ww,hh),(silent||arrow)?0u:screen==reading?0xf5f6eeff:enabled?(selected?0xffffffff:ink):muted,
+            arrow?0u:screen==reading?0x14251edc:selected?accent:paper,screen==reading?(icon?Font::title:Font::caption):Font::label,6,1}).on_click_ref(cb).enabled(enabled&&app->ready).render(owner,parent)&&ok;
     };
     auto row=[&](int xx,int yy,int rw,std::string_view title,std::string_view detail,Act action,int arg,bool selected=false,uint32_t spine=accent,bool menu=false){
         auto label=manga::ellipsize(title,rw-(menu?74:42),14);
@@ -52,7 +53,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         edge_notice(app->strip_notice,false);edge_notice(app->previous_notice,true);
         if(app->bars||!app->failure.empty()){
             button(x,y,38,30,"≡",go_back);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));button(x+w-38,y,38,30,"?",show_help);
-            button(x,y+h-30,38,30,"<",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,">",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
+            button(x,y+h-30,38,30,"上一页",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,"下一页",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
             button(x+42,y+h-30,w-84,30,app->page_label(),jump_page,0,false,!app->busy&&!app->pages.empty());
         }
         if(app->busy){centered_panel(x+42,y+h-70,w-84,34,app->status);button(x+w-86,y,44,30,"取消",cancel);}
