@@ -25,6 +25,10 @@ struct DisplayPlan {
   int sw=std::max(1,pw/scale),sh=std::max(1,ph/scale);bool wide=pw>=ph&&pw/dpi>=800&&ph/dpi>=440&&sw>=512&&sh>=300;
   return {sw,sh,scale,(pw-sw*scale)/2,(ph-sh*scale)/2,wide,dpi/scale,std::clamp(font/65536.f,.75f,2.f)};
  }
+ // Compensate for the game's virtual viewport before choosing an integer
+ // glyph strike. The resulting physical text size follows display density.
+ float text_scale(int canvas_width)const{return (wide?units_per_dp:units_per_dp*scale>=1.25f?std::max(1.f,units_per_dp*canvas_width/width):1.f)*font_scale;}
+ int minimum_text_scale()const{return font_style(std::lround(12*units_per_dp),false).scale;}
 };
 struct LargeHudLayout {
  int width,height,row,line,side,world_width,top,bottom,map_size,tabs,grid,card_height,footer;
@@ -49,9 +53,15 @@ struct DockState {
 // Small displays keep one touchable command row. Drawers overlay the world;
 // they never change its projection or enter the save format.
 struct CompactHudLayout {
- int height,width,offset,row,line,picture,card_height,header,top;
+ int height,width,offset,row,line,picture,card_height,header,top,status_height;
  static bool applies(int physical_width,int physical_height){return physical_width<400||physical_height<=480||physical_width>=physical_height;}
- explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width),offset((width-480)/2),row(std::max(28,std::min(int(canvas_height*.18f),int(std::ceil(30*density*canvas_height/physical_height))))),line(std::max(20,int(std::ceil(14*font*canvas_height/physical_height)))),picture(std::max(30,(20*canvas_height+physical_height-1)/physical_height)),card_height(12+picture+line*2),header(line+8),top(height-row-10){}
+ explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width),offset((width-480)/2){
+  bool readable=density>=1.25f;int glyph=12*font_style(std::lround(12*density*font),false).scale;
+  line=std::max(20,int(std::ceil((readable?glyph+4:14*font)*canvas_height/physical_height)));
+  row=std::max({28,readable?line+8:28,std::min(int(canvas_height*.18f),int(std::ceil(30*density*canvas_height/physical_height)))});
+  picture=std::max(30,int(std::ceil((readable?32*density:20)*canvas_height/physical_height)));
+  card_height=12+picture+line*2;header=line+8;top=height-row-10;status_height=readable?std::max(50,2*line+8):50;
+ }
  Rect command(int index)const{return {offset+8+94*index,top+5,88,row};}
  Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+(panel==DockPanel::tactics?row*2+6:card_height);return {0,top-size,width,size};}
  Rect card(int index,DockPanel panel)const{return {offset+8+94*index,overlay(panel).y+header+4,88,card_height};}

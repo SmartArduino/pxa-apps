@@ -1,0 +1,156 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "settle",
+      "action": "wait",
+      "ms": 600
+    },
+    {
+      "name": "home",
+      "action": "screenshot"
+    },
+    {
+      "name": "archive",
+      "action": "tap",
+      "x": 75,
+      "y": 435
+    },
+    {
+      "name": "campaign-archive",
+      "action": "screenshot"
+    },
+    {
+      "name": "first-chapter",
+      "action": "tap",
+      "x": 405,
+      "y": 136
+    },
+    {
+      "name": "story-briefing",
+      "action": "screenshot"
+    },
+    {
+      "name": "deploy",
+      "action": "tap",
+      "x": 180,
+      "y": 435
+    },
+    {
+      "name": "battle-settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "battle",
+      "action": "screenshot"
+    },
+    {
+      "name": "units",
+      "action": "tap",
+      "x": 52,
+      "y": 446
+    },
+    {
+      "name": "unit-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "tank",
+      "action": "tap",
+      "x": 240,
+      "y": 339
+    },
+    {
+      "name": "units-close",
+      "action": "tap",
+      "x": 52,
+      "y": 446
+    },
+    {
+      "name": "buildings",
+      "action": "tap",
+      "x": 146,
+      "y": 446
+    },
+    {
+      "name": "building-catalogue",
+      "action": "screenshot"
+    },
+    {
+      "name": "power",
+      "action": "tap",
+      "x": 52,
+      "y": 339
+    },
+    {
+      "name": "place-power",
+      "action": "tap",
+      "x": 110,
+      "y": 240
+    },
+    {
+      "name": "construction-settle",
+      "action": "wait",
+      "ms": 1500
+    },
+    {
+      "name": "construction",
+      "action": "screenshot"
+    },
+    {
+      "name": "tactics",
+      "action": "tap",
+      "x": 428,
+      "y": 446
+    },
+    {
+      "name": "tactics-panel",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "tap",
+      "x": 417,
+      "y": 311
+    },
+    {
+      "name": "research-page",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-to-battle",
+      "action": "tap",
+      "x": 240,
+      "y": 437
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 438,
+      "y": 30
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 1200
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 365,
+      "y": 367
+    },
+    {
+      "name": "restored-battle",
+      "action": "screenshot"
+    }
+  ]
+}

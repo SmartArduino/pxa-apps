@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-iron-dawn",
-  "version": "1.7.1",
-  "release_sequence": 10,
+  "version": "1.7.2",
+  "release_sequence": 11,
   "name": "钢铁黎明",
   "description": "原创像素即时战略。六章剧情、28至48格战场、车队护送、节点争夺、基地建设与触屏框选。",
   "publisher": {

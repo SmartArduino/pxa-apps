@@ -19,10 +19,10 @@ inline FontStyle font_style(int desired,bool){return {0,std::clamp((desired+6)/1
 inline int pixel_scale(int value,int numerator,int denominator){int64_t p=int64_t(value)*numerator;return int(p>=0?(p+denominator/2)/denominator:-((-p+denominator/2)/denominator));}
 struct TextCommand {int x,y,size,align;uint16_t color;Rect clip;uint16_t offset,length;};
 struct NativeText {
- int width=480,height=320,canvas_width=480,canvas_height=320;float text_scale=1;unsigned count=0,bytes=0;bool overflow=false;
+ int width=480,height=320,canvas_width=480,canvas_height=320,minimum_scale=1;float text_scale=1;unsigned count=0,bytes=0;bool overflow=false;
  std::array<TextCommand,128> commands{};std::array<char,8192> strings{};
- void reset(int w,int h,int cw,int ch,float scale=1){width=w;height=h;canvas_width=cw;canvas_height=ch;text_scale=scale;count=bytes=0;overflow=false;}
- FontStyle style(std::string_view s,int size)const{return font_style(std::lround(pixel_scale(size,width,canvas_width)*text_scale),ascii_text(s));}
+ void reset(int w,int h,int cw,int ch,float scale=1,int minimum=1){width=w;height=h;canvas_width=cw;canvas_height=ch;text_scale=scale;minimum_scale=minimum;count=bytes=0;overflow=false;}
+ FontStyle style(std::string_view s,int size)const{auto f=font_style(std::lround(pixel_scale(size,width,canvas_width)*text_scale),ascii_text(s));f.scale=std::max(f.scale,minimum_scale);return f;}
  bool push(int x,int y,std::string_view s,uint16_t c,int size,int align,Rect clip){if(count==commands.size()||bytes+s.size()>strings.size()){overflow=true;return false;}std::copy(s.begin(),s.end(),strings.begin()+bytes);commands[count++]={x,y,size,align,c,clip,uint16_t(bytes),uint16_t(s.size())};bytes+=s.size();return true;}
 };
 struct Raster {
@@ -54,7 +54,7 @@ struct Raster {
  }
  [[gnu::noinline]] void text(int x,int y,std::string_view s,uint16_t color=cream,int size=16,int align=0){if(native_text&&native_text->push(x,y,s,color,size,align,clip))return;bitmap_text(x,y,s,color,font_style(size,ascii_text(s)),align);}
  void label(Rect area,std::string_view s,uint16_t color=cream,int size=16,int align=1){
-  if(area.w<=0||area.h<=0)return;int width=measure(s,size);if(width>area.w)size=std::max(6,size*area.w/std::max(1,width));std::array<char,512> fitted{};
+  if(area.w<=0||area.h<=0)return;int width=measure(s,size),height=text_height(s,size);if(width>area.w||height>area.h)size=std::max(6,std::min(size*area.w/std::max(1,width),size*area.h/std::max(1,height)));std::array<char,512> fitted{};
   if(measure(s,size)>area.w){auto prefix=s;int dots=measure("...",size);while(!prefix.empty()&&(prefix.size()+3>fitted.size()||measure(prefix,size)+dots>area.w)){size_t n=prefix.size()-1;while(n&&(uint8_t(prefix[n])&0xc0)==0x80)--n;prefix=prefix.substr(0,n);}if(dots>area.w)return;std::copy(prefix.begin(),prefix.end(),fitted.begin());std::copy_n("...",3,fitted.begin()+prefix.size());s={fitted.data(),prefix.size()+3};}
   text(align==1?area.x+area.w/2:align==2?area.x+area.w:area.x,area.y+(area.h-text_height(s,size))/2,s,color,size,align);
  }

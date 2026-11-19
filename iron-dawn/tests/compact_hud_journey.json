@@ -440,13 +440,19 @@
       "name": "endless",
       "action": "tap",
       "x": 185,
-      "y": 416
+      "y": 435
+    },
+    {
+      "name": "continue-briefing",
+      "action": "tap",
+      "x": 180,
+      "y": 435
     },
     {
       "name": "deploy",
       "action": "tap",
       "x": 180,
-      "y": 436
+      "y": 435
     },
     {
       "name": "settle",
@@ -461,7 +467,7 @@
       "name": "open-units",
       "action": "tap",
       "x": 52,
-      "y": 460
+      "y": 446
     },
     {
       "name": "unit-catalogue",
@@ -471,7 +477,7 @@
       "name": "queue-artillery",
       "action": "tap",
       "x": 334,
-      "y": 391
+      "y": 339
     },
     {
       "name": "queued-production",
@@ -481,7 +487,7 @@
       "name": "close-units",
       "action": "tap",
       "x": 52,
-      "y": 460
+      "y": 446
     },
     {
       "name": "compact-queue",
@@ -491,7 +497,7 @@
       "name": "open-buildings",
       "action": "tap",
       "x": 146,
-      "y": 460
+      "y": 446
     },
     {
       "name": "building-catalogue",
@@ -501,7 +507,7 @@
       "name": "choose-power",
       "action": "tap",
       "x": 52,
-      "y": 391
+      "y": 339
     },
     {
       "name": "placement-catalogue-closed",
@@ -511,13 +517,13 @@
       "name": "cancel-placement",
       "action": "tap",
       "x": 146,
-      "y": 460
+      "y": 446
     },
     {
       "name": "open-tactics",
       "action": "tap",
       "x": 428,
-      "y": 460
+      "y": 446
     },
     {
       "name": "tactics",
@@ -527,13 +533,13 @@
       "name": "drawer-header",
       "action": "tap",
       "x": 240,
-      "y": 344
+      "y": 260
     },
     {
       "name": "header-drag",
       "action": "swipe",
       "x": 220,
-      "y": 344,
+      "y": 260,
       "x2": 255,
       "y2": 344,
       "ms": 300
@@ -546,19 +552,19 @@
       "name": "close-tactics",
       "action": "tap",
       "x": 428,
-      "y": 460
+      "y": 446
     },
     {
       "name": "reopen-units",
       "action": "tap",
       "x": 52,
-      "y": 460
+      "y": 446
     },
     {
       "name": "world-dismisses-drawer",
       "action": "tap",
       "x": 80,
-      "y": 105
+      "y": 180
     },
     {
       "name": "world-dismissed",
@@ -568,13 +574,13 @@
       "name": "selection-tactics",
       "action": "tap",
       "x": 428,
-      "y": 460
+      "y": 446
     },
     {
       "name": "arm-box",
       "action": "tap",
       "x": 63,
-      "y": 381
+      "y": 311
     },
     {
       "name": "selection-armed",
@@ -584,9 +590,9 @@
       "name": "select-starters",
       "action": "swipe",
       "x": 165,
-      "y": 241,
+      "y": 234,
       "x2": 275,
-      "y2": 280,
+      "y2": 273,
       "ms": 500
     },
     {
@@ -597,19 +603,19 @@
       "name": "stop-army",
       "action": "tap",
       "x": 334,
-      "y": 460
+      "y": 446
     },
     {
       "name": "open-research-menu",
       "action": "tap",
       "x": 428,
-      "y": 460
+      "y": 446
     },
     {
       "name": "research",
       "action": "tap",
       "x": 417,
-      "y": 381
+      "y": 311
     },
     {
       "name": "research-page",
@@ -625,7 +631,7 @@
       "name": "panel-before-pause",
       "action": "tap",
       "x": 52,
-      "y": 460
+      "y": 446
     },
     {
       "name": "pause",
@@ -646,7 +652,7 @@
       "name": "resume",
       "action": "tap",
       "x": 365,
-      "y": 372
+      "y": 367
     },
     {
       "name": "restored-default",
