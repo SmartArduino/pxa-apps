@@ -26,6 +26,8 @@ FIRST_HEIGHT = 0
 PANEL_WIDTH = 320
 WEBP = False
 WEBP_LOSSY = False
+JPEG_BASELINE = False
+PADDING_BYTES = 0
 
 
 def panel(index):
@@ -39,6 +41,8 @@ def panel(index):
         draw.rectangle((12, top, 308, top + 190), fill=['#ccddc2', '#d8dfeb', '#edcdb9'][index%3], outline='#243b31', width=5)
         draw.ellipse((70+i*20, top+65, 160+i*20, top+155), fill='#fff8e6', outline='#243b31', width=3)
         draw.text((40, top+20), f'PAGE {index+1} / PANEL {i+1}', fill='#20382f', font_size=22)
+    if JPEG_BASELINE:
+        out=io.BytesIO();image.save(out,format='JPEG',quality=95);return out.getvalue()+b'\0'*PADDING_BYTES
     out = io.BytesIO(); image.save(out, format='WEBP',lossless=not WEBP_LOSSY,quality=95) if WEBP else image.save(out, format='JPEG',progressive=True) if PROGRESSIVE else image.save(out, format='PNG'); return out.getvalue()
 
 
@@ -94,7 +98,9 @@ class Handler(BaseHTTPRequestHandler):
         else:
             code = 404; body = {'error': 'not found'}
         if not isinstance(body, bytes): body = json.dumps(body, ensure_ascii=False).encode()
-        self.send_response(code); self.send_header('Content-Type', content_type); self.send_header('Content-Length', str(len(body))); self.end_headers()
+        self.send_response(code);self.send_header('Content-Type',content_type)
+        if not (self.server.unknown_length and content_type.startswith('image/')):self.send_header('Content-Length',str(len(body)))
+        self.end_headers()
         if u.path.startswith('/data-saver/abc123/'):time.sleep(self.server.body_delay_ms/1000)
         try: self.wfile.write(body)
         except (BrokenPipeError, ConnectionResetError): pass
@@ -117,6 +123,9 @@ if __name__ == '__main__':
     parser.add_argument('--webp-lossy',action='store_true')
     parser.add_argument('--delay-ms',type=int,default=0)
     parser.add_argument('--body-delay-ms',type=int,default=0,help='Delay the image body after headers, for overlapping transfer tests')
+    parser.add_argument('--jpeg-baseline',action='store_true')
+    parser.add_argument('--padding-bytes',type=int,default=0)
+    parser.add_argument('--unknown-length',action='store_true')
     parser.add_argument('--two-books',action='store_true')
     parser.add_argument('--chapters',type=int,default=1)
     parser.add_argument('--toc-batch',type=int,default=20)
@@ -141,6 +150,9 @@ if __name__ == '__main__':
     server.delay_ms = min(5000,max(0,args.delay_ms))
     server.body_delay_ms = min(5000,max(0,args.body_delay_ms))
     server.two_books = args.two_books
+    server.unknown_length=args.unknown_length
+    JPEG_BASELINE=args.jpeg_baseline
+    PADDING_BYTES=min(4*1024*1024,max(0,args.padding_bytes))
     server.chapter_count=min(128,max(1,args.chapters))
     server.toc_batch=min(20,max(1,args.toc_batch))
     server.next_delay_ms=args.next_delay_ms

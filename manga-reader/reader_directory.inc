@@ -29,7 +29,7 @@
         chapters=std::move(next);groups=std::move(next_groups);total=count;group_index=group;list_start=0;return true;
     }
     Task<void> load_directory_cache(){
-        auto file=co_await ctx->fs().open("reader-directory.json");if(!file)co_return Result<void>{};std::string s;
+        auto file=co_await open_file("reader-directory.json");if(!file)co_return Result<void>{};std::string s;
         for(;;){auto n=file->read(buffer);if(!n||s.size()+*n>manga::DirectoryCache::file_maximum)co_return Result<void>{};if(!*n)break;s.append(reinterpret_cast<const char*>(buffer.data()),*n);}
         (void)file->close();(void)directory_cache.restore(s);co_return Result<void>{};
     }
@@ -38,9 +38,7 @@
         // budget. A failed optional write keeps the in-memory directory usable.
         if(!cache.enabled)co_return Result<void>{};auto s=directory_cache.save();
         if(s.size()>manga::DirectoryCache::file_maximum)co_return Result<void>{};
-        auto file=co_await ctx->fs().open("reader-directory.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!file)co_return Result<void>{};
-        auto wrote=co_await write_chunks(*file,std::as_bytes(std::span{s.data(),s.size()}));if(!wrote)co_return Result<void>{};if(!file->close())co_return Result<void>{};
-        auto moved=co_await ctx->fs().replace("reader-directory.tmp","reader-directory.json");(void)moved;co_return Result<void>{};
+        auto stored=co_await write_file("reader-directory.json",std::as_bytes(std::span{s.data(),s.size()}));(void)stored;co_return Result<void>{};
     }
     Task<void> load_chapters(bool refresh=false){
         auto key=directory_key();

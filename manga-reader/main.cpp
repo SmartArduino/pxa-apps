@@ -6,6 +6,7 @@
 #include "cache_model.hpp"
 #include "reader_gesture.hpp"
 #include "reader_work.hpp"
+#include "reader_disk.hpp"
 #include "directory_cache.hpp"
 #include <cstring>
 #include <cstdlib>
@@ -52,7 +53,7 @@ struct Reader {
     bool busy=false,dirty=true,ui_dirty=true,ready=false,save_pending=false,save_busy=false,storage_ok=true,bars=false,dragging=false,exit_pending=false;
     std::uint64_t now_us=0,bar_deadline=0,save_deadline=0,save_first=0;
     manga::TouchPair touches;manga::PinchAnchor pinch;float custom_zoom=1;
-    manga::FrameWork frame_work;std::uint64_t last_input_us=0;
+    manga::AsyncDisk disk;manga::FrameWork frame_work;std::uint64_t last_input_us=0;
     bool interacting()const{return screen==reading&&(dragging||touches.count()||(last_input_us&&now_us-last_input_us<120000));}
     struct WorkYield {
         manga::FrameWork::Awaiter frame;ClockService::Yield clock;bool paced;
@@ -104,6 +105,16 @@ struct Reader {
     void on_background(Context&){stop();(void)input_ref.hide_keyboard();dragging=false;touches.reset();save();save_deadline=0;if(save_pending&&!save_busy)start(save_state(),false);}
     void on_foreground(Context&){changed();if(ready&&screen==reading&&(!image||rendered_page!=page)&&!busy)begin(pages.empty()?load_pages():load_image());}
     BackAction on_back(){if(screen==shelf_screen){if(save_busy||save_pending){exit_pending=true;save_deadline=0;message("正在保存…");return BackAction::stay;}return BackAction::close;}action(go_back);return BackAction::stay;}
+    Task<File> open_file(std::string path,OpenMode mode=OpenMode::read){
+        if(!ready)(void)ctx->log().write(LogLevel::info,"MANGA startup_open="+path+" pending="+std::to_string(disk.pending));
+        auto r=co_await disk.idle(*ctx);if(!r)co_return std::unexpected(r.error());
+        auto file=co_await ctx->fs().open(path,mode);
+        if(!ready)(void)ctx->log().write(LogLevel::info,"MANGA startup_opened="+path+" result="+std::to_string(file?0:int(file.error())));
+        co_return std::move(file);
+    }
+    Task<void> remove_file(std::string path){auto r=co_await disk.idle(*ctx);if(!r)co_return std::unexpected(r.error());co_return co_await ctx->fs().remove(path);}
+    Task<void> replace_file(std::string from,std::string to){auto r=co_await disk.idle(*ctx);if(!r)co_return std::unexpected(r.error());co_return co_await ctx->fs().replace(from,to);}
+    Task<void> write_file(std::string path,std::span<const std::byte> bytes){co_return co_await disk.write(*ctx,path,bytes);}
     void stop(){ctx->foreground_tasks().cancel();chapter_requested=chapter_loading=chapter_failed=false;clear_wire();pending_cache_key.clear();pending_cache_file.clear();image_finishing=false;prefetch_running=false;prefetch_page=-1;busy=false;failure.clear();changed();}
     void begin(Task<void> task){stop();busy=true;message("正在加载…");start(std::move(task));}
     unsigned image_width()const{return std::clamp(unsigned(metrics.width),320u,1024u);}
@@ -277,7 +288,7 @@ struct Reader {
         // Display first; keep the next producer away from this scratch file
         // until its optional persistent cache entry has been committed.
         auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());auto stored=co_await finish_image_cache();(void)stored;
-        auto r=co_await ctx->fs().remove("manga-source.tmp");(void)r;r=co_await ctx->fs().remove("manga-image.tmp");(void)r;image_finishing=false;co_return Result<void>{};}
+        auto r=co_await remove_file("manga-source.tmp");(void)r;r=co_await remove_file("manga-image.tmp");(void)r;image_finishing=false;co_return Result<void>{};}
     Task<Asset> convert_download(bool foreground=true){auto started=now_us;std::uint64_t work_us=0;unsigned max_slice_us=0;
         auto batch=[&](auto done,auto step){auto tick=profile_short_tick();bool ok=true;for(unsigned n=0;n<64&&!done();++n){if(!step()){ok=false;break;}if(profile_short_us(tick,profile_short_tick())>=(foreground?6000u:interacting()?1000u:4000u))break;}auto us=profile_short_us(tick,profile_short_tick());work_us+=us;max_slice_us=std::max(max_slice_us,us);return ok;};
         if(foreground){
@@ -285,7 +296,7 @@ struct Reader {
             // Let the compositor retire its old image snapshot before the
             // Guest grows a contiguous RGB decode buffer on fragmented PSRAM.
             auto tick=profile_short_tick();for(unsigned pass=0;pass<256;++pass){auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());if(profile_short_us(tick,profile_short_tick())>=20000)break;}
-        }manga::ImageSource source;if(!source_bytes.empty())source.memory=source_bytes;else{auto opened=co_await ctx->fs().open("manga-source.tmp");if(!opened)co_return std::unexpected(opened.error());source.file.emplace(std::move(*opened));}auto file=&source;
+        }manga::ImageSource source;if(!source_bytes.empty())source.memory=source_bytes;else{auto opened=co_await open_file("manga-source.tmp");if(!opened)co_return std::unexpected(opened.error());source.file.emplace(std::move(*opened));}auto file=&source;
         auto converter=std::make_unique<manga::JpegCompat>();converter->max_width=image_width();converter->max_pixels=compatibility_pixels;
         auto read=[](void* p,std::span<std::byte> out)->std::size_t{auto n=static_cast<manga::ImageSource*>(p)->read(out);return n?*n:0;};
         std::unique_ptr<manga::ProgressiveJpeg> progressive;std::unique_ptr<manga::WebpCompat> webp;bool jpeg_output=true;
@@ -324,26 +335,23 @@ struct Reader {
         if(png.empty())co_return std::unexpected(Error::limit_exceeded);converted_encoded_bytes=png.size();
         sync_clock();(void)ctx->log().write(LogLevel::info,"MANGA converted_rgb="+std::to_string(converter->width)+"x"+std::to_string(converter->height)+" encoded_bytes="+std::to_string(png.size())+" jpeg="+std::to_string(jpeg_output)+" channel_bits="+std::to_string(converter->png_precision)+" work_us="+std::to_string(work_us)+" decode_us="+std::to_string(decode_us)+" encode_us="+std::to_string(work_us-decode_us)+" max_slice_us="+std::to_string(max_slice_us)+" elapsed_us="+std::to_string(now_us-started));
         converter.reset();progressive.reset();webp.reset();std::vector<std::byte>{}.swap(source_bytes);auto closed=file->close();if(!closed)co_return std::unexpected(closed.error());
-        auto removed=co_await ctx->fs().remove("manga-source.tmp");if(!removed&&removed.error()!=Error::not_found)co_return std::unexpected(removed.error());
-        auto output=co_await ctx->fs().open("manga-image.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!output)co_return std::unexpected(output.error());
-        auto written=co_await write_chunks(*output,std::as_bytes(std::span{png}));if(!written)co_return std::unexpected(written.error());
-        std::vector<std::uint8_t>{}.swap(png);closed=output->close();if(!closed)co_return std::unexpected(closed.error());
+        auto removed=co_await remove_file("manga-source.tmp");if(!removed&&removed.error()!=Error::not_found)co_return std::unexpected(removed.error());
+        auto written=co_await write_file("manga-image.tmp",std::as_bytes(std::span{png}));if(!written)co_return std::unexpected(written.error());
+        std::vector<std::uint8_t>{}.swap(png);
         co_return co_await decode_file("manga-image.tmp",foreground,ImageFormats::png|ImageFormats::jpeg);
     }
     std::string shelf_status()const{return shelf.empty()?"书架为空，去发现漫画":std::to_string(shelf.size())+" 部漫画 · "+(!storage_ok?"未保存":save_busy||save_pending?"保存中":"已保存");}
     void save(){if(ready&&storage_ok){if(!save_pending)save_first=now_us;save_pending=true;save_deadline=screen==reading?std::min(now_us+350000,save_first+1500000):0;}}
     Task<void> save_state(){save_busy=true;
         if(save_pending){save_pending=false;auto text=manga::save(shelf,language,custom);if(text.size()>32768)co_return std::unexpected(Error::limit_exceeded);
-            auto f=co_await ctx->fs().open("manga-state.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!f)co_return std::unexpected(f.error());
-            auto bytes=std::as_bytes(std::span{text.data(),text.size()});while(!bytes.empty()){auto n=f->write(bytes.first(std::min<size_t>(1024,bytes.size())));if(!n||!*n)co_return std::unexpected(n?Error::io_error:n.error());bytes=bytes.subspan(*n);auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
-            auto closed=f->close();if(!closed)co_return std::unexpected(closed.error());auto moved=co_await ctx->fs().replace("manga-state.tmp","manga-state.json");if(!moved)co_return std::unexpected(moved.error());
+            auto saved=co_await write_file("manga-state.json",std::as_bytes(std::span{text.data(),text.size()}));if(!saved)co_return std::unexpected(saved.error());
         }save_busy=false;(void)ctx->log().write(LogLevel::info,"MANGA progress_saved="+std::to_string(book.page));if(screen==shelf_screen)message(shelf_status());else if(screen==settings_screen&&book_settings()&&!save_pending)message("设置已保存");co_return Result<void>{};}
-    Task<void> load_saved(){auto loaded_cache=co_await load_cache();(void)loaded_cache;loaded_cache=co_await load_directory_cache();(void)loaded_cache;auto f=co_await ctx->fs().open("manga-state.json");
+    Task<void> load_saved(){auto loaded_cache=co_await load_cache();(void)loaded_cache;(void)ctx->log().write(LogLevel::info,"MANGA startup=directory");loaded_cache=co_await load_directory_cache();(void)loaded_cache;(void)ctx->log().write(LogLevel::info,"MANGA startup=shelf");auto f=co_await open_file("manga-state.json");
         if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>32768){storage_ok=false;break;}if(!*n)break;text.append(reinterpret_cast<const char*>(buffer.data()),*n);}auto c=f->close();
             if(!c||!storage_ok||!manga::restore(text,shelf,language,custom,cache.mode)){storage_ok=false;message("书架记录损坏，已保留原文件");}else if(manga::Json(text).get("version").number()<4)save_pending=true;}
         else if(f.error()!=Error::not_found){storage_ok=false;message("无法读取书架，进度暂不保存");}
-        auto cleaned=co_await ctx->fs().remove("manga-source.tmp");(void)cleaned;cleaned=co_await ctx->fs().remove("manga-image.tmp");(void)cleaned;
-        ready=true;if(storage_ok)message(shelf_status());co_return Result<void>{};}
+        auto cleaned=co_await remove_file("manga-source.tmp");(void)cleaned;cleaned=co_await remove_file("manga-image.tmp");(void)cleaned;
+        ready=true;(void)ctx->log().write(LogLevel::info,"MANGA startup=ready books="+std::to_string(shelf.size()));if(storage_ok)message(shelf_status());co_return Result<void>{};}
     void action(Act act,int arg=0){if(!ready)return;sync_clock();if(screen==reading)bar_deadline=now_us+6000000;
         if(act==retry_buffer){prefetch_retry=0;if(arg<0&&page)requested_page=page-1;else if(strip_notice==StripNotice::failed&&strip_end()+1<pages.size())requested_page=strip_end()+1;changed();return;}
         if(act==cancel){enter_from_bottom=false;stop();if(image){page=rendered_page;message(page_label());}else{bars=true;message("已取消，可重试");failure="已取消";}return;}
@@ -388,9 +396,9 @@ struct Reader {
         if(act==previous_page||act==next_page){if(pages.empty())return;if(act==next_page&&page+1==pages.size()&&!chapter_last){next_chapter();return;}if((act==previous_page&&page==0)||(act==next_page&&page+1==pages.size())){enter_from_bottom=false;message(act==next_page?"没有下一章":"已是本章第一页");bars=true;return;}
             page+=act==next_page?1:-1;begin(load_image());return;}
     }
-    void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=std::max(now_us,tick.timestamp_us);if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy&&now_us>=save_deadline&&!interacting())start(save_state(),false);
+    void on_frame(Context&,pxa::game::FrameTick tick){if(input_empty!=input.get().empty()){input_empty=input.get().empty();ui_dirty=true;}now_us=std::max(now_us,tick.timestamp_us);if(screen==reading&&bars&&!busy&&failure.empty()&&now_us>=bar_deadline){bars=false;changed();}if(save_pending&&!save_busy&&now_us>=save_deadline&&!interacting()&&!prefetch_running&&!image_finishing&&!busy)start(save_state(),false);
         if(chapter_requested&&!busy){chapter_requested=false;next_chapter();}
-        if(needs_prefetch()){prefetch_running=true;start(prefetch_pages());}
+        if(!save_busy&&needs_prefetch()){prefetch_running=true;start(prefetch_pages());}
         auto notice=strip_notice_state();if(notice!=strip_notice){strip_notice=notice;changed();}
         notice=strip_notice_state(true);if(notice!=previous_notice){previous_notice=notice;changed();}
         if(exit_pending&&!save_busy&&!save_pending){exit_pending=false;(void)ctx->window().request_back();}

@@ -29,10 +29,11 @@
           "name": "fs",
           "min_version": [
             0,
-            3
+            6
           ],
           "features": [
             "app-media-root",
+            "async-atomic-write",
             "scoped-roots"
           ]
         },
@@ -61,8 +62,8 @@
   "id": "pxa-manga-reader",
   "name": "漫画",
   "icon": "assets/icon.png",
-  "release_sequence": 22,
-  "version": "0.9.1",
+  "release_sequence": 24,
+  "version": "0.9.3",
   "description": "搜索多站漫画，触摸全屏阅读，自动保存章节和页码。",
   "permissions": [
     {

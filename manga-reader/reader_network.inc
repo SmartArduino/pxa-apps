@@ -2,10 +2,7 @@
     std::optional<HttpResponse> wire_response;std::string wire_url;
     bool wire_running=false,wire_ready=false;std::uint64_t wire_generation=0;
     void clear_wire(){++wire_generation;wire_response.reset();wire_url.clear();wire_running=wire_ready=false;std::vector<std::byte>{}.swap(wire_bytes);std::vector<std::byte>{}.swap(source_bytes);}
-    Task<void> write_chunks(File& file,std::span<const std::byte> bytes){
-        while(!bytes.empty()){auto tick=profile_short_tick();for(unsigned n=0;n<(interacting()?1u:8u)&&!bytes.empty();++n){auto wrote=file.write(bytes.first(std::min<std::size_t>(4096u,bytes.size())));if(!wrote||!*wrote)co_return std::unexpected(wrote?Error::io_error:wrote.error());bytes=bytes.subspan(*wrote);if(profile_short_us(tick,profile_short_tick())>=4000)break;}auto y=co_await yield_work();if(!y)co_return std::unexpected(y.error());}co_return Result<void>{};
-    }
-    Task<void> spool_source(){auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());auto file=co_await ctx->fs().open("manga-source.tmp",OpenMode::write|OpenMode::create|OpenMode::truncate);if(!file)co_return std::unexpected(file.error());auto r=co_await write_chunks(*file,source_bytes);if(!r)co_return std::unexpected(r.error());co_return file->close();}
+    Task<void> spool_source(){auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());co_return co_await write_file("manga-source.tmp",source_bytes);}
     Task<void> warm_network(std::string url,std::uint64_t generation,unsigned index){
         struct End {Reader* app;std::uint64_t generation;~End(){if(app->wire_generation==generation)app->wire_running=false;}} end{this,generation};
         auto r=co_await request(url,4*1024*1024,manga::referrer(book));if(!r)co_return Result<void>{};
