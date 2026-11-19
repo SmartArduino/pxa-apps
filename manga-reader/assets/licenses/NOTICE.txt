@@ -2,3 +2,5 @@ tiny-AES-c by kokke and contributors, public domain (The Unlicense).
 picojpeg by Rich Geldreich, public domain.
 See included license notices.
 stb_image by Sean Barrett and contributors, MIT License.
+
+Manhuashe / MH1234 protocol references: Keiyoushi extensions-source (Apache-2.0), commit 8947c372cd87f546a0b80cb0e4b0a5a8add5ef88. Independent native adapters; no Android extension binaries or manga content bundled.

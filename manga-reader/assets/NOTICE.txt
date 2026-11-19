@@ -213,3 +213,5 @@ Copyright notice:
 
 stb_image_write 1.16 — JPEG encoder helpers and tables
 Copyright (c) 2017 Sean Barrett. Used under the MIT license retained in assets/licenses/stb-MIT.txt.
+
+Manhuashe / MH1234 protocol references: Keiyoushi extensions-source (Apache-2.0), commit 8947c372cd87f546a0b80cb0e4b0a5a8add5ef88. Independent native adapters; no Android extension binaries or manga content bundled.

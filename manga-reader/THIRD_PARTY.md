@@ -15,3 +15,5 @@ Local portability changes replace left shifts of the negative literal -1 with eq
 `vendor/libwebp/` is the decoder/common subset of libwebp v1.6.0, pinned to commit `4fa21912338357f89e4fd51cf2368325b59e9bd9` (upstream tag `v1.6.0`) ([source](https://github.com/webmproject/libwebp/tree/v1.6.0)). Original BSD-3-Clause, PATENTS, AUTHORS and per-file notices are retained. No encoder, mux, animation player, SIMD or threading is built. The app build uses a private scalar configuration and routes only the decoder allocator through bounded app-owned functions; upstream files are unmodified. No PXA system, firmware or Host dependency is added.
 
 Binary packages include the third-party notices in `assets/NOTICE.txt`.
+
+The independent native Manhuashe and MH1234 adapters reference Keiyoushi extensions-source commit [`8947c372cd87f546a0b80cb0e4b0a5a8add5ef88`](https://github.com/keiyoushi/extensions-source/tree/8947c372cd87f546a0b80cb0e4b0a5a8add5ef88/src/zh) (Apache-2.0). Only bounded public HTML fields and a fixed reader redirect are parsed; no extension binary, script runtime or manga content is bundled.

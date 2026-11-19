@@ -19,7 +19,7 @@
         auto r=co_await cache_file(pending_cache_key,pending_cache_file,pending_cache_bytes);pending_cache_key.clear();pending_cache_file.clear();co_return std::move(r);
     }
     Task<void> write_cache_index(){
-        auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());auto s=cache.save();co_return co_await write_file("reader-cache.json",std::as_bytes(std::span{s.data(),s.size()}));
+        auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());auto s=cache.save();auto snapshot=cache.prepare_index();auto written=co_await write_file("reader-cache.json",std::as_bytes(std::span{s.data(),s.size()}));if(written)cache.persisted_index(snapshot);co_return std::move(written);
     }
     Task<void> load_cache(){
         auto f=co_await open_file("reader-cache.json");if(f){std::string text;for(;;){auto n=f->read(buffer);if(!n||text.size()+*n>cache.index_max)break;if(!*n){(void)cache.restore(text);break;}text.append(reinterpret_cast<const char*>(buffer.data()),*n);} (void)f->close();}
@@ -56,7 +56,7 @@
     Task<void> cache_file(std::string key,std::string file,unsigned encoded_bytes){
         if(!cache.enabled||!cache.limit||key.size()>1024||!encoded_bytes||encoded_bytes>524288||encoded_bytes>cache.limit)co_return Result<void>{};auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());
         while(cache.used()+encoded_bytes>cache.limit||cache.vacant()<0){int i=cache.oldest();if(i<0)break;auto r=co_await remove_file(cache_path(i));if(!r&&r.error()!=Error::not_found)co_return Result<void>{};cache.pages[i]={};}
-        int slot=cache.vacant();if(slot<0)co_return Result<void>{};auto invalidated=co_await write_cache_index();if(!invalidated)co_return Result<void>{};auto moved=co_await replace_file(file,cache_path(slot));if(moved){cache.pages[slot]={std::move(key),encoded_bytes,++cache.clock};auto saved=co_await write_cache_index();if(!saved)(void)ctx->log().write(LogLevel::warning,"MANGA cache index write failed");}else{auto reclaimed=co_await storage_pressure();(void)reclaimed;}co_return Result<void>{};
+        int slot=cache.vacant();if(slot<0)co_return Result<void>{};if(cache.indexed[slot]){auto invalidated=co_await write_cache_index();if(!invalidated)co_return Result<void>{};}auto moved=co_await replace_file(file,cache_path(slot));if(moved){cache.pages[slot]={std::move(key),encoded_bytes,++cache.clock};auto saved=co_await write_cache_index();if(!saved)(void)ctx->log().write(LogLevel::warning,"MANGA cache index write failed");}else{auto reclaimed=co_await storage_pressure();(void)reclaimed;}co_return Result<void>{};
     }
     Task<Asset> decode_file(std::string path,bool foreground,ImageFormats formats){
         if(foreground)release_page();
@@ -88,7 +88,7 @@
             if(!attempt&&wire_url==url){while(wire_running){auto y=co_await ctx->clock().yield();if(!y)co_return std::unexpected(y.error());}
                 if(wire_ready){if(wire_response)response.emplace(std::move(*wire_response));wire_response.reset();source_bytes=std::move(wire_bytes);wire_ready=false;wire_url.clear();
                     if(!response){if(source_bytes.empty())co_return std::unexpected(Error::protocol_error);download_encoded_bytes=source_bytes.size();if(following>=0)schedule_wire(following);(void)ctx->log().write(LogLevel::info,"MANGA wire_consumed_bytes="+std::to_string(source_bytes.size()));co_return Result<void>{};}}}
-            if(!response){source_bytes.clear();auto opened=co_await request(url,4*1024*1024,manga::referrer(book));if(!opened){if(!attempt&&transient(opened.error()))continue;co_return std::unexpected(opened.error());}response.emplace(std::move(*opened));}
+            if(!response){source_bytes.clear();sync_clock();auto opening=now_us;auto opened=co_await request(url,4*1024*1024,manga::referrer(book));if(!opened){if(!attempt&&transient(opened.error()))continue;co_return std::unexpected(opened.error());}response.emplace(std::move(*opened));sync_clock();(void)ctx->log().write(LogLevel::info,"MANGA network_headers_us="+std::to_string(now_us-opening)+" source="+book.source);}
             if(following>=0)schedule_wire(following);
             unsigned received=source_bytes.size();std::optional<manga::AsyncDisk::Session> file;std::vector<unsigned> parts;std::optional<Error> failed;
             for(;;){auto n=co_await response->body.read_some(*chunk);if(!n){failed=n.error();break;}if(!*n)break;received+=*n;if(received>4*1024*1024)co_return std::unexpected(Error::limit_exceeded);

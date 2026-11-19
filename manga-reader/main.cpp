@@ -178,7 +178,7 @@ struct Reader {
         if(!permission){auto p=co_await ctx->permissions().acquire("net.client","web");if(!p)co_return std::unexpected(p.error());permission=std::move(*p);}
         const bool copy_request=url.starts_with("https://api.copy4000.com/");
         const bool copy_browser=copy_request||url.starts_with("https://www.mangacopy.com/")||referrer=="https://www.mangacopy.com/";
-        const bool chinese_browser=url.starts_with("https://www.guazimanhua.com/")||url.starts_with("https://www.woimh.com/")||referrer=="https://www.guazimanhua.com/"||referrer=="https://www.woimh.com/";
+        const bool chinese_browser=url.starts_with("https://www.guazimanhua.com/")||url.starts_with("https://www.woimh.com/")||referrer=="https://www.guazimanhua.com/"||referrer=="https://www.woimh.com/"||url.starts_with("https://www.311s.com/")||url.starts_with("https://m.wmh1234.com/")||url.starts_with("https://reader.hqread.cc/")||referrer=="https://www.311s.com/"||referrer=="https://m.wmh1234.com/";
         const bool site_browser=url.starts_with("https://mangapill.com/")||url.starts_with("https://www.mangatown.com/")||referrer=="https://mangapill.com/"||referrer=="https://www.mangatown.com/";
         const std::array<NetHeaderView,5> fields{{{"Accept-Encoding","identity"},
             {"User-Agent",(copy_browser||site_browser||chinese_browser)?"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36 PXA-Manga/0.7":"PXA-Manga/0.7"},
@@ -205,6 +205,11 @@ struct Reader {
     }
     Task<void> load_catalog(){
         using enum manga::SourceKind;auto kind=manga::source_kind(custom);
+        if(manga::extra_source(kind)){
+            auto text=co_await json(manga::extra_catalog(kind,query,offset/batch_size()+1),false,524288);if(!text)co_return std::unexpected(text.error());bool more=false;
+            if(!manga::extra_books(*text,kind,results,more))co_return std::unexpected(Error::protocol_error);
+            total=offset+batch_size()+(more?1:0);list_start=0;busy=false;message(results.empty()?"没有找到漫画":"中文漫画");co_return Result<void>{};
+        }
         if(manga::chinese_source(kind)){
             auto number=std::to_string(offset/batch_size()+1);std::string url;
             if(kind==guazi)url=std::string(manga::guazi_base)+"/category.php?sort=hits&page="+number+(query.empty()?"":"&keyword="+manga::encoded(query));
@@ -239,6 +244,9 @@ struct Reader {
     }
     Task<void> load_chapters_network(){
         using enum manga::SourceKind;auto kind=manga::source_kind(book.source);std::string url;
+        if(manga::extra_source(kind)){auto text=co_await json(book.id,false,1048576);if(!text)co_return std::unexpected(text.error());
+            if(!manga::extra_chapters(*text,book,chapters))co_return std::unexpected(Error::protocol_error);
+            if(descending)std::reverse(chapters.begin(),chapters.end());total=chapters.size();list_start=0;busy=false;message(std::to_string(total)+" 个章节");co_return Result<void>{};}
         if(manga::chinese_source(kind)){auto text=co_await json(book.id,false,1048576);if(!text)co_return std::unexpected(text.error());
             if(!manga::chinese_chapters(*text,book,chapters))co_return std::unexpected(Error::protocol_error);
             if(descending)std::reverse(chapters.begin(),chapters.end());total=chapters.size();list_start=0;busy=false;message(std::to_string(total)+" 个章节");co_return Result<void>{};}
@@ -273,8 +281,9 @@ struct Reader {
         auto cached=co_await chapter_cache();if(cached&&*cached){page=std::min<unsigned>(book.page,pages.size()-1);co_return co_await load_image(foreground);}chapter_from_cache=false;
         using enum manga::SourceKind;auto kind=manga::source_kind(book.source);
         auto url=kind==mangadex?api("/at-home/server/"+book.chapter):book.chapter;
-        auto text=co_await json(url,kind==mangadex,kind==copy?196608:(kind==katana||kind==pill||kind==town||manga::chinese_source(kind))?262144:98304);if(!text)co_return std::unexpected(text.error());
-        bool ok=kind==copy?manga::copy_pages(*text,pages):kind==katana?manga::katana_pages(*text,pages):kind==pill?manga::pill_pages(*text,pages):kind==town?manga::town_pages(*text,book.chapter,pages):manga::chinese_source(kind)?manga::chinese_pages(*text,kind,pages):manga::pages(manga::Json(*text),pages,true,url);
+        auto text=co_await json(url,kind==mangadex,kind==copy?196608:(kind==katana||kind==pill||kind==town||manga::chinese_source(kind)||manga::extra_source(kind))?262144:98304);if(!text)co_return std::unexpected(text.error());
+        if(kind==mh1234){auto redirect=manga::extra_reader_redirect(*text);if(redirect){text=co_await json(*redirect,false,262144);if(!text)co_return std::unexpected(text.error());}}
+        bool ok=kind==copy?manga::copy_pages(*text,pages):kind==katana?manga::katana_pages(*text,pages):kind==pill?manga::pill_pages(*text,pages):kind==town?manga::town_pages(*text,book.chapter,pages):manga::chinese_source(kind)?manga::chinese_pages(*text,kind,pages):manga::extra_source(kind)?manga::extra_pages(*text,kind,pages):manga::pages(manga::Json(*text),pages,true,url);
         if(!ok)co_return std::unexpected(Error::protocol_error);
         originals.clear();if(kind==town){originals.resize(pages.size());auto first=manga::town_image(*text);if(!first)co_return std::unexpected(Error::protocol_error);originals[0]=std::move(*first);}if(kind==mangadex)manga::pages(manga::Json(*text),originals,true,url,true);
         auto stored=co_await store_chapter();(void)stored;page=std::min<unsigned>(book.page,pages.size()-1);co_return co_await load_image(foreground);

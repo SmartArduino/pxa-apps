@@ -5,10 +5,10 @@
     Task<void> spool_source(){auto pause=co_await metadata_pause();if(!pause)co_return std::unexpected(pause.error());co_return co_await write_file("manga-source.tmp",source_bytes);}
     Task<void> warm_network(std::string url,std::uint64_t generation,unsigned index){
         struct End {Reader* app;std::uint64_t generation;~End(){if(app->wire_generation==generation)app->wire_running=false;}} end{this,generation};
-        auto r=co_await request(url,4*1024*1024,manga::referrer(book));if(!r)co_return Result<void>{};
+        sync_clock();auto started=now_us;auto r=co_await request(url,4*1024*1024,manga::referrer(book));if(!r)co_return Result<void>{};sync_clock();auto headers_us=now_us-started;
         auto chunk=std::make_unique<std::array<std::byte,16384>>();wire_bytes.clear();bool complete=false;
         while(wire_bytes.size()<262144){auto n=co_await r->body.read_some(std::span{*chunk}.first(std::min<std::size_t>(chunk->size(),262144-wire_bytes.size())));if(!n){wire_bytes.clear();co_return Result<void>{};}if(!*n){complete=true;break;}wire_bytes.insert(wire_bytes.end(),chunk->begin(),chunk->begin()+*n);auto y=co_await yield_work();if(!y)co_return std::unexpected(y.error());}
-        if(wire_generation==generation){if(!complete)wire_response.emplace(std::move(*r));wire_ready=true;(void)ctx->log().write(LogLevel::info,"MANGA wire_prefetched="+std::to_string(index)+" bytes="+std::to_string(wire_bytes.size()));}co_return Result<void>{};
+        if(wire_generation==generation){if(!complete)wire_response.emplace(std::move(*r));wire_ready=true;sync_clock();(void)ctx->log().write(LogLevel::info,"MANGA wire_prefetched="+std::to_string(index)+" bytes="+std::to_string(wire_bytes.size())+" headers_us="+std::to_string(headers_us)+" elapsed_us="+std::to_string(now_us-started));}co_return Result<void>{};
     }
     void schedule_wire(unsigned index){
         if(index>=pages.size()||wire_running||wire_ready||manga::source_kind(book.source)==manga::SourceKind::town)return;

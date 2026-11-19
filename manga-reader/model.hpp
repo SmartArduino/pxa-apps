@@ -97,10 +97,12 @@ inline bool web(std::string_view s){auto p=s.find("://");return (s.starts_with("
 inline std::string resolve(std::string_view base,std::string_view ref){if(web(ref))return std::string(ref);if(ref.empty()||ref.find(":")!=ref.npos||ref.starts_with("//"))return {};auto p=base.find("://");if(p==base.npos)return {};if(ref.front()=='/'){auto end=base.find('/',p+3);return std::string(base.substr(0,end))+std::string(ref);}return std::string(base.substr(0,base.rfind('/')+1))+std::string(ref);}
 inline bool uuid(std::string_view s){if(s.size()!=36)return false;for(size_t i=0;i<s.size();++i)if(i==8||i==13||i==18||i==23){if(s[i]!='-')return false;}else if(!((s[i]>='0'&&s[i]<='9')||(s[i]>='a'&&s[i]<='f')))return false;return true;}
 struct Chapter {std::string id,title;};
-enum class SourceKind {mangadex,copy,katana,pill,town,guazi,woi,unknown};
+enum class SourceKind {mangadex,copy,katana,pill,town,guazi,woi,mh1234,she,unknown};
 struct Source {std::string_view id,title,detail,base;SourceKind kind;unsigned batch;};
-inline constexpr std::array<Source,7> sources{{
+inline constexpr std::array<Source,9> sources{{
     {"copymanga","拷贝漫画","中文 · 分组目录","https://www.mangacopy.com",SourceKind::copy,12},
+    {"manhuashe","漫画社","简体中文 · 搜索与章节目录","https://www.311s.com",SourceKind::she,30},
+    {"mh1234","漫画1234","简体中文 · 搜索与章节目录","https://m.wmh1234.com",SourceKind::mh1234,24},
     {"guazimanhua","瓜子漫画","简体中文 · 搜索与章节目录","https://www.guazimanhua.com",SourceKind::guazi,36},
     {"woaimanhua","我爱漫画","简体中文 · 搜索与章节目录","https://www.woimh.com",SourceKind::woi,35},
     {"","MangaDex","简中 · 繁中 · 英文","https://mangadex.org",SourceKind::mangadex,12},
@@ -133,12 +135,22 @@ inline bool guazi_book_url(std::string_view s){return numeric_url(s,"https://www
 inline bool guazi_chapter_url(std::string_view s){return numeric_url(s,"https://www.guazimanhua.com/chapter.php?id=");}
 inline bool woi_book_url(std::string_view s){return numeric_url(s,"https://www.woimh.com/book/mh");}
 inline bool woi_chapter_url(std::string_view s){constexpr std::string_view prefix="https://www.woimh.com/chapter/";if(!s.starts_with(prefix)||s.size()>prefix.size()+30)return false;auto tail=s.substr(prefix.size());auto dash=tail.find('-');return digits(tail.substr(0,dash))&&(dash==tail.npos||digits(tail.substr(dash+1)));}
+inline bool numbered_html(std::string_view s,std::string_view prefix){return s.starts_with(prefix)&&s.ends_with(".html")&&s.size()<=prefix.size()+17&&digits(s.substr(prefix.size(),s.size()-prefix.size()-5));}
+inline bool she_book_url(std::string_view s){return numbered_html(s,"https://www.311s.com/comic_");}
+inline bool mh1234_book_url(std::string_view s){return numbered_html(s,"https://m.wmh1234.com/comic/");}
+inline bool extra_chapter_url(std::string_view s,std::string_view book,SourceKind kind){
+    if(kind==SourceKind::she){if(!she_book_url(book))return false;auto id=book.substr(std::string_view("https://www.311s.com/comic_").size());id.remove_suffix(5);return numbered_html(s,"https://www.311s.com/chapter_"+std::string(id)+"_");}
+    if(kind==SourceKind::mh1234&&mh1234_book_url(book))return numbered_html(s,std::string(book.substr(0,book.size()-5))+"/");
+    return false;
+}
 struct Book {std::string id,title,source,chapter,chapter_title;unsigned page=0,language=0,pages=0;bool long_strip=false;unsigned reading_mode=0,view_mode=1,zoom_permille=1000;};
 inline bool valid_book(const Book& b){if(!valid_source(b.source))return false;switch(source_kind(b.source)){
     case SourceKind::mangadex:return uuid(b.id)&&(b.chapter.empty()||uuid(b.chapter));
     case SourceKind::copy:return slug(b.id)&&(b.chapter.empty()||(b.chapter.starts_with(copy_web(b.id)+"/chapter/")&&uuid(std::string_view(b.chapter).substr(b.chapter.rfind('/')+1))));
     case SourceKind::guazi:return guazi_book_url(b.id)&&(b.chapter.empty()||guazi_chapter_url(b.chapter));
     case SourceKind::woi:return woi_book_url(b.id)&&(b.chapter.empty()||woi_chapter_url(b.chapter));
+    case SourceKind::she:return she_book_url(b.id)&&(b.chapter.empty()||extra_chapter_url(b.chapter,b.id,SourceKind::she));
+    case SourceKind::mh1234:return mh1234_book_url(b.id)&&(b.chapter.empty()||extra_chapter_url(b.chapter,b.id,SourceKind::mh1234));
     case SourceKind::pill:return pill_book_url(b.id)&&(b.chapter.empty()||pill_chapter_url(b.chapter,b.id));
     case SourceKind::town:return town_book_url(b.id)&&(b.chapter.empty()||town_chapter_url(b.chapter,b.id));
     case SourceKind::katana:return katana_book_url(b.id)&&(b.chapter.empty()||(b.chapter.starts_with(b.id+"/c")&&web(b.chapter)));

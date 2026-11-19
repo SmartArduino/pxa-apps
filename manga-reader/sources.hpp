@@ -3,6 +3,7 @@
 #include "html.hpp"
 #include "site_sources.hpp"
 #include "chinese_sources.hpp"
+#include "extra_sources.hpp"
 #include <array>
 extern "C" {
 #include "vendor/tiny-aes/aes.h"

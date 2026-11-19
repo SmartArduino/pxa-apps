@@ -92,7 +92,7 @@
         float covered=image?image->descriptor().height*scale-pan_y:0;
         const unsigned capacity=buffer_capacity();
         for(unsigned i=page+1;i<pages.size()&&i<=page+capacity;++i){auto slot=buffered_slot(i);if(slot>=0)covered+=strip_height(*buffered[slot].asset)*strip_zoom();
-            else if(i<=page+ahead||(vertical()&&covered<metrics.height*3.f))return can_buffer(i)?int(i):-1;else break;}
+            else if(i<=page+ahead||(vertical()&&covered<metrics.height*6.f))return can_buffer(i)?int(i):-1;else break;}
         return -1;
     }
     int next_wire_page(unsigned index)const{
