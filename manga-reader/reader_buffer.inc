@@ -118,6 +118,17 @@
         if(!buffer_slots&&requested_page>=0&&now_us>=prefetch_retry){buffer_slots=1;buffer_limit=1048576;}
         return screen==reading&&!busy&&image&&!image_finishing&&pending_cache_file.empty()&&buffer_slots&&!prefetch_running&&now_us>=prefetch_retry&&next_buffer_page()>=0;
     }
+    Task<void> metadata_pause(){
+        // Metadata calls are synchronous in some SD Hosts. Spend the decoded
+        // lookahead during a drag, and do optional metadata work when idle.
+        while(interacting()&&!busy&&requested_page<0&&image){
+            float covered=image->descriptor().height*scale-pan_y;
+            if(vertical())for(unsigned i=page+1;i<=strip_end();++i)covered+=strip_height(*buffered[buffered_slot(i)].asset)*strip_zoom();
+            if(vertical()?covered<metrics.height*1.25f:buffered_slot(page+1)<0)break;
+            if(!co_await frame_work.yield())co_return std::unexpected(Error::resource_limit);
+        }
+        co_return Result<void>{};
+    }
     void apply_waiting_scroll(){
         if(!waiting_scroll||!vertical()||touches.count()==2)return;
         float old=pan_y;pan_y+=waiting_scroll;clamp();waiting_scroll-=pan_y-old;normalize_strip();

@@ -18,6 +18,7 @@ BOOK = '11111111-1111-1111-1111-111111111111'
 CHAPTER = '22222222-2222-2222-2222-222222222222'
 SECOND_BOOK = '33333333-3333-3333-3333-333333333333'
 SECOND_CHAPTER = '44444444-4444-4444-4444-444444444444'
+def chapter_id(index):return CHAPTER if index==0 else '55555555-5555-5555-5555-'+str(index).zfill(12)
 PROGRESSIVE = False
 NOISE = False
 PANEL_HEIGHT = 640
@@ -61,14 +62,24 @@ class Handler(BaseHTTPRequestHandler):
             if self.server.two_books and data:data.append(dict(id=SECOND_BOOK,attributes={'title':{'zh':'分页测试漫画'},'tags':[]}))
             body = {'result': 'ok', 'data': data, 'total': len(data)}
         elif u.path in [f'/manga/{BOOK}/feed',f'/manga/{SECOND_BOOK}/feed']:
-            body = {'data': [{'id': SECOND_CHAPTER if SECOND_BOOK in u.path else CHAPTER, 'attributes': {'chapter': '1', 'title': '出发', 'pages': self.server.page_count}}], 'total': 1}
-        elif u.path in [f'/at-home/server/{CHAPTER}',f'/at-home/server/{SECOND_CHAPTER}']:
-            body = {'baseUrl': root, 'chapter': {'hash': 'def456' if SECOND_CHAPTER in u.path else 'abc123', 'dataSaver': [f'{i+1}.png' for i in range(self.server.page_count)]}}
+            ids=[SECOND_CHAPTER] if SECOND_BOOK in u.path else [chapter_id(i) for i in range(self.server.chapter_count)]
+            rows=[{'id':ident,'attributes':{'chapter':str(i+1),'title':'出发' if i==0 else '继续','pages':self.server.page_count}} for i,ident in enumerate(ids)]
+            if q.get('order[chapter]')==['desc']:rows.reverse()
+            start=int(q.get('offset',['0'])[0]);count=min(self.server.toc_batch,int(q.get('limit',['20'])[0]));body={'data':rows[start:start+count],'total':len(rows)}
+        elif u.path in [f'/at-home/server/{chapter_id(i)}' for i in range(self.server.chapter_count)]+[f'/at-home/server/{SECOND_CHAPTER}']:
+            index=next((i for i in range(self.server.chapter_count) if u.path.endswith(chapter_id(i))),0)
+            if index:
+                time.sleep(self.server.next_delay_ms/1000)
+                if self.server.fail_next:
+                    self.send_response(503);self.send_header('Content-Length','0');self.end_headers();return
+            body = {'baseUrl': root, 'chapter': {'hash': 'def456' if SECOND_CHAPTER in u.path else 'abc123' if index==0 else 'abc'+format(123+index,'x'), 'dataSaver': [f'{i+1}.png' for i in range(self.server.page_count)]}}
+        elif u.path == '/_recover':
+            self.server.fail_next=False;body={'ok':True}
         elif u.path == '/_metrics':
             body = self.server.counts
         elif u.path == '/_timings':
             body = self.server.timings
-        elif u.path.startswith(('/data-saver/abc123/','/data-saver/def456/')):
+        elif u.path.startswith(('/data-saver/abc123/','/data-saver/def456/','/data-saver/abc')):
             with self.server.fault_lock:self.server.timings.append({'path':u.path,'event':'start','time':time.monotonic()})
             if not u.path.endswith('/1.png'):time.sleep(self.server.delay_ms/1000)
             content_type = 'image/webp' if WEBP else 'image/jpeg' if PROGRESSIVE else 'image/png'; body = b'broken-image' if self.server.broken_first and u.path.endswith('/1.png') else panel(int(u.path.rsplit('/',1)[1].split('.')[0])-1)
@@ -107,6 +118,10 @@ if __name__ == '__main__':
     parser.add_argument('--delay-ms',type=int,default=0)
     parser.add_argument('--body-delay-ms',type=int,default=0,help='Delay the image body after headers, for overlapping transfer tests')
     parser.add_argument('--two-books',action='store_true')
+    parser.add_argument('--chapters',type=int,default=1)
+    parser.add_argument('--toc-batch',type=int,default=20)
+    parser.add_argument('--next-delay-ms',type=int,default=0)
+    parser.add_argument('--fail-next',action='store_true')
     args = parser.parse_args()
     PROGRESSIVE = args.progressive
     NOISE = args.noise
@@ -126,4 +141,8 @@ if __name__ == '__main__':
     server.delay_ms = min(5000,max(0,args.delay_ms))
     server.body_delay_ms = min(5000,max(0,args.body_delay_ms))
     server.two_books = args.two_books
+    server.chapter_count=min(128,max(1,args.chapters))
+    server.toc_batch=min(20,max(1,args.toc_batch))
+    server.next_delay_ms=args.next_delay_ms
+    server.fail_next=args.fail_next
     server.serve_forever()

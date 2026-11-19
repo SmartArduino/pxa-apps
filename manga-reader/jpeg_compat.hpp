@@ -41,6 +41,10 @@ public:
         row=0;info.m_MCUSPerCol=h;borrowed=width==w&&height==h&&channels==3;if(borrowed){row=h;return true;}pixels.resize(std::size_t(width)*height*3);return true;
     }
     bool next_row() {
+        if(done())return false;auto previous=row;
+        do{if(!step())return false;}while(row==previous);return true;
+    }
+    bool step() {
         if(done())return false;
         if(rgb_){
             auto end=std::min(rgb_height_,row+16);
@@ -53,7 +57,8 @@ public:
         const unsigned sy=row*info.m_MCUHeight;
         auto ceil_ratio=[](unsigned x,unsigned n,unsigned d){return (x*n+d-1)/d;};
         unsigned ya=ceil_ratio(sy,height,info.m_height),yb=std::min(height,ceil_ratio(sy+info.m_MCUHeight,height,info.m_height));
-        for(unsigned col=0;col<unsigned(info.m_MCUSPerRow);++col){
+        {
+            const unsigned col=column_;
             if(pjpeg_decode_mcu())return false;
             unsigned sx=col*info.m_MCUWidth;
             unsigned xa=ceil_ratio(sx,width,info.m_width),xb=std::min(width,ceil_ratio(sx+info.m_MCUWidth,width,info.m_width));
@@ -63,7 +68,7 @@ public:
                 unsigned r=info.m_pMCUBufR[i],g=info.m_comps==1?r:info.m_pMCUBufG[i],b=info.m_comps==1?r:info.m_pMCUBufB[i];
                 auto target=pixels.data()+(std::size_t(y)*width+x)*3;target[0]=r;target[1]=g;target[2]=b;
             }
-        }++row;return true;
+        }if(++column_==unsigned(info.m_MCUSPerRow)){column_=0;++row;}return true;
     }
     const std::uint8_t* rgb_data()const{return borrowed?rgb_:pixels.data();}
     bool begin_png(){encoder=std::make_unique<RgbPng>();return done()&&(borrowed||!pixels.empty())&&encoder->begin(borrowed?rgb_:pixels.data(),width,height,png_precision);}
@@ -81,6 +86,7 @@ public:
     }
 private:
     const std::uint8_t* rgb_=nullptr;unsigned rgb_width_=0,rgb_height_=0,rgb_channels_=3;
+    unsigned column_=0;
     Read read_=nullptr;void* context_=nullptr;
     std::array<std::byte,4096> input_{};std::size_t begin_=0,end_=0;
     static unsigned char fill(unsigned char* out,unsigned char size,unsigned char* count,void* context){

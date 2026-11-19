@@ -48,7 +48,7 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
         auto edge_notice=[&](StripNotice notice,bool previous){
             if(notice==StripNotice::hidden)return;
             const bool failed=notice==StripNotice::failed;
-            const std::string_view label=notice==StripNotice::end?(previous?"没有上一页":"没有下一页"):
+            const std::string_view label=notice==StripNotice::end?(previous?"没有上一页":app->chapter_last?"没有下一章":"没有下一页"):
                 failed?(previous?"上一页加载失败，重试":"加载失败，点此重试"):(previous?"正在加载上一页…":"正在加载下一页…");
             const int width=std::min(w,notice==StripNotice::end?144:216),xx=x+(w-width)/2;
             const int yy=previous?y+(app->bars?36:0):y+h-((app->bars||!app->failure.empty())?66:34);
@@ -60,10 +60,10 @@ template<class Owner> bool Reader::Controls::render(Owner& owner,std::uint32_t p
             button(x,y,38,30,"≡",show_contents);button(x+42,y,42,30,app->zoom_mode==0?"适宽":app->zoom_mode==1?"放大":"整页",zoom,0,false,!app->busy&&bool(app->image));
             if(!app->busy)button(x+w-80,y,42,30,"设置",show_settings);
             button(x+w-34,y,34,30,"?",show_help);
-            button(x,y+h-30,38,30,"上一页",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,"下一页",next_page,0,false,!app->busy&&app->page+1<app->pages.size());
+            button(x,y+h-30,38,30,"上一页",previous_page,0,false,!app->busy&&app->page>0);button(x+w-38,y+h-30,38,30,"下一页",next_page,0,false,!app->busy&&!app->pages.empty()&&(app->page+1<app->pages.size()||!app->chapter_last));
             button(x+42,y+h-30,w-84,30,app->page_label(),jump_page,0,false,!app->busy&&!app->pages.empty());
         }
-        if(app->busy){centered_panel(x+42,y+h-70,w-84,34,app->status);button(x+w-80,y,42,30,"取消",cancel);}
+        if(app->busy){centered_panel(x+42,y+h-70,w-84,34,app->chapter_loading?"正在加载下一章…":app->status);button(x+w-80,y,42,30,"取消",cancel);}
         else if(!app->failure.empty()){rect(x,y+h/2-38,w,72,0x14251edc,6);text(x,y+h/2-34,w,24,app->status,Font::caption,0xe2ede6ff,1);button(x+(w-80)/2,y+h/2-4,80,30,"重试",retry);}
         return ok;
     }
