@@ -70,8 +70,9 @@ struct VoyageApp {
     Game game;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
-    // The explored chart exceeds the SDK's 512-byte inline packet.
-    std::array<std::byte,SaveBytes+72> save_packet{};
+    // Loading completes before gameplay can start. Subsequent saves use one
+    // borrowed packet at a time, keeping the chart out of coroutine slots.
+    std::array<std::byte,SaveBytes+72> storage_packet{};
     pxa::Context* context = nullptr;
     std::optional<pxa::Surface> surface;
     pxa::WindowMetrics metrics{};
@@ -86,6 +87,9 @@ struct VoyageApp {
     int expedition_item=0;
     int officer_item=Pilot;
     int rumor_item=0, pinned_rumor=-1;
+    HarborApproach approach;
+    Point approach_position{-1,-1};
+    int approach_port=-1;
     std::optional<Point> scout_course;
     bool officer_talk=false;
     float chart_x=0, chart_y=0, factor=1;
@@ -116,7 +120,7 @@ struct VoyageApp {
         return ctx.tasks().start(load());
     }
     pxa::Task<void> load() {
-        std::array<std::byte,SaveBytes> bytes{};
+        auto bytes=std::span{storage_packet}.first(SaveBytes);
         auto pending = co_await context->storage().get("voyage-v1", bytes);
         had_save=pending && *pending<=bytes.size() && decode(game.s,std::span{bytes}.first(*pending));
         if (had_save) game.restore();
@@ -131,9 +135,12 @@ struct VoyageApp {
         dirty=true;
         co_return pxa::Result<void>{};
     }
+    pxa::Task<void> write_snapshot() {
+        const auto bytes=encode(game.s);
+        return context->storage().set("voyage-v1",bytes,storage_packet);
+    }
     pxa::Task<void> save() {
-        const auto bytes = encode(game.s);
-        auto result = co_await context->storage().set("voyage-v1",bytes,save_packet);
+        auto result=co_await write_snapshot();
         save_active=false;
         save_failed=!result;
         if (result) saved_until=now+1600;
@@ -448,26 +455,41 @@ struct VoyageApp {
                (zoom==0 ? 1.0f : std::pow(1.52f,float(zoom)));
         chart_x=std::clamp(chart_x,0.f,float(ChartWidth));
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
-        const auto tl=map_point({0,0});
+        const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
+        const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
         d.fill(map,ocean);
-        d.image({art::chart},{0,0,ChartWidth,ChartHeight},
-                {tl.x,tl.y,int(std::round(ChartWidth*factor)),int(std::round(ChartHeight*factor))});
         constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
+        d.fill(chart_area,uncharted);
         const int left=std::max(0,int((chart_x-map.w/(2*factor))/ChartCell)-1);
         const int right=std::min(ChartColumns-1,int((chart_x+map.w/(2*factor))/ChartCell)+1);
         const int top=std::max(0,int((chart_y-map.h/(2*factor))/ChartCell)-1);
         const int bottom=std::min(ChartRows-1,int((chart_y+map.h/(2*factor))/ChartCell)+1);
+        for (int x=(left+3)/4*4;x<=right;x+=4)
+            d.fill({map_point({x*ChartCell,0}).x,tl.y,1,chart_area.h},grid);
+        for (int y=(top+3)/4*4;y<=bottom;y+=4)
+            d.fill({tl.x,map_point({0,y*ChartCell}).y,chart_area.w,1},grid);
+
+        // Keep the texture transform fixed while clipping the blit to explored spans.
+        const auto clip=d.clip;
         for (int y=top;y<=bottom;++y) {
-            for (int x=left;x<=right;++x) {
-                if (game.chart_cell(x,y)) continue;
-                const auto a=map_point({x*ChartCell,y*ChartCell});
-                const auto b=map_point({std::min((x+1)*ChartCell,ChartWidth),
+            int x=left;
+            while (x<=right) {
+                if (!game.chart_cell(x,y)) { ++x; continue; }
+                const int first=x++;
+                while (x<=right && game.chart_cell(x,y)) ++x;
+                const auto a=map_point({first*ChartCell,y*ChartCell});
+                const auto b=map_point({std::min(x*ChartCell,ChartWidth),
                                         std::min((y+1)*ChartCell,ChartHeight)});
-                d.fill({a.x,a.y,b.x-a.x,b.y-a.y},uncharted);
-                if (x%4==0 && b.x>a.x) d.fill({a.x,a.y,1,b.y-a.y},grid);
-                if (y%4==0 && b.y>a.y) d.fill({a.x,a.y,b.x-a.x,1},grid);
+                d.clip=d.clipped({a.x,a.y,b.x-a.x,b.y-a.y});
+                if (d.clip.w && d.clip.h) d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
+                d.clip=clip;
             }
         }
+    }
+    void draw_wake(Draw& d) {
+        constexpr auto wake_color=rgb(0x61aabd);
+        for (int i=1;i<game.s.wake_count;++i)
+            d.line(map_point(game.wake_point(i-1)),map_point(game.wake_point(i)),wake_color);
     }
     void draw_rumor_marks(Draw& d) {
         for (int id=0;id<RumorCount;++id) {
@@ -497,7 +519,7 @@ struct VoyageApp {
             }
         }
     }
-    void draw_map(Draw& d) {
+    void draw_map(Draw& d, int landmark, int berth) {
         const auto before=d.clip;
         d.clip=map;
         float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/DayMs : 0.f;
@@ -506,7 +528,18 @@ struct VoyageApp {
         atlas_background(d);
         const auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         draw_routes(d,path,game.sea());
+        draw_wake(d);
         draw_rumor_marks(d);
+        if (landmark>=0) {
+            const auto location=game.position();
+            if (approach_port!=landmark || approach_position.x!=location.x || approach_position.y!=location.y) {
+                approach=game.harbor_approach(landmark,chart_water);
+                approach_port=landmark;
+                approach_position=location;
+            }
+            for (int i=1;i<approach.count;++i)
+                d.line(map_point(approach.points[i-1]),map_point(approach.points[i]),gold,true);
+        }
 
         struct Geo { int lon,lat; Text label; bool land; };
         constexpr Geo names[] = {
@@ -538,6 +571,12 @@ struct VoyageApp {
             }
             d.label(p.x+2,p.y+1,text,color);
         };
+        if (landmark>=0 && berth<0 && approach.count>1) {
+            const auto a=approach.points[0], b=approach.points[1];
+            const int bearing=direction_to({b.x-a.x,b.y-a.y});
+            const auto message=format("%s%s",approach.direct?"锚地向":"绕浅滩向",Bearings[bearing].data());
+            draw_label({map.x+4,map.bottom()-19},message,gold,true,false);
+        }
         for (int i=0;i<PlaceCount;++i) {
             if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
@@ -584,6 +623,12 @@ struct VoyageApp {
             auto p=map_point(Places[game.s.origin].map);
             d.line({p.x-3,p.y+5},{p.x+3,p.y+5},mint);
         }
+        if (landmark>=0) {
+            const auto mark=map_point(Anchor[landmark]);
+            d.diamond(mark,5,ink);
+            d.diamond(mark,3,berth>=0?mint:gold);
+            d.dot(mark.x,mark.y,ink);
+        }
         nav_icon(d,CompassIcon,compass);
         d.clip=before;
         d.frame(map,border);
@@ -603,17 +648,19 @@ struct VoyageApp {
             info={body.x,map.bottom()+31,body.w,card};
         }
         if (map.h<35) map.h=35;
-        draw_map(d);
+        const int berth=game.s.helm?game.nearby_anchorage(chart_water):-1;
+        const int landmark=berth>=0?berth:game.s.helm?game.visible_landmark():-1;
+        draw_map(d,landmark,berth);
 
         const int icon_w=28, y=map.bottom()+3;
         button(d,{map.x,y,icon_w,24},"+",ZoomIn);
         button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
-        button(d,{map.x+2*(icon_w+3),y,36,24},"定位",Center);
+        button(d,{map.x+2*(icon_w+3),y,36,24},landmark>=0 && zoom<5?"近岸":"定位",Center);
         button(d,{map.x+2*(icon_w+3)+39,y,map.w-2*(icon_w+3)-39,24},
                game.s.helm ? "靠泊" : game.sea() ? (game.s.stop_next ? "取消停靠" : "下站停靠") : "目的地",
-               game.s.helm ? DockHelm : game.sea() ? NextStop : RouteList,game.s.stop_next,
-               game.s.helm && game.nearby_anchorage(chart_water)<0);
-        if (game.s.helm) { helm_panel(d,info,wide); return; }
+               game.s.helm ? DockHelm : game.sea() ? NextStop : RouteList,game.s.stop_next || berth>=0,
+               game.s.helm && berth<0);
+        if (game.s.helm) { helm_panel(d,info,wide,landmark); return; }
 
         skin_box(d,info,0,5);
         const int p=game.sea()?game.s.destination:selected;
@@ -679,17 +726,15 @@ struct VoyageApp {
         }
     }
 
-    void helm_panel(Draw& d, Rect info, bool wide) {
+    void helm_panel(Draw& d, Rect info, bool wide, int landmark) {
         skin_box(d,info,0,5);
         const auto state=game.conditions();
-        const auto here=game.nearby_anchorage(chart_water);
-        const auto seen=here>=0?here:game.visible_landmark();
         const auto bearing=format("航向%s",Bearings[game.s.heading].data());
         constexpr Text compact_weather[]{"晴","热","雨","阵"};
         const auto breeze=format("%s→%s%d级",
                                   (wide?compact_weather[state.weather]:SeaWeatherNames[state.weather]).data(),
                                   Bearings[state.direction].data(),state.strength);
-        d.label(info.x+5,info.y+4,seen>=0?Places[seen].name:Text("自由掌舵"),gold,info.w-10);
+        d.label(info.x+5,info.y+4,landmark>=0?Places[landmark].name:Text("自由掌舵"),gold,info.w-10);
         if (wide) {
             d.label(info.x+5,info.y+22,bearing,ivory,info.w-10);
             d.label(info.x+5,info.y+41,breeze,mist,info.w-10);
@@ -1660,7 +1705,8 @@ struct VoyageApp {
             if (!zoom) follow=false;
             break;
         case Center:
-            if (!zoom) zoom=3;
+            if (game.s.helm && game.visible_landmark()>=0 && zoom<5) set_zoom(5);
+            else if (!zoom) zoom=3;
             follow=true; center_at(game.position());
             break;
         case Sail: {

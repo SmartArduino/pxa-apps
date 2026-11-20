@@ -96,6 +96,13 @@ SeaConditions conditions_at(Point position, int day);
 int direction_to(Point offset);
 using WaterTest = bool (*)(Point);
 
+inline constexpr int WakeCapacity=64;
+struct HarborApproach {
+    std::array<Point,48> points{};
+    int count=0;
+    bool direct=false;
+};
+
 struct PassageForecast {
     std::array<int, PlaceCount> arrival_days{};
     int days=0;
@@ -133,10 +140,12 @@ struct State {
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
     std::uint32_t chart_marks=StartingChart, heard_rumors=0;
     std::array<std::uint8_t, ChartBytes> coast{};
+    std::array<Point,WakeCapacity> wake{};
+    std::uint8_t wake_head=0, wake_count=0;
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
-inline constexpr std::size_t OfficerSaveBytes=376, SaveBytes=960;
+inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, SaveBytes=1216;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -170,8 +179,10 @@ struct Game {
     bool start_helm(int destination);
     void helm_step(WaterTest water_at);
     int visible_landmark() const;
+    HarborApproach harbor_approach(int port, WaterTest water_at) const;
     int nearby_anchorage(WaterTest water_at=nullptr) const;
     bool dock_helm(WaterTest water_at=nullptr);
+    Point wake_point(int index) const;
     int reward(int port) const;
     int ration_cost() const;
     int repair_cost() const;
@@ -257,6 +268,8 @@ private:
     int lookout_radius() const { return s.first_mate==Pilot?19:14; }
     int sighting(Point center);
     void chart_passage(const Leg& leg, int progress);
+    void record_wake();
+    int anchorage_at(Point position, WaterTest water_at) const;
 };
 
 } // namespace tide
