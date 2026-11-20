@@ -39,7 +39,7 @@ struct Campaign {
     int player=0, chapter=0, turn=1, gold=0, grain=0, actions=0;
     int won=0, commander=0, tours=0, recruited=7;
     bool objectivePaid=false;
-    uint32_t surveyed=0;
+    uint64_t surveyed=0;
     std::array<int,3> truce{};
     std::array<int,noGear> stock{};
     std::array<City,cityCount> cities{};
@@ -49,21 +49,20 @@ struct Campaign {
     Order defense{};
     Captive prisoner{}, guest{};
 
+    static City initialCity(int city,int scene) {
+        const auto& site=sites[city];
+        if (const auto* change=opening(scene,city))
+            return {change->owner,change->troops,site.yield>=4?2:1,change->fort};
+        return {site.owner,site.troops,site.yield>=4?2:1,site.fort};
+    }
+
     void start(int side,int scene=0) {
         *this={};
         player=side;
         chapter=scene;
         gold=side==0?430:side==1?580:490;
         grain=side==0?460:side==1?550:610;
-        for (int i=0;i<cityCount;++i) {
-            const auto& site=sites[i];
-            cities[i]={site.owner,site.troops,site.yield>=4?2:1,site.fort};
-            if (const auto* change=opening(scene,i)) {
-                cities[i].owner=change->owner;
-                cities[i].troops=change->troops;
-                cities[i].fort=change->fort;
-            }
-        }
+        for (int i=0;i<cityCount;++i) cities[i]=initialCity(i,scene);
         if (scene==0 && side==0) cities[10].fields=3;
         if (scene==1) recruited=15;
         if (scene==2) recruited=31;
@@ -278,11 +277,11 @@ struct Campaign {
         return true;
     }
     bool canSurvey(int city) const {
-        return actions && own(city) && !(surveyed&(uint32_t(1)<<city)) && gold>=35;
+        return actions && own(city) && !(surveyed&(uint64_t(1)<<city)) && gold>=35;
     }
     Discovery survey(int city) {
         if (!canSurvey(city)) return {};
-        surveyed|=uint32_t(1)<<city;
+        surveyed|=uint64_t(1)<<city;
         --actions;
         gold-=35;
         const int result=(city*13+chapter*7)%5;

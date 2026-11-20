@@ -4,12 +4,17 @@
 
 namespace han {
 
-constexpr size_t saveWords=18+3*cityCount+2*(ownerCount+1)+noGear+
+constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+noGear+
     3*commanderSlots+4*columnCount+6+1;
+static_assert(cityCount>expandedCityCount && cityCount<=48);
+constexpr size_t fourthSaveWords=thirdSaveWords+3*(expandedCityCount-oldCityCount)+1;
+constexpr size_t saveWords=thirdSaveWords+3*(cityCount-oldCityCount)+1;
 using Save=std::array<std::byte,saveWords*2>;
+using FourthSave=std::array<std::byte,fourthSaveWords*2>;
+using ThirdSave=std::array<std::byte,thirdSaveWords*2>;
 using SecondSave=std::array<std::byte,194>;
 using LegacySave=std::array<std::byte,78>;
-constexpr const char* saveKey="campaign-v3";
+constexpr const char* saveKey="campaign-v5";
 
 template<size_t N>
 uint16_t checksum(const std::array<std::byte,N>& bytes,size_t count) {
@@ -40,10 +45,11 @@ inline Save encode(const Campaign& c) {
     auto put=[&](int n) {bytes[i++]=std::byte(n&255);bytes[i++]=std::byte((n>>8)&255);};
     auto order=[&](Order o) {put(o.from+1);put(o.to+1);};
     auto captive=[&](Captive p) {put(p.side+1);put(p.officer+1);put(p.city+1);};
-    put(0x4842);put(3);put(c.player);put(c.turn);put(c.gold);put(c.grain);
+    put(0x4842);put(5);put(c.player);put(c.turn);put(c.gold);put(c.grain);
     put(c.actions);put(c.won+1);put(c.commander);put(c.recruited);put(c.tours);
     for (int n:c.truce) put(n);
-    put(c.chapter);put(c.objectivePaid);put(c.surveyed&65535u);put(c.surveyed>>16);
+    put(c.chapter);put(c.objectivePaid);
+    for (int word=0;word<3;++word) put((c.surveyed>>(16*word))&65535u);
     for (const auto& city:c.cities) {
         put(city.owner|(city.fields<<4)|(city.fort<<8));
         put(city.troops);
@@ -83,8 +89,9 @@ inline bool validRoad(Order o) {
     return o.from<cityCount && o.to>=0 && o.to<cityCount && adjacent(o.from,o.to);
 }
 template<size_t N>
-bool readMap(Reader<N>& r,Campaign& c,bool old=false) {
-    for (auto& city:c.cities) {
+bool readMap(Reader<N>& r,Campaign& c,int count,bool old=false) {
+    for (int i=0;i<count;++i) {
+        auto& city=c.cities[i];
         const int flags=r.get();
         city={flags&15,r.get(),(flags>>4)&15,flags>>8};
         if (!old) {
@@ -96,23 +103,27 @@ bool readMap(Reader<N>& r,Campaign& c,bool old=false) {
             city.fields>4 || city.fort<1 || city.fort>4 || city.order>100 || city.market>3)
             return false;
     }
+    for (int i=count;i<cityCount;++i) c.cities[i]=Campaign::initialCity(i,c.chapter);
     for (auto& o:c.orders) {o=r.order();if (!validRoad(o)) return false;}
     c.defense=r.order();
     return validRoad(c.defense) && (!c.defense ||
         (c.own(c.defense.to) && !c.own(c.defense.from) && c.dispatch(c.defense.from)>=180));
 }
 
-inline bool decode(const Save& bytes,Campaign& campaign) {
-    Reader<Save{}.size()> r{bytes};
+template<int Version,int Count,size_t N>
+bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
+    Reader<N> r{bytes};
     Campaign loaded;
-    if (!r.begins(3) || !readCommon(r,loaded)) return false;
+    if (!r.begins(Version) || !readCommon(r,loaded)) return false;
     loaded.chapter=r.get();
     const int reward=r.get();
     if (loaded.chapter>=chapterCount || reward>1) return false;
     loaded.objectivePaid=reward;
-    loaded.surveyed=uint32_t(r.get());
-    loaded.surveyed|=uint32_t(r.get())<<16;
-    if (!readMap(r,loaded)) return false;
+    loaded.surveyed=uint64_t(r.get());
+    loaded.surveyed|=uint64_t(r.get())<<16;
+    if constexpr (Version>=4) loaded.surveyed|=uint64_t(r.get())<<32;
+    if ((loaded.surveyed>>Count) || !readMap(r,loaded,Count))
+        return false;
     for (int& count:loaded.stock) {count=r.get();if (count>33) return false;}
     for (auto& veteran:loaded.generals) {
         veteran.xp=r.get();
@@ -161,11 +172,20 @@ inline bool decode(const Save& bytes,Campaign& campaign) {
     campaign=loaded;
     return true;
 }
+inline bool decode(const Save& bytes,Campaign& campaign) {
+    return decodeCampaign<5,cityCount>(bytes,campaign);
+}
+inline bool migrate(const FourthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<4,expandedCityCount>(bytes,campaign);
+}
+inline bool migrate(const ThirdSave& bytes,Campaign& campaign) {
+    return decodeCampaign<3,oldCityCount>(bytes,campaign);
+}
 
 inline bool migrate(const SecondSave& bytes,Campaign& campaign) {
     Reader<SecondSave{}.size()> r{bytes};
     Campaign loaded;
-    if (!r.begins(2) || !readCommon(r,loaded,true) || !readMap(r,loaded,true) ||
+    if (!r.begins(2) || !readCommon(r,loaded,true) || !readMap(r,loaded,oldCityCount,true) ||
         !loaded.unlocked(loaded.commander) || !r.finish()) return false;
     campaign=loaded;
     return true;

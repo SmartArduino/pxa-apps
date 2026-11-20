@@ -10,8 +10,8 @@ import numpy as np
 from PIL import Image, ImageDraw
 
 ROOT = Path(__file__).resolve().parents[1]
-WIDTH, HEIGHT = 1024, 832
-WEST, NORTH, EAST, SOUTH = 101.5, 41.0, 123.5, 22.5
+WIDTH, HEIGHT = 1024, 1024
+WEST, NORTH, EAST, SOUTH = 101.5, 41.0, 123.5, 17.2
 
 
 def project(lon,lat):

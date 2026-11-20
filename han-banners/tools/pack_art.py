@@ -5,7 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 
-from PIL import Image, ImageDraw, ImageEnhance, ImageFont, ImageOps
+from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
+from fontTools.ttLib import TTFont
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT_ROOT = ROOT / "tools" / "fonts"
@@ -49,11 +50,41 @@ for name in ("outcome-win","outcome-loss"):
         raise ValueError(f"Missing result lettering in {name}")
     outcomes.append(whole(scaled(banner.crop(bounds),192)))
 
-ornament=image("ui-frame")
-bounds=ornament.getchannel("A").point(lambda a:255 if a>=105 else 0).getbbox()
-if bounds is None:
-    raise ValueError("Missing frame border")
-skin=whole(ornament.crop(bounds).resize((96,96),Image.Resampling.LANCZOS))
+def panel_bitmap(name,size):
+    panel=image(name)
+    bounds=panel.getchannel("A").point(lambda a:255 if a>=128 else 0).getbbox()
+    if bounds is None:
+        raise ValueError(f"Missing frame silhouette: {name}")
+    return panel.crop(bounds).resize(size,Image.Resampling.LANCZOS)
+
+
+def tint_lacquer(source,shadow,highlight):
+    # Recolor the recessed field while preserving the brass bevel and corner work.
+    mask=Image.new("L",source.size)
+    ImageDraw.Draw(mask).rectangle((16,6,source.width-17,source.height-7),fill=240)
+    mask=mask.filter(ImageFilter.GaussianBlur(3))
+    lacquer=ImageOps.colorize(ImageOps.grayscale(source),shadow,highlight)
+    panel=Image.composite(lacquer,source.convert("RGB"),mask)
+    panel.putalpha(source.getchannel("A"))
+    return panel
+
+
+frame_page=new_page(256,166)
+battle_frame=panel_bitmap("battle-bronze",(140,36))
+battle_panels=[]
+for i,pane in enumerate((tint_lacquer(battle_frame,"#28170e","#bf8050"),
+                         tint_lacquer(battle_frame,"#111e1c","#73a290"),
+                         tint_lacquer(battle_frame,"#291613","#bd7664"))):
+    y=i*38
+    pages[frame_page].paste(pane,(0,y))
+    battle_panels.append((frame_page,0,y,*pane.size))
+window=panel_bitmap("amber-lacquer",(114,80))
+window=tint_lacquer(window,"#261a11","#b27a50")
+windows=[]
+for i,pane in enumerate((window,ImageEnhance.Brightness(window).enhance(1.26))):
+    y=i*83
+    pages[frame_page].paste(pane,(142,y))
+    windows.append((frame_page,142,y,*pane.size))
 
 bar_source=image("hud-bars")
 _,projection=bar_source.getchannel("A").point(lambda a:255 if a>=105 else 0).getprojection()
@@ -80,8 +111,8 @@ for i,(top,bottom) in enumerate(runs):
 battlefields = [whole(image(name).resize((256, 136), Image.Resampling.LANCZOS))
                 for name in ("battle","hill-battle","river-battle")]
 siege=whole(image("siege").resize((256,136),Image.Resampling.LANCZOS))
-terrain = image("terrain").resize((512,416),Image.Resampling.LANCZOS)
-map_tiles = [whole(terrain.crop((x,y,x+256,y+208))) for y in (0,208) for x in (0,256)]
+terrain = image("terrain").resize((512,512),Image.Resampling.LANCZOS)
+map_tiles = [whole(terrain.crop((x,y,x+256,y+256))) for y in (0,256) for x in (0,256)]
 
 portraits = []
 portrait_size = 50
@@ -113,7 +144,7 @@ city_courtyard=whole(scaled(image("city-courtyard")))
 
 # These UI tiles travel together so the battle scene uses one texture slot for
 # its buttons, icons and action states.
-ui_page=new_page(144,237)
+ui_page=new_page(144,236)
 
 
 def pack_icons(sheet, columns, rows, top, cell_size):
@@ -144,9 +175,6 @@ for i,(brightness,saturation) in enumerate(((1,1),(1.52,1.12),(.64,.58))):
     y=144+i*31
     pages[ui_page].paste(strip,(0,y))
     plaques.append((ui_page,0,y,144,30))
-
-# Solid-color sprites read these texels as opacity instead of palette indices.
-panel_shades=[(ui_page,i,236,1,1) for i in range(2)]
 
 def separated_poses(sheet, columns, rows):
     # Generated weapon tips can cross the nominal atlas cells. Pull complete
@@ -273,7 +301,8 @@ for enemy in range(2):
         marchers[enemy].append(strip)
 
 source = "".join((ROOT / filename).read_text()
-                 for filename in ("main.cpp","expansion_ui.inc","campaign.hpp","world.hpp","chapters.hpp","battle.hpp","save.hpp"))
+                 for filename in ("main.cpp","expansion_ui.inc","campaign.hpp","world.hpp",
+                                  "chapters.hpp","history.hpp","battle.hpp","save.hpp"))
 chars = sorted(set(map(chr, range(32,127))) | {c for c in source if ord(c)>127})
 provenance=json.loads((FONT_ROOT / "upstream.json").read_text())
 font_path=FONT_ROOT/provenance["font_file"]
@@ -281,8 +310,16 @@ license_path=FONT_ROOT/provenance["license_file"]
 for file,key in ((font_path,"font_sha256"),(license_path,"license_sha256")):
     if hashlib.sha256(file.read_bytes()).hexdigest()!=provenance[key]:
         raise ValueError(f"Font source hash mismatch: {file}")
+sans_spec=json.loads((FONT_ROOT / "sans.json").read_text())
+for file_key,hash_key in (("font_file","font_sha256"),("license_file","license_sha256")):
+    path=FONT_ROOT/sans_spec[file_key]
+    if hashlib.sha256(path.read_bytes()).hexdigest()!=sans_spec[hash_key]:
+        raise ValueError(f"Font source hash mismatch: {path}")
 font_px=12
 font=ImageFont.truetype(str(font_path),font_px)
+with TTFont(font_path) as face:
+    pixel_codes=face.getBestCmap()
+sans_small=ImageFont.truetype(str(FONT_ROOT/sans_spec["font_file"]),font_px)
 cols=SIZE//font_px
 capacity=cols*cols
 glyphs=[]
@@ -292,22 +329,20 @@ for i,char in enumerate(chars):
         glyph_slot=new_page(cols*font_px,min(cols,(len(chars)-i+cols-1)//cols)*font_px)
     j=i%capacity
     x,y=(j%cols)*font_px,(j//cols)*font_px
-    advance=max(1,round(font.getlength(char)))
+    is_pixel=ord(char) in pixel_codes
+    face=font if is_pixel else sans_small
+    advance=max(1,round(face.getlength(char)))
     bitmap=Image.new("1",(advance,font_px))
     draw=ImageDraw.Draw(bitmap)
     draw.fontmode="1"
-    draw.text((0,0),char,font=font,anchor="la",fill=1)
+    draw.text((0,0) if is_pixel else (0,10),char,font=face,
+              anchor="la" if is_pixel else "ls",fill=1)
     alpha=bitmap.convert("L")
     solid=Image.new("RGBA",bitmap.size,(255,255,255,255))
     solid.putalpha(alpha)
     pages[glyph_slot].paste(solid,(x,y))
     glyphs.append((advance,(glyph_slot,x,y,advance,font_px)))
 
-sans_spec=json.loads((FONT_ROOT / "sans.json").read_text())
-for file_key,hash_key in (("font_file","font_sha256"),("license_file","license_sha256")):
-    path=FONT_ROOT/sans_spec[file_key]
-    if hashlib.sha256(path.read_bytes()).hexdigest()!=sans_spec[hash_key]:
-        raise ValueError(f"Font source hash mismatch: {path}")
 color_pages=pages[:first_font_page]
 sample = Image.new("RGB", (256*3, 256*((len(color_pages)+2)//3)), (23,25,23))
 for i, page in enumerate(color_pages):
@@ -327,8 +362,6 @@ for i, page in enumerate(pages):
         packed = alpha
     else:
         packed = bytes(p + 1 if a >= 105 else 0 for p, a in zip(data, alpha))
-        if i==ui_page:
-            packed=packed[:-144]+bytes((164,207))+packed[-142:]
     (output / f"atlas-{i}.index8").write_bytes(packed)
     spec.append(dict(path=f"assets/atlas-{i}.pxr", kind="index8",
                      source=f"resources/atlas-{i}.index8", width=page.width, height=page.height))
@@ -355,11 +388,12 @@ lines = [
     "inline constexpr std::array<uint16_t,256> palette = {" + ",".join(map(str,colors)) + "};",
 ]
 for name,t in (("coverWide",cover_wide),("coverSquare",cover_square),("logo",logo),("siege",siege),
-               ("skin",skin),("warHall",war_hall),("cityCourtyard",city_courtyard)):
+               ("warHall",war_hall),("cityCourtyard",city_courtyard)):
     lines.append(f"inline constexpr Tile {name} = {tile_initializer(t)};")
 for name,tiles in (("mapTiles",map_tiles),("battlefields",battlefields),("portraits",portraits),("equipment",equipment),
                    ("outcomes",outcomes),("hudBars",hud_bars),("commandIcons",command_icons),
-                   ("mapProps",map_props),("plaques",plaques),("panelShades",panel_shades)):
+                   ("mapProps",map_props),("plaques",plaques),("battlePanels",battle_panels),
+                   ("windows",windows)):
     lines.append(f"inline constexpr Tile {name}[{len(tiles)}] = {{" +
                  ",".join(map(tile_initializer,tiles)) + "};")
 for name,dimension,banks in (("troops","[2][3][6]",troops),

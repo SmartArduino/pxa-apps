@@ -15,7 +15,7 @@ source = Path(sys.argv[1])
 font = TTFont(source)
 chars = set(map(chr, range(32, 127)))
 for name in ("main.cpp", "expansion_ui.inc", "campaign.hpp", "world.hpp",
-             "chapters.hpp", "battle.hpp", "save.hpp"):
+             "chapters.hpp", "history.hpp", "battle.hpp", "save.hpp"):
     chars.update(c for c in (root / name).read_text() if ord(c) > 127)
 missing = chars - {chr(n) for n in font.getBestCmap()}
 if missing:

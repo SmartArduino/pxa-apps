@@ -39,8 +39,8 @@
       "path": "assets/atlas-5.pxr",
       "kind": "index8",
       "source": "resources/atlas-5.index8",
-      "width": 96,
-      "height": 96
+      "width": 256,
+      "height": 166
     },
     {
       "path": "assets/atlas-6.pxr",
@@ -82,28 +82,28 @@
       "kind": "index8",
       "source": "resources/atlas-11.index8",
       "width": 256,
-      "height": 208
+      "height": 256
     },
     {
       "path": "assets/atlas-12.pxr",
       "kind": "index8",
       "source": "resources/atlas-12.index8",
       "width": 256,
-      "height": 208
+      "height": 256
     },
     {
       "path": "assets/atlas-13.pxr",
       "kind": "index8",
       "source": "resources/atlas-13.index8",
       "width": 256,
-      "height": 208
+      "height": 256
     },
     {
       "path": "assets/atlas-14.pxr",
       "kind": "index8",
       "source": "resources/atlas-14.index8",
       "width": 256,
-      "height": 208
+      "height": 256
     },
     {
       "path": "assets/atlas-15.pxr",
@@ -138,7 +138,7 @@
       "kind": "index8",
       "source": "resources/atlas-19.index8",
       "width": 144,
-      "height": 237
+      "height": 236
     },
     {
       "path": "assets/atlas-20.pxr",
@@ -208,7 +208,7 @@
       "kind": "index8",
       "source": "resources/atlas-29.index8",
       "width": 252,
-      "height": 108
+      "height": 252
     }
   ]
 }

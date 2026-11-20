@@ -67,8 +67,9 @@ static Campaign play(int side,int chapter) {
         for (int a=0;a<cityCount;++a) if (c.own(a)) {
             for (int b=0;b<cityCount;++b) if (adjacent(a,b) && !c.own(b)) {
                 const int size=c.dispatch(a);
-                const int score=size-c.cities[b].troops-c.cities[b].fort*70;
-                const bool siege=score<130;
+                const int difficulty=size-c.cities[b].troops-c.cities[b].fort*70;
+                const bool siege=difficulty<130;
+                const int score=difficulty+(siege?std::min(c.cities[b].fort,2)*70:0);
                 if (score>best && (!siege || size>=1450) && c.canSend(a,b,legion,lead,siege)) {
                     best=score;from=a;to=b;prepareSiege=siege;
                 }
@@ -114,7 +115,8 @@ static void checkMigration() {
     offset=0;
     auto write=[&](int n) {second[offset++]=std::byte(n&255);second[offset++]=std::byte(n>>8);};
     for (int n:{0x4842,2,2,14,234,689,2,1,3,15,5,0,3,0}) write(n);
-    for (const auto& city:current.cities) {
+    for (int i=0;i<oldCityCount;++i) {
+        const auto& city=current.cities[i];
         write(city.owner|(city.fields<<4)|(city.fort<<8));
         write(city.troops);
     }
@@ -125,6 +127,44 @@ static void checkMigration() {
            c.chapter==0 && c.truce[1]==3);
     second[11]^=std::byte{1};
     assert(!migrate(second,c));
+
+    current.start(0,2);
+    current.surveyed=uint64_t(1)<<31;
+    auto newest=encode(current);
+    ThirdSave third{};
+    constexpr size_t header=18*2;
+    constexpr size_t legacyCities=oldCityCount*6;
+    std::copy_n(newest.begin(),header,third.begin());
+    third[2]=std::byte{3};
+    std::copy_n(newest.begin()+header+2,legacyCities,third.begin()+header);
+    std::copy(newest.begin()+header+2+cityCount*6,newest.end()-2,
+              third.begin()+header+legacyCities);
+    const auto sum=checksum(third,third.size()-2);
+    third[third.size()-2]=std::byte(sum&255);
+    third.back()=std::byte(sum>>8);
+    assert(migrate(third,c) && c.chapter==2 && c.own(32) && c.cities[37].owner==7 &&
+           c.surveyed==(uint64_t(1)<<31));
+    assert(c.canSurvey(32));
+    c.survey(32);
+    assert(!c.canSurvey(32) && (c.surveyed>>32)==1);
+    checkSave(c);
+
+    current.surveyed=uint64_t(1)<<37;
+    current.cities[37].troops=432;
+    newest=encode(current);
+    FourthSave fourth{};
+    constexpr size_t expandedHeader=header+2;
+    std::copy_n(newest.begin(),expandedHeader+expandedCityCount*6,fourth.begin());
+    fourth[2]=std::byte{4};
+    std::copy(newest.begin()+expandedHeader+cityCount*6,newest.end()-2,
+              fourth.begin()+expandedHeader+expandedCityCount*6);
+    const auto fourthSum=checksum(fourth,fourth.size()-2);
+    fourth[fourth.size()-2]=std::byte(fourthSum&255);
+    fourth.back()=std::byte(fourthSum>>8);
+    assert(migrate(fourth,c) && c.chapter==2 && c.cities[37].troops==432 &&
+           c.surveyed==(uint64_t(1)<<37) && c.cities[40].owner==7 && c.own(47));
+    c.surveyed|=uint64_t(1)<<47;
+    checkSave(c);
 }
 
 static void checkCivicAndColumns() {

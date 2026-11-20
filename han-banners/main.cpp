@@ -9,6 +9,7 @@
 #include "save.hpp"
 #include "art.hpp"
 #include "sans_text.hpp"
+#include "history.hpp"
 
 namespace han {
 
@@ -33,13 +34,13 @@ constexpr Rect standardMap{8,42,264,177};
 constexpr Rect wideMap{8,42,368,177};
 
 enum class Page {home, choose, map, deploy, battle, report, help, ending, replace, council, roster,
-                 cityDesk, dispatch, forces, gear, captive};
+                 cityDesk, dispatch, forces, gear, captive, gazetteer};
 enum class Command {resume, newGame, guide, back, side, seat, work, march, season, select,
                     engage, shift, skill, pause, retreat, accept, home, replace, zoom, council,
                     roster, officer, hire, chooseOfficer, treat, market, militia, skipMarch, atlas,
                     chapter, cityDesk, survey, forces, chooseSize, approach, send, recall,
                     rosterPage, gear, pickGear, equip, drill, orders, maneuver, duel, duelMove,
-                    captiveChoice};
+                    captiveChoice, gazetteer, browseCity};
 struct Control {
     Rect box;
     Command command;
@@ -49,6 +50,7 @@ struct Control {
 enum UiIcon {coinsIcon,grainIcon,orderIcon,recruitIcon,farmIcon,wallsIcon,marketIcon,
              pacifyIcon,surveyIcon,spearIcon,bowIcon,horseIcon};
 enum MapProp {cityGate,compassRose,armyTent,mapScroll};
+enum BattlePlaque {bronzePlaque,jadePlaque,vermilionPlaque};
 inline constexpr const char* seasons[]={"春","夏","秋","冬"};
 enum class Notice {none, recruited, cultivated, fortified, moved, income, saved, saveError, treaty, supplies, levies,
                     civic, encamped, withdrawn, goal};
@@ -61,8 +63,8 @@ struct App {
     bool loadingArt=false;
     Rect mapWindow=standardMap;
     std::array<Rect,cityCount> mapLabels{};
-    pxa::game::DrawBuffer<16384> commands;
-    std::array<Control,48> controls{};
+    pxa::game::DrawBuffer<32768> commands;
+    std::array<Control,64> controls{};
     int count = 0, focus = 0, selected = 2, destination = -1, side = 0, formation = spear;
     int width = 0, height = 0;
     float scale = 1, ox = 0, oy = 0;
@@ -77,6 +79,7 @@ struct App {
     bool stageSiege=false, tacticsOpen=false;
     DispatchSize dispatchSize=legion;
     int surveyCity=-1;
+    int gazetteerCity=0;
     Discovery discovery{};
     Settlement aftermath{};
     float mapCenterX=worldWidth/2.f, mapCenterY=worldHeight/2.f;
@@ -130,17 +133,29 @@ struct App {
         auto r = co_await context->storage().get(saveKey,data);
         hasSave = r && *r == data.size() && decode(data,campaign);
         damagedSave = !hasSave && (r || r.error() != pxa::Error::not_found);
-        if (!r && r.error()==pxa::Error::not_found) {
+        if (!hasSave && !damagedSave) {
+            FourthSave previous{};
+            const auto old=co_await context->storage().get("campaign-v4",previous);
+            hasSave=old && *old==previous.size() && migrate(previous,campaign);
+            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
+        }
+        if (!hasSave && !damagedSave) {
+            ThirdSave previous{};
+            const auto old=co_await context->storage().get("campaign-v3",previous);
+            hasSave=old && *old==previous.size() && migrate(previous,campaign);
+            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
+        }
+        if (!hasSave && !damagedSave) {
             SecondSave previous{};
             const auto old=co_await context->storage().get("campaign-v2",previous);
             hasSave=old && *old==previous.size() && migrate(previous,campaign);
             damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
-            if (!old && old.error()==pxa::Error::not_found) {
-                LegacySave legacy{};
-                const auto ancient=co_await context->storage().get("campaign-v1",legacy);
-                hasSave=ancient && *ancient==legacy.size() && migrate(legacy,campaign);
-                damagedSave=!hasSave && (ancient || ancient.error()!=pxa::Error::not_found);
-            }
+        }
+        if (!hasSave && !damagedSave) {
+            LegacySave previous{};
+            const auto old=co_await context->storage().get("campaign-v1",previous);
+            hasSave=old && *old==previous.size() && migrate(previous,campaign);
+            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
         }
         co_return co_await openRenderer();
     }
@@ -222,16 +237,16 @@ struct App {
         require(art::plaques[0]);
         auto room=[&](art::Tile background=art::warHall) {
             require(background);
-            require(art::skin);
+            require(art::windows[0]);
         };
         auto actor=[&](int slot) {
             if (slot>=0) require(art::portraits[campaign.leader(slot).portrait]);
         };
         switch (page) {
             case Page::home:require(titleBackground());require(art::logo);break;
-            case Page::replace:require(titleBackground());require(art::skin);break;
+            case Page::replace:require(titleBackground());require(art::windows[0]);break;
             case Page::ending:
-                require(titleBackground());require(art::skin);
+                require(titleBackground());require(art::windows[0]);
                 require(art::outcomes[campaign.won>0?0:1]);break;
             case Page::choose:room();require(art::portraits[0]);break;
             case Page::roster:
@@ -243,6 +258,7 @@ struct App {
                 for (auto t:art::mapTiles) require(t);
                 if (isMarching() || hasColumns()) require(art::marchers[0][0][0]);
                 break;
+            case Page::gazetteer:room();break;
             case Page::dispatch:room();actor(dispatchLead);break;
             case Page::cityDesk:room(art::cityCourtyard);actor(campaign.governor(selected));break;
             case Page::deploy: {
@@ -256,7 +272,7 @@ struct App {
             case Page::battle:
                 require(art::portraits[battle.officer().portrait]);
                 if (auto* foe=battle.opponent()) require(art::portraits[foe->portrait]);
-                require(art::skin);require(art::hudBars[0]);
+                require(art::windows[0]);require(art::hudBars[0]);
                 if (!sansText || !battle.duel.visible()) {
                     require(battlefield());
                     require(art::troops[0][0][0]);require(art::troops[1][0][0]);
@@ -268,7 +284,7 @@ struct App {
                 }
                 break;
             case Page::report:
-                require(art::skin);require(art::outcomes[reportWinner>0?0:1]);
+                require(art::windows[0]);require(art::outcomes[reportWinner>0?0:1]);
                 require(reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);break;
             case Page::gear:
             case Page::forces:room();require(art::equipment[0]);break;
@@ -362,6 +378,7 @@ struct App {
     void line(pxa::game::Frame& f,int x,int y,int u,int v,uint16_t color,int thickness=1) const {
         int16_t l = int16_t(sx(x)*16), t = int16_t(sy(y)*16);
         int16_t e = int16_t(sx(u)*16), b = int16_t(sy(v)*16);
+        if (l==e && t==b) return;
         float length = std::max(1.f,std::hypot(float(e-l),float(b-t)));
         int16_t dx = int16_t(-(b-t)*8*thickness*scale/length);
         int16_t dy = int16_t((e-l)*8*thickness*scale/length);
@@ -423,24 +440,17 @@ struct App {
         }
         if (n) f.sprites({uint8_t(slots[tile.page])},{sprites.data(),size_t(n)});
     }
-    void tintPanel(pxa::game::Frame& f,Rect area,uint16_t color=ink,bool light=false) const {
+    void skinFrame(pxa::game::Frame& f,Rect area,bool selected=false) const {
         const auto p=toPixels(area);
         if (p.w<=0 || p.h<=0) return;
-        if (!texelAlpha) {
-            blockPixels(f,p,color);
-            return;
-        }
-        const auto mask=art::panelShades[light?0:1];
-        const auto sprite=slice(mask,p,0,0,1,1);
-        f.sprites({uint8_t(slots[mask.page])},{&sprite,1},
-                  {.solid_color=true,.texel_alpha=true,.color={color}});
+        const int border=std::max(2,int(12*scale+.5f));
+        nineSlice(f,art::windows[selected],p,{14,12,border,border},true);
     }
-    void skinFrame(pxa::game::Frame& f,Rect area,uint16_t fill=ink,bool light=false) const {
+    void battlePanel(pxa::game::Frame& f,Rect area,BattlePlaque tone=bronzePlaque) const {
         const auto p=toPixels(area);
         if (p.w<=0 || p.h<=0) return;
-        tintPanel(f,area,fill,light);
-        const int border=std::max(2,int(13*scale+.5f));
-        nineSlice(f,art::skin,p,{20,20,border,border},false);
+        nineSlice(f,art::battlePanels[tone],p,
+                  {19,8,std::max(2,int(14*scale)),std::max(2,int(8*scale))},true);
     }
     void plaque(pxa::game::Frame& f,Rect area,bool enabled=true,bool lit=false) const {
         const auto pixels=toPixels(area);
@@ -589,6 +599,25 @@ struct App {
         text(f,label,25,8,19,gold);
         if (sub) text(f,sub,365,11,13,ivory,2);
     }
+    void bookText(pxa::game::Frame& f,std::string_view line,int x,int y,int w,
+                  uint16_t color=ivory) {
+        constexpr int size=14;
+        const int height=fontHeight(size),limit=sx(x+w)-sx(x);
+        while (!line.empty()) {
+            auto remainder=line;
+            size_t used=0;
+            int widthUsed=0;
+            while (!remainder.empty()) {
+                const int advance=glyphAdvance(next(remainder),height);
+                if (used && widthUsed+advance>limit) break;
+                widthUsed+=advance;
+                used=line.size()-remainder.size();
+            }
+            text(f,line.substr(0,used),x,y,size,color);
+            line.remove_prefix(used);
+            y+=18;
+        }
+    }
     void resourcePlate(pxa::game::Frame& f,Rect area,UiIcon icon,
                        std::string_view value,uint16_t color=ivory) {
         plaque(f,area);
@@ -636,7 +665,7 @@ struct App {
             Rect card{10+122*i,71,118,130};
             bool emphasis=registerControl(card,Command::side,i);
             const bool selectedRuler=side==i;
-            skinFrame(f,card,selectedRuler||emphasis?rgb(70,50,30):ink);
+            skinFrame(f,card,selectedRuler||emphasis);
             portrait(f,i,{card.cx()-38,card.y+5,76,76});
             block(f,{card.x+7,card.y+83,104,2},colors[i]);
             text(f,rulers[i],card.cx(),card.y+88,18,selectedRuler?gold:ivory,1);
@@ -654,8 +683,8 @@ struct App {
     const char* ownerName(int o) const {return factions[o].title;}
     const char* cityName(int i) const {return cityLabel(i,campaign.year());}
     float mapScale() const {
-        constexpr float sizes[]={.425f,.74f,1.13f};
-        return sizes[mapZoom];
+        if (!mapZoom) return std::min(float(mapWindow.w-16)/worldWidth,float(mapWindow.h-16)/worldHeight);
+        return mapZoom==1?.74f:1.13f;
     }
     void clampCamera() {
         float halfW=std::min(worldWidth/2.f,mapWindow.w/(mapScale()*2));
@@ -664,16 +693,17 @@ struct App {
         mapCenterY=std::clamp(mapCenterY,halfH,worldHeight-halfH);
     }
     void focusCamera(int city) {
-        mapCenterX=sites[city].x();
-        mapCenterY=sites[city].y();
+        auto [x,y]=cityMapPoint(city,campaign.year());
+        mapCenterX=x;
+        mapCenterY=y;
         clampCamera();
     }
     float mapLeft() const {return mapWindow.cx()-mapCenterX*mapScale();}
     float mapTop() const {return mapWindow.cy()-mapCenterY*mapScale();}
     int mapX(float x) const {return int(std::round(mapLeft()+x*mapScale()));}
     int mapY(float y) const {return int(std::round(mapTop()+y*mapScale()));}
-    int cityX(int index) const {return mapX(sites[index].x());}
-    int cityY(int index) const {return mapY(sites[index].y());}
+    int cityX(int index) const {return mapX(cityMapPoint(index,campaign.year()).first);}
+    int cityY(int index) const {return mapY(cityMapPoint(index,campaign.year()).second);}
     const Road* findRoad(Order order) const {
         for (const auto& r:roads) if (r.joins(order.from,order.to)) return &r;
         return nullptr;
@@ -694,20 +724,34 @@ struct App {
         int c=x+int(std::round(end*dx)), d=y+int(std::round(end*dy));
         if (a!=c || b!=d) line(f,a,b,c,d,color,stroke);
     }
-    void path(pxa::game::Frame& f,const Road& edgeRoute,uint16_t color,int stroke) {
-        const int x=cityX(edgeRoute.from),y=cityY(edgeRoute.from);
-        const int u=cityX(edgeRoute.to),v=cityY(edgeRoute.to);
-        if (edgeRoute.lon) {
-            int a=mapX(worldX(edgeRoute.lon)), b=mapY(worldY(edgeRoute.lat));
-            drawSegment(f,x,y,a,b,color,stroke);
-            drawSegment(f,a,b,u,v,color,stroke);
-        } else drawSegment(f,x,y,u,v,color,stroke);
+    using MapPoint=std::pair<float,float>;
+    struct RouteLine {
+        std::array<MapPoint,8> points{};
+        int count=0;
+    };
+    RouteLine routeLine(const Road& road) const {
+        RouteLine line;
+        line.points[line.count++]=cityMapPoint(road.from,campaign.year());
+        for (const auto& bend:road.bends) {
+            if (!bend.lon) break;
+            line.points[line.count++]={worldX(bend.lon),worldY(bend.lat)};
+        }
+        line.points[line.count++]=cityMapPoint(road.to,campaign.year());
+        return line;
+    }
+    void path(pxa::game::Frame& f,const Road& road,uint16_t color,int stroke) {
+        const auto line=routeLine(road);
+        for (int i=1;i<line.count;++i) {
+            auto [x,y]=line.points[i-1];
+            auto [u,v]=line.points[i];
+            drawSegment(f,mapX(x),mapY(y),mapX(u),mapY(v),color,stroke);
+        }
     }
     void mapArt(pxa::game::Frame& f) {
         frame(f,mapWindow,edge,rgb(25,44,43));
         for (int n=0;n<4;++n) {
             auto base=art::mapTiles[n];
-            const int wx=(n%2)*256, wy=(n/2)*208;
+            const int wx=(n%2)*(worldWidth/2),wy=(n/2)*(worldHeight/2);
             const auto m=mapScale();
             const int l=std::clamp(int(std::ceil((mapWindow.x+1-mapLeft())/m))-wx,0,int(base.w));
             const int r=std::clamp(int(std::floor((mapWindow.x+mapWindow.w-1-mapLeft())/m))-wx,0,int(base.w));
@@ -719,16 +763,30 @@ struct App {
                   {x,y,mapX(wx+r)-x,mapY(wy+b)-y});
         }
     }
-    std::pair<float,float> marchPosition(Order order,float t) const {
-        const auto &left=sites[order.from], &right=sites[order.to];
-        float ax=left.x(), ay=left.y(), bx=right.x(), by=right.y();
-        if (auto road=findRoad(order);road && road->lon) {
-            float cx=worldX(road->lon), cy=worldY(road->lat);
-            float k=std::hypot(cx-ax,cy-ay)/(std::hypot(cx-ax,cy-ay)+std::hypot(bx-cx,by-cy));
-            if (t<k) {bx=cx;by=cy;t/=k;}
-            else {ax=cx;ay=cy;t=(t-k)/(1-k);}
+    MapPoint marchPosition(Order order,float progress) const {
+        const auto* road=findRoad(order);
+        if (!road) return cityMapPoint(order.from,campaign.year());
+        const auto line=routeLine(*road);
+        std::array<float,7> distances{};
+        float total=0;
+        for (int i=1;i<line.count;++i) {
+            auto [x,y]=line.points[i-1];
+            auto [u,v]=line.points[i];
+            distances[i-1]=std::hypot(u-x,v-y);
+            total+=distances[i-1];
         }
-        return {ax+(bx-ax)*t,ay+(by-ay)*t};
+        float distance=total*(order.from==road->from?progress:1-progress);
+        for (int i=1;i<line.count;++i) {
+            const float length=distances[i-1];
+            if (distance<=length && length>0) {
+                auto [x,y]=line.points[i-1];
+                auto [u,v]=line.points[i];
+                const float fraction=distance/length;
+                return {x+(u-x)*fraction,y+(v-y)*fraction};
+            }
+            distance-=length;
+        }
+        return line.points[line.count-1];
     }
     void armyOnMap(pxa::game::Frame& f,Order order,bool own) {
         if (!order) return;
@@ -737,7 +795,7 @@ struct App {
         auto [u,v]=marchPosition(order,t);
         int x=mapX(u),y=mapY(v);
         if (!mapWindow.contains(x-15,y-25)||!mapWindow.contains(x+15,y+9)) return;
-        bool flip=sites[order.to].lon<sites[order.from].lon;
+        const bool flip=marchPosition(order,std::min(1.f,t+.02f)).first<u;
         int pose=1+marchingMs/115%2;
         int motion=pose==1?1:0;
         block(f,{x-14,y+1,28,6},ink);
@@ -748,7 +806,7 @@ struct App {
         bar(f,{x-13,y+5,26,2},marchingMs,marchDuration,flag);
     }
     bool taggedCity(int i) const {
-        constexpr int anchors[]={0,2,3,4,5,8,9,10,13,25,26,28,29};
+        constexpr int anchors[]={0,2,3,4,5,8,9,10,13,25,26,28,29,32,34,36,37,38,39,40,41,42};
         return std::find(std::begin(anchors),std::end(anchors),i)!=std::end(anchors);
     }
     Rect labelAt(int i,int direction) const {
@@ -819,13 +877,15 @@ struct App {
         char buf[64];
         int inspected=destination<0?selected:destination;
         auto city=campaign.cities[inspected];
-        skinFrame(f,{279,42,97,177},panel);
+        skinFrame(f,{279,42,97,177});
         text(f,cityName(inspected),288,48,18,gold);
         text(f,ownerName(city.owner),289,69,13,colors[city.owner]);
         const bool terrainInOwnerRow=textWidth(ownerName(city.owner),13)+
             textWidth(terrains[sites[inspected].terrain],12)+2<=sx(369)-sx(289);
         std::string_view region=sites[inspected].region;
-        if (region.ends_with("郡")) region.remove_suffix(std::string_view("郡").size());
+        if (region.size()>6 && region.ends_with("郡") &&
+            textWidth(region,11)+textWidth(cityName(inspected),18)>sx(369)-sx(288))
+            region.remove_suffix(std::string_view("郡").size());
         text(f,terrainInOwnerRow?region:terrains[sites[inspected].terrain],369,49,11,dim,2);
         if (terrainInOwnerRow) text(f,terrains[sites[inspected].terrain],369,70,12,dim,2);
         std::snprintf(buf,sizeof buf,"守军 %d",city.troops);
@@ -837,23 +897,23 @@ struct App {
         if (city.owner==campaign.player && destination<0) {
             button(f,{286,131,83,24},"征募 80",Command::work,recruit,campaign.canWork(selected,recruit),true,recruitIcon);
             button(f,{286,158,83,24},"屯田 95",Command::work,farm,campaign.canWork(selected,farm),false,farmIcon);
-            button(f,{286,185,83,24},"城池内政",Command::cityDesk,selected,true,false,wallsIcon);
+            button(f,{286,185,55,24},"内政",Command::cityDesk);
         } else {
             bool local=adjacent(selected,inspected);
             bool transfer=city.owner==campaign.player;
             if (local) {
                 std::snprintf(buf,sizeof buf,"可派 %d",campaign.own(selected)?campaign.dispatch(selected):0);
                 text(f,buf,327,134,13,dim,1);
-                if (!transfer) {
-                    std::snprintf(buf,sizeof buf,"相邻可出兵");
-                    text(f,buf,327,153,13,dim,1);
-                }
-            } else text(f,"道路未连通",327,144,13,dim,1);
+                const auto* road=findRoad({selected,inspected});
+                if (road && road->name) text(f,road->name,327,153,12,gold,1);
+                else if (!transfer) text(f,"相邻可出兵",327,153,13,dim,1);
+            } else text(f,"非相邻城池",327,144,12,dim,1);
             if (!transfer && campaign.ceasefire(city.owner))
                 text(f,"盟约生效",327,164,12,gold,1);
-            button(f,{286,182,83,27},transfer?"调兵":"出征",Command::march,inspected,
+            button(f,{286,185,55,24},transfer?"调兵":"出征",Command::march,inspected,
                    campaign.canMarch(selected,inspected),true);
         }
+        button(f,{344,185,25,24},"志",Command::gazetteer,inspected);
     }
     void drawMap(pxa::game::Frame& f) {
         fillBackground(f,art::warHall,.42f);
@@ -900,6 +960,10 @@ struct App {
         for (int i=0;i<cityCount;++i) if (i!=selected && i!=destination) drawCity(f,i);
         drawCity(f,selected);
         if (destination>=0) drawCity(f,destination);
+        const int islandX=mapX(worldX(121.04f)),islandY=mapY(worldY(23.65f));
+        const int islandHalf=int(std::ceil(textWidth("台湾岛",12)/(2*scale)))+2;
+        if (insideMap({islandX-islandHalf,islandY-8,islandHalf*2,16}))
+            text(f,"台湾岛",islandX,islandY-6,12,dim,1,ink);
         drawCompass(f);
         for (const auto& unit:campaign.columns) {
             if (!unit || !unit.eta) continue;
@@ -916,7 +980,7 @@ struct App {
         }
         if (mapWindow.w==standardMap.w) drawCityPanel(f);
 
-        tintPanel(f,{7,221,370,39},rgb(36,27,21));
+        battlePanel(f,{7,220,370,42});
         const char* status=nullptr;
         uint16_t tone=dim;
         switch (notice) {
@@ -953,12 +1017,12 @@ struct App {
             if (playerMarch) std::snprintf(buf,sizeof buf,"%s → %s",
                                          cityName(playerMarch.from),cityName(playerMarch.to));
             else std::snprintf(buf,sizeof buf,"诸军正在进发");
-            text(f,buf,9,226,13,playerMarch?mint:coral);
-            bar(f,{9,247,232,4},marchingMs,marchDuration,playerMarch?mint:coral);
+            text(f,buf,23,226,13,playerMarch?mint:coral);
+            bar(f,{23,247,218,4},marchingMs,marchDuration,playerMarch?mint:coral);
             button(f,{274,226,102,32},"加速抵达",Command::skipMarch,0,true,true);
             return;
         }
-        text(f,status,9,224,12,tone);
+        text(f,status,23,224,12,tone);
         button(f,{8,240,43,21},"战法",Command::guide);
         button(f,{54,240,43,21},"封卷",Command::home);
         button(f,{100,240,43,21},"军议",Command::council);
@@ -1053,9 +1117,9 @@ struct App {
         button(f,{196,132,99,30},battle.defending?"弃城":"撤军",Command::retreat);
     }
     void battleHud(pxa::game::Frame& f) const {
-        skinFrame(f,{4,3,148,48},rgb(16,42,35),true);
-        skinFrame(f,{232,3,148,48},rgb(55,29,25),true);
-        skinFrame(f,{155,3,74,48},rgb(34,27,21));
+        battlePanel(f,{4,3,148,48},jadePlaque);
+        battlePanel(f,{232,3,148,48},vermilionPlaque);
+        battlePanel(f,{155,3,74,48});
     }
     void drawBattle(pxa::game::Frame& f) {
         if (battle.duel.visible()) {
@@ -1065,25 +1129,25 @@ struct App {
         }
         fillBackground(f,battlefield());
         battleHud(f);
-        portrait(f,battle.officer().portrait,{8,7,36,36});
-        if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{340,7,36,36});
+        portrait(f,battle.officer().portrait,{11,9,34,34});
+        if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{339,9,34,34});
         else {
             frame(f,{339,6,38,38});
             text(f,"守",358,13,20,gold,1);
         }
         number(f,battle.troops[0],51,6,17,mint);
         number(f,battle.troops[1],333,6,17,coral,2);
-        healthBar(f,{51,27,97,9},battle.troops[0],battle.initial[0]);
-        healthBar(f,{236,27,97,9},battle.troops[1],battle.initial[1],true);
+        healthBar(f,{51,27,93,9},battle.troops[0],battle.initial[0]);
+        healthBar(f,{240,27,93,9},battle.troops[1],battle.initial[1],true);
         text(f,"军心",51,37,11,dim);
         number(f,battle.morale[0],77,36,12);
         text(f,"军心",310,37,11,dim);
         number(f,battle.morale[1],307,36,12,ivory,2);
         char buf[44];
         std::snprintf(buf,sizeof buf,"%s会战",cityName(battle.to));
-        text(f,buf,192,4,16,gold,1);
+        text(f,buf,192,8,16,gold,1);
         std::snprintf(buf,sizeof buf,"敌令 %s",formations[battle.intent]);
-        text(f,buf,192,23,14,coral,1);
+        text(f,buf,192,26,14,coral,1);
         int progress=battle.ticks<Battle::approach?battle.ticks:
             (battle.ticks-Battle::approach)%Battle::period;
         bar(f,{162,43,60,3},progress,battle.ticks<Battle::approach?Battle::approach:Battle::period,coral);
@@ -1105,7 +1169,7 @@ struct App {
         } else if (battle.ticks<Battle::approach) {
             text(f,"两军列阵",192,69,16,ivory,1);
         }
-        skinFrame(f,{4,212,376,51},rgb(39,26,19),true);
+        battlePanel(f,{4,212,376,51});
         bar(f,{11,219,97,4},battle.signal,100,gold);
         std::snprintf(buf,sizeof buf,"令%d",battle.signal);
         text(f,buf,116,214,12,gold);
@@ -1177,7 +1241,7 @@ struct App {
     }
     void drawReplace(pxa::game::Frame& f) {
         fillBackground(f,titleBackground(),.57f);
-        skinFrame(f,{47,74,290,115},rgb(39,26,19));
+        skinFrame(f,{47,74,290,115});
         text(f,"另起一局",192,86,22,gold,1);
         text(f,"开战后会覆盖现有战役。",192,118,15,ivory,1);
         button(f,{57,148,119,29},"保留旧档",Command::back);
@@ -1244,6 +1308,7 @@ struct App {
             case Page::council: drawCouncil(f); break;
             case Page::roster: drawRoster(f); break;
             case Page::cityDesk: drawCityDesk(f);break;
+            case Page::gazetteer: drawGazetteer(f);break;
             case Page::dispatch: drawDispatch(f);break;
             case Page::forces: drawForces(f);break;
             case Page::gear: drawGear(f);break;
@@ -1407,6 +1472,7 @@ struct App {
                 break;
             case Page::council:
             case Page::dispatch:
+            case Page::gazetteer:
             case Page::cityDesk:show(Page::map,-1);break;
             case Page::forces:show(Page::council);break;
             case Page::gear:show(Page::roster,officerSlot-rosterStart());break;
@@ -1477,6 +1543,8 @@ struct App {
                 }
                 break;
             case Command::cityDesk:show(Page::cityDesk);break;
+            case Command::gazetteer:gazetteerCity=arg;show(Page::gazetteer);break;
+            case Command::browseCity:gazetteerCity=(gazetteerCity+arg+cityCount)%cityCount;break;
             case Command::survey:
                 if (campaign.canSurvey(selected)) {
                     discovery=campaign.survey(selected);

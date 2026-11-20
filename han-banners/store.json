@@ -3,7 +3,7 @@
   "kind": "game",
   "category": "strategy",
   "language": "zh-CN",
-  "summary": "选择刘备、曹操或孙权起兵，经营城池、任用武将，在会战中夺取三十二城。",
+  "summary": "从刘备、曹操或孙权起兵，沿古道行军，经营城池、任用武将，争夺四十八城。",
   "tags": [
     "三国",
     "策略",
@@ -12,8 +12,8 @@
     "触屏",
     "手柄"
   ],
-  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。会战中根据敌军阵势换阵、下达号令或发起三合单挑，获胜后可处置俘将。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。",
+  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。会战中根据敌军阵势换阵、下达号令或发起三合单挑，获胜后可处置俘将。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。\n\n四十八城覆盖中原、巴蜀、江东、岭南、闽地和交趾。军队沿河谷、古道和沿海水路进发。点城池志可查古城地望、开局的史载官员与出处。",
   "icon": "art/store-icon.png",
   "cover": "art/store-cover.png",
-  "changelog": "会战与单挑的血条改用分列的半透明铜框，战场从面板中透出。内政、武将和军令面板同步调整底色，保留大屏黑体和小屏像素字。\n\nUses translucent bronze-framed health panels for battles and duels. City, officer, and tactical panels now blend with their scene backgrounds. Keeps size-specific sans-serif text on large displays and pixel text on small displays."
+  "changelog": "舆图扩至四十八城，加入福建侯官、建安，交趾羸娄、九真胥浦、日南西卷，以及鄂县、陈仓、谯县、平原和雒县。新增城池志并标明官员任期和城址存疑处。重绘会战军牌、体力条与通用木漆窗框，大屏按实际像素栅格化黑体，小屏使用整数倍像素字。\n\nExpands the map to 48 cities, adds a gazetteer with historical appointments and sources, and revises marching routes to follow geographic corridors. Redraws battle plaques, health bars, and window frames. Uses native-resolution sans-serif text on large displays and integer-scaled pixel text on small displays."
 }

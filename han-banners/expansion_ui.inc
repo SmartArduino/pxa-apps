@@ -13,6 +13,32 @@
         return arrivingColumn>=0?campaign.columns[arrivingColumn].leader:-1;
     }
 
+    void drawGazetteer(pxa::game::Frame& f) {
+        const auto& place=placeHistory[gazetteerCity];
+        const auto& start=campaign.story();
+        const auto* official=recordedOfficial(gazetteerCity,campaign.chapter);
+        char location[70], period[64];
+        std::snprintf(location,sizeof location,"%s · %s",cityName(gazetteerCity),sites[gazetteerCity].region);
+        std::snprintf(period,sizeof period,"%d年 · %s",start.year,start.name);
+        fillBackground(f,art::warHall);
+        header(f,"城池志",location);
+        skinFrame(f,{10,41,364,81});
+        text(f,"古城地望",23,49,13,gold);
+        text(f,place.anchor,23,66,16);
+        bookText(f,place.context,23,86,337,dim);
+
+        skinFrame(f,{10,127,364,102});
+        text(f,"史载官员与守将",23,135,13,gold);
+        text(f,period,360,135,12,dim,2);
+        text(f,official?official->title:"开局时当地长吏未详",23,153,16);
+        bookText(f,official?official->details:"城池内政处可查看和任免本局太守。",23,175,337,dim);
+        if (official) text(f,official->source,360,210,12,gold,2);
+
+        button(f,{10,235,91,24},"返回",Command::back);
+        button(f,{151,235,104,24},"上一城",Command::browseCity,-1);
+        button(f,{270,235,104,24},"下一城",Command::browseCity,1);
+    }
+
     void drawCityDesk(pxa::game::Frame& f) {
         const auto& c=campaign.cities[selected];
         const int mayor=campaign.governor(selected);
@@ -20,7 +46,7 @@
         header(f,"城池内政",cityName(selected));
         skinFrame(f,{10,43,172,84});
         if (mayor>=0) portrait(f,campaign.leader(mayor).portrait,{19,50,34,34});
-        text(f,mayor>=0?campaign.leader(mayor).name:"暂无太守",mayor>=0?61:20,52,15,gold);
+        text(f,mayor>=0?campaign.leader(mayor).name:"本局未任太守",mayor>=0?61:20,52,15,gold);
         char stats[60];
         std::snprintf(stats,sizeof stats,"守军 %d",c.troops);
         text(f,stats,mayor>=0?61:20,72,13,ivory);
@@ -61,7 +87,7 @@
         char stats[70];
         std::snprintf(stats,sizeof stats,"%s → %s",cityName(departure.from),goal);
         header(f,"军队开拔",stats);
-        skinFrame(f,{10,43,364,60},panel);
+        skinFrame(f,{10,43,364,60});
         if (dispatchLead>=0) portrait(f,campaign.leader(dispatchLead).portrait,{18,50,46,46});
         text(f,dispatchLead>=0?campaign.leader(dispatchLead).name:"无闲将",76,52,16,gold);
         std::snprintf(stats,sizeof stats,"目的地守军 %d",campaign.cities[departure.to].troops);
@@ -132,7 +158,7 @@
             Rect r{9+93*i,45,87,104};
             const bool equipped=veteran.gear==i;
             const bool hi=registerControl(r,Command::pickGear,i);
-            skinFrame(f,r,hi||gearCursor==i?rgb(53,49,35):panel);
+            skinFrame(f,r,hi||gearCursor==i);
             contain(f,art::equipment[i],{r.x+15,r.y+3,57,58},true);
             text(f,gearNames[i],r.cx(),r.y+64,13,ivory,1);
             char countText[32];
@@ -180,7 +206,7 @@
             Rect box{9+74*(i-first),46,70,108};
             const auto& actor=campaign.leader(i);
             bool focused=registerControl(box,Command::officer,i);
-            skinFrame(f,box,i==officerSlot||focused?rgb(70,50,30):ink);
+            skinFrame(f,box,i==officerSlot||focused);
             portrait(f,actor.portrait,{box.x+6,box.y+5,58,58});
             text(f,actor.name,box.cx(),box.y+65,14,campaign.unlocked(i)?ivory:dim,1);
             const auto& veteran=campaign.generals[i];
@@ -237,8 +263,8 @@
     void drawDuel(pxa::game::Frame& f) {
         fillBackground(f,art::siege);
         battleHud(f);
-        portrait(f,battle.officer().portrait,{9,8,36,36});
-        if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{339,8,36,36});
+        portrait(f,battle.officer().portrait,{11,9,34,34});
+        if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{339,9,34,34});
         text(f,battle.officer().name,51,10,14,mint);
         text(f,battle.opponent()?battle.opponent()->name:"守阵校尉",332,10,14,coral,2);
         text(f,"阵前斗将",192,16,16,gold,1);
@@ -264,7 +290,7 @@
             std::snprintf(line,sizeof line,"第%d合  敌势 %s",battle.duel.round+1,duelMoves[battle.duelIntent()]);
         plaque(f,{12,188,360,31});
         text(f,line,192,196,13,gold,1);
-        skinFrame(f,{4,222,376,41},rgb(39,26,19),true);
+        battlePanel(f,{4,222,376,41});
         for (int i=0;i<3;++i)
             button(f,{9+103*i,229,97,28},duelMoves[i],Command::duelMove,i,battle.duel.ready());
         button(f,{322,229,54,28},"暂停",Command::pause);
