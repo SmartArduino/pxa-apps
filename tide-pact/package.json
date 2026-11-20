@@ -3,11 +3,14 @@
   "id": "tide-pact",
   "name": "大航路时代：潮汐之约",
   "description": "自由航行、跨港贸易、绘制海图，在十五世纪末的海路追查失踪的制图师。",
-  "version": "1.8.0",
-  "release_sequence": 9,
+  "version": "1.9.0",
+  "release_sequence": 10,
   "min_sdk": [2, 0],
   "target_sdk": [2, 0],
   "compile_sdk": [2, 0],
+  "permissions": [
+    {"name": "audio.playback", "required": false, "scope": "media"}
+  ],
   "build": {
     "system": "cmake",
     "linear_memory": {"maximum_bytes": 2359296, "pinned": true}
@@ -25,7 +28,7 @@
   "components": [{
     "id": "main",
     "kind": "ui",
-    "services": ["clock", "window", "ui", "surface", "storage", "log"],
+    "services": ["clock", "window", "ui", "surface", "storage", "log", "permission", "assets", "audio"],
     "cmake_target": "pxa_main",
     "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
   }]

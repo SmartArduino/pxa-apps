@@ -5,7 +5,7 @@
 ## 航行与操作
 
 - 触屏点选港口或打开目的地清单。拖动海图，使用加减按钮缩放，使用定位回到船的位置。
-- 在「海图 → 目的地 → 出海」可以直接自由掌舵，也可以点海面设定初始方向。开局海图记录了五处已知港口。船经过的区域会显出海岸细节，驶近未知港湾或测绘水域会标出地点。手动航行时发现新地点会停船，随后可以继续或驶近锚地靠泊。
+- 在「海图 → 目的地 → 出海」可以直接自由掌舵，也可以点海面设定初始方向。开局海图记录了五处已知港口。船经过的区域会显出海岸细节，驶近未知港湾或测绘水域会标出地点。手动航行时发现新地点会停船，随后可以继续或驶近锚地靠泊。支持旋转的大屏设备会以横屏显示海图。
 - 蓝线记录最近一次手动航行的航迹，靠泊后也可查看，会随存档保留。靠近地点时点「近岸」放大，黄色虚线标出水域允许的进港方向。进入安全靠泊范围会停船，按「靠泊」入港，也可选择继续。航迹最多保留最近六十四个位置。
 - 在「港务 → 港口商会 → 打听传闻」或目的地页的「传闻」抄录水手的消息。海图上的虚线问号圈出大致海域。故事指路和明确的领航线索可以直接记下泊地。自动航行只能选择已定位地点，沿已知航路经过陌生水域时也会逐步测出海岸。
 - 手柄用方向键移动焦点，A 确认，B 返回。海图上可用 Start 启航或停船。游戏内的手册位于日志页。
@@ -24,12 +24,18 @@
 
 ## 构建与维护
 
+标题或日志中的「声音」可单独打开或关闭配乐、航海音效和船员语音。港口、航行与战斗使用不同的配乐，PXA Host 流式播放单声道 Ogg，短音效和语音按需载入。游戏把内嵌美术保存在 `art/`，音频资源保存在 `assets/audio/`。
+
+音频提示词与台词位于 [tools/audio-cues.json](tools/audio-cues.json)。可用 `python tools/make_audio.py 原始FLAC目录 处理记录路径` 重新生成游戏资源。模型在工作站生成，设备包只包含音乐和短录音。 [ACE-Step 1.5](https://huggingface.co/ACE-Step/Ace-Step1.5) · [Stable Audio 3 Small SFX](https://huggingface.co/stabilityai/stable-audio-3-small-sfx) · [Qwen3-TTS VoiceDesign](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign)
+
 从该目录使用锁定的 PXA DevKit 0.11.2 构建和运行。普通构建使用已经生成的资源，只需 SDK 的构建工具和 Python 3 标准库。
 
 ```sh
 pxa run . --profile pai-touch
 pxa build . --offline --target wasm,simulator,esp32s3,esp32s31,esp32p4
 ```
+
+PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，先用 `pxa build . --target esp32p4 --aot-only --output out/tide-pact` 构建设备产物，再用 SDK 自带的 Python 执行 `tools/pack_espp4.py out/tide-pact out/pxa-tide-pact.pxa --sdk SDK目录`。设备包采用 `pxa-tide-pact`，通用包沿用 `tide-pact`。PXA 按应用 ID 保存进度，两种包各用自己的存档。
 
 `game.cpp` 管理航行、经济、委托、剧情选择和存档；`main.cpp` 处理 PXA 生命周期、界面和输入。记录格式版本和固定地标编号保存在游戏逻辑中，扩充 `world.json` 时应保留旧地标的顺序。
 
@@ -41,7 +47,7 @@ pxa build . --offline --target wasm,simulator,esp32s3,esp32s31,esp32p4
 
 - 海岸数据来自公有领域的 Natural Earth 1:10m Land 5.1.1。可用 `python tools/make_chart.py ne_10m_land.zip` 重建海图和航路，需要 Pillow 和 PyShp。[数据](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/) · [许可](https://www.naturalearthdata.com/about/terms-of-use/)
 - 佛得角里贝拉格兰德、埃尔米纳和基尔瓦的港口注记参考 UNESCO。开普航路时代背景参考英国国家海事博物馆。[里贝拉格兰德](https://whc.unesco.org/en/list/1310/) · [埃尔米纳](https://whc.unesco.org/en/list/34/) · [基尔瓦](https://whc.unesco.org/en/list/144/) · [开普航路](https://www.rmg.co.uk/collections/objects/rmgc-object-14176)
-- 标题字标、场景、角色、货物、航海图标及界面材料由内置图像生成工具为游戏制作。帆船循环为 12 帧，炮击为 8 帧，决斗的三种出招各 6 帧。接舷和码头背景及序列图保存在 `assets/`。素材可用 `tools/make_art.py --help` 查看预处理入口。
+- 标题字标、场景、角色、货物、航海图标及界面材料由内置图像生成工具为游戏制作。帆船循环为 12 帧，炮击为 8 帧，决斗的三种出招各 6 帧。接舷和码头背景及序列图保存在 `art/`。素材可用 `tools/make_art.py --help` 查看预处理入口。
 - 考察插画使用四联图，可用 `tools/make_discoveries.py` 生成运行时图集。阿尔金生态和本格拉寒流注记参考联合国教科文组织与 NASA。游戏按日离散潮汐与天气，手记、考察人物与竞赛为原创虚构。 [阿尔金浅滩](https://whc.unesco.org/en/list/506/) · [本格拉寒流](https://science.nasa.gov/earth/earth-observatory/namibia-3464/)
 - 三位副官的原创肖像由内置图像生成工具绘制，用 `tools/make_officers.py` 从三联图生成运行时图集。
 - 中文点阵来自 Noto Sans CJK SC，随附 SIL OFL 1.1。增加文字后运行 `python tools/make_font.py NotoSansCJK-Regular.ttc` 更新字模。[字体及许可](https://github.com/notofonts/noto-cjk/tree/main/Sans)

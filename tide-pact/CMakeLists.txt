@@ -7,13 +7,13 @@ find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 set(asset_files)
 foreach(asset chart harbor storm portraits caravel broadside glyphs wordmark skin goods navigation ports boarding cadiz_duel duel_fx discoveries officers)
-    list(APPEND asset_files "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}.pxi")
+    list(APPEND asset_files "${CMAKE_CURRENT_SOURCE_DIR}/art/${asset}.pxi")
 endforeach()
 set(asset_source "${CMAKE_CURRENT_BINARY_DIR}/embedded_assets.cpp")
 add_custom_command(
     OUTPUT "${asset_source}"
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/tools/embed_assets.py"
-            "${asset_source}" "${CMAKE_CURRENT_SOURCE_DIR}/assets"
+            "${asset_source}" "${CMAKE_CURRENT_SOURCE_DIR}/art"
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tools/embed_assets.py" ${asset_files}
     VERBATIM
 )

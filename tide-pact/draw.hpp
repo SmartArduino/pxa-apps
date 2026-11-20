@@ -114,16 +114,24 @@ struct Draw {
         }
     }
     void image(Image img, Rect src, Rect dst, bool transparent = false, bool flip = false) {
-        if (dst.w <= 0 || dst.h <= 0) return;
+        if (dst.w<=0 || dst.h<=0 || src.w<=0 || src.h<=0) return;
         const auto r = clipped(dst);
+        if (!r.w || !r.h) return;
+        const int initial=(r.x-dst.x)*src.w;
+        const int first=initial/dst.w, first_error=initial%dst.w;
+        const int pitch=src.w/dst.w, step=src.w%dst.w;
+        const int stride=img.width();
         for (int y = r.y; y < r.bottom(); ++y) {
             const int sy = src.y + (y-dst.y)*src.h/dst.h;
+            const auto* indexes=img.bytes+516+sy*stride+src.x;
             auto row = *pixels.row(y);
+            int source=first, error=first_error;
             for (int x = r.x; x < r.right(); ++x) {
-                const int px = (x-dst.x)*src.w/dst.w;
-                const int sx = src.x + (flip ? src.w-1-px : px);
-                const auto index = img.index(sx,sy);
+                const auto index=indexes[flip?src.w-1-source:source];
                 if (!transparent || index != 255) row[x] = img.color(index);
+                source+=pitch;
+                error+=step;
+                if (error>=dst.w) { error-=dst.w; ++source; }
             }
         }
     }

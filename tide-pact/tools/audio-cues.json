@@ -1,0 +1,23 @@
+{
+  "music": {
+    "harbor": {"bpm":92,"seed":3624111,"duration":46,"bars":12,"start":1.4,"prompt":"Original instrumental music for a fictional 1498 Portuguese trading harbor. Warm intimate Renaissance acoustic ensemble, six course lute and classical gut-string Portuguese vihuela fingerpicking, soft recorder answer, lightly bowed rebec, delicate frame drum. A distinctive recurring four bar melody in D minor/Dorian, 92 BPM 4/4, lively human timing and morning light on a quay. Used as a continuous background loop with steady musical energy, recognizable motif within the first second, no modern instruments, no vocals, no incidental harbor noise, no fade or ending."},
+    "voyage": {"bpm":76,"seed":3624114,"duration":53,"bars":12,"start":1.2,"prompt":"Original quiet ocean exploration music for a late fifteenth century Atlantic sailing game. Broad steady 76 BPM in 4/4, open Dorian modal melody on airy wooden flute, rippling gut-string lute ostinato, low restrained viola da gamba and slow soft frame drum. Spacious and curious, seabirds suggested in the melody rather than sound effects, good for long listening, recurring four bar figure with subtle changes. Continuous instrumental recording, melody starts early, no speech, singing, wave noises, trailer swells, electronic sounds, intro or final cadence."},
+    "battle": {"bpm":112,"seed":3624118,"duration":43,"bars":12,"start":1.55,"prompt":"Original close naval combat underscore for a fictional 1498 Iberian caravel. Minor modal staccato rebec and Renaissance lute, taut skin frame drums, brief low wooden pipe motif, 112 BPM four square but lightly syncopated; determined and tense. Leave clear room for cannon, cutlass and dialogue. Acoustic historic atmosphere, coherent repeating four-bar pulse from the opening. No gunshots, voice, chants, crowd, modern orchestra, synthesizers, big intro or ending."}
+  },
+  "effects": {
+    "castoff":{"seed":3624201,"duration":0.9,"prompt":"TrackType: SFX. One compact sound as the last thick hemp mooring rope slips over a wooden bollard and the side of a small wooden sailboat laps twice in water. Restrained close nautical sound, isolated, no speech or music."},
+    "trim":{"seed":3624202,"duration":0.66,"prompt":"TrackType: SFX. A short taut canvas sail flap and the dry slide of a hemp rope run through a wooden sailing block. Single isolated historic boat maneuver, no voices, no music, no background wind."},
+    "shoal":{"seed":3624203,"duration":0.92,"prompt":"TrackType: SFX. A brief coarse scrape of a wooden boat keel over coarse shingle followed by a stopped hollow creak and one tiny splash. Close compact impact and clear onset, no cannon, no music, no people."},
+    "anchor":{"seed":3624204,"duration":0.88,"prompt":"TrackType: SFX. A small iron anchor drops off the side of a historical sail boat, brief rattle of two iron links followed immediately by a crisp heavy splash, fast decay. One isolated event with no music, speech or long ambience."},
+    "sighting":{"seed":3624205,"duration":1.12,"prompt":"TrackType: SFX. Two close brief strikes on a small brass ship bell, the second slightly brighter, with a clear warm metallic marine ring. An isolated historical nautical discovery cue, no tune, voice, crowd or ambience."},
+    "broadside":{"seed":3624206,"duration":1.22,"prompt":"TrackType: SFX. A single deep dry historic ship cannon shot on a wooden deck, dense short powder blast and a woody jolt, dies quickly across the open sea; no modern weapons, no voices, no music, one isolated strong onset."},
+    "steel":{"seed":3624207,"duration":0.52,"prompt":"TrackType: SFX. One decisive clean ring of two historical steel cutlasses sliding into contact, a crisp close metallic transient and short soft decay. No voices, music, crowd, blood effects or additional strikes."},
+    "page":{"seed":3624208,"duration":0.39,"prompt":"TrackType: SFX. Dry rustle of a single thick vellum chart page being turned on a wooden navigation table with a small quill tap at the end. One short close isolated foley event, no voice or music."}
+  },
+  "voices": {
+    "instruct": "Fictional female lookout on a late medieval ship, standard Mandarin, around thirty, alert, warm slightly textured clear mid-low register. She calls a practical shipboard command naturally, very short and well projected, no announcing cadence, no extra syllables. Clean studio recording, no music, wind, reverb or other voices.",
+    "retake_instruct": "Original fictional sailor, clear native Mandarin, short nautical command, energetic but calm. Speak the given phrase exactly once, isolated dry audio.",
+    "start_seed": 3624311,
+    "lines":{"land":"前方见陆！","anchor":"可以下锚了。","fire":"放！"}
+  }
+}
