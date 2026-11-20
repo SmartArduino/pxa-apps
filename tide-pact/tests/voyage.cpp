@@ -373,6 +373,65 @@ void expeditions() {
     }
 }
 
+void ship_officers() {
+    Game ship;
+    assert(!ship.hire_officer(Quartermaster) && !ship.assign_officer(Quartermaster));
+    const auto original=ship;
+    assert(ship.hire_officer(Pilot) && !ship.hire_officer(Pilot));
+    assert(ship.s.first_mate==Pilot && ship.s.gold==520-Officers[Pilot].fee);
+    Game regular=original;
+    assert(regular.depart(azores) && ship.depart(azores));
+    assert(!ship.assign_officer(NoOfficer));
+    regular.advance();
+    ship.advance();
+    assert(ship.s.progress==regular.s.progress+20);
+    ship=original;
+    assert(ship.hire_officer(Pilot) && ship.start_helm(-1));
+    ship.s.heading=2;
+    ship.helm_step([](Point p){return p.x<=248;});
+    assert(ship.paused && ship.s.hull==97);
+    assert(ship.dock_helm());
+
+    ship.s.origin=madeira;
+    ship.s.crew=18;
+    const auto route=passage(madeira,canaries);
+    assert(ship.hire_officer(Quartermaster) && ship.s.first_mate==Pilot);
+    assert(ship.assign_officer(NoOfficer));
+    const auto forecast=ship.forecast(route);
+    assert(ship.assign_officer(Quartermaster) && !ship.assign_officer(Quartermaster));
+    const auto lower=ship.forecast(route);
+    assert(forecast.days==lower.days && forecast.provisions==lower.provisions);
+    assert(lower.water==forecast.water-forecast.days);
+    ship.s.water=1;
+    assert(ship.depart(canaries));
+    ship.advance();
+    assert(!ship.s.water && ship.s.hull==97);
+
+    Game combat;
+    combat.s.origin=cadiz;
+    combat.s.cadiz_victory=1;
+    assert(combat.hiring_fee(Boatswain)==85 && combat.hire_officer(Boatswain));
+    const auto setup_battle=[](Game& g) {
+        assert(g.depart(lisbon));
+        g.s.weather=Privateer;
+        g.s.enemy=95;
+        g.s.range=1;
+    };
+    auto no_guard=combat;
+    assert(no_guard.assign_officer(NoOfficer));
+    setup_battle(combat);
+    setup_battle(no_guard);
+    combat.encounter_action(FireGuns);
+    no_guard.encounter_action(FireGuns);
+    assert(combat.s.hull==no_guard.s.hull+3);
+    combat.encounter_action(BoardShip);
+    no_guard.encounter_action(BoardShip);
+    assert(combat.duel() && combat.s.vigor==no_guard.s.vigor+6);
+    State loaded;
+    assert(decode(loaded,encode(combat.s)) && loaded.first_mate==Boatswain &&
+           loaded.officer_roster==combat.s.officer_roster && loaded.vigor==combat.s.vigor);
+}
+
 int main() {
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {
@@ -444,7 +503,8 @@ int main() {
     new_events_and_investment();
     free_helm();
     expeditions();
+    ship_officers();
     story_journey(1,0);
     story_journey(2,1);
-    std::puts("All routes, contracts, markets, endings, charting, saves, combat and expeditions passed.");
+    std::puts("Routes, contracts, markets, endings, charting, saves, combat, expeditions and officers passed.");
 }

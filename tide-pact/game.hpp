@@ -27,6 +27,25 @@ inline constexpr std::array<Text, GoodsCount> GoodsNames{
     "葡萄酒", "蔗糖", "织锦", "羊毛", "木料", "海盐", "胡椒", "瓷器"
 };
 
+enum OfficerId { NoOfficer, Pilot, Quartermaster, Boatswain, OfficerLimit };
+struct Officer {
+    int port, fee;
+    Text name, specialty, effect, greeting;
+};
+inline constexpr Officer Officers[]{
+    {},
+    {lisbon,95,"安娜","领航",
+     "航路每日多行二十海里。掌舵更快，触礁少伤船。",
+     "小时候我在塔霍河替渡船测深。把铅锤给我，我能听出船底离沙洲有多远。"},
+    {madeira,140,"贝阿特丽丝","司务",
+     "每航行或考察一日少用一份淡水，至少仍用一份。",
+     "糖仓漏过一桶水，此后我给每个桶盖都刻了记号。船上也可以照办。"},
+    {cadiz,160,"杜阿尔特","甲板护卫",
+     "敌炮每次少伤三点船体。接舷决斗体力增加六点。",
+     "两船靠得再近，也等水手把缆钩扣牢了再跳。这条命是我在直布罗陀学回来的。"}
+};
+static_assert(std::size(Officers)==OfficerLimit);
+
 struct Chapter {
     int place, portrait;
     Text title, speaker, message, first, second;
@@ -66,7 +85,8 @@ struct Passage {
 
 enum SeaWeather { Fair, Heat, Rain, Squall };
 struct SeaConditions {
-    int direction, strength, weather;
+    int direction, strength;
+    SeaWeather weather;
 };
 inline constexpr Point Directions[]{{0,-16},{11,-11},{16,0},{11,11},{0,16},{-11,11},{-16,0},{-11,-11}};
 inline constexpr Text Bearings[]{"北","东北","东","东南","南","西南","西","西北"};
@@ -109,6 +129,7 @@ struct State {
     int helm_x=0, helm_y=0;
     std::uint8_t water=74, helm=0, heading=0, helm_pulse=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
+    std::uint8_t officer_roster=0, first_mate=NoOfficer;
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352, SaveBytes=376;
@@ -134,6 +155,7 @@ struct Game {
     int wind(int leg) const;
     PassageForecast forecast(const Passage& path) const;
     int daily_rations() const;
+    int daily_water(SeaWeather weather) const;
     bool tow_needed() const;
     bool request_tow();
     int resupply_cost(int food, int water) const;
@@ -194,6 +216,10 @@ struct Game {
     bool observe(int expedition, int method);
     int expedition_purse(int expedition) const;
     bool file_expedition(int expedition);
+    bool has_officer(int officer) const;
+    int hiring_fee(int officer) const;
+    bool hire_officer(int officer);
+    bool assign_officer(int officer);
 private:
     unsigned roll(unsigned range);
     void arrive();

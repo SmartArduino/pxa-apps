@@ -29,10 +29,11 @@ int sailing_wind(const Leg& leg, bool reverse, int month) {
     return 0;
 }
 
-int knots(int ship, int crew, int hold, int max_hold, int spirits, int wind, int reefed, int allies) {
+int knots(int ship, int crew, int hold, int max_hold, int spirits, int wind, int reefed, int allies, bool pilot) {
     const int overload = hold * 45 / max_hold;
     return std::max(65, 188 + ship * 16 + crew * 2 + (spirits-60) / 2 - overload +
-                    wind * 2 - (reefed ? 48 : 0) + (allies & 1 ? 12 : 0) + (allies & 2 ? 7 : 0));
+                    wind * 2 - (reefed ? 48 : 0) + (allies & 1 ? 12 : 0) + (allies & 2 ? 7 : 0) +
+                    (pilot ? 20 : 0));
 }
 
 int checksum(std::span<const std::byte> bytes) {
@@ -201,9 +202,9 @@ PassageForecast Game::forecast(const Passage& path) const {
             const int day=std::min(99999,s.day+(++result.days));
             if (day%6==0) spirits=std::max(0,spirits-3);
             const auto here=vessel_at(path,i,float(leg.nautical_miles-miles)/leg.nautical_miles);
-            result.water+=daily_rations()+(conditions_at(here,day).weather==Heat);
+            result.water+=daily_water(conditions_at(here,day).weather);
             const int wind=sailing_wind(leg,path.reverse[i],(day/30)%12);
-            miles-=knots(s.ship,s.crew,cargo,capacity(),spirits,wind,s.reefed,s.allies);
+            miles-=knots(s.ship,s.crew,cargo,capacity(),spirits,wind,s.reefed,s.allies,s.first_mate==Pilot);
         }
         result.arrival_days[i]=result.days;
     }
@@ -270,6 +271,9 @@ int Game::repair_cost() const {
 }
 
 int Game::daily_rations() const { return s.crew>=27 ? 3 : (s.crew>14 ? 2 : 1); }
+int Game::daily_water(SeaWeather weather) const {
+    return std::max(1,daily_rations()+(weather==Heat)-(s.first_mate==Quartermaster));
+}
 int Game::water_price() const { return s.tales[Monsoon]==Shared ? 18 : 30; }
 
 int Game::tale_stop(int tale) const {
@@ -327,7 +331,8 @@ Point Game::position(float frame) const {
     if (!sea()) return Anchor[s.origin];
     if (s.helm) return {s.helm_x/16,s.helm_y/16};
     const auto& edge = Legs[route.edge[s.leg]];
-    const int pace = knots(s.ship, s.crew, load(), capacity(), s.spirits, wind(s.leg), s.reefed, s.allies);
+    const int pace = knots(s.ship, s.crew, load(), capacity(), s.spirits, wind(s.leg), s.reefed,
+                           s.allies,s.first_mate==Pilot);
     return vessel_at(route, s.leg, (s.progress + frame*pace) / edge.nautical_miles);
 }
 
@@ -352,7 +357,7 @@ bool Game::depart(int to) {
     auto path = passage(s.origin, to);
     if (!path.count) return false;
     if (s.hull<=12) { notice="船体破损，需要维修"; return false; }
-    if (s.stores<daily_rations() || s.water<daily_rations()) { notice="水粮不足一日"; return false; }
+    if (s.stores<daily_rations() || s.water<daily_water(Fair)) { notice="水粮不足一日"; return false; }
     route = path;
     s.destination = to;
     s.leg = s.progress = s.weather = s.enemy = s.range = s.aim = 0;
@@ -402,7 +407,7 @@ void Game::restore() {
 
 bool Game::consume_day(SeaConditions weather) {
     const int food=daily_rations();
-    const int drink=food+(weather.weather==Heat);
+    const int drink=daily_water(weather.weather);
     const bool hunger=s.stores<food, thirst=s.water<drink;
     s.stores=std::max(0,s.stores-food);
     s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-drink));
@@ -420,7 +425,7 @@ bool Game::consume_day(SeaConditions weather) {
 
 bool Game::start_helm(int destination) {
     if (sea() || encounter() || s.hull<=12 ||
-        s.stores<daily_rations() || s.water<daily_rations()) {
+        s.stores<daily_rations() || s.water<daily_water(Fair)) {
         notice="掌舵前请备足一日水粮并修船";
         return false;
     }
@@ -480,7 +485,8 @@ void Game::helm_step(WaterTest water_at) {
     const auto weather=conditions();
     const auto heading=Directions[s.heading];
     const int wind_force=wind(0);
-    const int pace=std::max(22,(87+s.ship*10-load()*24/capacity()-(s.reefed?25:0))*
+    const bool has_pilot=s.first_mate==Pilot;
+    const int pace=std::max(22,(87+s.ship*10-load()*24/capacity()-(s.reefed?25:0)+(has_pilot?10:0))*
                                   std::clamp(77+wind_force*2,32,147)/100);
     const int dx=heading.x*pace/16, dy=heading.y*pace/16;
     const int steps=std::max(1,std::max(std::abs(dx),std::abs(dy))/4);
@@ -493,7 +499,7 @@ void Game::helm_step(WaterTest water_at) {
             return;
         }
         if (!water_at({x/16,y/16})) {
-            s.hull-=s.reefed?2:6;
+            s.hull-=std::max(1,(s.reefed?2:6)-(has_pilot?3:0));
             notice="触及浅滩，转舵离岸";
             paused=true;
             check_ship();
@@ -529,7 +535,8 @@ void Game::advance() {
     spend_day(1);
     if (!consume_day(conditions())) return;
     const int w = wind(s.leg);
-    const int speed = knots(s.ship, s.crew, load(), capacity(), s.spirits, w, s.reefed, s.allies);
+    const int speed = knots(s.ship, s.crew, load(), capacity(), s.spirits, w, s.reefed,
+                            s.allies,s.first_mate==Pilot);
     const auto& leg = Legs[route.edge[s.leg]];
     if (s.escort==EscortSailing && on_leg(lisbon,madeira) && !(s.event_mask & (1U<<s.leg))) {
         s.progress=std::min(leg.nautical_miles-1,s.progress+speed);
@@ -605,7 +612,8 @@ void Game::rescue() {
 }
 
 bool Game::tow_needed() const {
-    return !sea() && !encounter() && !port() && (s.stores<daily_rations() || s.water<daily_rations() || s.hull<=12);
+    return !sea() && !encounter() && !port() &&
+           (s.stores<daily_rations() || s.water<daily_water(Fair) || s.hull<=12);
 }
 
 bool Game::request_tow() {
@@ -734,6 +742,35 @@ void Game::navigator() {
     } else notice = "带来两件海盐，优素福愿意领航";
 }
 
+bool Game::has_officer(int officer) const {
+    return officer>NoOfficer && officer<OfficerLimit && (s.officer_roster & (1U<<(officer-1)));
+}
+
+int Game::hiring_fee(int officer) const {
+    return officer==Boatswain && s.cadiz_victory ? 85 : Officers[officer].fee;
+}
+
+bool Game::hire_officer(int officer) {
+    if (!port() || officer<=NoOfficer || officer>=OfficerLimit ||
+        s.origin!=Officers[officer].port || has_officer(officer)) return false;
+    const int fee=hiring_fee(officer);
+    if (s.gold<fee) { notice="船金不足，暂不能招募"; return false; }
+    earn(-fee);
+    s.officer_roster|=1U<<(officer-1);
+    if (s.first_mate==NoOfficer) {
+        s.first_mate=officer;
+        notice="新同伴上任副官";
+    } else notice="新同伴登船待命";
+    return true;
+}
+
+bool Game::assign_officer(int officer) {
+    if (!port() || officer==s.first_mate || (officer!=NoOfficer && !has_officer(officer))) return false;
+    s.first_mate=officer;
+    notice=officer==NoOfficer?"已卸任，留在船上":"已轮换副官";
+    return true;
+}
+
 int Game::archive_here() const {
     if (!port()) return -1;
     for (int i=0;i<ExpeditionCount;++i)
@@ -787,11 +824,11 @@ Text Game::observation_block(int id) const {
 }
 
 bool Game::observation_day() {
-    if (s.stores<daily_rations() || s.water<daily_rations()+(conditions().weather==Heat)) {
+    const int water_used=daily_water(conditions().weather);
+    if (s.stores<daily_rations() || s.water<water_used) {
         notice="水粮不足，须先补给";
         return false;
     }
-    const int water_used=daily_rations()+(conditions().weather==Heat);
     s.stores-=daily_rations();
     s.water-=water_used;
     spend_day(1);
@@ -986,7 +1023,7 @@ int Game::duel_intent() const {
 
 int Game::vigor_limit() const {
     if (s.weather==DockDuel) return 44;
-    return 36+std::min(12,(s.crew-4)/2)+(s.cadiz_victory?8:0);
+    return 36+std::min(12,(s.crew-4)/2)+(s.cadiz_victory?8:0)+(s.first_mate==Boatswain?6:0);
 }
 
 int Game::rival_limit() const { return s.weather==DockDuel?44:30+s.enemy/4; }
@@ -1046,7 +1083,8 @@ void Game::naval_action(int action) {
         }
     }
     if (intent==EnemyFire) {
-        s.hull-=std::max(2,13-s.range*2+s.ship+int(roll(5))-(action==BreakAway?3:0));
+        const int hit=std::max(2,13-s.range*2+s.ship+int(roll(5))-(action==BreakAway?3:0));
+        s.hull-=std::max(0,hit-(s.first_mate==Boatswain?3:0));
         s.spirits-=3;
     } else if (intent==EnemyClose) {
         s.range=std::max(1,s.range-1);
@@ -1141,7 +1179,7 @@ void Game::encounter_action(int action) {
             } else {
                 spend_day(1);
                 s.stores=std::max(0,s.stores-daily_rations());
-                s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-daily_rations()));
+                s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-daily_water(Fair)));
             }
             break;
         case Rigging:
@@ -1184,7 +1222,7 @@ void Game::encounter_action(int action) {
             if (action==0) {
                 spend_day(1);
                 s.stores=std::max(0,s.stores-daily_rations());
-                s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-daily_rations()));
+                s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-daily_water(Fair)));
             } else if (action==2) {
                 s.hull-=7+int(roll(12));
             }
@@ -1201,7 +1239,7 @@ static_assert(4 + 28*4 + 4*4 + GoodsCount + PortCount*GoodsCount +
               TaleCount + 1 + 3*4 + 4 == LegacySaveBytes);
 static_assert(CombatSaveBytes==LegacySaveBytes+7+4+5);
 static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
-static_assert(SaveBytes>=HelmSaveBytes+6*ExpeditionCount);
+static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1209,7 +1247,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x35445054);
+    put(0x36445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -1230,6 +1268,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         bytes[offset++]=std::byte(record.flags);
         put(record.rival_day);
     }
+    bytes[offset++]=std::byte(s.officer_roster);
+    bytes[offset++]=std::byte(s.first_mate);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1247,8 +1287,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool latest=version==0x35445054 && bytes.size()==SaveBytes;
-    const bool with_helm=latest || (version==0x34445054 && bytes.size()==HelmSaveBytes);
+    const bool latest=version==0x36445054 && bytes.size()==SaveBytes;
+    const bool with_expeditions=latest || (version==0x35445054 && bytes.size()==SaveBytes);
+    const bool with_helm=with_expeditions || (version==0x34445054 && bytes.size()==HelmSaveBytes);
     const bool current=with_helm || (version==0x33445054 && bytes.size()==CombatSaveBytes);
     if (!current && (bytes.size()!=LegacySaveBytes ||
         (version!=0x31445054 && version!=0x32445054))) return false;
@@ -1286,7 +1327,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         for (auto* field : {&s.naval_turn,&s.needs_reload,&s.duel_turn,&s.vigor,&s.rival,&s.escort,&s.cadiz_victory})
             *field=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.guild_stakes=get();
-        if (s.naval_turn>2 || s.needs_reload>1 || s.duel_turn>2 || s.vigor>56 || s.rival>55 ||
+        if (s.naval_turn>2 || s.needs_reload>1 || s.duel_turn>2 || s.vigor>(latest?62:56) || s.rival>55 ||
             s.escort>EscortSold || s.cadiz_victory>1 || s.guild_stakes>>PortCount) return false;
     }
     if (with_helm) {
@@ -1298,7 +1339,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         if (s.stores<0 || s.stores>255) return false;
         s.water=static_cast<std::uint8_t>(s.stores);
     }
-    if (latest) {
+    if (with_expeditions) {
         for (auto& record : s.expeditions) {
             record.stage=std::to_integer<std::uint8_t>(bytes[offset++]);
             record.flags=std::to_integer<std::uint8_t>(bytes[offset++]);
@@ -1310,6 +1351,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 (record.stage<AtSeaSearch && (record.flags&Sponsored)) ||
                 (record.stage<HasEvidence && (record.flags&FirstObserver))) return false;
         }
+    }
+    if (latest) {
+        s.officer_roster=std::to_integer<std::uint8_t>(bytes[offset++]);
+        s.first_mate=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (s.officer_roster>>(OfficerLimit-1) || s.first_mate>=OfficerLimit ||
+            (s.first_mate!=NoOfficer && !(s.officer_roster & (1U<<(s.first_mate-1))))) return false;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

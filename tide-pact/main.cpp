@@ -19,7 +19,7 @@ enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
-    ExpeditionList, ExpeditionPage
+    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -36,8 +36,9 @@ enum Action {
     OpenProvisions, BuyFood, BuyWater, UnloadFood, UnloadWater,
     ShowExpeditions, OpenArchive, OpenObservation, CopyClue, AskWitness, SponsorVoyage, FundVoyage,
     MarkExpedition, ObserveFirst, ObserveSecond, WaitToObserve, FileExpedition, ReadNotes,
+    ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
-    ExpeditionEntry=700
+    ExpeditionEntry=700, OfficerEntry=800
 };
 
 template<class... Args>
@@ -80,6 +81,8 @@ struct VoyageApp {
     int scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
     int expedition_item=0;
+    int officer_item=Pilot;
+    bool officer_talk=false;
     float chart_x=0, chart_y=0, factor=1;
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
@@ -711,8 +714,9 @@ struct VoyageApp {
         if (!game.port()) { no_port(d,"靠港后才能整备船只"); return; }
         const auto& s=game.s;
         skin_box(d,body,0,6);
-        d.label(body.x+5,body.y+2,ship_names[s.ship],gold,body.w-10);
-        d.label(body.x+5,body.y+20,format("船员 %d/%d  士气 %d  火炮 %d",s.crew,
+        d.label(body.x+5,body.y+4,ship_names[s.ship],gold,body.w-82);
+        button(d,{body.right()-71,body.y+2,67,20},"副官",ShowOfficers,s.first_mate!=NoOfficer);
+        d.label(body.x+5,body.y+22,format("船员 %d/%d  士气 %d  火炮 %d",s.crew,
             game.crew_limit(),s.spirits,s.guns),mist,body.w-10);
         int height=std::clamp((body.h-36)/4-3,20,34);
         const auto fill=format("补给 %d金",game.ration_cost());
@@ -798,6 +802,59 @@ struct VoyageApp {
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
         pair(d,{body.x+4,body.bottom()-53,body.w-8,23},"港口故事",ShowTales,"海上纪事",ShowSeaLog);
         pair(d,{body.x+4,body.bottom()-27,body.w-8,23},"发现图鉴",ShowAtlas,"操作帮助",ShowHelp);
+    }
+    void officer_portrait(Draw& d, int officer, Rect viewport) {
+        d.image({art::officers},{(officer-1)*96,0,96,96},viewport);
+        d.frame(viewport,border);
+    }
+    void officer_list(Draw& d) {
+        page_title(d,"副官名册");
+        const int row_h=std::clamp((body.h-34)/(OfficerLimit-1),29,46);
+        for (int id=Pilot;id<OfficerLimit;++id) {
+            const auto& person=Officers[id];
+            const bool on_duty=game.s.first_mate==id;
+            const bool focused_row=pad_focus && button_count==focused;
+            const Rect item{body.x+6,body.y+28+(id-1)*row_h,body.w-12,row_h-3};
+            skin_box(d,item,on_duty?1:0,4);
+            if (focused_row) d.frame(item,mint);
+            const int size=item.h-4;
+            officer_portrait(d,id,{item.x+3,item.y+2,size,size});
+            const Text state=on_duty?"在任":game.has_officer(id)?"候任":Places[person.port].name;
+            const int badge=measure(state);
+            d.label(item.x+size+8,item.y+(item.h-14)/2,person.name,on_duty?gold:ivory,
+                    item.w-size-badge-17);
+            d.label(item.right()-6-badge,item.y+(item.h-14)/2,state,on_duty?mint:mist);
+            buttons[button_count++]={item,OfficerEntry+id};
+        }
+        if (body.h>28+(OfficerLimit-1)*row_h+22)
+            d.label(body.x+7,body.bottom()-20,"靠港可换任一位副官",quiet,body.w-14);
+    }
+    void officer_page(Draw& d) {
+        const auto& person=Officers[officer_item];
+        const bool aboard=game.has_officer(officer_item);
+        const bool on_duty=game.s.first_mate==officer_item;
+        page_title(d,person.name);
+        const int size=std::min({96,body.w/3,body.h-63});
+        const Rect portrait{body.x+7,body.y+29,size,size};
+        officer_portrait(d,officer_item,portrait);
+        const int x=portrait.right()+7, y=body.y+29, w=body.right()-7-x;
+        d.label(x,y,person.specialty,gold,w);
+        const Text status=on_duty?"在任副官":aboard?"随船候任":Places[person.port].name;
+        d.label(x,y+17,status,on_duty?mint:mist,w);
+        const int text_y=y+35;
+        d.wrap({x,text_y,w,body.bottom()-32-text_y},
+               officer_talk?person.greeting:person.effect,ivory,15);
+
+        const Rect actions{body.x+7,body.bottom()-28,body.w-14,24};
+        const int half=(actions.w-5)/2;
+        const auto fee=format("招募 %d金",game.hiring_fee(officer_item));
+        const auto destination=format("去%s",Places[person.port].name.data());
+        const bool local=game.s.origin==person.port;
+        const Text action=aboard?(on_duty?"卸任":"任命副官"):local?Text(fee):Text(destination);
+        button(d,{actions.x,actions.y,half,actions.h},action,aboard?OfficerDuty:local?OfficerHire:OfficerMark,
+               true, !aboard && local && game.s.gold<game.hiring_fee(officer_item));
+        button(d,{actions.x+half+5,actions.y,actions.w-half-5,actions.h},
+               officer_talk?"查看专长":"交谈",OfficerTalk);
     }
     void encounter_screen(Draw& d) {
         const auto& s=game.s;
@@ -947,11 +1004,12 @@ struct VoyageApp {
         d.label(x,body.y+48,format("%d海里  预计%d日",path.miles,forecast.days),ivory,w);
         const int surplus=std::min(game.s.stores-forecast.provisions,int(game.s.water)-forecast.water);
         const int ship_ok=game.s.hull>12;
-        const bool ready=path.count && ship_ok && std::min(game.s.stores,int(game.s.water))>=game.daily_rations();
+        const bool ready=path.count && ship_ok && game.s.stores>=game.daily_rations() &&
+                         game.s.water>=game.daily_water(Fair);
         d.label(x,body.y+65,format("粮 %d/%d  水 %d/%d",forecast.provisions,game.s.stores,
                                  forecast.water,int(game.s.water)),surplus<0?vermilion:mint,w);
-        if (body.h>=160)
-            d.label(x,body.y+84,"风浪会延误航程",quiet,w);
+        if (body.h>=160 && game.s.first_mate!=NoOfficer)
+            d.label(x,body.y+84,format("当值副官  %s",Officers[game.s.first_mate].name.data()),quiet,w);
         const int third=(w-8)/3;
         button(d,{x,body.bottom()-54,third,23},"停靠点",ShowStops);
         button(d,{x+third+4,body.bottom()-54,third,23},"地理",ShowIntel);
@@ -1384,6 +1442,8 @@ struct VoyageApp {
         case ProvisionsPage: provisions_page(d); break;
         case ExpeditionList: expedition_list(d); break;
         case ExpeditionPage: expedition_page(d); break;
+        case Wardroom: officer_list(d); break;
+        case OfficerPage: officer_page(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1409,6 +1469,12 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=OfficerEntry) {
+            officer_item=action-OfficerEntry;
+            officer_talk=false;
+            set_modal(OfficerPage);
+            return;
+        }
         if (action>=ExpeditionEntry) {
             expedition_item=action-ExpeditionEntry;
             show_witness=false;
@@ -1485,6 +1551,18 @@ struct VoyageApp {
             break;
         }
         case OpenProvisions: if (game.port()) set_modal(ProvisionsPage); break;
+        case ShowOfficers: if (game.port()) set_modal(Wardroom); break;
+        case OfficerTalk: officer_talk=!officer_talk; break;
+        case OfficerHire:
+            if (game.hire_officer(officer_item)) changed();
+            else notify();
+            break;
+        case OfficerDuty:
+            if (game.assign_officer(game.s.first_mate==officer_item?NoOfficer:officer_item)) changed();
+            break;
+        case OfficerMark:
+            if (game.port()) select(Officers[officer_item].port);
+            break;
         case BuyFood: case BuyWater:
             if (game.resupply(game.s.stores+(action==BuyFood?10:0),
                               game.s.water+(action==BuyWater?10:0))) changed();
@@ -1684,6 +1762,7 @@ struct VoyageApp {
             else if (modal==RouteStops || (modal==Intel && intel_from_preflight)) set_modal(Preflight);
             else if (modal==EscortPage || modal==DuelInvitation) set_modal(activity_back);
             else if (modal==ExpeditionPage && expedition_from_book) set_modal(ExpeditionList);
+            else if (modal==OfficerPage) set_modal(Wardroom);
             else if (modal==PortPrices) { page=good/market_rows(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }

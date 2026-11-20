@@ -6,7 +6,7 @@ include(PxaGuest)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 set(asset_files)
-foreach(asset chart harbor storm portraits caravel broadside glyphs wordmark skin goods navigation ports boarding cadiz_duel duel_fx discoveries)
+foreach(asset chart harbor storm portraits caravel broadside glyphs wordmark skin goods navigation ports boarding cadiz_duel duel_fx discoveries officers)
     list(APPEND asset_files "${CMAKE_CURRENT_SOURCE_DIR}/assets/${asset}.pxi")
 endforeach()
 set(asset_source "${CMAKE_CURRENT_BINARY_DIR}/embedded_assets.cpp")

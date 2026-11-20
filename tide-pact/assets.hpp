@@ -18,4 +18,5 @@ extern const unsigned char boarding[];
 extern const unsigned char cadiz_duel[];
 extern const unsigned char duel_fx[];
 extern const unsigned char discoveries[];
+extern const unsigned char officers[];
 }
