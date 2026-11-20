@@ -18,6 +18,7 @@ inline constexpr int PlaceCount = std::size(Places);
 } // namespace tide
 
 #include "expeditions.hpp"
+#include "rumors.hpp"
 #include "stories.hpp"
 
 namespace tide {
@@ -130,13 +131,17 @@ struct State {
     std::uint8_t water=74, helm=0, heading=0, helm_pulse=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
+    std::uint32_t chart_marks=StartingChart, heard_rumors=0;
+    std::array<std::uint8_t, ChartBytes> coast{};
 };
 
-inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352, SaveBytes=376;
+inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
+inline constexpr std::size_t OfficerSaveBytes=376, SaveBytes=960;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
 struct Game {
+    Game();
     State s;
     Passage route;
     Text notice;
@@ -164,6 +169,7 @@ struct Game {
     SeaConditions conditions() const { return conditions_at(position(),s.day); }
     bool start_helm(int destination);
     void helm_step(WaterTest water_at);
+    int visible_landmark() const;
     int nearby_anchorage(WaterTest water_at=nullptr) const;
     bool dock_helm(WaterTest water_at=nullptr);
     int reward(int port) const;
@@ -220,6 +226,10 @@ struct Game {
     int hiring_fee(int officer) const;
     bool hire_officer(int officer);
     bool assign_officer(int officer);
+    bool charted(int place) const;
+    bool chart_cell(int column, int row) const;
+    bool heard_rumor(int id) const;
+    bool hear_rumor(int id);
 private:
     unsigned roll(unsigned range);
     void arrive();
@@ -243,6 +253,10 @@ private:
     bool consume_day(SeaConditions weather);
     void clear_helm();
     bool observation_day();
+    void reveal_chart(Point center, int radius);
+    int lookout_radius() const { return s.first_mate==Pilot?19:14; }
+    int sighting(Point center);
+    void chart_passage(const Leg& leg, int progress);
 };
 
 } // namespace tide
