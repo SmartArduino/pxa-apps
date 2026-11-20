@@ -6,7 +6,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageOps
 
-ASSETS = Path(__file__).resolve().parents[1] / "assets"
+ASSETS = Path(__file__).resolve().parents[1] / "art"
 
 
 def write_texture(image, name):

@@ -205,7 +205,7 @@ def main():
     data = json.loads((ROOT / "world.json").read_text())
     mask = mask_from_land(args.natural_earth_land_zip)
     world(data, mask.load())
-    chart(mask, ROOT / "assets")
+    chart(mask, ROOT / "art")
 
 
 if __name__ == "__main__":

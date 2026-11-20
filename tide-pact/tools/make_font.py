@@ -24,7 +24,7 @@ def main():
         data.extend(struct.pack("<HB", code, max(3, min(CELL, round(face.getlength(char))))))
         pixels = image.tobytes()
         data.extend((a & 0xf0) | (b >> 4) for a, b in zip(pixels[::2], pixels[1::2]))
-    (ROOT / "assets/glyphs.pxi").write_bytes(data)
+    (ROOT / "art/glyphs.pxi").write_bytes(data)
 
 
 if __name__ == "__main__":

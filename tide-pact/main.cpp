@@ -1,4 +1,6 @@
 #include "draw.hpp"
+#include "game_audio.hpp"
+#include "game_save.hpp"
 #include <pxa/app.hpp>
 
 #include <array>
@@ -19,7 +21,7 @@ enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
-    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage
+    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -38,6 +40,7 @@ enum Action {
     MarkExpedition, ObserveFirst, ObserveSecond, WaitToObserve, FileExpedition, ReadNotes,
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
+    ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices,
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900
 };
@@ -64,15 +67,16 @@ struct EncounterOutcome {
 
 struct VoyageApp {
     static constexpr pxa::game::LoopOptions loop_options{
-        .simulation_step_us=50000, .frame_period_ms=72, .maximum_updates=1};
+        .simulation_step_us=50000, .frame_period_ms=48, .maximum_updates=1};
     static constexpr unsigned DayMs=480, HelmPulseMs=220;
 
     Game game;
+    GameAudio audio;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
     // Loading completes before gameplay can start. Subsequent saves use one
     // borrowed packet at a time, keeping the chart out of coroutine slots.
-    std::array<std::byte,SaveBytes+72> storage_packet{};
+    VoyageSave voyage_save;
     pxa::Context* context = nullptr;
     std::optional<pxa::Surface> surface;
     pxa::WindowMetrics metrics{};
@@ -93,9 +97,10 @@ struct VoyageApp {
     std::optional<Point> scout_course;
     bool officer_talk=false;
     float chart_x=0, chart_y=0, factor=1;
+    Point previous_helm{};
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
-    bool title=true, loaded=false, had_save=false, opening=false, reconfigure=true;
+    bool title=true, loaded=false, had_save=false, opening=false, reconfigure=true, landscape_requested=false;
     bool foreground=false, dirty=true, save_needed=false, save_active=false, save_failed=false;
     unsigned now=0, last_day=0, last_step=0, notice_until=0, flash_until=0, saved_until=0;
     unsigned surface_retry=0, duel_flash_until=0;
@@ -117,30 +122,28 @@ struct VoyageApp {
             .edge_to_edge=true,
             .status_bar_mode=pxa::WindowBarMode::hidden,
             .navigation_bar_mode=pxa::WindowBarMode::hidden});
-        return ctx.tasks().start(load());
+        auto started=ctx.tasks().start(load());
+        if (started) audio.start(ctx);
+        return started;
     }
     pxa::Task<void> load() {
-        auto bytes=std::span{storage_packet}.first(SaveBytes);
-        auto pending = co_await context->storage().get("voyage-v1", bytes);
-        had_save=pending && *pending<=bytes.size() && decode(game.s,std::span{bytes}.first(*pending));
+        const auto result=co_await voyage_save.load(context->storage(),game.s);
+        had_save=bool(result);
         if (had_save) game.restore();
-        else if ((pending || pending.error() != pxa::Error::not_found)) {
+        else if (result.error()!=pxa::Error::not_found) {
             game.notice = "存档读取失败";
             notify();
         }
         selected=game.s.destination>=0 ? game.s.destination :
                  game.s.origin==lisbon && !game.s.helm ? madeira : game.s.origin;
         center_at(game.position());
+        previous_helm={game.s.helm_x,game.s.helm_y};
         loaded=true;
         dirty=true;
         co_return pxa::Result<void>{};
     }
-    pxa::Task<void> write_snapshot() {
-        const auto bytes=encode(game.s);
-        return context->storage().set("voyage-v1",bytes,storage_packet);
-    }
     pxa::Task<void> save() {
-        auto result=co_await write_snapshot();
+        auto result=co_await voyage_save.write(context->storage(),game.s);
         save_active=false;
         save_failed=!result;
         if (result) saved_until=now+1600;
@@ -161,15 +164,17 @@ struct VoyageApp {
         }
     }
 
-    void on_foreground(pxa::Context&) { foreground=true; last_day=0; dirty=true; }
+    void on_foreground(pxa::Context&) { foreground=true; audio.foreground(true); last_day=0; dirty=true; }
     void on_background(pxa::Context&) {
         foreground=false;
+        audio.foreground(false);
         pointer_capture.reset();
         controller.reset();
         if (!title && game.sea()) save_needed=true;
         request_save();
     }
     pxa::Result<bool> on_event(pxa::Context&, const pxa::Event& event) {
+        if (audio.event(event)) return true;
         if (event.service!=3 || event.opcode!=0x8002 || event.token!=0) return false;
         auto display=pxa::ui::decode_display_metrics(event);
         if (!display) return std::unexpected(display.error());
@@ -180,6 +185,10 @@ struct VoyageApp {
     void on_window_changed(const pxa::WindowMetrics& value) {
         reconfigure |= value.pixel_width != metrics.pixel_width || value.pixel_height != metrics.pixel_height;
         metrics = value;
+        if (!landscape_requested && std::min(value.pixel_width,value.pixel_height)>=400) {
+            landscape_requested=true;
+            (void)context->window().request_orientation(pxa::OrientationPreference::landscape);
+        }
         dirty = true;
     }
     pxa::Task<void> open_surface() {
@@ -245,6 +254,8 @@ struct VoyageApp {
     void on_frame(pxa::Context&, pxa::game::FrameTick tick) {
         if (!foreground) return;
         now=unsigned(tick.timestamp_us / 1000);
+        const bool battle=game.s.weather==Privateer || game.duel();
+        audio.tick(tick.timestamp_us,battle?Score::Battle:!title && game.sea()?Score::Voyage:Score::Harbor);
         if ((reconfigure || !surface) && !opening && now>=surface_retry) {
             opening=true;
             if (!context->tasks().start(open_surface())) opening=false;
@@ -257,7 +268,11 @@ struct VoyageApp {
                 const int old_day=game.s.day;
                 const int old_hull=game.s.hull;
                 const auto old_marks=game.s.chart_marks;
-                if (game.s.helm) game.helm_step(chart_water);
+                const bool manual=game.s.helm;
+                if (manual) {
+                    previous_helm={game.s.helm_x,game.s.helm_y};
+                    game.helm_step(chart_water);
+                }
                 else game.advance();
                 last_day=now;
                 if ((game.s.day!=old_day && (game.s.helm || game.s.day%4==0)) ||
@@ -265,7 +280,16 @@ struct VoyageApp {
                     save_needed=true;
                 if (modal==ExpeditionPage && game.s.day!=old_day) dirty=true;
                 if (game.paused || game.s.hull<old_hull) notify();
+                if (manual && game.s.helm && game.paused) {
+                    if (game.s.hull<old_hull && game.notice=="触及浅滩，转舵离岸") audio.cue(Sound::Shoal);
+                    else if (game.nearby_anchorage(chart_water)>=0) audio.cue(Sound::AnchorCall);
+                    else if (game.s.chart_marks!=old_marks) {
+                        audio.cue(Sound::Sighting);
+                        audio.cue(Sound::LandCall);
+                    }
+                }
                 if (!game.sea()) {
+                    audio.cue(Sound::Anchor);
                     modal=None; screen=Chart; selected=game.s.origin;
                     notify();
                 } else if (game.encounter()) {
@@ -444,12 +468,14 @@ struct VoyageApp {
         int width=std::min(216,safe.w-12);
         button(d,{safe.x+(safe.w-width)/2,safe.bottom()-42,width,36},
                !loaded ? "读取航海日志" : had_save ? "继续航行" : "启航",Begin,true,!loaded);
+        button(d,{safe.right()-48,safe.y+3,44,22},"声音",ShowAudio);
     }
 
-    Point map_point(Point p) const {
-        return {map.x+map.w/2+int(std::lround((p.x-chart_x)*factor)),
-                map.y+map.h/2+int(std::lround((p.y-chart_y)*factor))};
+    Point map_point(float x, float y) const {
+        return {map.x+map.w/2+int(std::lround((x-chart_x)*factor)),
+                map.y+map.h/2+int(std::lround((y-chart_y)*factor))};
     }
+    Point map_point(Point p) const { return map_point(p.x,p.y); }
     void atlas_background(Draw& d) {
         factor=std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight)*
                (zoom==0 ? 1.0f : std::pow(1.52f,float(zoom)));
@@ -524,7 +550,13 @@ struct VoyageApp {
         d.clip=map;
         float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/DayMs : 0.f;
         const auto ship=game.position(std::clamp(fraction,0.f,1.f));
-        if (game.sea() && follow) center_at(ship);
+        float ship_x=ship.x, ship_y=ship.y;
+        if (game.s.helm) {
+            const auto blend=game.paused?1.f:std::clamp(float(now-last_day)/HelmPulseMs,0.f,1.f);
+            ship_x=std::lerp(float(previous_helm.x),float(game.s.helm_x),blend)/16;
+            ship_y=std::lerp(float(previous_helm.y),float(game.s.helm_y),blend)/16;
+        }
+        if (game.sea() && follow) { chart_x=ship_x; chart_y=ship_y; }
         atlas_background(d);
         const auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         draw_routes(d,path,game.sea());
@@ -608,7 +640,7 @@ struct VoyageApp {
             if (map.contains(p)) draw_label({p.x+4,p.y-14},Places[i].name,ivory,true,false);
         }
         if (game.sea()) {
-            auto p=map_point(ship);
+            auto p=map_point(ship_x,ship_y);
             int frame=(now/115)%12;
             const auto heading=game.position(.9f);
             const bool west=game.s.helm?Directions[game.s.heading].x<0:heading.x<ship.x;
@@ -879,8 +911,9 @@ struct VoyageApp {
         const auto& s=game.s;
         const int half=(body.w-13)/2;
         skin_box(d,body,0,6);
-        d.label(body.x+5,body.y+2,format("声望 %d  信任 %d  测绘 %d/%d",s.renown,s.trust,
-                s.charts,PlaceCount-PortCount),gold,body.w-10);
+        d.label(body.x+5,body.y+3,format("声望%d 信任%d 测绘%d/%d",s.renown,s.trust,
+                s.charts,PlaceCount-PortCount),gold,body.w-58);
+        button(d,{body.right()-47,body.y+2,43,20},"声音",ShowAudio);
         d.label(body.x+5,body.y+23,"主线",quiet);
         if (s.ending) {
             d.label(body.x+58,body.y+22,s.ending==1 ? "航图为众人所有" : "商号的独家合约",ivory,body.w-63);
@@ -1558,11 +1591,25 @@ struct VoyageApp {
         d.wrap({body.x+6,body.y+36,body.w-12,body.h-68},Endings[game.s.ending-1],ivory);
         button(d,{body.x+5,body.bottom()-28,body.w-10,23},"继续自由航行",Close,true);
     }
+    void audio_settings(Draw& d) {
+        page_title(d,"声音");
+        constexpr Text labels[]{"背景音乐","航海音效","船员语音"};
+        constexpr unsigned choices[]{GameAudio::Music,GameAudio::Effects,GameAudio::Voices};
+        for (int i=0;i<3;++i) {
+            const bool enabled=audio.enabled(choices[i]);
+            row(d,i,labels[i],enabled?"开启":"关闭",audio.loaded?ToggleMusic+i:0,enabled);
+        }
+    }
     void render(Draw& d) {
         layout(d);
         d.fill(d.clip,ink);
         button_count=0;
-        if (title) { start_screen(d); return; }
+        if (title) {
+            if (modal==AudioSettings) audio_settings(d);
+            else start_screen(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
         header(d);
         switch (modal) {
         case Routes: route_list(d); break;
@@ -1589,6 +1636,7 @@ struct VoyageApp {
         case OfficerPage: officer_page(d); break;
         case RumorList: rumor_list(d); break;
         case RumorPage: rumor_page(d); break;
+        case AudioSettings: audio_settings(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1669,9 +1717,13 @@ struct VoyageApp {
             if (!had_save) { selected=lisbon; set_modal(StoryPage); }
             break;
         case RouteList: page=0; set_modal(Routes); break;
+        case ShowAudio: set_modal(AudioSettings); break;
+        case ToggleMusic: case ToggleEffects: case ToggleVoices:
+            audio.toggle(1U<<(action-ToggleMusic));
+            break;
         case ShowRumors: rumor_back=modal; page=0; set_modal(RumorList); break;
         case RecordRumor:
-            if (game.hear_rumor(rumor_item)) changed();
+            if (game.hear_rumor(rumor_item)) { audio.cue(Sound::Page); changed(); }
             break;
         case MarkRumor: {
             const auto& rumor=Rumors[rumor_item];
@@ -1695,6 +1747,8 @@ struct VoyageApp {
                 }
                 scout_course.reset();
                 screen=Chart; set_modal(None); follow=true; last_day=now;
+                previous_helm={game.s.helm_x,game.s.helm_y};
+                audio.cue(Sound::CastOff);
                 changed();
             } else notify();
             break;
@@ -1722,6 +1776,7 @@ struct VoyageApp {
                 set_modal(None);
                 follow=true;
                 last_day=now;
+                audio.cue(Sound::CastOff);
                 changed();
             } else notify();
             break;
@@ -1757,6 +1812,8 @@ struct VoyageApp {
         case StartHelm:
             if (game.start_helm(selected)) {
                 screen=Chart; set_modal(None); follow=true; last_day=now;
+                previous_helm={game.s.helm_x,game.s.helm_y};
+                audio.cue(Sound::CastOff);
                 changed();
             } else notify();
             break;
@@ -1767,7 +1824,11 @@ struct VoyageApp {
             }
             break;
         case DockHelm:
-            if (game.dock_helm(chart_water)) { select(game.s.origin); changed(); }
+            if (game.dock_helm(chart_water)) {
+                audio.cue(Sound::Anchor);
+                select(game.s.origin);
+                changed();
+            }
             else notify();
             break;
         case ShowTow: set_modal(TowRequest); break;
@@ -1782,9 +1843,10 @@ struct VoyageApp {
             break;
         case Pause:
             game.paused=!game.paused;
+            previous_helm={game.s.helm_x,game.s.helm_y};
             last_day=now;
             break;
-        case Trim: game.s.reefed=1-game.s.reefed; save_needed=true; break;
+        case Trim: game.s.reefed=1-game.s.reefed; audio.cue(Sound::Trim); save_needed=true; break;
         case Retreat:
             game.turn_back(); selected=game.sea()?game.s.destination:game.s.origin;
             last_day=now;
@@ -1909,10 +1971,15 @@ struct VoyageApp {
         case FightFirst: case FightSecond: case FightThird: case FightFourth: {
             const auto& s=game.s;
             const int hull=s.hull, stores=s.stores, water=s.water, gold=s.gold, cargo=game.load(), day=s.day;
-            if (s.weather==Privateer && action==FightSecond) flash_until=now+570;
+            if (s.weather==Privateer && action==FightSecond && !s.needs_reload) {
+                flash_until=now+570;
+                audio.cue(Sound::Broadside);
+                audio.cue(Sound::FireCall);
+            }
             if (game.duel() && action!=FightFourth) {
                 duel_animation=action-FightFirst;
                 duel_flash_until=now+419;
+                audio.cue(Sound::Steel);
             }
             game.encounter_action(action-FightFirst);
             if (!game.encounter()) {
@@ -1930,6 +1997,7 @@ struct VoyageApp {
         }
         case ResumeAfterEvent:
             game.paused=false;
+            previous_helm={game.s.helm_x,game.s.helm_y};
             last_day=now;
             set_modal(None);
             break;
@@ -1937,6 +2005,7 @@ struct VoyageApp {
     }
 
     bool back() {
+        if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
         if (modal!=None) {
             if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
