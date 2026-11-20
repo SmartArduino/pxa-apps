@@ -102,7 +102,7 @@
     deploy(1, {{hq,{7,10}}, {power,{4,12}}, {turret,{10,18}}, {tank,{10,21}},
                {tank,{15,17}}, {rifle,{17,11}}, {rocket,{6,20}}});
     deploy(2, {{relay,{14,24}}, {supply,{27,23}}, {supply,{16,36}}});
-    deploy(0, {{shipyard,{26,27}}, {patrol_boat,{23.5f,29.5f}}});
+    deploy(0, {{shipyard,{26,27}}, {patrol_boat,{23.5f,29.5f}}, {landing_craft,{24.5f,30.5f}}});
     deploy(1, {{patrol_boat,{20.5f,12.5f}}});
     break;
    case 2: // Grid district: two substations on separate service roads.

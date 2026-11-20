@@ -9,7 +9,7 @@ struct Locomotion {
  void update(const World& w){
   if(w.time==last_time)return;
   float dt=w.time-last_time;bool reset=last_time<0||dt<=0||dt>.5f;last_time=w.time;
-  for(int i=0;i<MAX;++i){auto& p=poses[i];const auto& a=w.e[i];bool alive=a.hp>0&&unit_kind(a.kind);uint8_t token=combat_kind(a.kind)?a.cargo:0;
+  for(int i=0;i<MAX;++i){auto& p=poses[i];const auto& a=w.e[i];bool alive=deployed(a)&&unit_kind(a.kind);uint8_t token=combat_kind(a.kind)?a.cargo:0;
    if(!alive){p.alive=false;p.weight=0;continue;}
    if(reset||!p.alive||p.kind!=a.kind||p.team!=a.team||p.token!=token){p={a.p,0,0,a.kind,a.team,token,true};continue;}
    float moved=dist(a.p,p.last);p.last=a.p;

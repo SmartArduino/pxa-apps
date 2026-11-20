@@ -31,8 +31,14 @@ inline bool valid_world(const Save& s,bool v4=false){
  if(s.career.unlocked>=CHAPTERS||s.has_run>1||s.world.chapter<0||s.world.chapter>=CHAPTERS||s.world.side<28||s.world.side>N||s.world.job_count<0||s.world.job_count>6||s.world.credits<0||s.world.credits>10000000||!std::isfinite(s.world.time))return false;
  for(auto& a:s.world.e)if(a.kind>=kind_count||a.team>2||!std::isfinite(a.hp)||!std::isfinite(a.p.x)||!std::isfinite(a.p.y)||a.p.x<0||a.p.y<0||a.p.x>s.world.side||a.p.y>s.world.side||!std::isfinite(a.goal.x)||!std::isfinite(a.goal.y)||!std::isfinite(a.progress))return false;
  for(const auto& a:s.world.e){
-  int escort=escort_id(a);
-  if(escort>=MAX|| (a.hp>0&&(escort>=0||a.target==retreat_order)&&(a.team!=0||!combat_kind(a.kind))))return false;
+  if(a.target<passenger_order_base-MAX+1)return false;
+  if(a.hp<=0)continue;
+  int board=boarding_ship(a),passenger=passenger_ship(a);
+  if((escort_id(a)>=0||a.target==retreat_order)&&(a.team!=0||!combat_kind(a.kind)))return false;
+  int boat=board>=0?board:passenger;
+  if(boat>=0&&(a.team!=0||!land_combat(a.kind)||!s.world.transport_exists(boat)))return false;
+  if(passenger>=0&&(a.selected||a.moving))return false;
+  if(a.kind==landing_craft&&s.world.transport_load(int(&a-s.world.e.data()),true)>transport_capacity)return false;
  }
  for(int i=0;i<s.world.job_count;++i){auto& j=s.world.jobs[i];if(!unit_kind(j.kind)||j.producer>MAX||!std::isfinite(j.left)||!std::isfinite(j.total)||j.total<=0)return false;}
  const auto& build=s.world.construction;

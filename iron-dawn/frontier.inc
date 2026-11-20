@@ -2,7 +2,7 @@
 // World members for the second act’s persistent mission objectives.
  int captured_nodes()const{return count(relay,0);}
  void frontier_tick(float dt){
-  for(auto& node:e)if(node.hp>0&&node.kind==relay&&node.team==2){bool friendly=false,enemy=false;for(auto& a:e)if(a.hp>0&&land_combat(a.kind)&&dist(a.p,node.p)<2.7f){friendly|=a.team==0;enemy|=a.team==1;}if(friendly&&!enemy){node.stuck+=dt;if(node.stuck>=12){node.team=0;node.stuck=0;credits+=180;blast(node.p,6);power_update();say(chapter==4?"苏弥：中继站已接通，车队可以继续前进。":"苏弥：节点已接通。收到居民区的回传信号。",8);emit_sound(5);}}else if(!friendly)node.stuck=std::max(0.f,node.stuck-dt*.4f);}
+  for(auto& node:e)if(node.hp>0&&node.kind==relay&&node.team==2){bool friendly=false,enemy=false;for(auto& a:e)if(deployed(a)&&land_combat(a.kind)&&dist(a.p,node.p)<2.7f){friendly|=a.team==0;enemy|=a.team==1;}if(friendly&&!enemy){node.stuck+=dt;if(node.stuck>=12){node.team=0;node.stuck=0;credits+=180;blast(node.p,6);power_update();say(chapter==4?"苏弥：中继站已接通，车队可以继续前进。":"苏弥：节点已接通。收到居民区的回传信号。",8);emit_sound(5);}}else if(!friendly)node.stuck=std::max(0.f,node.stuck-dt*.4f);}
   if(chapter==3){if(captured_nodes()>=2&&!mission.stage){mission.stage=1;mission.events|=1;say("林岚：已取得行车记录。摧毁军工厂，切断山区追兵。",9);}won=mission.stage&&!count(factory,1);if(count(relay,0)+count(relay,2)<2)defeated=true;}
   if(chapter==4) convoy_tick(dt);
   if(chapter==5){if(!mission.stage&&captured_nodes()>=3){mission.stage=1;mission.events|=1u<<3;say("墨沉：恢复城市供电，就会暴露所有人。你承担得起吗？",10);}if(mission.stage==1&&!count(power,1)){mission.stage=2;mission.events|=1u<<4;say("苏弥：居民电网已隔离！核心屏障解除，城市不会再停电。",10);}won=mission.stage==2&&!count(hq,1);if(count(relay,0)+count(relay,2)<3)defeated=true;}

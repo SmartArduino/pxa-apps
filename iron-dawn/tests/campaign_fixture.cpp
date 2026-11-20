@@ -7,6 +7,10 @@
 using namespace iron;
 int main(int argc,char** argv){if(argc!=3)return 2;std::string_view mode=argv[1];Save s;s.has_run=1;s.generation=1000;s.career.unlocked=5;s.career.wins=7;auto& w=s.world;
  if(mode.starts_with("construction")){w.init(0);constexpr Vec sites[]={{8,20},{6,21},{13,25},{8,32},{12,24}};int stage=std::clamp(std::atoi(argv[1]+12),0,3);for(int k=power;k<=turret;++k){int id=w.add(k,0,sites[k-power]);if(id<0)return 3;w.e[id].progress=specs[k].build*(.875f-stage*.25f);}w.seen.fill(1);w.fog.fill(1);w.story_beat=true;}
+ else if(mode=="transport"){
+  w.init(1);w.e[5].p={25.5f,30.5f};w.e[6].p={26.5f,31.5f};
+  w.select_one(5);w.select_one(6,true);w.assign_squad(1);w.fog.fill(1);w.seen.fill(1);
+ }
  else if(mode=="combined-water")w.init(1);
  else if(mode=="combined-sky")w.init(3);
  else if(mode=="combined-hero"){w.init(5);w.e[5].hp=100;}

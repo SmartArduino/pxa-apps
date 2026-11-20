@@ -10,7 +10,7 @@
   if(id<0)return -1;
   switch(world.e[id].kind){
    case hq:return index==0?commander:-1;
-   case shipyard:return index==0?patrol_boat:-1;
+   case shipyard:return index==0?patrol_boat:index==1?landing_craft:-1;
    case helipad:return index==0?rotorcraft:-1;
    case barracks:return index<2?rifle+index:-1;
    case factory:return index<3?tank+index:-1;
@@ -20,7 +20,7 @@
 
  const char* short_title(int kind)const{
   constexpr const char* titles[]={"游骑","破甲","坦克","火炮","矿车","指挥中心","电站","矿厂","兵营","工厂","炮塔","中继站","补给",
-     "巡逻艇","旋翼机","林岚","船坞","机坪","防空塔"};
+     "巡逻艇","旋翼机","林岚","船坞","机坪","防空塔","渡运艇"};
   return titles[kind];
  }
 
@@ -93,11 +93,11 @@
   return best;
  }
 
- int combined_unit_at(int x,int y)const{
+ int combined_unit_at(int x,int y,bool only_transport=false)const{
   int found=-1;float best=1;
   for(int i=0;i<MAX;++i){
    auto& a=world.e[i];
-   if(a.hp<=0||(a.kind!=rotorcraft&&a.kind!=patrol_boat&&a.kind!=commander)
+   if(!deployed(a)||(only_transport&&a.kind!=landing_craft)||(a.kind!=rotorcraft&&!naval_kind(a.kind)&&a.kind!=commander)
       ||(a.team!=0&&!world.fog[cell(a.p)]))continue;
    int height=a.kind==rotorcraft?craft_altitude+13:a.kind==commander?18:12;
    float radius=(a.kind==commander?13.f:18.f)*field.zoom;

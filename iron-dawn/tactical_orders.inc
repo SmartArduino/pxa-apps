@@ -17,7 +17,7 @@
   bool ordered=false;
   for(int id=0;id<MAX;++id){
    auto& guard=e[id];
-   if(!guard.selected||!squad_unit(id)||guard.kind==patrol_boat)continue;
+   if(!guard.selected||!squad_unit(id)||naval_kind(guard.kind))continue;
    guard.target=int16_t(escort_order_base-truck);
    guard.goal=e[truck].p;guard.step=guard.p;guard.stuck=0;guard.moving=true;
    ordered=true;

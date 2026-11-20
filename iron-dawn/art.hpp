@@ -53,7 +53,7 @@ struct Battlefield {
    r.dot(x,y,cream);
   }else{
    const auto& pose=locomotion.get(identity);
-   if(a.kind==patrol_boat&&pose.weight>.12f){
+   if(naval_kind(a.kind)&&pose.weight>.12f){
     auto wake=project({a.p.x-std::cos(a.dir)*.8f,a.p.y-std::sin(a.dir)*.8f});
     r.ring(wake.x,wake.y,12*zoom,4*zoom,rgb(102,167,162));
    }
@@ -71,7 +71,7 @@ struct Battlefield {
   if(a.selected)r.ring(ground.x,ground.y,17*zoom,7*zoom,team);
  }
  [[gnu::noinline]] void unit_art(Raster& r,const Entity& a,int identity=-1,bool cover=false){
-  if(a.kind==patrol_boat||a.kind==rotorcraft||a.kind==commander){combined_unit_art(r,a,identity);return;}
+  if(naval_kind(a.kind)||a.kind==rotorcraft||a.kind==commander){combined_unit_art(r,a,identity);return;}
   auto p=project(a.p);int x=std::lround(p.x),y=std::lround(p.y);bool infantry=a.kind<=rocket;auto team=a.team==1?red:cyan;
   if(a.selected){
    int rx=std::max(6,int((infantry?8:18)*zoom)),ry=std::max(3,int((infantry?4:8)*zoom)),arm=std::max(2,int(4*zoom));
@@ -165,12 +165,20 @@ struct Battlefield {
   rallies(r,w);
   for(const auto& shot:w.shots)if(shot.alive&&shot_behind(shot)&&w.fog[cell(shot.p)])draw_shot(r,shot,w);
   // Painter sort props and entities by their ground plane depth.
-  std::array<int,MAX> order{};int num=0;for(int i=0;i<MAX;++i)if(w.e[i].hp>0&&(w.e[i].team==0||w.fog[cell(w.e[i].p)]))order[num++]=i;std::sort(order.begin(),order.begin()+num,[&](int a,int b){return w.e[a].p.x+w.e[a].p.y<w.e[b].p.x+w.e[b].p.y;});
+  std::array<int,MAX> order{};int num=0;for(int i=0;i<MAX;++i)if(deployed(w.e[i])&&(w.e[i].team==0||w.fog[cell(w.e[i].p)]))order[num++]=i;std::sort(order.begin(),order.begin()+num,[&](int a,int b){return w.e[a].p.x+w.e[a].p.y<w.e[b].p.x+w.e[b].p.y;});
   for(int d=0,ii=0;d<w.side*2;++d){for(int x=std::max(1,tiles.left);x<=std::min(w.side-2,tiles.right);++x){int y=d-x;if(y<1||y>=w.side-1)continue;int c=y*N+x;if(!w.fog[c])continue;Vec p={x+.5f,y+.5f};if(!onscreen(project(p),60))continue;unsigned hash=x*8749+y*6329+x*y*17;tall_environment(r,w,p,hash);}
    while(ii<num&&int(w.e[order[ii]].p.x+w.e[order[ii]].p.y)<=d){auto& a=w.e[order[ii++]];if(a.kind==rotorcraft||!onscreen(project(a.p),110))continue;if(!unit_kind(a.kind)){building_art(r,a);if(w.chapter==5&&a.kind==hq&&a.team==1&&w.mission.stage<2){auto lock=project(a.p,68);r.text(lock.x,lock.y,"屏障",cyan,12,1);}if(w.extra.mode&&a.kind==hq&&a.team==0){auto beacon=project(a.p,58);for(int lamp=0;lamp<3;++lamp)r.rect(beacon.x+(lamp-1)*3*zoom,beacon.y-(1+((int(clock*4)+lamp)%3))*2*zoom,std::max(1,int(2*zoom)),std::max(1,int((2+((int(clock*4)+lamp)%3)*2)*zoom)),cyan);}}else{
     int id=order[ii-1];
     unit_art(r,a,id,w.in_cover(a));
     draw_order_tag(r,w,id);
+    if(a.kind==landing_craft){
+     int load=w.transport_load(id);
+     if(a.selected||load){
+      auto p=project(a.p,55);
+      char seats[12];std::snprintf(seats,sizeof seats,"%d/%d",load,transport_capacity);
+      r.text(p.x,p.y,seats,gold,12,1);
+     }
+    }
    }if(!unit_kind(a.kind)&&(a.selected||a.hp<specs[a.kind].hp)){auto p=project(a.p,48);r.rect(p.x-18,p.y,36,3,navy);r.rect(p.x-17,p.y+1,34*std::clamp(a.hp/specs[a.kind].hp,0.f,1.f),1,a.team==1?red:cyan);}}
    // Near rails are sorted after units behind their ground-plane edge.
    for(int x=std::max(1,tiles.left);x<=std::min(w.side-2,tiles.right);++x){int y=d-2-x;if(y<1||y>=w.side-1)continue;int c=y*N+x;if(w.terrain[c]!=bridge||w.terrain[c+N]==bridge||!w.fog[c])continue;auto q=project({x+.5f,y+.98f});if(onscreen(q,30))Sprites::anchor(r,art::bridge_first+2,std::lround(q.x),std::lround(q.y),zoom*.55f);}

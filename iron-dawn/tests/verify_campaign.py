@@ -305,6 +305,71 @@ def combined_arms(host,mode):
  host.pause();host.leave()
  return {'hero_support':True,'cooldown_restored':True}
 
+def troop_transport(host):
+ host.bootstrap('transport');host.resume()
+ data=host.save()
+ entity=schema['entities']
+ boat=next(i for i in range(100) if data[entity+i*56+50:entity+i*56+52]==bytes((19,0)))
+ def position(i,state):
+  return struct.unpack_from('<2f',state,entity+i*56)
+ def orders(state):
+  return [struct.unpack_from('<h',state,entity+i*56+schema['target_offset'])[0] for i in (5,6)]
+ def focus(x,y):
+  wide=host.ww<host.w
+  size=96 if wide else 80
+  map_x,map_y=(host.ww+12,host.top+12) if wide else (host.w-90,host.top+8)
+  px,py=round(x*size/44),round(y*size/44)
+  host.tap(map_x+px,map_y+py)
+  # Touch coordinates round to whole physical pixels, then truncate in the guest.
+  clicked_x=round((map_x+px)*host.pw/host.w)*host.w//host.pw
+  clicked_y=round((map_y+py)*host.ph/host.h)*host.h//host.ph
+  return ((clicked_x-map_x)*44/size,(clicked_y-map_y)*44/size)
+ def field(view,x,y,z=0):
+  cx,cy=view
+  host.tap(host.ww/2+(x-y-cx+cy)*20,(host.top+host.bottom)/2+(x+y-cx-cy)*10-z)
+ def arm():
+  if host.ww<host.w:
+   host.tap(407,host.top+44)
+  else:
+   row=max(28,min(int(host.h*.18),int(np.ceil(30*host.h/host.ph))))
+   line=max(20,int(np.ceil(14*host.h/host.ph)))
+   panel=host.bottom-(line+8+12+row*2+6)
+   host.tap((host.w-480)/2+428,host.bottom+5+row/2)
+   host.tap((host.w-480)/2+417,panel+line+18+row*1.5)
+ start=position(boat,data)
+ view=focus(*start)
+ arm();field(view,*start,12)
+ host.wait_log('boarding order')
+ time.sleep(4)
+ host.pause()
+ cargo=[-204-boat]*2
+ host.save(lambda state:orders(state)==cargo)
+ host.leave();host.launch();host.resume()
+ view=focus(*start)
+ assert orders(host.save())==cargo
+ field(view,*start,12);host.shot('loaded-ferry')
+ field(view,21.5,30.5,0)
+ time.sleep(4)
+ host.pause()
+ crossed=host.save(lambda state:position(boat,state)[0]<22 and orders(state)==cargo)
+ assert position(5,crossed)==position(boat,crossed)
+ host.command('KEY BACK');time.sleep(.3)
+ arm();field(view,20.5,30.5,0)
+ host.wait_log('landing order')
+ landed=host.save(lambda state:orders(state)==[-1,-1])
+ assert all(position(i,landed)[0]<21 for i in (5,6))
+ assert landed[schema['squads']+5:schema['squads']+7]==b'\x01\x01'
+ host.shot('opposite-bank')
+ if host.ww<host.w:
+  dock=next(i for i in range(100) if data[entity+i*56+50:entity+i*56+52]==bytes((16,0)))
+  dock_pos=position(dock,landed)
+  field(focus(*dock_pos),*dock_pos,30)
+  host.tap(host.ww+165,242)
+  host.save(lambda state:state[schema['jobs']:schema['jobs']+2]==bytes((19,dock+1)))
+  host.shot('ferry-production')
+ host.pause();host.leave()
+ return {'passengers':2,'loaded_save_restored':True,'crossed_and_landed':True,'squad_preserved':True}
+
 scenario('campaign-wide',campaign)
 scenario('campaign-small',lambda host:campaign(host,3,6),296,240)
 def legacy_convoy(host):
@@ -331,6 +396,8 @@ scenario('tactical-small',tactical_orders,296,240)
 for mode in ['combined-water','combined-sky','combined-hero']:
  scenario(mode,lambda host,mode=mode:combined_arms(host,mode))
 scenario('combined-hero-small',lambda host:combined_arms(host,'combined-hero'),296,240)
+scenario('transport',troop_transport)
+scenario('transport-small',troop_transport,296,240)
 for stage in range(4):scenario('construction-'+str(stage),lambda h,s=stage:construction(h,s,complete=s==0))
 (args.output/'result.json').write_text(json.dumps({'passed':all(x['passed'] for x in results),'scenarios':results,'capture':'signed production app, official SDK simulator and controlled fixture saves'},ensure_ascii=False,indent=2)+'\n')
 raise SystemExit(0 if all(x['passed'] for x in results) else 1)

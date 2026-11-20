@@ -25,7 +25,7 @@ struct SelectionTool {
  }
  Rect bounds()const{return {std::min(x0,x1),std::min(y0,y1),std::abs(x1-x0)+1,std::abs(y1-y0)+1};}
  bool visible(const Entity& a,const Battlefield& f)const{
-  if(a.hp<=0||a.team!=0||!combat_kind(a.kind))return false;
+  if(!deployed(a)||a.team!=0||!combat_kind(a.kind))return false;
   // Use the visible body rather than the ground point beneath a tank's hull.
   auto p=f.project(a.p,a.kind==rotorcraft?craft_altitude+14:8);
   return viewport.has(int(p.x),int(p.y))&&!map.has(int(p.x),int(p.y))&&!toggle.has(int(p.x),int(p.y));

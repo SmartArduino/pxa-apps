@@ -61,7 +61,7 @@
   if(job.left>0)return;
   if(home>=0){
    Vec base=e[home].p;
-   Vec pos=k==patrol_boat?shore_exit(base):k==rotorcraft?base:production_exit(base);
+   Vec pos=naval_kind(k)?shore_exit(base):k==rotorcraft?base:production_exit(base);
    if(!open_for(k,pos))return; // Keep the unit ready until there is a usable exit.
    int id=add(k,0,pos);
    if(id>=0){
@@ -121,7 +121,7 @@
  bool site_clear(Vec p) const {
   int c=cell(p);
   if(!open(p)||!seen[c]||ore[c]||terrain[c]==bridge||terrain[c]==railbed)return false;
-  for(auto& a:e)if(a.hp>0&&unit_kind(a.kind)&&a.kind!=rotorcraft&&cell(a.p)==c)return false;
+  for(auto& a:e)if(deployed(a)&&unit_kind(a.kind)&&a.kind!=rotorcraft&&cell(a.p)==c)return false;
   return true;
  }
 

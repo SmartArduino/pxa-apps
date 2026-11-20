@@ -5,7 +5,7 @@
  bool waterway_cell(int c)const{return terrain[c]==water||terrain[c]==bridge;}
 
  bool open_for(int kind,Vec p,int ignore=-1)const{
-  if(kind!=patrol_boat&&kind!=rotorcraft)return open(p,ignore);
+  if(!naval_kind(kind)&&kind!=rotorcraft)return open(p,ignore);
   if(p.x<1||p.y<1||p.x>=side-1||p.y>=side-1)return false;
   return kind==rotorcraft||waterway_cell(cell(p));
  }
@@ -31,7 +31,7 @@
  }
 
  int selected_commander()const{
-  for(int i=0;i<MAX;++i)if(e[i].hp>0&&e[i].team==0&&e[i].kind==commander&&e[i].selected)return i;
+  for(int i=0;i<MAX;++i)if(deployed(e[i])&&e[i].team==0&&e[i].kind==commander&&e[i].selected)return i;
   return -1;
  }
 
@@ -42,7 +42,7 @@
   auto position=e[id].p;
   bool repaired=false;
   for(auto& a:e){
-   if(a.hp<=0||a.team!=0||!combat_kind(a.kind)||a.kind==rotorcraft||a.hp>=specs[a.kind].hp)continue;
+   if(!deployed(a)||a.team!=0||!combat_kind(a.kind)||a.kind==rotorcraft||a.hp>=specs[a.kind].hp)continue;
    if(distance_squared(a.p,position)>support_radius*support_radius)continue;
    a.hp=std::min(float(specs[a.kind].hp),a.hp+specs[a.kind].hp*.24f);
    blast(a.p,3);repaired=true;

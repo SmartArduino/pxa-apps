@@ -29,6 +29,7 @@ struct Sprites {
  static unsigned unit_frame(int kind,float angle,unsigned pose=0){
   unsigned facing=int(std::lround(angle*4/3.14159265f))&7;
   if(kind==patrol_boat)return art::patrol_boats_first+facing;
+  if(kind==landing_craft)return art::landing_craft_first+facing;
   if(kind==rotorcraft)return art::rotorcraft_first+facing;
   if(kind==commander)return art::commander_first+facing;
   return art::unit_first[std::clamp(kind,0,4)]+facing+(pose&1)*8;

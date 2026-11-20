@@ -4,6 +4,8 @@
  const char* tactical_hint()const{
   if(tactical==TacticalMode::escort)return "护卫：点击矿车或补给车";
   if(tactical==TacticalMode::retreat)return "撤退：点击要撤往的空地";
+  if(tactical==TacticalMode::board)return "渡运：点击已靠岸的渡运艇";
+  if(tactical==TacticalMode::land)return "登陆：点击附近已探索的岸边";
   return nullptr;
  }
 
@@ -26,11 +28,38 @@
   return best;
  }
 
+ void arm_transport(){
+  if(tactical==TacticalMode::board||tactical==TacticalMode::land){
+   tactical=TacticalMode::none;world.say("已取消待发指令");return;
+  }
+  if(world.selected_loaded_transport()>=0){
+   placing=-1;tactical=TacticalMode::land;
+  }else if(world.may_board()){
+   placing=-1;tactical=TacticalMode::board;
+  }else return;
+  last_selected_id=-1;world.say(tactical_hint());
+ }
+
+ bool transport_available()const{return world.selected_loaded_transport()>=0||world.may_board();}
+
+ void transport_button(Raster& r,Rect area){
+  int ship=world.selected_loaded_transport();
+  bool active=tactical==TacticalMode::board||tactical==TacticalMode::land;
+  if(ship>=0||world.may_board()||active)button(r,area,tactic_transport,ship>=0?"登陆":"渡运",active);
+ }
+
  void tactical_tap(int x,int y,Vec position){
   if(tactical==TacticalMode::escort){
    int vehicle=escort_vehicle_at(x,y);
    if(!world.order_escort(vehicle))return;
    char message[80];std::snprintf(message,sizeof message,"Iron Dawn escort order truck=%d",vehicle);log(message);
+  }else if(tactical==TacticalMode::board){
+   int ship=combined_unit_at(x,y,true);
+   if(!world.order_board(ship))return;
+   log("Iron Dawn boarding order");
+  }else if(tactical==TacticalMode::land){
+   if(!world.order_land(world.selected_loaded_transport(),position))return;
+   log("Iron Dawn landing order");
   }else{
    if(!world.order_retreat(position))return;
    log("Iron Dawn retreat order");

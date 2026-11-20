@@ -3,7 +3,7 @@
 
  bool squad_unit(int id) const {
   const auto& a=e[id];
-  return a.hp>0&&a.team==0&&combat_kind(a.kind);
+  return deployed(a)&&a.team==0&&combat_kind(a.kind);
  }
 
  int squad_size(unsigned number) const {
