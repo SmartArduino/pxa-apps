@@ -472,6 +472,58 @@ void unknown_waters() {
     assert(official.depart(azores));
 }
 
+void harbor_navigation() {
+    // A narrow strip of land separates the vessel from a charted Azores anchorage.
+    const auto water=[](Point p) {
+        return p.x>=0 && p.x<ChartWidth && p.y>=0 && p.y<ChartHeight &&
+               !(p.x>=137 && p.x<=140 && p.y>=272 && p.y<=274);
+    };
+    Game ship;
+    ship.s.chart_marks|=1U<<azores;
+    assert(ship.start_helm(-1));
+    ship.s.helm_x=140*16;
+    ship.s.helm_y=270*16;
+    const auto channel=ship.harbor_approach(azores,water);
+    assert(channel.count>2 && !channel.direct);
+    assert(channel.points[0].x==140 && channel.points[0].y==270);
+    const auto berth=channel.points[channel.count-1];
+    assert(berth.x==Anchor[azores].x && berth.y==Anchor[azores].y);
+    for (int i=1;i<channel.count;++i) {
+        const auto a=channel.points[i-1], b=channel.points[i];
+        assert(water(a) && water(b));
+        const int dx=b.x-a.x, dy=b.y-a.y;
+        if (dx && dy) assert(water({b.x,a.y}) && water({a.x,b.y}));
+    }
+
+    ship.s.helm_x=148*16;
+    ship.s.helm_y=276*16;
+    assert(ship.harbor_approach(azores,water).direct);
+    assert(ship.nearby_anchorage(water)<0);
+    for (int i=0;i<8 && !ship.paused;++i) ship.helm_step(water);
+    assert(ship.paused && ship.nearby_anchorage(water)==azores && ship.s.hull==100);
+    assert(ship.dock_helm(water) && ship.s.origin==azores && !ship.sea());
+    const auto end=ship.wake_point(ship.s.wake_count-1);
+    assert(end.x==berth.x && end.y==berth.y);
+    State saved;
+    assert(decode(saved,encode(ship.s)));
+    assert(saved.wake_count==ship.s.wake_count && saved.wake_head==ship.s.wake_head);
+    assert(ship.start_helm(-1) && ship.s.wake_count==1);
+
+    ship.s.helm_x=25*16;
+    ship.s.helm_y=100*16;
+    ship.s.heading=2;
+    ship.s.day=99999;
+    for (int i=0;i<80;++i) ship.helm_step(water);
+    assert(ship.s.wake_count==WakeCapacity);
+    int previous=-1;
+    for (int i=0;i<ship.s.wake_count;++i) {
+        const auto point=ship.wake_point(i);
+        assert(point.x>previous && point.y==100);
+        previous=point.x;
+    }
+    assert(decode(saved,encode(ship.s)) && saved.wake_count==WakeCapacity);
+}
+
 int main() {
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {
@@ -545,7 +597,8 @@ int main() {
     expeditions();
     ship_officers();
     unknown_waters();
+    harbor_navigation();
     story_journey(1,0);
     story_journey(2,1);
-    std::puts("Routes, contracts, markets, endings, saves, combat, expeditions, officers and exploration passed.");
+    std::puts("Routes, markets, combat, expeditions, exploration, navigation and saves passed.");
 }

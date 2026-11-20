@@ -42,6 +42,15 @@ int checksum(std::span<const std::byte> bytes) {
         hash = (hash ^ std::to_integer<unsigned>(bytes[i])) * 16777619U;
     return static_cast<int>(hash);
 }
+
+bool open_water(Point from, Point to, WaterTest water_at) {
+    if (!water_at) return true;
+    const int dx=to.x-from.x, dy=to.y-from.y;
+    const int samples=std::max(std::abs(dx),std::abs(dy));
+    for (int step=1;step<=samples;++step)
+        if (!water_at({from.x+dx*step/samples,from.y+dy*step/samples})) return false;
+    return true;
+}
 }
 
 SeaConditions conditions_at(Point p, int day) {
@@ -479,6 +488,7 @@ void Game::restore() {
     }
     reveal_chart(Anchor[lisbon],34);
     reveal_chart(position(),24);
+    if (s.helm && !s.wake_count) record_wake();
 }
 
 bool Game::consume_day(SeaConditions weather) {
@@ -510,6 +520,8 @@ bool Game::start_helm(int destination) {
     s.helm_pulse=0;
     s.helm_x=here.x*16;
     s.helm_y=here.y*16;
+    s.wake_head=s.wake_count=0;
+    record_wake();
     s.destination=charted(destination) && destination!=s.origin ? destination : -1;
     const auto target=s.destination>=0?Anchor[s.destination]:Point{here.x-12,here.y};
     s.heading=static_cast<std::uint8_t>(direction_to({target.x-here.x,target.y-here.y}));
@@ -540,31 +552,99 @@ int Game::visible_landmark() const {
     return nearest;
 }
 
+HarborApproach Game::harbor_approach(int port, WaterTest water_at) const {
+    HarborApproach course;
+    if (!s.helm || !charted(port) || !water_at) return course;
+    const Point ship=position(), anchor=Anchor[port];
+    const int dx=ship.x-anchor.x, dy=ship.y-anchor.y;
+    constexpr int radius=23, width=2*radius+1, cells=width*width, center=cells/2;
+    if (std::abs(dx)>radius || std::abs(dy)>radius || !water_at(anchor)) return course;
+    if (open_water(ship,anchor,water_at)) {
+        course.points[0]=ship;
+        course.points[1]=anchor;
+        course.count=2;
+        course.direct=true;
+        return course;
+    }
+
+    // Search outward from the anchorage so every direction points back toward it.
+    constexpr Point offsets[]{{0,-1},{1,-1},{1,0},{1,1},{0,1},{-1,1},{-1,0},{-1,-1}};
+    constexpr std::uint8_t unvisited=255;
+    std::array<std::uint8_t,cells> back;
+    back.fill(unvisited);
+    std::array<std::uint16_t,cells> queue;
+    const int destination=center+dy*width+dx;
+    queue[0]=center;
+    back[center]=8;
+    int tail=1;
+    for (int head=0;head<tail && back[destination]==unvisited;++head) {
+        const int node=queue[head], x=node%width, y=node/width;
+        for (int bearing=0;bearing<8;++bearing) {
+            const auto step=offsets[bearing];
+            const int nx=x+step.x, ny=y+step.y;
+            if (nx<0 || nx>=width || ny<0 || ny>=width) continue;
+            const int next=ny*width+nx;
+            if (back[next]!=unvisited) continue;
+            const Point p{anchor.x+nx-radius,anchor.y+ny-radius};
+            if (!water_at(p)) continue;
+            if (step.x && step.y &&
+                (!water_at({p.x-step.x,p.y}) || !water_at({p.x,p.y-step.y}))) continue;
+            back[next]=(bearing+4)%8;
+            queue[tail++]=next;
+        }
+    }
+    if (back[destination]==unvisited) return course;
+    int cell=destination;
+    Point p=ship;
+    while (course.count<int(course.points.size())-1 && cell!=center) {
+        course.points[course.count++]=p;
+        const auto step=offsets[back[cell]];
+        cell+=step.y*width+step.x;
+        p={p.x+step.x,p.y+step.y};
+    }
+    course.points[course.count++]=p;
+    return course;
+}
+
 int Game::nearby_anchorage(WaterTest water_at) const {
-    if (!s.helm) return -1;
-    const auto here=position();
+    return s.helm?anchorage_at(position(),water_at):-1;
+}
+
+int Game::anchorage_at(Point here, WaterTest water_at) const {
     int best=26, index=-1;
     for (int i=0;i<PlaceCount;++i) {
         const int x=Anchor[i].x-here.x, y=Anchor[i].y-here.y;
         const int distance=x*x+y*y;
         if (distance>=best) continue;
-        if (water_at) {
-            bool open=true;
-            const int samples=std::max(std::abs(x),std::abs(y));
-            for (int step=1;step<=samples;++step)
-                if (!water_at({here.x+x*step/samples,here.y+y*step/samples})) { open=false; break; }
-            if (!open) continue;
-        }
+        if (!open_water(here,Anchor[i],water_at)) continue;
         best=distance;
         index=i;
     }
     return index;
 }
 
+Point Game::wake_point(int index) const {
+    return s.wake[(s.wake_head+WakeCapacity-s.wake_count+index)%WakeCapacity];
+}
+
+void Game::record_wake() {
+    const auto point=position();
+    if (s.wake_count) {
+        const auto previous=wake_point(s.wake_count-1);
+        if (point.x==previous.x && point.y==previous.y) return;
+    }
+    s.wake[s.wake_head]=point;
+    s.wake_head=(s.wake_head+1)%WakeCapacity;
+    s.wake_count=std::min(WakeCapacity,int(s.wake_count)+1);
+}
+
 bool Game::dock_helm(WaterTest water_at) {
     if (encounter()) return false;
     const int port=nearby_anchorage(water_at);
     if (port<0) { notice="请靠近锚地再停靠"; return false; }
+    s.helm_x=Anchor[port].x*16;
+    s.helm_y=Anchor[port].y*16;
+    record_wake();
     s.destination=port;
     arrive();
     paused=false;
@@ -582,14 +662,19 @@ void Game::helm_step(WaterTest water_at) {
     const int dx=heading.x*pace/16, dy=heading.y*pace/16;
     const int steps=std::max(1,std::max(std::abs(dx),std::abs(dy))/4);
     const int start_x=s.helm_x, start_y=s.helm_y;
+    auto last_cell=position();
+    const int starting_berth=anchorage_at(last_cell,water_at);
+    bool reached_berth=false;
     for (int i=1;i<=steps;++i) {
         const int x=start_x+dx*i/steps, y=start_y+dy*i/steps;
         if (x<0 || y<0 || x>=ChartWidth*16 || y>=ChartHeight*16) {
+            record_wake();
             notice="到达海图边界";
             paused=true;
             return;
         }
         if (!water_at({x/16,y/16})) {
+            record_wake();
             sighting(position());
             s.hull-=std::max(1,(s.reefed?2:6)-(has_pilot?3:0));
             notice="触及浅滩，转舵离岸";
@@ -599,10 +684,23 @@ void Game::helm_step(WaterTest water_at) {
         }
         s.helm_x=x;
         s.helm_y=y;
+        const Point current{x/16,y/16};
+        if (current.x==last_cell.x && current.y==last_cell.y) continue;
+        last_cell=current;
+        const int berth=anchorage_at(current,water_at);
+        if (berth>=0 && berth!=starting_berth) {
+            reached_berth=true;
+            break;
+        }
     }
+    record_wake();
     const int found=sighting(position());
     if (found>=0) {
         notice=Places[found].name;
+        paused=true;
+    }
+    if (reached_berth) {
+        notice="已到锚地，可以靠泊";
         paused=true;
     }
     if (++s.helm_pulse<4) return;
@@ -1351,7 +1449,8 @@ static_assert(4 + 28*4 + 4*4 + GoodsCount + PortCount*GoodsCount +
               TaleCount + 1 + 3*4 + 4 == LegacySaveBytes);
 static_assert(CombatSaveBytes==LegacySaveBytes+7+4+5);
 static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
-static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
+static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
+static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1359,7 +1458,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x37445054);
+    put(0x38445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -1385,6 +1484,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.chart_marks);
     put(s.heard_rumors);
     for (auto cell : s.coast) bytes[offset++]=std::byte(cell);
+    bytes[offset++]=std::byte(s.wake_head);
+    bytes[offset++]=std::byte(s.wake_count);
+    for (const auto point : s.wake) put(std::uint32_t(point.x)|(std::uint32_t(point.y)<<16));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1392,7 +1494,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
 
 bool decode(State& output, std::span<const std::byte> bytes) {
     if (bytes.size()!=LegacySaveBytes && bytes.size()!=CombatSaveBytes &&
-        bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes &&
+        bytes.size()!=CoastSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -1402,8 +1505,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool latest=version==0x37445054 && bytes.size()==SaveBytes;
-    const bool with_officers=latest || (version==0x36445054 && bytes.size()==OfficerSaveBytes);
+    const bool latest=version==0x38445054 && bytes.size()==SaveBytes;
+    const bool with_coast=latest || (version==0x37445054 && bytes.size()==CoastSaveBytes);
+    const bool with_officers=with_coast || (version==0x36445054 && bytes.size()==OfficerSaveBytes);
     const bool with_expeditions=with_officers || (version==0x35445054 && bytes.size()==OfficerSaveBytes);
     const bool with_helm=with_expeditions || (version==0x34445054 && bytes.size()==HelmSaveBytes);
     const bool current=with_helm || (version==0x33445054 && bytes.size()==CombatSaveBytes);
@@ -1474,11 +1578,22 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         if (s.officer_roster>>(OfficerLimit-1) || s.first_mate>=OfficerLimit ||
             (s.first_mate!=NoOfficer && !(s.officer_roster & (1U<<(s.first_mate-1))))) return false;
     }
-    if (latest) {
+    if (with_coast) {
         s.chart_marks=get();
         s.heard_rumors=get();
         if (s.chart_marks>>PlaceCount || s.heard_rumors>>RumorCount) return false;
         for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
+    }
+    if (latest) {
+        s.wake_head=std::to_integer<std::uint8_t>(bytes[offset++]);
+        s.wake_count=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (s.wake_head>=WakeCapacity || s.wake_count>WakeCapacity ||
+            (s.wake_count<WakeCapacity && s.wake_head!=s.wake_count)) return false;
+        for (auto& point : s.wake) {
+            const auto value=get();
+            point={int(value&0xffffU),int(value>>16)};
+            if (point.x>=ChartWidth || point.y>=ChartHeight) return false;
+        }
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||
