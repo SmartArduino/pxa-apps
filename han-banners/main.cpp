@@ -66,7 +66,7 @@ struct App {
     int count = 0, focus = 0, selected = 2, destination = -1, side = 0, formation = spear;
     int width = 0, height = 0;
     float scale = 1, ox = 0, oy = 0;
-    bool sansText = false, textAlpha = false;
+    bool sansText = false, texelAlpha = false;
     SansText sans;
     Page page = Page::home, helpFrom = Page::home;
     Notice notice = Notice::none;
@@ -186,7 +186,7 @@ struct App {
         } else {
             co_return std::unexpected(r.error());
         }
-        textAlpha=renderer->supports(pxa::game::RenderCapability::sprite_texel_alpha);
+        texelAlpha=renderer->supports(pxa::game::RenderCapability::sprite_texel_alpha);
         auto palette = pxa::game::Upload(*renderer,commands.bytes()).palette(art::palette);
         if (!palette) co_return palette;
         slots.fill(-1);
@@ -229,7 +229,7 @@ struct App {
         };
         switch (page) {
             case Page::home:require(titleBackground());require(art::logo);break;
-            case Page::replace:require(titleBackground());break;
+            case Page::replace:require(titleBackground());require(art::skin);break;
             case Page::ending:
                 require(titleBackground());require(art::skin);
                 require(art::outcomes[campaign.won>0?0:1]);break;
@@ -423,10 +423,22 @@ struct App {
         }
         if (n) f.sprites({uint8_t(slots[tile.page])},{sprites.data(),size_t(n)});
     }
-    void skinFrame(pxa::game::Frame& f,Rect area,uint16_t fill=ink) const {
+    void tintPanel(pxa::game::Frame& f,Rect area,uint16_t color=ink,bool light=false) const {
         const auto p=toPixels(area);
         if (p.w<=0 || p.h<=0) return;
-        blockPixels(f,p,fill);
+        if (!texelAlpha) {
+            blockPixels(f,p,color);
+            return;
+        }
+        const auto mask=art::panelShades[light?0:1];
+        const auto sprite=slice(mask,p,0,0,1,1);
+        f.sprites({uint8_t(slots[mask.page])},{&sprite,1},
+                  {.solid_color=true,.texel_alpha=true,.color={color}});
+    }
+    void skinFrame(pxa::game::Frame& f,Rect area,uint16_t fill=ink,bool light=false) const {
+        const auto p=toPixels(area);
+        if (p.w<=0 || p.h<=0) return;
+        tintPanel(f,area,fill,light);
         const int border=std::max(2,int(13*scale+.5f));
         nineSlice(f,art::skin,p,{20,20,border,border},false);
     }
@@ -498,7 +510,7 @@ struct App {
 
     TextStamp stamp(uint32_t code,int height,int x,int y) {
         if (sansText) {
-            const auto* letter=sans.glyph(code,height,textAlpha);
+            const auto* letter=sans.glyph(code,height,texelAlpha);
             if (!letter) return {};
             const auto w=uint16_t(letter->width),h=uint16_t(letter->height);
             return {{0,uint16_t(letter->x),uint16_t(letter->y),w,h},
@@ -515,7 +527,7 @@ struct App {
         int u=sx(x);
         const int v=(sy(y)+sy(y+size)-h)/2;
         if (align) u-=textWidth(s,size)/(align==1?2:1);
-        const bool alpha=sansText && textAlpha;
+        const bool alpha=sansText && texelAlpha;
         if (outline) {
             int left=u;
             const int stroke=std::max(1,h/12);
@@ -904,7 +916,7 @@ struct App {
         }
         if (mapWindow.w==standardMap.w) drawCityPanel(f);
 
-        block(f,{7,221,370,39},ink);
+        tintPanel(f,{7,221,370,39},rgb(36,27,21));
         const char* status=nullptr;
         uint16_t tone=dim;
         switch (notice) {
@@ -1040,6 +1052,11 @@ struct App {
         button(f,{89,132,98,30},"继续战斗",Command::pause,0,true,true);
         button(f,{196,132,99,30},battle.defending?"弃城":"撤军",Command::retreat);
     }
+    void battleHud(pxa::game::Frame& f) const {
+        skinFrame(f,{4,3,148,48},rgb(16,42,35),true);
+        skinFrame(f,{232,3,148,48},rgb(55,29,25),true);
+        skinFrame(f,{155,3,74,48},rgb(34,27,21));
+    }
     void drawBattle(pxa::game::Frame& f) {
         if (battle.duel.visible()) {
             drawDuel(f);
@@ -1047,7 +1064,7 @@ struct App {
             return;
         }
         fillBackground(f,battlefield());
-        block(f,{0,0,384,53},ink);
+        battleHud(f);
         portrait(f,battle.officer().portrait,{8,7,36,36});
         if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{340,7,36,36});
         else {
@@ -1069,7 +1086,7 @@ struct App {
         text(f,buf,192,23,14,coral,1);
         int progress=battle.ticks<Battle::approach?battle.ticks:
             (battle.ticks-Battle::approach)%Battle::period;
-        bar(f,{157,42,70,3},progress,battle.ticks<Battle::approach?Battle::approach:Battle::period,coral);
+        bar(f,{162,43,60,3},progress,battle.ticks<Battle::approach?Battle::approach:Battle::period,coral);
         for (int lane=0;lane<3;++lane) {
             army(f,lane,0);
             army(f,lane,1);
@@ -1080,7 +1097,7 @@ struct App {
                 int x=115+trail*5+i*13, y=124+i*19%64;
                 line(f,x,y,x+28,y-10,i%2?gold:ivory,2);
             }
-            frame(f,{121,66,142,26},gold,ink);
+            plaque(f,{121,66,142,26},true,true);
             text(f,battle.officer().skill,192,70,17,gold,1);
         } else if (battle.round && (battle.ticks-Battle::approach)%Battle::period<17) {
             number(f,-battle.losses[0],111,92,15,coral,1);
@@ -1088,7 +1105,7 @@ struct App {
         } else if (battle.ticks<Battle::approach) {
             text(f,"两军列阵",192,69,16,ivory,1);
         }
-        plaque(f,{4,212,376,51});
+        skinFrame(f,{4,212,376,51},rgb(39,26,19),true);
         bar(f,{11,219,97,4},battle.signal,100,gold);
         std::snprintf(buf,sizeof buf,"令%d",battle.signal);
         text(f,buf,116,214,12,gold);
@@ -1160,7 +1177,7 @@ struct App {
     }
     void drawReplace(pxa::game::Frame& f) {
         fillBackground(f,titleBackground(),.57f);
-        frame(f,{47,74,290,115},gold,ink);
+        skinFrame(f,{47,74,290,115},rgb(39,26,19));
         text(f,"另起一局",192,86,22,gold,1);
         text(f,"开战后会覆盖现有战役。",192,118,15,ivory,1);
         button(f,{57,148,119,29},"保留旧档",Command::back);

@@ -113,7 +113,7 @@ city_courtyard=whole(scaled(image("city-courtyard")))
 
 # These UI tiles travel together so the battle scene uses one texture slot for
 # its buttons, icons and action states.
-ui_page=new_page(144,236)
+ui_page=new_page(144,237)
 
 
 def pack_icons(sheet, columns, rows, top, cell_size):
@@ -145,6 +145,8 @@ for i,(brightness,saturation) in enumerate(((1,1),(1.52,1.12),(.64,.58))):
     pages[ui_page].paste(strip,(0,y))
     plaques.append((ui_page,0,y,144,30))
 
+# Solid-color sprites read these texels as opacity instead of palette indices.
+panel_shades=[(ui_page,i,236,1,1) for i in range(2)]
 
 def separated_poses(sheet, columns, rows):
     # Generated weapon tips can cross the nominal atlas cells. Pull complete
@@ -325,6 +327,8 @@ for i, page in enumerate(pages):
         packed = alpha
     else:
         packed = bytes(p + 1 if a >= 105 else 0 for p, a in zip(data, alpha))
+        if i==ui_page:
+            packed=packed[:-144]+bytes((164,207))+packed[-142:]
     (output / f"atlas-{i}.index8").write_bytes(packed)
     spec.append(dict(path=f"assets/atlas-{i}.pxr", kind="index8",
                      source=f"resources/atlas-{i}.index8", width=page.width, height=page.height))
@@ -355,7 +359,7 @@ for name,t in (("coverWide",cover_wide),("coverSquare",cover_square),("logo",log
     lines.append(f"inline constexpr Tile {name} = {tile_initializer(t)};")
 for name,tiles in (("mapTiles",map_tiles),("battlefields",battlefields),("portraits",portraits),("equipment",equipment),
                    ("outcomes",outcomes),("hudBars",hud_bars),("commandIcons",command_icons),
-                   ("mapProps",map_props),("plaques",plaques)):
+                   ("mapProps",map_props),("plaques",plaques),("panelShades",panel_shades)):
     lines.append(f"inline constexpr Tile {name}[{len(tiles)}] = {{" +
                  ",".join(map(tile_initializer,tiles)) + "};")
 for name,dimension,banks in (("troops","[2][3][6]",troops),

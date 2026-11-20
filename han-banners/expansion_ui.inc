@@ -236,12 +236,12 @@
 
     void drawDuel(pxa::game::Frame& f) {
         fillBackground(f,art::siege);
-        block(f,{0,0,384,55},ink);
+        battleHud(f);
         portrait(f,battle.officer().portrait,{9,8,36,36});
         if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{339,8,36,36});
         text(f,battle.officer().name,51,10,14,mint);
         text(f,battle.opponent()?battle.opponent()->name:"守阵校尉",332,10,14,coral,2);
-        text(f,"阵前斗将",192,8,20,gold,1);
+        text(f,"阵前斗将",192,16,16,gold,1);
         healthBar(f,{51,32,88,10},battle.duel.health[0],100);
         healthBar(f,{245,32,88,10},battle.duel.health[1],100,true);
         int tick=battle.duel.poseTicks;
@@ -264,7 +264,7 @@
             std::snprintf(line,sizeof line,"第%d合  敌势 %s",battle.duel.round+1,duelMoves[battle.duelIntent()]);
         plaque(f,{12,188,360,31});
         text(f,line,192,196,13,gold,1);
-        block(f,{4,222,376,41},ink);
+        skinFrame(f,{4,222,376,41},rgb(39,26,19),true);
         for (int i=0;i<3;++i)
             button(f,{9+103*i,229,97,28},duelMoves[i],Command::duelMove,i,battle.duel.ready());
         button(f,{322,229,54,28},"暂停",Command::pause);
