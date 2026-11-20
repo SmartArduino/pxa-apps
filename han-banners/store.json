@@ -1,0 +1,19 @@
+{
+  "name": "三国逐城",
+  "kind": "game",
+  "category": "strategy",
+  "language": "zh-CN",
+  "summary": "选择刘备、曹操或孙权起兵，经营城池、任用武将，在会战中夺取三十二城。",
+  "tags": [
+    "三国",
+    "策略",
+    "城池经营",
+    "武将养成",
+    "触屏",
+    "手柄"
+  ],
+  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。会战中根据敌军阵势换阵、下达号令或发起三合单挑，获胜后可处置俘将。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。",
+  "icon": "art/store-icon.png",
+  "cover": "art/store-cover.png",
+  "changelog": "首次提交商城。直接选择君主起兵，三个历史时期可在同一屏切换。包含三十二城及二十四名武将。城名改用透明底描边；大屏根据标题、正文和战报选择字号，小屏保留整数倍像素字。\n\nInitial store submission with direct ruler selection, three switchable historical starts, 32 cities, and 24 officers. Map labels use transparent backgrounds and outlines. Larger displays use a proportional sans-serif face with distinct text sizes, while smaller displays keep integer-scaled pixel lettering."
+}

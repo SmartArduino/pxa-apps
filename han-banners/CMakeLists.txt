@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.20)
+project(han_banners LANGUAGES CXX)
+set(PXA_COROUTINE_SLOT_BYTES 4096)
+find_package(Pxa CONFIG REQUIRED)
+set(sans_font "${CMAKE_CURRENT_SOURCE_DIR}/tools/fonts/HanBannersSans-Medium.otf")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${sans_font}")
+file(READ "${sans_font}" sans_font_hex HEX)
+string(REGEX REPLACE "(..)" "0x\\1," sans_font_bytes "${sans_font_hex}")
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/sans_font_bytes.hpp"
+    "inline constexpr unsigned char sansFontBytes[] = {${sans_font_bytes}};\n")
+pxa_add_app(main SOURCES main.cpp)
+target_include_directories(main PRIVATE
+    "${CMAKE_CURRENT_BINARY_DIR}" "${CMAKE_CURRENT_SOURCE_DIR}/../common/sdl-games/vendor/stb")
+target_compile_options(main PRIVATE -Oz)
+target_link_options(main PRIVATE -Wl,-z,stack-size=32768)

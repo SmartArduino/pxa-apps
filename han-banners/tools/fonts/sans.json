@@ -1,0 +1,9 @@
+{
+  "upstream": "https://github.com/adobe-fonts/source-han-sans",
+  "original_file": "SourceHanSansCN-Medium.otf",
+  "original_sha256": "a94e558a2fe972bee4f46bce0843abff37063fd68c33f1e7d9058f6f09432b01",
+  "font_file": "HanBannersSans-Medium.otf",
+  "font_sha256": "6872a9eda17824781e02f4fed4c1f0386ea8e6e5efb8816efd4b455416c9445f",
+  "license_file": "../../assets/Han-Banners-Sans-OFL.txt",
+  "license_sha256": "fcac737e761ec63dbfbdce11030a1780161920d80315edba9c8beff1c2bac5a2"
+}
