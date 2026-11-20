@@ -25,14 +25,14 @@ struct SelectionTool {
  }
  Rect bounds()const{return {std::min(x0,x1),std::min(y0,y1),std::abs(x1-x0)+1,std::abs(y1-y0)+1};}
  bool visible(const Entity& a,const Battlefield& f)const{
-  if(a.hp<=0||a.team!=0||a.kind>=harvester)return false;
+  if(a.hp<=0||a.team!=0||!combat_kind(a.kind))return false;
   // Use the visible body rather than the ground point beneath a tank's hull.
-  auto p=f.project(a.p,8);
+  auto p=f.project(a.p,a.kind==rotorcraft?craft_altitude+14:8);
   return viewport.has(int(p.x),int(p.y))&&!map.has(int(p.x),int(p.y))&&!toggle.has(int(p.x),int(p.y));
  }
  bool contains(const Entity& a,const Battlefield& f)const{
   if(!visible(a,f))return false;
-  auto p=f.project(a.p,8);return bounds().has(int(p.x),int(p.y));
+  auto p=f.project(a.p,a.kind==rotorcraft?craft_altitude+14:8);return bounds().has(int(p.x),int(p.y));
  }
  int preview(const World& w,const Battlefield& f)const{
   int n=0;for(auto& a:w.e)n+=contains(a,f);return n;
@@ -45,7 +45,7 @@ struct SelectionTool {
    // accidental move or attack command when the finger barely moved.
    int nearest=-1;float best=18.f*18.f;
    for(int i=0;i<MAX;++i)if(visible(w.e[i],f)){
-    auto p=f.project(w.e[i].p,8);float d=(p.x-x1)*(p.x-x1)+(p.y-y1)*(p.y-y1);
+    auto p=f.project(w.e[i].p,w.e[i].kind==rotorcraft?craft_altitude+14:8);float d=(p.x-x1)*(p.x-x1)+(p.y-y1)*(p.y-y1);
     if(d<best){nearest=i;best=d;}
    }
    for(int i=0;i<MAX;++i)w.e[i].selected=i==nearest;

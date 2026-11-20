@@ -7,7 +7,7 @@
 namespace iron {
 enum class UiIcon {none,pause,stop,repair,air,zoom,cancel,units,buildings,all,base,box,lock,ore,power,sound,star};
 struct Skin {
- static void picture(Raster& r,int kind,Rect area,unsigned variant=0){if(kind==10)TurretArt::fit(r,area,variant);else Sprites::fit(r,kind>=5?art::buildings_first+kind-5:Sprites::unit_frame(kind,1.5707963f,kind==4),area,variant);}
+ static void picture(Raster& r,int kind,Rect area,unsigned variant=0){if(kind==10)TurretArt::fit(r,area,variant);else Sprites::fit(r,!unit_kind(kind)?Sprites::building_frame(kind):Sprites::unit_frame(kind,kind<=harvester?1.5707963f:0.f,kind==harvester),area,variant);}
  static void panel_frame(Raster& r,Rect a,uint16_t color=panel,uint16_t rim=rgb(79,121,112)){
   (void)color;SkinTiles::draw(r,a,0);if(rim==cyan){r.rect(a.x+2,a.y+2,2,std::max(0,a.h-4),cyan);r.rect(a.x+3,a.y+2,std::min(16,std::max(0,a.w-6)),1,cyan);}
  }

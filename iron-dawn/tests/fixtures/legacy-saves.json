@@ -25,6 +25,16 @@
     "save-v6.bin": {
       "bytes": 13448,
       "sha256": "f3b4bff64d2613821c98898b1229a74efa19a5661fc1fa53b76beee05c9c064d"
+    },
+    "save-v7.bin": {
+      "bytes": 21092,
+      "sha256": "a790d8c2380bcabc74498ca335b724ffc6b07868f44f1f456b573bbfb7b64be0",
+      "source": "Previous V7 campaign_fixture, chapter 5 convoy at deployment"
+    },
+    "save-v8.bin": {
+      "bytes": 30064,
+      "sha256": "8ffae9d92a1ad30030f5d62d5ac223e9b1ab2f073e7ed285427f3214d97d36cf",
+      "source": "V8 model and save layout, chapter 5 with a bound tank job and active construction"
     }
   }
 }

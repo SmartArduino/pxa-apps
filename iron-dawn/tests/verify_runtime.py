@@ -53,7 +53,7 @@ def run(item):
  def saves():
   found=[]
   for file in (state/'private-files').rglob('*.save'):
-   b=file.read_bytes();assert len(b)==schema['size'] and struct.unpack_from('<II',b)==(0x49445737,7);crc=2166136261
+   b=file.read_bytes();assert len(b)==schema['size'] and struct.unpack_from('<II',b)==(schema['magic'],schema['version']);crc=2166136261
    for byte in b[12:]:crc=((crc^byte)*16777619)&0xffffffff
    assert crc==struct.unpack_from('<I',b,8)[0];found.append((struct.unpack_from('<I',b,16)[0],b))
   assert found;return max(found)[1]
@@ -85,7 +85,10 @@ def run(item):
     tap(180,h-44)
     if re.search(r'Iron Dawn state .*screen=3',log.read_text()):break
    else:raise AssertionError('Briefing did not deploy')
-   shot('battle-default');dock(0);shot('unit-catalogue');production(2);shot('queued');dock(1);shot('building-catalogue');production(0);shot('placement');tap(cx-90,mid-65);shot('power-placed')
+   shot('battle-default')
+   tap(cx+80,mid-88);shot('unit-catalogue');production(0);shot('queued')
+   dock(1);shot('building-catalogue');production(0);shot('construction')
+   time.sleep(5.5);production(0);shot('placement');tap(cx-80,mid-53);shot('power-placed')
    if wide:
     qx=world_w+8+cw+6+cw/2;qy=grid+2*(card_height+6)+card_height/2;swipe(qx,qy,qx+10,qy);shot('sidebar-empty-drag')
    else:
@@ -95,7 +98,7 @@ def run(item):
    while time.monotonic()<deadline and sum(before[schema['entities']+i*56+50]==6 and before[schema['entities']+i*56+51]==0 and struct.unpack_from('<f',before,schema['entities']+i*56+24)[0]>0 for i in range(100))!=3:
     time.sleep(.2);before=saves()
    shot('paused-saved')
-   # Actual V6 state confirms build/card hits and world movement after rotation.
+   # The persisted state confirms build/card hits and world movement after rotation.
    assert struct.unpack_from('<I',before,schema['extra'])[0]==1
    power_count=0;positions=[]
    for i in range(100):

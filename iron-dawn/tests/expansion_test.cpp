@@ -15,5 +15,5 @@ int main(){
  // Released V4–V6 binary fixtures and in-place migration: frontier_test.cpp.
 
  {Save s;s.world.init_defense(9);s.world.research_start(2);s.defense_best=7;s.has_run=1;s.checksum=checksum(s);Save d;assert(decode_save(std::as_bytes(std::span{&s,1}),d)&&d.world.extra.research==2&&d.defense_best==7);}
- std::puts("Defense waves/rewards/elite raids, research/cancel/levels, damage/armor and V7 save roundtrip passed");
+ std::puts("Defense waves/rewards/elite raids, research/cancel/levels, damage/armor and V8 save roundtrip passed");
 }

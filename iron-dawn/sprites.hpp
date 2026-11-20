@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include "raster.hpp"
+#include "model.hpp"
 #include "art_data.hpp"
 #include "span_cache.hpp"
 #include <cstring>
@@ -21,6 +22,16 @@ struct Sprites {
   if(id>=art::frames.size()||area.w<=0||area.h<=0)return;auto& f=art::frames[id];float scale=std::min(float(area.w)/std::max(1u,unsigned(f.bw)),float(area.h)/std::max(1u,unsigned(f.bh)));
   int x=area.x+(area.w-int(f.bw*scale))/2-int(f.bx*scale),y=area.y+(area.h-int(f.bh*scale))/2-int(f.by*scale);auto old=r.clip;int left=std::max(old.x,area.x),top=std::max(old.y,area.y),right=std::min(old.x+old.w,area.x+area.w),bottom=std::min(old.y+old.h,area.y+area.h);r.clip={left,top,std::max(0,right-left),std::max(0,bottom-top)};blit(r,id,x,y,scale,scale,variant);r.clip=old;
  }
- static unsigned unit_frame(int kind,float angle,unsigned pose=0){int facing=int(std::lround(angle*4/3.14159265f))&7;return art::unit_first[std::clamp(kind,0,4)]+facing+(pose&1)*8;}
+ static unsigned building_frame(int kind){
+  if(kind>=shipyard&&kind<=aa_tower)return art::combined_structures_first+kind-shipyard;
+  return art::buildings_first+std::clamp(kind-int(hq),0,7);
+ }
+ static unsigned unit_frame(int kind,float angle,unsigned pose=0){
+  unsigned facing=int(std::lround(angle*4/3.14159265f))&7;
+  if(kind==patrol_boat)return art::patrol_boats_first+facing;
+  if(kind==rotorcraft)return art::rotorcraft_first+facing;
+  if(kind==commander)return art::commander_first+facing;
+  return art::unit_first[std::clamp(kind,0,4)]+facing+(pose&1)*8;
+ }
 };
 }

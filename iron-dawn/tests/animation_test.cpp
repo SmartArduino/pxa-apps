@@ -16,6 +16,7 @@ int main(){
  }
  auto south=CombatArt::socket(rocket,1,0,0,1);assert(south.x<-3&&south.y<-15); // Front-facing launcher bore is left of the chest.
  assert(art::muzzles[rifle][5].behind&&art::muzzles[rocket][5].behind);
+ World world;
  unsigned poses=0,sockets=0;
  for(int kind=0;kind<2;++kind)for(unsigned d=0;d<8;++d){
   float angle=d*3.14159265f/4;Pt direction{20*(std::cos(angle)-std::sin(angle)),10*(std::cos(angle)+std::sin(angle))};
@@ -35,7 +36,7 @@ int main(){
   for(float z:{.45f,.72f,1.f,1.3f}){Battlefield field;field.width=480;field.top=50;field.bottom=314;field.zoom=z;field.focus({12,12});Shot shot;shot.kind=kind;shot.from={12,12};float angle=d*3.14159265f/4;shot.dest={12+4*std::cos(angle),12+4*std::sin(angle)};shot.duration=.85f;shot.alive=true;
    auto origin=field.project(shot.from);auto expected=CombatArt::socket(kind,d,std::lround(origin.x),std::lround(origin.y),z);auto start=field.muzzle(shot);assert(start.x==expected.x&&start.y==expected.y);auto end=field.project(shot.dest,16);auto p0=CombatArt::trajectory(start,end,0,kind==artillery,z,d),p1=CombatArt::trajectory(start,end,1,kind==artillery,z,d);assert(p0.x==start.x&&p0.y==start.y&&p1.x==end.x&&p1.y==end.y);
    if(kind==artillery){auto next=CombatArt::trajectory(start,end,.0001f,true,z,d),axis=CombatArt::shell_axis(d);float dx=next.x-start.x,dy=next.y-start.y;assert((dx*axis.x+dy*axis.y)/std::hypot(dx,dy)/std::hypot(axis.x,axis.y)>.99f);}
-   std::vector<uint16_t> pixels(480*360+2,navy);pixels.front()=pixels.back()=0xa55a;Raster r(pixels.data()+1,480,360,480);field.draw_shot(r,shot);assert(pixels.front()==0xa55a&&pixels.back()==0xa55a);assert(r.pixels[int(start.y)*480+int(start.x)]==cream);++sockets;
+   std::vector<uint16_t> pixels(480*360+2,navy);pixels.front()=pixels.back()=0xa55a;Raster r(pixels.data()+1,480,360,480);field.draw_shot(r,shot,world);assert(pixels.front()==0xa55a&&pixels.back()==0xa55a);assert(r.pixels[int(start.y)*480+int(start.x)]==cream);++sockets;
   }
  }
  for(unsigned d=0;d<8;++d)for(float z:{.45f,.72f,1.f,1.3f}){Battlefield field;field.zoom=z;field.focus({12,12});Shot shot;shot.kind=turret;shot.from={12,12};float angle=d*3.14159265f/4;shot.dest={12+4*std::cos(angle),12+4*std::sin(angle)};auto a=field.muzzle(shot),origin=field.project(shot.from);auto& f=art::frames[art::turret_heads_first+8+d];auto tip=art::turret_muzzles[8+d];Pt b{origin.x+(tip.x-f.ox)*z,origin.y+(tip.y-f.oy-art::turret_mount_height)*z};assert(close(a.x,b.x)&&close(a.y,b.y));auto steady=TurretArt::muzzle(d,false),recoil=TurretArt::muzzle(d,true);Pt axis{20*(std::cos(angle)-std::sin(angle)),10*(std::cos(angle)+std::sin(angle))};assert((steady.x-recoil.x)*axis.x+(steady.y-recoil.y)*axis.y>0);++sockets;}

@@ -11,7 +11,7 @@ struct HudLayout {
  Rect price(int index)const{auto a=card(index);return {a.x+2,a.y+icon_height+28,a.w-4,14};}
  Rect progress(int index)const{auto a=card(index);return {a.x+3,a.y+a.h-5,a.w-6,3};}
 };
-enum class DockPanel {closed,units,buildings,tactics};
+enum class DockPanel {closed,units,buildings,tactics,squads};
 struct GameViewport {
  int width,height;
  static GameViewport fit(int pixels_w,int pixels_h){int width=std::clamp(int(int64_t(pixels_w)*320/std::max(1,pixels_h)),480,1060);return {width,std::clamp(int(int64_t(pixels_h)*width/std::max(1,pixels_w)),320,1060)};}
@@ -63,12 +63,12 @@ struct CompactHudLayout {
   card_height=12+picture+line*2;header=line+8;top=height-row-10;status_height=readable?std::max(50,2*line+8):50;
  }
  Rect command(int index)const{return {offset+8+94*index,top+5,88,row};}
- Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+(panel==DockPanel::tactics?row*2+6:card_height);return {0,top-size,width,size};}
+ Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+((panel==DockPanel::tactics||panel==DockPanel::squads)?row*2+6:card_height);return {0,top-size,width,size};}
  Rect card(int index,DockPanel panel)const{return {offset+8+94*index,overlay(panel).y+header+4,88,card_height};}
  Rect image(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+4,a.y+4,a.w-8,picture};}
  Rect name(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+2,a.y+picture+6,a.w-4,line};}
  Rect price(int index,DockPanel panel)const{auto a=name(index,panel);return {a.x,a.y+line,a.w,line};}
  Rect progress(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+4,a.y+a.h-4,a.w-8,2};}
- Rect tactic(int index)const{return {offset+8+118*(index%4),overlay(DockPanel::tactics).y+header+4+(index/4)*(row+6),110,row};}
+ Rect tactic(int index,DockPanel panel=DockPanel::tactics)const{return {offset+8+118*(index%4),overlay(panel).y+header+4+(index/4)*(row+6),110,row};}
 };
 }
