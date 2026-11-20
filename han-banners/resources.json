@@ -117,7 +117,7 @@
       "kind": "index8",
       "source": "resources/atlas-16.index8",
       "width": 250,
-      "height": 100
+      "height": 150
     },
     {
       "path": "assets/atlas-17.pxr",
@@ -209,6 +209,13 @@
       "source": "resources/atlas-29.index8",
       "width": 252,
       "height": 252
+    },
+    {
+      "path": "assets/atlas-30.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-30.index8",
+      "width": 252,
+      "height": 24
     }
   ]
 }

@@ -9,7 +9,7 @@ constexpr int cityCount = 48;
 constexpr int ownerCount = 8;
 constexpr int officerCount = 8;
 constexpr int guestSlot = officerCount;
-constexpr int commanderSlots = officerCount+1;
+constexpr int talentFirst = guestSlot+1;
 constexpr int columnCount = 3;
 constexpr int garrison = 100;
 constexpr int armyLimit = 2400;
@@ -23,7 +23,8 @@ enum Gear { sword, armor, saddle, manual, noGear };
 enum Maneuver { measured, press, hold, flank };
 enum DuelMove { thrust, parry, feint };
 enum DispatchSize { vanguard, division, legion };
-enum Power { charge, guard, guile, inspire, wildfire };
+enum Power { charge, guard, guile, inspire, wildfire, volley };
+enum class Specialty { envoy, treasury, convoy, command, scout, granary };
 
 struct Officer {
     const char* name;
@@ -61,6 +62,32 @@ constexpr Officer officers[3][officerCount] = {
      {"凌统","横江急袭","疾攻兼提振士气",horse,charge,165,25,92,68},
      {"徐盛","江东疑城","瓦解阵势与军心",bow,guile,43,26,88,86}},
 };
+struct WildTalent {
+    Officer officer;
+    int city[3];
+    int fee;
+    Specialty specialty;
+    const char* service;
+};
+inline constexpr WildTalent talents[] = {
+    {{"程砚","守望军阵","护军并补充军令",spear,guard,28,27,61,94},
+     {10,30,2},135,Specialty::envoy,"任太守时，每季额外恢复6民心"},
+    {{"许棠","算无遗筹","削弱敌军军心",bow,guile,36,28,48,96},
+     {4,4,4},160,Specialty::treasury,"任太守时，每季增加22金"},
+    {{"沈汐","横波破阵","水战可重创敌军",bow,wildfire,146,29,83,87},
+     {9,8,8},175,Specialty::convoy,"担任领军时，出征最多省22粮"},
+    {{"霍毅","铁槊突阵","突击兼稳军心",horse,charge,177,30,97,61},
+     {7,7,7},175,Specialty::command,"担任领军时，开战多12军令"},
+    {{"黎岚","穿林连射","弓阵连射伤害更高",bow,volley,90,31,93,80},
+     {39,39,39},145,Specialty::scout,"负责搜寻时，更容易找到军械"},
+    {{"梁稷","同袍共济","恢复军心并补充军令",spear,inspire,39,32,67,91},
+     {36,36,36},140,Specialty::granary,"任太守时，每季增加28粮"},
+};
+constexpr int talentCount=int(std::size(talents));
+constexpr int commanderSlots=talentFirst+talentCount;
+inline const WildTalent* talentAtSlot(int slot) {
+    return slot>=talentFirst && slot<commanderSlots?&talents[slot-talentFirst]:nullptr;
+}
 constexpr const char* gearNames[]={"青锋剑","山文甲","赤绒鞍","行军策"};
 constexpr const char* gearHints[]={"会战伤害增加","减少会战损失","出征节省粮草","开战军令增加"};
 constexpr const char* maneuvers[]={"整阵","强攻","固守","迂回"};

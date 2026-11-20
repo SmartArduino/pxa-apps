@@ -1,16 +1,130 @@
     static constexpr int rosterSize=5;
-    int rosterCount() const {return campaign.guest?commanderSlots:officerCount;}
-    int rosterStart() const {return officerSlot/rosterSize*rosterSize;}
-    bool recruitingAllowed() const {return rosterFrom!=Page::deploy;}
+    int rosterCount() const {
+        int count=officerCount;
+        for (int slot=officerCount;slot<commanderSlots;++slot) count+=campaign.unlocked(slot);
+        return count;
+    }
+    int rosterSlot(int index) const {
+        if (index<officerCount) return index;
+        for (int slot=officerCount;slot<commanderSlots;++slot)
+            if (campaign.unlocked(slot) && index--==officerCount) return slot;
+        return campaign.commander;
+    }
+    int rosterPosition() const {
+        if (officerSlot<officerCount) return officerSlot;
+        int index=officerCount;
+        for (int slot=officerCount;slot<officerSlot;++slot) index+=campaign.unlocked(slot);
+        return index;
+    }
+    int rosterStart() const {return rosterPosition()/rosterSize*rosterSize;}
+    bool recruitingAllowed() const {return rosterFrom!=Page::deploy && rosterFrom!=Page::search;}
     bool eligibleOfficer(int slot) const {
         if (!campaign.unlocked(slot)) return false;
         if (rosterFrom==Page::dispatch) return campaign.available(slot);
         if (rosterFrom==Page::deploy) return campaign.available(slot,departure.to);
+        if (rosterFrom==Page::search) return campaign.available(slot,selected);
         return !campaign.inField(slot);
     }
     int plannedLeader() const {
         if (battle.defending) return defenseLeader;
         return arrivingColumn>=0?campaign.columns[arrivingColumn].leader:-1;
+    }
+
+    void drawSeasonCouncil(pxa::game::Frame& f) {
+        constexpr const char* plans[]={"照常","抚民","整训"};
+        const auto accounts=campaign.seasonAccounts(seasonPlan);
+        const int next=(campaign.season()+1)%4;
+        char line[80];
+        std::snprintf(line,sizeof line,"下一季  %d年 %s",campaign.year()+(next==0),seasons[next]);
+        fillBackground(f,art::warHall);
+        header(f,"季末军议",line);
+        skinFrame(f,{10,41,364,53});
+        std::snprintf(line,sizeof line,"季末入账   本季粮产 %d%%",grainBySeason[campaign.season()]);
+        text(f,line,21,48,13,gold);
+        const int goldAfter=std::min(9999,campaign.gold+accounts.gold-accounts.goldCost);
+        const int grainAfter=std::min(9999,campaign.grain+accounts.grain-accounts.grainCost);
+        std::snprintf(line,sizeof line,"金 %+d → %d",goldAfter-campaign.gold,goldAfter);
+        text(f,line,21,70,13,ivory);
+        std::snprintf(line,sizeof line,"粮 %+d → %d",grainAfter-campaign.grain,grainAfter);
+        text(f,line,208,70,13,ivory);
+
+        for (int i=0;i<int(std::size(plans));++i) {
+            const auto plan=SeasonPlan(i);
+            const bool enabled=campaign.canAdvance(plan);
+            const Rect row{10,99+i*32,364,28};
+            const bool focused=registerControl(row,Command::choosePlan,i,enabled);
+            const auto terms=campaign.seasonAccounts(plan);
+            plaque(f,row,enabled,focused||seasonPlan==plan);
+            if (seasonPlan==plan) block(f,{15,row.y+6,2,16},gold);
+            text(f,plans[i],23,row.y+6,15,enabled?gold:dim);
+            if (plan==SeasonPlan::relief) {
+                std::snprintf(line,sizeof line,"%d金 · 各城民心 +%d",terms.goldCost,reliefOrder);
+            } else if (plan==SeasonPlan::drills) {
+                std::snprintf(line,sizeof line,"%d粮 · 留守将历练 +%d，疲劳 -%d",
+                              terms.grainCost,drillExperience,drillRest);
+            } else std::snprintf(line,sizeof line,"依本季产量收取钱粮");
+            text(f,line,68,row.y+7,12,enabled?ivory:dim);
+        }
+
+        Order threat;
+        for (Order order:campaign.orders)
+            if (order && campaign.own(order.to)) {threat=order;break;}
+        if (threat) {
+            std::snprintf(line,sizeof line,"敌袭预报   %s → %s",cityName(threat.from),cityName(threat.to));
+            text(f,line,20,197,12,coral);
+        } else text(f,"暂无敌袭预报",20,197,12,dim);
+        int sieges=0;
+        for (const auto& unit:campaign.columns) if (unit && unit.eta) ++sieges;
+        if (sieges) {
+            std::snprintf(line,sizeof line,"下季有 %d 路围城军抵达",sieges);
+            text(f,line,20,215,12,gold);
+        }
+        button(f,{10,234,96,25},"返回",Command::back);
+        button(f,{250,232,124,27},"推进一季",Command::advanceSeason,0,
+               campaign.canAdvance(seasonPlan),true);
+    }
+
+    void drawRegions(pxa::game::Frame& f) {
+        char line[84];
+        int paid=0;
+        for (int i=0;i<regionalGoalCount;++i) paid+=campaign.regionalPaid(i);
+        std::snprintf(line,sizeof line,"已领 %d/%d",paid,regionalGoalCount);
+        fillBackground(f,art::warHall);
+        header(f,"州郡军略",line);
+        for (int i=0;i<regionalGoalCount;++i) {
+            const Rect row{10+(i%2)*184,42+(i/2)*29,180,26};
+            const bool focused=registerControl(row,Command::chooseRegion,i);
+            plaque(f,row,true,focused||i==regionalChoice);
+            text(f,regionalGoals[i].name,row.x+10,row.y+5,15,ivory);
+            const bool done=campaign.regionalPaid(i), ready=campaign.canClaimRegional(i);
+            if (done || ready) std::snprintf(line,sizeof line,"%s",done?"已领":"可领");
+            else std::snprintf(line,sizeof line,"%d/3",campaign.regionalProgress(i));
+            text(f,line,row.x+169,row.y+6,12,ready?gold:done?mint:dim,2);
+        }
+
+        const auto& goal=regionalGoals[regionalChoice];
+        skinFrame(f,{10,159,364,68});
+        if (goal.minOrder)
+            std::snprintf(line,sizeof line,"占领三城，民心各到 %d",goal.minOrder);
+        else std::snprintf(line,sizeof line,"占领下列三城");
+        text(f,line,20,164,12,gold);
+        for (int i=0;i<int(std::size(goal.cities));++i) {
+            const int city=goal.cities[i];
+            const Rect chip{19+i*116,181,113,23};
+            const bool focus=registerControl(chip,Command::locateRegionCity,city);
+            plaque(f,chip,true,focus);
+            text(f,cityName(city),chip.x+8,chip.y+4,13,ivory);
+            const bool ready=campaign.regionalCityReady(regionalChoice,city);
+            if (campaign.own(city) && goal.minOrder)
+                std::snprintf(line,sizeof line,"%d",campaign.cities[city].order);
+            else std::snprintf(line,sizeof line,"%s",ready?"已占":"未占");
+            text(f,line,chip.x+104,chip.y+5,12,ready?mint:dim,2);
+        }
+        std::snprintf(line,sizeof line,"赏金 %d  粮 %d  %s",goal.gold,goal.grain,gearNames[goal.gear]);
+        text(f,line,20,208,12,ivory);
+        button(f,{10,234,96,25},"返回",Command::back);
+        button(f,{250,232,124,27},campaign.regionalPaid(regionalChoice)?"已领悬赏":"领取悬赏",
+               Command::claimRegion,regionalChoice,campaign.canClaimRegional(regionalChoice),true);
     }
 
     void drawGazetteer(pxa::game::Frame& f) {
@@ -55,30 +169,75 @@
         std::snprintf(stats,sizeof stats,"田产%d  市集%d",c.fields,c.market);
         text(f,stats,20,106,12,ivory);
 
-        constexpr const char* choices[]={"征募","屯田","筑城","兴市","安民","巡访"};
-        constexpr const char* price[]={"80金 50粮","95金","105金","125金","25金 65粮","35金"};
+        constexpr const char* choices[]={"征募","屯田","筑城","兴市","安民","搜寻"};
+        constexpr const char* price[]={"80金 50粮","95金","105金","125金","25金 65粮","人才与物资"};
         constexpr UiIcon icons[]={recruitIcon,farmIcon,wallsIcon,marketIcon,pacifyIcon,surveyIcon};
         for (int i=0;i<6;++i) {
             const Rect tileBox{10+122*(i%3),132+47*(i/3),118,43};
-            const bool enabled=i==5?campaign.canSurvey(selected):campaign.canWork(selected,Work(i));
-            const bool focused=registerControl(tileBox,i==5?Command::survey:Command::work,i,enabled);
+            const bool enabled=i==5 || campaign.canWork(selected,Work(i));
+            const bool focused=registerControl(tileBox,i==5?Command::openSearch:Command::work,i,enabled);
             plaque(f,tileBox,enabled,focused);
             contain(f,art::commandIcons[icons[i]],{tileBox.x+7,tileBox.y+7,29,29},true);
             text(f,choices[i],tileBox.cx()+16,tileBox.y+5,15,enabled?ivory:dim,1);
             text(f,price[i],tileBox.cx()+16,tileBox.y+23,12,enabled?gold:dim,1);
         }
-        if (surveyCity==selected) {
-            switch (discovery.kind) {
-                case moneyFound:std::snprintf(stats,sizeof stats,"巡访得金 %d",discovery.value);break;
-                case grainFound:std::snprintf(stats,sizeof stats,"巡访得粮 %d",discovery.value);break;
-                case gearFound:std::snprintf(stats,sizeof stats,"找到 %s",gearNames[discovery.value]);break;
-                case loreFound:std::snprintf(stats,sizeof stats,"将领获历练 %d",discovery.value);break;
-            }
-            plaque(f,{103,231,120,29});
-            text(f,stats,163,239,12,mint,1);
-        }
         button(f,{10,235,91,24},"返回",Command::back);
         button(f,{228,233,146,27},"太守任免",Command::roster,0,true,true);
+    }
+
+    void drawSearch(pxa::game::Frame& f) {
+        const int candidate=campaign.localTalent(selected);
+        const bool discovered=campaign.knowsTalent(candidate);
+        const bool hired=discovered && campaign.unlocked(talentFirst+candidate);
+        char line[92];
+        fillBackground(f,art::cityCourtyard,.88f);
+        header(f,"城中搜寻",cityName(selected));
+        skinFrame(f,{10,41,364,62});
+        if (searchingOfficer>=0) {
+            const auto& officer=campaign.leader(searchingOfficer);
+            portrait(f,officer.portrait,{18,47,49,49});
+            text(f,officer.name,77,51,16,gold);
+            std::snprintf(line,sizeof line,"智%d  疲劳%d",officer.counsel,campaign.generals[searchingOfficer].fatigue);
+            text(f,line,77,76,12,dim);
+        } else text(f,"无人可出访",21,62,15,dim);
+        button(f,{272,56,91,29},"换访将",Command::searchOfficer);
+
+        switch (discovery.kind) {
+            case talentFound:std::snprintf(line,sizeof line,"寻得在野人才 %s",talents[discovery.value].officer.name);break;
+            case moneyFound:std::snprintf(line,sizeof line,"搜得 %d 金",discovery.value);break;
+            case grainFound:std::snprintf(line,sizeof line,"搜得 %d 粮",discovery.value);break;
+            case gearFound:std::snprintf(line,sizeof line,"搜得军械 %s",gearNames[discovery.value]);break;
+            case loreFound:std::snprintf(line,sizeof line,"访得兵书，额外历练 +%d",discovery.value);break;
+            case noFind:std::snprintf(line,sizeof line,"每城每季可搜寻一次，消耗1政令");break;
+        }
+        if (hired && (discovery.kind==talentFound || discovery.kind==noFind))
+            std::snprintf(line,sizeof line,"%s已入帐，可在武将名册任用",talents[candidate].officer.name);
+        plaque(f,{10,108,364,23});
+        text(f,line,192,112,12,discovery.kind==noFind && !hired?ivory:mint,1);
+
+        skinFrame(f,{10,136,364,90});
+        if (discovered) {
+            const auto& talent=talents[candidate];
+            portrait(f,talent.officer.portrait,{19,147,64,64});
+            text(f,talent.officer.name,95,144,16,gold);
+            std::snprintf(line,sizeof line,"武%d  智%d  %s",talent.officer.valor,talent.officer.counsel,
+                          formations[talent.officer.favored]);
+            text(f,line,362,147,12,ivory,2);
+            std::snprintf(line,sizeof line,"%s · %s",talent.officer.skill,talent.officer.hint);
+            text(f,line,95,169,12,ivory);
+            text(f,talent.service,95,193,12,mint);
+        } else {
+            text(f,candidate>=0?"乡里有贤才的消息":"走访乡里，搜集补给",192,154,16,gold,1);
+            text(f,"智力高的武将更容易找到军械",192,187,12,ivory,1);
+        }
+        button(f,{10,234,73,25},"返回",Command::back);
+        button(f,{90,234,127,25},campaign.alreadySearched(selected)?"本季已搜":"搜寻35金",
+            Command::survey,0,campaign.canSearch(selected,searchingOfficer),!discovered);
+        if (discovered && !hired) {
+            std::snprintf(line,sizeof line,"延揽%d金",talents[candidate].fee);
+            button(f,{225,234,149,25},line,Command::welcomeTalent,candidate,
+                   campaign.canWelcome(selected,candidate),true);
+        }
     }
 
     void drawDispatch(pxa::game::Frame& f) {
@@ -202,8 +361,9 @@
         fillBackground(f,art::warHall);
         header(f,"武将名册",factions[campaign.player].title);
         int first=rosterStart(),last=std::min(rosterCount(),first+rosterSize);
-        for (int i=first;i<last;++i) {
-            Rect box{9+74*(i-first),46,70,108};
+        for (int index=first;index<last;++index) {
+            const int i=rosterSlot(index);
+            Rect box{9+74*(index-first),46,70,108};
             const auto& actor=campaign.leader(i);
             bool focused=registerControl(box,Command::officer,i);
             skinFrame(f,box,i==officerSlot||focused);
@@ -218,11 +378,14 @@
         const auto& veteran=campaign.generals[officerSlot];
         plaque(f,{10,157,364,66});
         text(f,actor.skill,20,163,17,gold);
-        text(f,actor.hint,20,185,13,ivory);
+        const auto* talent=talentAtSlot(officerSlot);
+        text(f,actor.hint,20,183,12,ivory);
         char desc[68];
         std::snprintf(desc,sizeof desc,"武%d  智%d  等级%d",actor.valor,actor.counsel,veteran.level());
         text(f,desc,364,165,13,gold,2);
-        if (!campaign.unlocked(officerSlot)) {
+        if (talent) {
+            std::snprintf(desc,sizeof desc,"%s",talent->service);
+        } else if (!campaign.unlocked(officerSlot)) {
             std::snprintf(desc,sizeof desc,"克%d城  金%d招揽",campaign.hireRenown(officerSlot),
                           campaign.hireCost(officerSlot));
         } else if (veteran.station>=0) {
@@ -239,6 +402,7 @@
         if (campaign.unlocked(officerSlot)) {
             const char* label=rosterFrom==Page::cityDesk?
                 (veteran.station==selected?"解除太守":"任命太守"):
+                rosterFrom==Page::search?"选为访将":
                 rosterFrom==Page::dispatch||rosterFrom==Page::deploy?"选为领军":"任命主将";
             button(f,{231,229,143,27},label,Command::chooseOfficer,officerSlot,eligibleOfficer(officerSlot),true);
         } else {

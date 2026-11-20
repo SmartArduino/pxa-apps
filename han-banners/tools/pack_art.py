@@ -116,7 +116,9 @@ map_tiles = [whole(terrain.crop((x,y,x+256,y+256))) for y in (0,256) for x in (0
 
 portraits = []
 portrait_size = 50
-for name,columns,rows in (("portraits",3,2),("officers",4,3),("veterans",3,3)):
+portrait_sheets = (("portraits",3,2),("officers",4,3),("veterans",3,3),("wild-talents",3,2))
+portrait_count = sum(columns*rows for _,columns,rows in portrait_sheets)
+for name,columns,rows in portrait_sheets:
     people=image(name)
     for i in range(columns*rows):
         x, y = i % columns, i // columns
@@ -125,7 +127,8 @@ for name,columns,rows in (("portraits",3,2),("officers",4,3),("veterans",3,3)):
         crop = ImageOps.fit(crop, (portrait_size,portrait_size), Image.Resampling.LANCZOS)
         index=len(portraits)%20
         if index==0:
-            portrait_page=new_page(portrait_size*5,portrait_size*(4 if not portraits else 2))
+            rows_on_page=(min(20,portrait_count-len(portraits))+4)//5
+            portrait_page=new_page(portrait_size*5,portrait_size*rows_on_page)
         x,y=portrait_size*(index%5),portrait_size*(index//5)
         pages[portrait_page].paste(crop, (x,y))
         portraits.append((portrait_page,x,y,portrait_size,portrait_size))

@@ -29,16 +29,24 @@ struct Captive {
     int side=-1, officer=-1, city=-1;
     constexpr explicit operator bool() const {return side>=0;}
 };
-enum FindKind { moneyFound, grainFound, gearFound, loreFound };
+enum FindKind { noFind, moneyFound, grainFound, gearFound, loreFound, talentFound };
 struct Discovery {
-    FindKind kind=moneyFound;
+    FindKind kind=noFind;
     int value=0;
+};
+enum class SeasonPlan { regular, relief, drills };
+inline constexpr int grainBySeason[]={100,100,125,90};
+inline constexpr int reliefOrder=14, drillExperience=45, drillRest=18;
+struct SeasonAccounts {
+    int gold, grain, goldCost, grainCost;
 };
 
 struct Campaign {
     int player=0, chapter=0, turn=1, gold=0, grain=0, actions=0;
     int won=0, commander=0, tours=0, recruited=7;
     bool objectivePaid=false;
+    unsigned regionalRewards=0;
+    unsigned talentSeen=0, talentHired=0;
     uint64_t surveyed=0;
     std::array<int,3> truce{};
     std::array<int,noGear> stock{};
@@ -93,10 +101,16 @@ struct Campaign {
     }
     bool unlocked(int slot) const {
         if (slot==guestSlot) return bool(guest);
+        if (talentAtSlot(slot)) return (talentHired&(1u<<(slot-talentFirst)))!=0;
         return slot>=0 && slot<officerCount && (recruited&(1<<slot));
     }
     const Officer& leader(int slot) const {
+        if (auto* talent=talentAtSlot(slot)) return talent->officer;
         return slot==guestSlot?officers[guest.side][guest.officer]:officers[player][slot];
+    }
+    bool hasSpecialty(int slot,Specialty specialty) const {
+        const auto* talent=talentAtSlot(slot);
+        return talent && talent->specialty==specialty;
     }
     bool inField(int slot) const {
         for (const auto& unit:columns) if (unit && unit.leader==slot) return true;
@@ -162,8 +176,20 @@ struct Campaign {
             const int mayor=governor(i);
             const int orderFactor=75+c.order/3;
             sum+=base*orderFactor/100+(mayor>=0?(leader(mayor).counsel-35)/5:0);
+            if (food && hasSpecialty(mayor,Specialty::granary)) sum+=28;
+            if (!food && hasSpecialty(mayor,Specialty::treasury)) sum+=22;
         }
-        return sum;
+        return food?sum*grainBySeason[season()]/100:sum;
+    }
+    SeasonAccounts seasonAccounts(SeasonPlan plan) const {
+        const int reliefCost=plan==SeasonPlan::relief?55+4*holdings(player):0;
+        const int drillCost=plan==SeasonPlan::drills?135:0;
+        return {income(false),income(true),reliefCost,drillCost};
+    }
+    bool canAdvance(SeasonPlan plan) const {
+        if (won || defense || readyColumn()>=0) return false;
+        const auto next=seasonAccounts(plan);
+        return gold>=next.goldCost && grain>=next.grainCost;
     }
 
     static int hireCost(int slot) {return slot==3?240:380+80*(slot-4);}
@@ -276,31 +302,73 @@ struct Campaign {
         }
         return true;
     }
-    bool canSurvey(int city) const {
-        return actions && own(city) && !(surveyed&(uint64_t(1)<<city)) && gold>=35;
+    static constexpr int searchCost=35;
+    int localTalent(int city) const {
+        for (int i=0;i<talentCount;++i) if (talents[i].city[chapter]==city) return i;
+        return -1;
     }
-    Discovery survey(int city) {
-        if (!canSurvey(city)) return {};
+    bool knowsTalent(int id) const {return id>=0 && (talentSeen&(1u<<id));}
+    bool alreadySearched(int city) const {return surveyed&(uint64_t(1)<<city);}
+    int searchLead(int city) const {
+        int lead=-1;
+        for (int slot=0;slot<commanderSlots;++slot) {
+            if (!available(slot,city)) continue;
+            if (lead<0 || searchQuality(slot)>searchQuality(lead)) lead=slot;
+        }
+        return lead;
+    }
+    int searchQuality(int slot) const {
+        return leader(slot).counsel-generals[slot].fatigue/4+
+            (hasSpecialty(slot,Specialty::scout)?30:0);
+    }
+    bool canSearch(int city,int slot) const {
+        return !won && actions && own(city) && !alreadySearched(city) && gold>=searchCost &&
+            available(slot,city);
+    }
+    Discovery search(int city,int slot) {
+        if (!canSearch(city,slot)) return {};
         surveyed|=uint64_t(1)<<city;
         --actions;
-        gold-=35;
-        const int result=(city*13+chapter*7)%5;
-        if (result==0) {
-            gold=std::min(9999,gold+125);
-            return {moneyFound,125};
+        gold-=searchCost;
+        const int quality=searchQuality(slot);
+        gainXp(slot,15,8);
+        const int candidate=localTalent(city);
+        if (candidate>=0 && !knowsTalent(candidate)) {
+            talentSeen|=1u<<candidate;
+            return {talentFound,candidate};
         }
-        if (result==1) {
-            grain=std::min(9999,grain+185);
-            return {grainFound,185};
+        const int roll=(city*17+turn*37+chapter*23+player*13)%100;
+        const int gearChance=std::clamp((quality-40)/2,8,43);
+        if (roll<gearChance) {
+            const auto gear=Gear((city+chapter+turn)%noGear);
+            if (stock[gear]<24) {
+                gainGear(gear);
+                return {gearFound,gear};
+            }
         }
-        if (result==2) {
-            const auto gear=Gear((city+chapter)%noGear);
-            gainGear(gear);
-            return {gearFound,gear};
+        if (roll<gearChance || roll<55) {
+            const int amount=std::min(9999-gold,55+quality/2);
+            gold+=amount;
+            return {moneyFound,amount};
         }
-        const int candidate=governor(city);
-        gainXp(candidate>=0?candidate:commander,105);
-        return {loreFound,105};
+        if (roll<88) {
+            const int amount=std::min(9999-grain,85+quality);
+            grain+=amount;
+            return {grainFound,amount};
+        }
+        const int extra=std::min(549-generals[slot].xp,55+quality/3);
+        gainXp(slot,extra);
+        return {loreFound,extra};
+    }
+    bool canWelcome(int city,int id) const {
+        return !won && own(city) && id>=0 && id<talentCount && talents[id].city[chapter]==city &&
+            knowsTalent(id) && !unlocked(talentFirst+id) && gold>=talents[id].fee;
+    }
+    bool welcome(int city,int id) {
+        if (!canWelcome(city,id)) return false;
+        gold-=talents[id].fee;
+        talentHired|=1u<<id;
+        return true;
     }
 
     int dispatch(int from,DispatchSize size=legion) const {
@@ -312,7 +380,7 @@ struct Campaign {
         int supply=marchCost(dispatch(from,size))+ (blockade?45:0);
         if (own(to)) supply/=2;
         if (generals[slot].gear==saddle) supply=supply*3/4;
-        return supply;
+        return std::max(1,supply-(hasSpecialty(slot,Specialty::convoy)?22:0));
     }
     int readyColumn() const {
         for (int i=0;i<columnCount;++i) if (columns[i] && !columns[i].eta) return i;
@@ -406,21 +474,28 @@ struct Campaign {
             }
         }
     }
-    void advance() {
-        if (won || defense || readyColumn()>=0) return;
+    void advance(SeasonPlan plan=SeasonPlan::regular) {
+        if (!canAdvance(plan)) return;
         const auto incoming=orders;
+        const auto next=seasonAccounts(plan);
         ++turn;
-        gold=std::min(9999,gold+income(false));
-        grain=std::min(9999,grain+income(true));
+        gold=std::min(9999,gold-next.goldCost+next.gold);
+        grain=std::min(9999,grain-next.grainCost+next.grain);
         actions=actionCapacity();
-        for (int i=0;i<commanderSlots;++i)
-            generals[i].fatigue=std::max(0,generals[i].fatigue-(inField(i)?12:26));
+        surveyed=0;
+        for (int i=0;i<commanderSlots;++i) {
+            const bool away=inField(i);
+            const bool drills=plan==SeasonPlan::drills && !away && unlocked(i);
+            generals[i].fatigue=std::max(0,generals[i].fatigue-(away?12:26)-(drills?drillRest:0));
+            if (drills) gainXp(i,drillExperience);
+        }
         for (auto& unit:columns) if (unit && unit.eta) --unit.eta;
         for (int i=0;i<cityCount;++i) {
             auto& c=cities[i];
             const int mayor=governor(i);
             if (own(i)) {
-                c.order=std::min(100,c.order+(mayor>=0?8:3));
+                const int civicBonus=hasSpecialty(mayor,Specialty::envoy)?6:0;
+                c.order=std::min(100,c.order+(mayor>=0?8:3)+civicBonus+(plan==SeasonPlan::relief?reliefOrder:0));
                 c.troops=std::min(armyLimit,c.troops+25+c.order/7+(mayor>=0?18:0));
             } else {
                 const int restore=(c.owner<3?63:33)+c.fields*13;
@@ -467,6 +542,28 @@ struct Campaign {
         gold=std::min(9999,gold+250);
         grain=std::min(9999,grain+220);
         gainGear(goal.reward);
+        return true;
+    }
+    bool regionalPaid(int id) const {return regionalRewards&(1u<<id);}
+    bool regionalCityReady(int id,int city) const {
+        return own(city) && cities[city].order>=regionalGoals[id].minOrder;
+    }
+    int regionalProgress(int id) const {
+        int complete=0;
+        for (int city:regionalGoals[id].cities) complete+=regionalCityReady(id,city);
+        return complete;
+    }
+    bool canClaimRegional(int id) const {
+        return !won && id>=0 && id<regionalGoalCount && !regionalPaid(id) &&
+            regionalProgress(id)==int(std::size(regionalGoals[id].cities));
+    }
+    bool claimRegional(int id) {
+        if (!canClaimRegional(id)) return false;
+        const auto& goal=regionalGoals[id];
+        regionalRewards|=1u<<id;
+        gold=std::min(9999,gold+goal.gold);
+        grain=std::min(9999,grain+goal.grain);
+        gainGear(goal.gear);
         return true;
     }
 };

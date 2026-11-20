@@ -47,7 +47,8 @@ struct Settlement {
 
 struct Battle {
     int from=0,to=0,hero=0,enemy=3,commander=0,column=-1;
-    int generalSide=0,generalIndex=0,enemyIndex=-1,level=1,shield=0,walls=1;
+    int enemyIndex=-1,level=1,shield=0,walls=1;
+    const Officer* general=&officers[0][0];
     bool defending=false,blockade=false,usedSkill=false,paused=false;
     int troops[2]{},initial[2]{},morale[2]{100,100};
     int losses[2]{},result=0,round=0,ticks=0,signal=0,effects=0;
@@ -80,8 +81,7 @@ struct Battle {
             initial[0]=unit.troops;
             initial[1]=c.cities[to].troops;
         }
-        generalSide=commander==guestSlot?c.guest.side:hero;
-        generalIndex=commander==guestSlot?c.guest.officer:std::max(0,commander);
+        general=&c.leader(std::max(0,commander));
         enemyIndex=enemy<3?c.enemyOfficer(enemy,to):-1;
         std::copy(initial,initial+2,troops);
         stance=formation;
@@ -90,7 +90,7 @@ struct Battle {
             auto veteran=c.generals[commander];
             level=veteran.level();
             gear=veteran.gear;
-            signal+=level*3-3+(gear==manual?18:0);
+            signal+=level*3-3+(gear==manual?18:0)+(c.hasSpecialty(commander,Specialty::command)?12:0);
             morale[0]=100-veteran.fatigue/3;
         } else {
             signal=28;
@@ -99,7 +99,7 @@ struct Battle {
         if (blockade) signal=std::min(100,signal+10);
         intent=predict();
     }
-    const Officer& officer() const {return officers[generalSide][generalIndex];}
+    const Officer& officer() const {return *general;}
     const Officer* opponent() const {return enemyIndex>=0?&officers[enemy][enemyIndex]:nullptr;}
     Formation predict() const {
         if (round==0) {
@@ -174,6 +174,9 @@ struct Battle {
             case wildfire:
                 strike=lead.strength+(sites[to].terrain==river?100:0);
                 morale[1]=std::max(0,morale[1]-23);
+                break;
+            case volley:
+                strike=lead.strength+(stance==bow?85:0);
                 break;
         }
         if (strike) strike+=10*(level-1);

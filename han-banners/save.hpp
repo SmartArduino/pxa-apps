@@ -5,16 +5,33 @@
 namespace han {
 
 constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+noGear+
-    3*commanderSlots+4*columnCount+6+1;
+    3*talentFirst+4*columnCount+6+1;
 static_assert(cityCount>expandedCityCount && cityCount<=48);
 constexpr size_t fourthSaveWords=thirdSaveWords+3*(expandedCityCount-oldCityCount)+1;
-constexpr size_t saveWords=thirdSaveWords+3*(cityCount-oldCityCount)+1;
+constexpr size_t fifthSaveWords=thirdSaveWords+3*(cityCount-oldCityCount)+1;
+constexpr size_t sixthSaveWords=fifthSaveWords+1;
+constexpr size_t saveWords=sixthSaveWords+2+3*talentCount;
 using Save=std::array<std::byte,saveWords*2>;
+using SixthSave=std::array<std::byte,sixthSaveWords*2>;
+using FifthSave=std::array<std::byte,fifthSaveWords*2>;
 using FourthSave=std::array<std::byte,fourthSaveWords*2>;
 using ThirdSave=std::array<std::byte,thirdSaveWords*2>;
 using SecondSave=std::array<std::byte,194>;
 using LegacySave=std::array<std::byte,78>;
-constexpr const char* saveKey="campaign-v5";
+constexpr const char* saveKey="campaign-v7";
+struct SaveSlot {
+    const char* key;
+    size_t size;
+};
+inline constexpr SaveSlot saveSlots[] = {
+    {saveKey,Save{}.size()},
+    {"campaign-v6",SixthSave{}.size()},
+    {"campaign-v5",FifthSave{}.size()},
+    {"campaign-v4",FourthSave{}.size()},
+    {"campaign-v3",ThirdSave{}.size()},
+    {"campaign-v2",SecondSave{}.size()},
+    {"campaign-v1",LegacySave{}.size()},
+};
 
 template<size_t N>
 uint16_t checksum(const std::array<std::byte,N>& bytes,size_t count) {
@@ -45,7 +62,12 @@ inline Save encode(const Campaign& c) {
     auto put=[&](int n) {bytes[i++]=std::byte(n&255);bytes[i++]=std::byte((n>>8)&255);};
     auto order=[&](Order o) {put(o.from+1);put(o.to+1);};
     auto captive=[&](Captive p) {put(p.side+1);put(p.officer+1);put(p.city+1);};
-    put(0x4842);put(5);put(c.player);put(c.turn);put(c.gold);put(c.grain);
+    auto veteran=[&](const Veteran& g) {
+        put(g.xp);
+        put(g.fatigue|((g.station+1)<<8));
+        put(g.gear);
+    };
+    put(0x4842);put(7);put(c.player);put(c.turn);put(c.gold);put(c.grain);
     put(c.actions);put(c.won+1);put(c.commander);put(c.recruited);put(c.tours);
     for (int n:c.truce) put(n);
     put(c.chapter);put(c.objectivePaid);
@@ -58,11 +80,7 @@ inline Save encode(const Campaign& c) {
     for (auto o:c.orders) order(o);
     order(c.defense);
     for (int n:c.stock) put(n);
-    for (const auto& g:c.generals) {
-        put(g.xp);
-        put(g.fatigue|((g.station+1)<<8));
-        put(g.gear);
-    }
+    for (int slot=0;slot<talentFirst;++slot) veteran(c.generals[slot]);
     for (const auto& unit:c.columns) {
         order(unit.road);
         put(unit.troops);
@@ -70,6 +88,10 @@ inline Save encode(const Campaign& c) {
     }
     captive(c.prisoner);
     captive(c.guest);
+    put(c.regionalRewards);
+    put(c.talentSeen);
+    put(c.talentHired);
+    for (int slot=talentFirst;slot<commanderSlots;++slot) veteran(c.generals[slot]);
     put(checksum(bytes,i));
     return bytes;
 }
@@ -125,15 +147,17 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     if ((loaded.surveyed>>Count) || !readMap(r,loaded,Count))
         return false;
     for (int& count:loaded.stock) {count=r.get();if (count>33) return false;}
-    for (auto& veteran:loaded.generals) {
+    auto readVeteran=[&](Veteran& veteran) {
         veteran.xp=r.get();
         const auto status=r.get();
         veteran.fatigue=status&255;
         veteran.station=(status>>8)-1;
         veteran.gear=Gear(r.get());
-        if (veteran.xp>549 || veteran.fatigue>100 || veteran.gear>noGear ||
-            (veteran.station>=0 && !loaded.own(veteran.station))) return false;
-    }
+        return veteran.xp<=549 && veteran.fatigue<=100 && veteran.gear<=noGear &&
+            (veteran.station<0 || loaded.own(veteran.station));
+    };
+    for (int slot=0;slot<talentFirst;++slot)
+        if (!readVeteran(loaded.generals[slot])) return false;
     for (auto& unit:loaded.columns) {
         unit.road=r.order();
         unit.troops=r.get();
@@ -148,6 +172,17 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     }
     loaded.prisoner=r.captive();
     loaded.guest=r.captive();
+    if constexpr (Version>=6) {
+        loaded.regionalRewards=r.get();
+        if (loaded.regionalRewards>>regionalGoalCount) return false;
+    }
+    if constexpr (Version>=7) {
+        loaded.talentSeen=r.get();
+        loaded.talentHired=r.get();
+        if ((loaded.talentSeen>>talentCount) || (loaded.talentHired&~loaded.talentSeen)) return false;
+        for (int slot=talentFirst;slot<commanderSlots;++slot)
+            if (!readVeteran(loaded.generals[slot])) return false;
+    }
     auto validCaptive=[&](Captive p,bool visiting) {
         if (!p) return p.side==-1 && p.officer==-1 && p.city==-1;
         return p.side<3 && p.side!=loaded.player && p.officer>=0 && p.officer<officerCount &&
@@ -173,6 +208,12 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     return true;
 }
 inline bool decode(const Save& bytes,Campaign& campaign) {
+    return decodeCampaign<7,cityCount>(bytes,campaign);
+}
+inline bool migrate(const SixthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<6,cityCount>(bytes,campaign);
+}
+inline bool migrate(const FifthSave& bytes,Campaign& campaign) {
     return decodeCampaign<5,cityCount>(bytes,campaign);
 }
 inline bool migrate(const FourthSave& bytes,Campaign& campaign) {
@@ -213,6 +254,23 @@ inline bool migrate(const LegacySave& bytes,Campaign& campaign) {
     loaded.makeOrders();
     campaign=loaded;
     return true;
+}
+
+inline bool restoreSave(const Save& data,size_t size,Campaign& campaign) {
+    auto older=[&](auto previous) {
+        std::copy_n(data.begin(),previous.size(),previous.begin());
+        return migrate(previous,campaign);
+    };
+    switch (size) {
+        case Save{}.size():return decode(data,campaign);
+        case SixthSave{}.size():return older(SixthSave{});
+        case FifthSave{}.size():return older(FifthSave{});
+        case FourthSave{}.size():return older(FourthSave{});
+        case ThirdSave{}.size():return older(ThirdSave{});
+        case SecondSave{}.size():return older(SecondSave{});
+        case LegacySave{}.size():return older(LegacySave{});
+        default:return false;
+    }
 }
 
 }

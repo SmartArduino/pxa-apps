@@ -134,19 +134,20 @@ static void checkMigration() {
     ThirdSave third{};
     constexpr size_t header=18*2;
     constexpr size_t legacyCities=oldCityCount*6;
+    constexpr size_t preRegionalEnd=FifthSave{}.size()-2;
     std::copy_n(newest.begin(),header,third.begin());
     third[2]=std::byte{3};
     std::copy_n(newest.begin()+header+2,legacyCities,third.begin()+header);
-    std::copy(newest.begin()+header+2+cityCount*6,newest.end()-2,
+    std::copy(newest.begin()+header+2+cityCount*6,newest.begin()+preRegionalEnd,
               third.begin()+header+legacyCities);
     const auto sum=checksum(third,third.size()-2);
     third[third.size()-2]=std::byte(sum&255);
     third.back()=std::byte(sum>>8);
     assert(migrate(third,c) && c.chapter==2 && c.own(32) && c.cities[37].owner==7 &&
            c.surveyed==(uint64_t(1)<<31));
-    assert(c.canSurvey(32));
-    c.survey(32);
-    assert(!c.canSurvey(32) && (c.surveyed>>32)==1);
+    assert(c.canSearch(32,0));
+    c.search(32,0);
+    assert(!c.canSearch(32,0) && (c.surveyed>>32)==1);
     checkSave(c);
 
     current.surveyed=uint64_t(1)<<37;
@@ -156,7 +157,7 @@ static void checkMigration() {
     constexpr size_t expandedHeader=header+2;
     std::copy_n(newest.begin(),expandedHeader+expandedCityCount*6,fourth.begin());
     fourth[2]=std::byte{4};
-    std::copy(newest.begin()+expandedHeader+cityCount*6,newest.end()-2,
+    std::copy(newest.begin()+expandedHeader+cityCount*6,newest.begin()+preRegionalEnd,
               fourth.begin()+expandedHeader+expandedCityCount*6);
     const auto fourthSum=checksum(fourth,fourth.size()-2);
     fourth[fourth.size()-2]=std::byte(fourthSum&255);
@@ -165,6 +166,94 @@ static void checkMigration() {
            c.surveyed==(uint64_t(1)<<37) && c.cities[40].owner==7 && c.own(47));
     c.surveyed|=uint64_t(1)<<47;
     checkSave(c);
+
+    newest=encode(c);
+    FifthSave fifth{};
+    std::copy_n(newest.begin(),preRegionalEnd,fifth.begin());
+    fifth[2]=std::byte{5};
+    const auto fifthSum=checksum(fifth,fifth.size()-2);
+    fifth[fifth.size()-2]=std::byte(fifthSum&255);
+    fifth.back()=std::byte(fifthSum>>8);
+    c.regionalRewards=7;
+    Save stored{};
+    std::copy(fifth.begin(),fifth.end(),stored.begin());
+    assert(!restoreSave(stored,fifth.size()-1,c));
+    assert(restoreSave(stored,fifth.size(),c) && c.regionalRewards==0 && c.own(47) && c.cities[37].troops==432 &&
+           c.surveyed==((uint64_t(1)<<37)|(uint64_t(1)<<47)));
+
+    c.regionalRewards=7;
+    newest=encode(c);
+    SixthSave sixth{};
+    std::copy_n(newest.begin(),sixth.size()-2,sixth.begin());
+    sixth[2]=std::byte{6};
+    const auto sixthSum=checksum(sixth,sixth.size()-2);
+    sixth[sixth.size()-2]=std::byte(sixthSum&255);
+    sixth.back()=std::byte(sixthSum>>8);
+    std::copy(sixth.begin(),sixth.end(),stored.begin());
+    assert(restoreSave(stored,sixth.size(),c) && c.regionalRewards==7 && c.talentHired==0 &&
+           c.own(47) && c.cities[37].troops==432);
+}
+
+static void checkSeasonAndRegionalGoals() {
+    Campaign c;
+    c.start(0);
+    const auto fall=c.seasonAccounts(SeasonPlan::regular);
+    auto winter=c;
+    ++winter.turn;
+    assert(fall.grain>winter.income(true) && fall.gold==winter.income(false));
+
+    constexpr int id=2;
+    const auto& goal=regionalGoals[id];
+    for (int city:goal.cities) c.cities[city].owner=0;
+    c.orders={};
+    c.cities[7].order=50;
+    c.cities[43].order=64;
+    assert(c.regionalProgress(id)==1 && !c.claimRegional(id));
+    assert(!c.claimRegional(-1) && !c.claimRegional(regionalGoalCount));
+    const auto relief=c.seasonAccounts(SeasonPlan::relief);
+    const int gold=c.gold;
+    const int grain=c.grain;
+    auto poor=c;
+    poor.gold=relief.goldCost-1;
+    assert(!poor.canAdvance(SeasonPlan::relief));
+    poor.advance(SeasonPlan::relief);
+    assert(poor.turn==1 && poor.cities[7].order==50 && poor.gold==relief.goldCost-1);
+    auto regular=c;
+    regular.advance();
+    assert(regular.cities[7].order==53 && !regular.canClaimRegional(id));
+    c.advance(SeasonPlan::relief);
+    assert(c.turn==2 && c.gold==gold+relief.gold-relief.goldCost && c.grain==grain+relief.grain);
+    assert(c.cities[7].order==67 && c.cities[10].order==89 && c.cities[43].order==81);
+    assert(c.canClaimRegional(id));
+    const auto rewardGold=c.gold+goal.gold;
+    const auto rewardFood=c.grain+goal.grain;
+    const auto gear=c.stock[goal.gear]+1;
+    assert(c.claimRegional(id) && !c.claimRegional(id) && c.regionalPaid(id));
+    assert(c.gold==rewardGold && c.grain==rewardFood && c.stock[goal.gear]==gear);
+    auto saved=encode(c);
+    Campaign restored;
+    assert(decode(saved,restored) && restored.regionalPaid(id) && !restored.claimRegional(id));
+    saved[SixthSave{}.size()-3]=std::byte{1};
+    const auto sum=checksum(saved,saved.size()-2);
+    saved[saved.size()-2]=std::byte(sum&255);
+    saved.back()=std::byte(sum>>8);
+    assert(!decode(saved,restored));
+
+    Campaign drilled;
+    drilled.start(0);
+    assert(drilled.assign(10,2));
+    const auto column=drilled.send(10,15,division,0,true);
+    assert(column>=0);
+    for (int slot=0;slot<4;++slot) drilled.generals[slot].fatigue=80;
+    drilled.generals[2].xp=530;
+    const auto estimate=drilled.seasonAccounts(SeasonPlan::drills);
+    const auto food=drilled.grain;
+    drilled.advance(SeasonPlan::drills);
+    assert(drilled.grain==food+estimate.grain-estimate.grainCost && drilled.readyColumn()==column);
+    assert(drilled.generals[0].fatigue==68 && drilled.generals[0].xp==0);
+    assert(drilled.generals[1].fatigue==36 && drilled.generals[1].xp==45);
+    assert(drilled.generals[2].fatigue==36 && drilled.generals[2].xp==549);
+    assert(drilled.generals[3].xp==0 && !drilled.canAdvance(SeasonPlan::regular));
 }
 
 static void checkCivicAndColumns() {
@@ -173,8 +262,8 @@ static void checkCivicAndColumns() {
     const auto gold=c.gold,grain=c.grain;
     assert(c.develop(10,recruit) && c.cities[10].troops==2030 && c.actions==1);
     assert(c.gold==gold-80 && c.grain==grain-50);
-    auto found=c.survey(10);
-    assert(found.kind==moneyFound && !c.canSurvey(10) && !c.actions);
+    auto found=c.search(10,1);
+    assert(found.kind==talentFound && !c.canSearch(10,1) && !c.actions);
     assert(c.assign(10,2) && c.governor(10)==2 && !c.available(2));
     assert(c.available(2,10) && c.equip(0,saddle));
     checkSave(c);
@@ -255,8 +344,76 @@ static void checkBattleAndCaptive() {
     assert(!defended.defense);
 }
 
+static void checkSearchAndTalents() {
+    for (int chapter=0;chapter<chapterCount;++chapter) {
+        for (int side=0;side<3;++side) {
+            Campaign opening;
+            opening.start(side,chapter);
+            const int city=opening.capital();
+            const int lead=opening.searchLead(city);
+            const int gold=opening.gold, actions=opening.actions;
+            const auto found=opening.search(city,lead);
+            assert(found.kind==talentFound && found.value==side && opening.knowsTalent(side));
+            assert(!opening.unlocked(talentFirst+side) && opening.alreadySearched(city));
+            assert(opening.gold==gold-Campaign::searchCost && opening.actions==actions-1);
+            assert(opening.generals[lead].xp==15 && opening.generals[lead].fatigue==8);
+            assert(opening.search(city,lead).kind==noFind);
+            checkSave(opening);
+            Campaign restored;
+            assert(decode(encode(opening),restored) && restored.canWelcome(city,side));
+            assert(restored.welcome(city,side) && !restored.welcome(city,side));
+            assert(restored.gold==opening.gold-talents[side].fee && restored.actions==opening.actions);
+            assert(restored.unlocked(talentFirst+side));
+            checkSave(restored);
+            const auto nextTurn=restored.turn+1;
+            restored.advance();
+            assert(restored.turn==nextTurn && !restored.alreadySearched(city));
+            const auto loot=restored.search(city,lead);
+            assert(loot.kind!=talentFound && loot.kind!=noFind);
+        }
+    }
+
+    Campaign office;
+    office.start(0);
+    office.cities[4].owner=0;
+    office.cities[36].owner=0;
+    office.talentSeen=office.talentHired=(1u<<0)|(1u<<1)|(1u<<5);
+    assert(office.assign(10,talentFirst));
+    assert(office.assign(4,talentFirst+1));
+    assert(office.assign(36,talentFirst+5));
+    assert(!office.available(talentFirst+1,36) && office.available(talentFirst+1,4));
+    auto without=office;
+    without.relieve(4);
+    without.relieve(36);
+    assert(office.income(false)-without.income(false)==22+(96-35)/5+(91-35)/5);
+    assert(office.income(true)>without.income(true)+40);
+    office.orders={};
+    office.advance();
+    assert(office.cities[10].order==86);
+    checkSave(office);
+
+    Campaign arms;
+    arms.start(0);
+    arms.talentSeen=arms.talentHired=(1u<<2)|(1u<<3)|(1u<<4);
+    assert(arms.supplyCost(10,7,legion,talentFirst+2,false)==arms.supplyCost(10,7,legion,0,false)-22);
+    const int column=arms.send(10,7,legion,talentFirst+3,false);
+    assert(column>=0 && !arms.available(talentFirst+3,10));
+    checkSave(arms);
+    Battle fight;
+    fight.start(arms,arms.columns[column].road,column,horse);
+    assert(&fight.officer()==&talents[3].officer && fight.signal==64 && fight.rally());
+    assert(fight.losses[1]==talents[3].officer.strength+35);
+    arms.cities[11].owner=0;
+    auto ordinary=arms;
+    assert(ordinary.search(11,0).kind==moneyFound);
+    assert(arms.search(11,talentFirst+4).kind==gearFound);
+    checkSave(arms);
+}
+
 int main() {
     checkMigration();
+    checkSearchAndTalents();
+    checkSeasonAndRegionalGoals();
     checkCivicAndColumns();
     checkBattleAndCaptive();
     for (int chapter=0;chapter<chapterCount;++chapter)

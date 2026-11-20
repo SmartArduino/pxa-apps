@@ -26,6 +26,26 @@ inline constexpr Chapter chapters[] = {
 };
 constexpr int chapterCount=int(std::size(chapters));
 
+struct RegionalGoal {
+    const char* name;
+    int cities[3];
+    int minOrder;
+    int gold, grain;
+    Gear gear;
+};
+inline constexpr RegionalGoal regionalGoals[] = {
+    {"关洛通道",{44,0,1},0,220,170,armor},
+    {"蜀道据点",{3,30,47},0,200,220,saddle},
+    {"江汉锁钥",{7,10,43},65,250,260,manual},
+    {"淮泗攻守",{45,22,24},0,240,170,sword},
+    {"江东门户",{8,19,20},75,360,210,armor},
+    {"闽江通商",{20,39,38},75,300,240,manual},
+    {"西江粮道",{34,35,29},75,225,440,saddle},
+    {"北部湾水路",{36,40,41},65,290,390,sword},
+};
+constexpr int regionalGoalCount=int(std::size(regionalGoals));
+static_assert(regionalGoalCount<=16);
+
 struct OpeningChange {
     int city,owner,troops,fort;
 };

@@ -34,13 +34,15 @@ constexpr Rect standardMap{8,42,264,177};
 constexpr Rect wideMap{8,42,368,177};
 
 enum class Page {home, choose, map, deploy, battle, report, help, ending, replace, council, roster,
-                 cityDesk, dispatch, forces, gear, captive, gazetteer};
+                 cityDesk, dispatch, forces, gear, captive, gazetteer, seasonCouncil, regions, search};
 enum class Command {resume, newGame, guide, back, side, seat, work, march, season, select,
                     engage, shift, skill, pause, retreat, accept, home, replace, zoom, council,
                     roster, officer, hire, chooseOfficer, treat, market, militia, skipMarch, atlas,
                     chapter, cityDesk, survey, forces, chooseSize, approach, send, recall,
                     rosterPage, gear, pickGear, equip, drill, orders, maneuver, duel, duelMove,
-                    captiveChoice, gazetteer, browseCity};
+                    captiveChoice, gazetteer, browseCity, choosePlan, advanceSeason,
+                    regions, chooseRegion, locateRegionCity, claimRegion,
+                    openSearch, searchOfficer, welcomeTalent};
 struct Control {
     Rect box;
     Command command;
@@ -78,8 +80,10 @@ struct App {
     int chosenChapter=0, dispatchLead=-1, defenseLeader=-1, arrivingColumn=-1, gearCursor=0;
     bool stageSiege=false, tacticsOpen=false;
     DispatchSize dispatchSize=legion;
-    int surveyCity=-1;
+    int searchingOfficer=-1;
     int gazetteerCity=0;
+    int regionalChoice=0;
+    SeasonPlan seasonPlan=SeasonPlan::regular;
     Discovery discovery{};
     Settlement aftermath{};
     float mapCenterX=worldWidth/2.f, mapCenterY=worldHeight/2.f;
@@ -130,32 +134,12 @@ struct App {
     }
     pxa::Task<void> initialize() {
         Save data{};
-        auto r = co_await context->storage().get(saveKey,data);
-        hasSave = r && *r == data.size() && decode(data,campaign);
-        damagedSave = !hasSave && (r || r.error() != pxa::Error::not_found);
-        if (!hasSave && !damagedSave) {
-            FourthSave previous{};
-            const auto old=co_await context->storage().get("campaign-v4",previous);
-            hasSave=old && *old==previous.size() && migrate(previous,campaign);
-            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
-        }
-        if (!hasSave && !damagedSave) {
-            ThirdSave previous{};
-            const auto old=co_await context->storage().get("campaign-v3",previous);
-            hasSave=old && *old==previous.size() && migrate(previous,campaign);
-            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
-        }
-        if (!hasSave && !damagedSave) {
-            SecondSave previous{};
-            const auto old=co_await context->storage().get("campaign-v2",previous);
-            hasSave=old && *old==previous.size() && migrate(previous,campaign);
-            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
-        }
-        if (!hasSave && !damagedSave) {
-            LegacySave previous{};
-            const auto old=co_await context->storage().get("campaign-v1",previous);
-            hasSave=old && *old==previous.size() && migrate(previous,campaign);
-            damagedSave=!hasSave && (old || old.error()!=pxa::Error::not_found);
+        for (const auto& slot:saveSlots) {
+            auto result=co_await context->storage().get(slot.key,std::span(data).first(slot.size));
+            if (!result && result.error()==pxa::Error::not_found) continue;
+            hasSave=result && *result==slot.size && restoreSave(data,slot.size,campaign);
+            damagedSave=!hasSave;
+            break;
         }
         co_return co_await openRenderer();
     }
@@ -251,16 +235,25 @@ struct App {
             case Page::choose:room();require(art::portraits[0]);break;
             case Page::roster:
                 room();
-                for (int i=rosterStart();i<std::min(rosterCount(),rosterStart()+rosterSize);++i) actor(i);
+                for (int i=rosterStart();i<std::min(rosterCount(),rosterStart()+rosterSize);++i)
+                    actor(rosterSlot(i));
                 break;
             case Page::map:
                 room();
                 for (auto t:art::mapTiles) require(t);
                 if (isMarching() || hasColumns()) require(art::marchers[0][0][0]);
                 break;
-            case Page::gazetteer:room();break;
+            case Page::gazetteer:
+            case Page::seasonCouncil:
+            case Page::regions:room();break;
             case Page::dispatch:room();actor(dispatchLead);break;
             case Page::cityDesk:room(art::cityCourtyard);actor(campaign.governor(selected));break;
+            case Page::search:
+                room(art::cityCourtyard);
+                actor(searchingOfficer);
+                if (const int id=campaign.localTalent(selected);campaign.knowsTalent(id))
+                    require(art::portraits[talents[id].officer.portrait]);
+                break;
             case Page::deploy: {
                 room();
                 actor(plannedLeader());
@@ -1007,7 +1000,7 @@ struct App {
             tone=coral;
         }
         if (!status) {
-            std::snprintf(buf,sizeof buf,"领地 %d/%d  下季 +%d金 +%d粮",
+            std::snprintf(buf,sizeof buf,"领地 %d/%d  季末 +%d金 +%d粮",
                           campaign.holdings(campaign.player),cityCount,campaign.income(false),campaign.income(true));
             status=buf;
         }
@@ -1029,7 +1022,7 @@ struct App {
         button(f,{146,240,30,21},"−",Command::zoom,-1,mapZoom>0);
         button(f,{179,240,30,21},"+",Command::zoom,1,mapZoom<2);
         button(f,{212,240,57,21},mapWindow.w==wideMap.w?"城务":"全图",Command::atlas);
-        button(f,{274,226,102,32},"推进一季",Command::season,0,true,true);
+        button(f,{274,226,102,32},"季末军议",Command::season,0,true,true);
     }
     void drawDeploy(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
@@ -1276,9 +1269,10 @@ struct App {
             else std::snprintf(state,sizeof state,"与%s议和",factions[side].title);
             button(f,{205,118+40*n++,160,28},state,Command::treat,side,campaign.mayTreat(side));
         }
-        button(f,{10,230,102,25},"返回舆图",Command::back);
-        button(f,{125,230,102,25},"军情",Command::forces);
-        button(f,{236,229,138,27},"武将名册",Command::roster,0,true,true);
+        button(f,{10,230,75,26},"返回",Command::back);
+        button(f,{91,230,75,26},"军情",Command::forces);
+        button(f,{172,230,95,26},"州郡军略",Command::regions);
+        button(f,{273,230,101,26},"武将名册",Command::roster,0,true,true);
     }
 #include "expansion_ui.inc"
 
@@ -1308,7 +1302,10 @@ struct App {
             case Page::council: drawCouncil(f); break;
             case Page::roster: drawRoster(f); break;
             case Page::cityDesk: drawCityDesk(f);break;
+            case Page::search: drawSearch(f);break;
             case Page::gazetteer: drawGazetteer(f);break;
+            case Page::seasonCouncil: drawSeasonCouncil(f);break;
+            case Page::regions: drawRegions(f);break;
             case Page::dispatch: drawDispatch(f);break;
             case Page::forces: drawForces(f);break;
             case Page::gear: drawGear(f);break;
@@ -1343,6 +1340,8 @@ struct App {
         logState("march");
     }
     void beginSeason() {
+        if (!campaign.canAdvance(seasonPlan)) return;
+        show(Page::map,0);
         seasonMarch=true;
         marching=campaign.orders;
         marchingMs=0;
@@ -1373,7 +1372,7 @@ struct App {
         marching={};
         seasonMarch=false;
         if (season) {
-            campaign.advance();
+            campaign.advance(seasonPlan);
             notice=Notice::income;
             checkpoint();
             enterMap();
@@ -1473,9 +1472,12 @@ struct App {
             case Page::council:
             case Page::dispatch:
             case Page::gazetteer:
+            case Page::seasonCouncil:
             case Page::cityDesk:show(Page::map,-1);break;
+            case Page::regions:show(Page::council);break;
             case Page::forces:show(Page::council);break;
-            case Page::gear:show(Page::roster,officerSlot-rosterStart());break;
+            case Page::gear:show(Page::roster,rosterPosition()-rosterStart());break;
+            case Page::search:show(Page::cityDesk);break;
             case Page::roster:show(rosterFrom,rosterFrom==Page::deploy?formation:0);break;
             case Page::deploy:
                 if (battle.defending) show(Page::home);
@@ -1518,7 +1520,8 @@ struct App {
                 campaign.start(side,chosenChapter);
                 selected=campaign.capital();
                 mapWindow=standardMap;mapZoom=0;focusCamera(selected);
-                surveyCity=-1;
+                discovery={};
+                regionalChoice=0;
                 notice=Notice::none;
                 checkpoint();
                 enterMap();
@@ -1536,7 +1539,6 @@ struct App {
                 if (campaign.develop(selected,Work(arg))) {
                     notice=arg==recruit?Notice::recruited:arg==farm?Notice::cultivated:
                         arg==walls?Notice::fortified:Notice::civic;
-                    surveyCity=-1;
                     campaign.makeOrders();
                     checkpoint();
                     logState("work");
@@ -1545,12 +1547,27 @@ struct App {
             case Command::cityDesk:show(Page::cityDesk);break;
             case Command::gazetteer:gazetteerCity=arg;show(Page::gazetteer);break;
             case Command::browseCity:gazetteerCity=(gazetteerCity+arg+cityCount)%cityCount;break;
+            case Command::openSearch:
+                searchingOfficer=campaign.searchLead(selected);
+                discovery={};
+                show(Page::search);
+                break;
+            case Command::searchOfficer:
+                rosterFrom=Page::search;
+                officerSlot=searchingOfficer>=0?searchingOfficer:campaign.commander;
+                show(Page::roster,rosterPosition()-rosterStart());
+                break;
             case Command::survey:
-                if (campaign.canSurvey(selected)) {
-                    discovery=campaign.survey(selected);
-                    surveyCity=selected;
+                if (campaign.canSearch(selected,searchingOfficer)) {
+                    discovery=campaign.search(selected,searchingOfficer);
                     checkpoint();
-                    logState("survey");
+                    logState(discovery.kind==talentFound?"talent-found":"search");
+                }
+                break;
+            case Command::welcomeTalent:
+                if (campaign.welcome(selected,arg)) {
+                    checkpoint();
+                    logState("talent-recruited");
                 }
                 break;
             case Command::march:
@@ -1575,7 +1592,12 @@ struct App {
                 }
                 break;
             case Command::recall:recallColumn(arg);break;
-            case Command::season:beginSeason();break;
+            case Command::season:
+                seasonPlan=SeasonPlan::regular;
+                show(Page::seasonCouncil);
+                break;
+            case Command::choosePlan:seasonPlan=SeasonPlan(arg);break;
+            case Command::advanceSeason:beginSeason();break;
             case Command::skipMarch:finishMarch();break;
             case Command::zoom:
                 mapZoom=std::clamp(mapZoom+arg,0,2);
@@ -1590,17 +1612,33 @@ struct App {
                 break;
             case Command::council:show(Page::council);break;
             case Command::forces:show(Page::forces);break;
+            case Command::regions:show(Page::regions,regionalChoice);break;
+            case Command::chooseRegion:regionalChoice=arg;break;
+            case Command::locateRegionCity:
+                destination=arg==selected?-1:arg;
+                mapWindow=standardMap;
+                mapZoom=1;
+                focusCamera(arg);
+                notice=Notice::none;
+                show(Page::map,-1);
+                break;
+            case Command::claimRegion:
+                if (campaign.claimRegional(arg)) {
+                    checkpoint();
+                    logState("regional-reward");
+                }
+                break;
             case Command::roster:
                 rosterFrom=page;
                 officerSlot=page==Page::dispatch?dispatchLead:
                     page==Page::deploy?defenseLeader:
                     page==Page::cityDesk?campaign.governor(selected):campaign.commander;
                 if (officerSlot<0) officerSlot=campaign.commander;
-                show(Page::roster,officerSlot-rosterStart());
+                show(Page::roster,rosterPosition()-rosterStart());
                 break;
             case Command::officer:officerSlot=arg;break;
             case Command::rosterPage:
-                officerSlot=std::clamp(rosterStart()+arg*rosterSize,0,rosterCount()-1);
+                officerSlot=rosterSlot(std::clamp(rosterStart()+arg*rosterSize,0,rosterCount()-1));
                 focus=0;
                 break;
             case Command::hire:
@@ -1610,6 +1648,7 @@ struct App {
                 if (eligibleOfficer(arg)) {
                     if (rosterFrom==Page::dispatch) dispatchLead=arg;
                     else if (rosterFrom==Page::deploy) defenseLeader=arg;
+                    else if (rosterFrom==Page::search) searchingOfficer=arg;
                     else {
                         if (rosterFrom==Page::cityDesk) campaign.assign(selected,arg);
                         else campaign.commander=arg;
