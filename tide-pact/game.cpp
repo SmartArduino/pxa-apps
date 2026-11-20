@@ -340,6 +340,7 @@ bool Game::heard_rumor(int id) const {
 bool Game::hear_rumor(int id) {
     if (!port() || id<0 || id>=RumorCount || heard_rumor(id) || s.origin!=Rumors[id].port)
         return false;
+    if (!understands(PortSpeech[s.origin])) return false;
     s.heard_rumors|=1U<<id;
     notice="传闻已记在航海簿上";
     return true;
@@ -431,6 +432,7 @@ bool Game::depart(int to) {
     if (s.hull<=12) { notice="船体破损，需要维修"; return false; }
     if (s.stores<daily_rations() || s.water<daily_water(Fair)) { notice="水粮不足一日"; return false; }
     route = path;
+    s.interpreter_port=-1;
     s.destination = to;
     s.leg = s.progress = s.weather = s.enemy = s.range = s.aim = 0;
     s.event_mask = 0;
@@ -516,6 +518,7 @@ bool Game::start_helm(int destination) {
         return false;
     }
     const auto here=Anchor[s.origin];
+    s.interpreter_port=-1;
     s.helm=1;
     s.helm_pulse=0;
     s.helm_x=here.x*16;
@@ -979,6 +982,75 @@ bool Game::assign_officer(int officer) {
     return true;
 }
 
+Fluency Game::fluency(Language language) const {
+    if (language==Portuguese) return Fluent;
+    if (language>=LanguageCount) return Unfamiliar;
+    return static_cast<Fluency>((s.language_skills>>(2*language))&3U);
+}
+
+int Game::crew_interpreter(Language language) const {
+    for (int id=Pilot;id<OfficerLimit;++id)
+        if (has_officer(id) && std::ranges::find(Officers[id].languages,language)!=Officers[id].languages.end())
+            return id;
+    return NoOfficer;
+}
+
+bool Game::can_study(Language language) const {
+    return language<LanguageCount && port() &&
+           (language==PortSpeech[s.origin] || language==port_second_language(s.origin));
+}
+
+bool Game::local_interpreter(Language language) const {
+    return can_study(language) && s.interpreter_port==s.origin;
+}
+
+bool Game::understands(Language language) const {
+    return fluency(language)==Fluent || crew_interpreter(language)!=NoOfficer || local_interpreter(language);
+}
+
+int Game::lesson_fee(Language language) const { return fluency(language)==Unfamiliar?18:38; }
+int Game::lesson_days(Language language) const { return fluency(language)==Unfamiliar?1:2; }
+
+bool Game::hire_interpreter() {
+    if (!port() || s.interpreter_port==s.origin || s.gold<InterpreterFee) return false;
+    earn(-InterpreterFee);
+    s.interpreter_port=s.origin;
+    notice="口译已在码头等候";
+    return true;
+}
+
+bool Game::take_lesson(Language language) {
+    if (!can_study(language) || fluency(language)==Fluent || s.gold<lesson_fee(language)) return false;
+    earn(-lesson_fee(language));
+    spend_day(lesson_days(language));
+    s.language_skills+=1U<<(2*language);
+    notice=fluency(language)==Phrases?"学会了问路常用语":"已能通读手记和询问细节";
+    return true;
+}
+
+bool Game::tide_ledger_here() const {
+    return port() && (s.origin==tangier || (s.origin==cadiz && s.tide_ledger>=LedgerCopied));
+}
+
+bool Game::copy_tide_ledger() {
+    if (!port() || s.origin!=tangier || s.tide_ledger!=LedgerUnseen || !understands(Arabic))
+        return false;
+    s.tide_ledger=LedgerCopied;
+    notice="带抄本到加的斯渡口核对";
+    return true;
+}
+
+bool Game::decide_tide_ledger(bool publish) {
+    if (!port() || s.origin!=cadiz || s.tide_ledger!=LedgerCopied || !understands(Castilian))
+        return false;
+    s.tide_ledger=publish?LedgerPublished:LedgerReturned;
+    if (publish) { s.trust+=2; ++s.renown; }
+    else earn(100);
+    s.chart_marks|=1U<<gibraltar;
+    notice=publish?"渡口挂出了双语潮簿":"收下谢金，潮图留在船上";
+    return true;
+}
+
 int Game::archive_here() const {
     if (!port()) return -1;
     for (int i=0;i<ExpeditionCount;++i)
@@ -995,6 +1067,7 @@ int Game::expedition_here() const {
 
 bool Game::read_expedition(int id) {
     if (id<0 || archive_here()!=id || s.expeditions[id].stage!=UnknownClue) return false;
+    if (!understands(BookLanguage[id])) return false;
     auto& record=s.expeditions[id];
     record.stage=ReadClue;
     record.rival_day=std::min(99999,s.day+Expeditions[id].race_days);
@@ -1006,6 +1079,7 @@ bool Game::consult_witness(int id) {
     if (id<0 || archive_here()!=id) return false;
     auto& record=s.expeditions[id];
     if (record.stage<ReadClue || record.stage>=HasEvidence || (record.flags&HeardWitness)) return false;
+    if (!understands(WitnessLanguage[id])) return false;
     record.flags|=HeardWitness;
     s.chart_marks|=1U<<Expeditions[id].site;
     notice="口述线索已抄入考察簿";
@@ -1450,7 +1524,9 @@ static_assert(4 + 28*4 + 4*4 + GoodsCount + PortCount*GoodsCount +
 static_assert(CombatSaveBytes==LegacySaveBytes+7+4+5);
 static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
 static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
-static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity+4);
+constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
+static_assert(WakeSaveBytes>=WakeRecordBytes+4);
+static_assert(SaveBytes>=WakeRecordBytes+6+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1458,7 +1534,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x38445054);
+    put(0x39445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -1487,6 +1563,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.wake_head);
     bytes[offset++]=std::byte(s.wake_count);
     for (const auto point : s.wake) put(std::uint32_t(point.x)|(std::uint32_t(point.y)<<16));
+    put(s.language_skills);
+    bytes[offset++]=std::byte(s.interpreter_port+1);
+    bytes[offset++]=std::byte(s.tide_ledger);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1495,7 +1574,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
 bool decode(State& output, std::span<const std::byte> bytes) {
     if (bytes.size()!=LegacySaveBytes && bytes.size()!=CombatSaveBytes &&
         bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes &&
-        bytes.size()!=CoastSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -1505,8 +1584,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool latest=version==0x38445054 && bytes.size()==SaveBytes;
-    const bool with_coast=latest || (version==0x37445054 && bytes.size()==CoastSaveBytes);
+    const bool with_languages=version==0x39445054 && bytes.size()==SaveBytes;
+    const bool with_wake=with_languages || (version==0x38445054 && bytes.size()==WakeSaveBytes);
+    const bool with_coast=with_wake || (version==0x37445054 && bytes.size()==CoastSaveBytes);
     const bool with_officers=with_coast || (version==0x36445054 && bytes.size()==OfficerSaveBytes);
     const bool with_expeditions=with_officers || (version==0x35445054 && bytes.size()==OfficerSaveBytes);
     const bool with_helm=with_expeditions || (version==0x34445054 && bytes.size()==HelmSaveBytes);
@@ -1584,7 +1664,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         if (s.chart_marks>>PlaceCount || s.heard_rumors>>RumorCount) return false;
         for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
     }
-    if (latest) {
+    if (with_wake) {
         s.wake_head=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.wake_count=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.wake_head>=WakeCapacity || s.wake_count>WakeCapacity ||
@@ -1594,6 +1674,17 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             point={int(value&0xffffU),int(value>>16)};
             if (point.x>=ChartWidth || point.y>=ChartHeight) return false;
         }
+    }
+    if (with_languages) {
+        s.language_skills=get();
+        s.interpreter_port=std::to_integer<int>(bytes[offset++])-1;
+        s.tide_ledger=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (s.language_skills>>(2*LanguageCount) || (s.language_skills&3U) ||
+            s.tide_ledger>LedgerReturned || s.interpreter_port>=PortCount ||
+            (s.interpreter_port>=0 && (s.interpreter_port!=s.origin || s.helm || s.destination>=0)))
+            return false;
+        for (int language=1;language<LanguageCount;++language)
+            if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

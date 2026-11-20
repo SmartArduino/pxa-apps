@@ -32,8 +32,8 @@ struct VoyageSave {
             if (*head!=HeadBytes || current>1) co_return std::unexpected(pxa::Error::protocol_error);
             slot=current;
             auto tail=co_await storage.get(TailKeys[slot],all.subspan(HeadBytes));
-            if (!tail || *tail!=all.size()-HeadBytes)
-                co_return std::unexpected(pxa::Error::protocol_error);
+            if (!tail) co_return std::unexpected(pxa::Error::protocol_error);
+            data=data.first(HeadBytes-1+*tail);
         }
         if (!decode(state,data)) co_return std::unexpected(pxa::Error::protocol_error);
         co_return pxa::Result<void>{};
