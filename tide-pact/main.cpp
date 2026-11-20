@@ -275,7 +275,7 @@ struct VoyageApp {
                 }
                 else game.advance();
                 last_day=now;
-                if ((game.s.day!=old_day && (game.s.helm || game.s.day%4==0)) ||
+                if ((game.s.day!=old_day && game.s.day%4==0) ||
                     !game.sea() || game.encounter() || game.paused || game.s.chart_marks!=old_marks)
                     save_needed=true;
                 if (modal==ExpeditionPage && game.s.day!=old_day) dirty=true;
@@ -2076,10 +2076,14 @@ struct VoyageApp {
         if (game.s.helm) {
             const auto here=game.position();
             if (std::abs(x-here.x)+std::abs(y-here.y)>=2) {
-                game.s.heading=static_cast<std::uint8_t>(direction_to({x-here.x,y-here.y}));
-                game.notice="已调整航向";
                 follow=true;
-                changed();
+                dirty=true;
+                const auto heading=static_cast<std::uint8_t>(direction_to({x-here.x,y-here.y}));
+                if (heading!=game.s.heading) {
+                    game.s.heading=heading;
+                    game.notice="已调整航向";
+                    changed();
+                }
             }
             return;
         }
