@@ -1,0 +1,32 @@
+{
+  "format": "pxa-package-source-0.1",
+  "id": "tide-pact",
+  "name": "大航路时代：潮汐之约",
+  "description": "自由航行、跨港贸易、绘制海图，在十五世纪末的海路追查失踪的制图师。",
+  "version": "1.5.0",
+  "release_sequence": 6,
+  "min_sdk": [2, 0],
+  "target_sdk": [2, 0],
+  "compile_sdk": [2, 0],
+  "build": {
+    "system": "cmake",
+    "linear_memory": {"maximum_bytes": 2359296, "pinned": true}
+  },
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {"id": "touch", "kind": "touch", "complete": true, "contacts": 1,
+       "requires": {"tap": "tap"}},
+      {"id": "gamepad", "kind": "controller", "complete": true,
+       "requires": {"up": "press", "down": "press", "left": "press", "right": "press",
+                    "a": "press", "b": "press"}}
+    ]
+  },
+  "components": [{
+    "id": "main",
+    "kind": "ui",
+    "services": ["clock", "window", "ui", "surface", "storage", "log"],
+    "cmake_target": "pxa_main",
+    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
+  }]
+}

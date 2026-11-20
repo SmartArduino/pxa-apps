@@ -1,0 +1,29 @@
+{
+  "pai-touch": [
+    {"name":"ready","action":"wait","ms":1400},
+    {"name":"new-voyage","action":"tap","x":148,"y":201},
+    {"name":"independent","action":"tap","x":82,"y":178},
+    {"name":"journal","action":"tap","x":244,"y":216},
+    {"name":"tales","action":"tap","x":75,"y":151},
+    {"name":"more-tales","action":"tap","x":257,"y":180},
+    {"name":"cadiz-tale","action":"tap","x":125,"y":112},
+    {"name":"mark-cadiz","action":"tap","x":148,"y":178},
+    {"name":"depart","action":"tap","x":234,"y":178},
+    {"name":"sail-to-cadiz","action":"wait","ms":1900},
+    {"name":"cadiz-office","action":"tap","x":197,"y":216},
+    {"name":"cadiz-desk","action":"tap","x":73,"y":151},
+    {"name":"duel-story","action":"tap","x":120,"y":136},
+    {"name":"accept-duel","action":"tap","x":148,"y":178},
+    {"name":"dock-duel","action":"screenshot"},
+    {"name":"parry","action":"tap","x":210,"y":154},
+    {"name":"before-reload","action":"screenshot"},
+    {"name":"wait-for-save","action":"wait","ms":1100},
+    {"name":"reload","action":"relaunch"},
+    {"name":"ready-after-reload","action":"wait","ms":1100},
+    {"name":"resume-duel","action":"tap","x":148,"y":201},
+    {"name":"duel-restored","action":"screenshot"},
+    {"name":"feint","action":"tap","x":77,"y":178},
+    {"name":"thrust","action":"tap","x":77,"y":154},
+    {"name":"dock-victory","action":"screenshot"}
+  ]
+}

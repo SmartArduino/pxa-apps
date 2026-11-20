@@ -1,0 +1,212 @@
+#pragma once
+
+#include "assets.hpp"
+#include "game.hpp"
+#include <pxa/pixels.hpp>
+
+#include <algorithm>
+#include <cmath>
+
+namespace tide {
+
+using Color = std::uint16_t;
+constexpr Color rgb(unsigned v) {
+    return ((v >> 8) & 0xf800) | ((v >> 5) & 0x07e0) | ((v >> 3) & 0x001f);
+}
+
+struct Rect {
+    int x, y, w, h;
+    int right() const { return x+w; }
+    int bottom() const { return y+h; }
+    bool contains(Point p) const {
+        return p.x >= x && p.y >= y && p.x < right() && p.y < bottom();
+    }
+    Rect inset(int n) const { return {x+n,y+n,w-n*2,h-n*2}; }
+};
+
+inline int u16(const unsigned char* p) { return p[0] | (p[1] << 8); }
+
+struct Image {
+    const unsigned char* bytes;
+    int width() const { return u16(bytes); }
+    int height() const { return u16(bytes+2); }
+    unsigned index(int x, int y) const { return bytes[516 + y*width() + x]; }
+    Color color(unsigned index) const { return u16(bytes+4 + 2*index); }
+};
+
+inline unsigned next_char(Text& text) {
+    unsigned first = static_cast<unsigned char>(text.front());
+    text.remove_prefix(1);
+    if (first < 128) return first;
+    int tail = first < 224 ? 1 : (first < 240 ? 2 : 3);
+    auto code = first & (0x3f >> tail);
+    for (int i = 0; i < tail && !text.empty(); ++i) {
+        code = (code << 6) | (static_cast<unsigned char>(text.front()) & 0x3f);
+        text.remove_prefix(1);
+    }
+    return code;
+}
+
+inline const unsigned char* glyph(unsigned code) {
+    constexpr int record = 101;
+    const auto* start = art::glyphs+2;
+    int lo = 0, hi = u16(art::glyphs);
+    while (lo < hi) {
+        const int mid = (lo+hi)/2;
+        if (unsigned(u16(start+mid*record)) < code) lo = mid+1; else hi = mid;
+    }
+    if (lo >= u16(art::glyphs) || unsigned(u16(start+lo*record)) != code)
+        return start + int('?' - ' ') * record + 2;
+    return start + lo*record + 2;
+}
+
+inline int measure(Text text) {
+    int result = 0;
+    while (!text.empty()) result += *glyph(next_char(text));
+    return result;
+}
+
+struct Draw {
+    pxa::Rgb565Pixels pixels;
+    Rect clip;
+
+    explicit Draw(pxa::Rgb565Pixels image)
+        : pixels(image), clip{0,0,int(image.width()),int(image.height())} {}
+
+    Rect clipped(Rect r) const {
+        int x = std::max(r.x, clip.x), y = std::max(r.y, clip.y);
+        return {x, y, std::max(0,std::min(r.right(),clip.right())-x),
+                std::max(0,std::min(r.bottom(),clip.bottom())-y)};
+    }
+    void dot(int x, int y, Color color) {
+        if (clip.contains({x,y})) (*pixels.row(y))[x] = color;
+    }
+    void fill(Rect rect, Color color) {
+        const auto r = clipped(rect);
+        if (!r.w) return;
+        for (int y = r.y; y < r.bottom(); ++y) {
+            auto row = *pixels.row(y);
+            for (int x = r.x; x < r.right(); ++x) row[x] = color;
+        }
+    }
+    void line(Point a, Point b, Color color, bool dashed = false) {
+        const int dx = std::abs(a.x-b.x), dy = -std::abs(a.y-b.y);
+        const int sx = a.x < b.x ? 1 : -1, sy = a.y < b.y ? 1 : -1;
+        int err = dx+dy, i = 0;
+        while (true) {
+            if (!dashed || (i++ & 7) < 5) dot(a.x,a.y,color);
+            if (a.x == b.x && a.y == b.y) break;
+            int e = err*2;
+            if (e >= dy) { err += dy; a.x += sx; }
+            if (e <= dx) { err += dx; a.y += sy; }
+        }
+    }
+    void frame(Rect r, Color color) {
+        fill({r.x,r.y,r.w,1},color);
+        fill({r.x,r.bottom()-1,r.w,1},color);
+        fill({r.x,r.y,1,r.h},color);
+        fill({r.right()-1,r.y,1,r.h},color);
+    }
+    void diamond(Point p, int radius, Color color) {
+        for (int dy = -radius; dy <= radius; ++dy) {
+            const int extent = radius - std::abs(dy);
+            fill({p.x-extent,p.y+dy,2*extent+1,1},color);
+        }
+    }
+    void image(Image img, Rect src, Rect dst, bool transparent = false, bool flip = false) {
+        if (dst.w <= 0 || dst.h <= 0) return;
+        const auto r = clipped(dst);
+        for (int y = r.y; y < r.bottom(); ++y) {
+            const int sy = src.y + (y-dst.y)*src.h/dst.h;
+            auto row = *pixels.row(y);
+            for (int x = r.x; x < r.right(); ++x) {
+                const int px = (x-dst.x)*src.w/dst.w;
+                const int sx = src.x + (flip ? src.w-1-px : px);
+                const auto index = img.index(sx,sy);
+                if (!transparent || index != 255) row[x] = img.color(index);
+            }
+        }
+    }
+    void cover(Image img, Rect dst) {
+        const int w = std::min(img.width(),img.height()*dst.w/std::max(1,dst.h));
+        const int h = std::min(img.height(),img.width()*dst.h/std::max(1,dst.w));
+        image(img,{(img.width()-w)/2,(img.height()-h)/2,w,h},dst);
+    }
+    void darken(Rect box, int strength) {
+        auto r = clipped(box);
+        for (int y = r.y; y < r.bottom(); ++y) {
+            auto row = *pixels.row(y);
+            for (int x = r.x; x < r.right(); ++x) row[x] = mix(row[x], rgb(0x08181d), strength);
+        }
+    }
+    static Color mix(Color a, Color b, int opacity) {
+        const int inv = 15-opacity;
+        const auto blend = [&](int shift, int mask) {
+            return ((((a >> shift) & mask)*inv + ((b >> shift) & mask)*opacity + 7) / 15) << shift;
+        };
+        return blend(11,31) | blend(5,63) | blend(0,31);
+    }
+    void label(int x, int y, Text text, Color color, int max_width = 10000, int scale = 1) {
+        const int end = x+max_width;
+        while (!text.empty()) {
+            const auto code = next_char(text);
+            const auto* g = glyph(code);
+            const int advance = *g++ * scale;
+            if (x+advance > end) return;
+            if (code != ' ') {
+                for (int j = 0; j < 14; ++j) {
+                    for (int i = 0; i < 14; ++i) {
+                        const auto packed = g[j*7 + i/2];
+                        const int alpha = i % 2 ? packed & 15 : packed >> 4;
+                        if (!alpha) continue;
+                        auto r = clipped({x+i*scale,y+j*scale,scale,scale});
+                        if (!r.w) continue;
+                        for (int yy = r.y; yy < r.bottom(); ++yy) {
+                            auto row = *pixels.row(yy);
+                            for (int xx = r.x; xx < r.right(); ++xx)
+                                row[xx] = alpha == 15 ? color : mix(row[xx],color,alpha);
+                        }
+                    }
+                }
+            }
+            x += advance;
+        }
+    }
+    void center(Rect box, Text text, Color color, int scale = 1) {
+        const int w = measure(text)*scale;
+        label(box.x+std::max(0,(box.w-w)/2),box.y+(box.h-14*scale)/2,
+              text,color,box.w,scale);
+    }
+    int wrap(Rect r, Text text, Color color, int spacing = 17) {
+        int y = r.y;
+        while (!text.empty() && y + 14 <= r.bottom()) {
+            Text rest = text;
+            int width = 0;
+            Text before_last = text;
+            while (!rest.empty()) {
+                const Text previous = rest;
+                const auto c = next_char(rest);
+                if (c == '\n') { rest = previous; break; }
+                int next = width + *glyph(c);
+                if (next > r.w) { rest = previous; break; }
+                width = next;
+                before_last = previous;
+            }
+            if (!rest.empty() && before_last.size() < text.size()) {
+                auto lookahead = rest;
+                constexpr std::u32string_view closing = U"、。，！？：）】》”’";
+                if (closing.find(next_char(lookahead)) != std::u32string_view::npos)
+                    rest = before_last;
+            }
+            auto slice = text.substr(0,text.size()-rest.size());
+            label(r.x,y,slice,color,r.w);
+            if (rest.size() == text.size()) (void)next_char(rest);
+            if (!rest.empty() && rest.front() == '\n') rest.remove_prefix(1);
+            text = rest;
+            y += spacing;
+        }
+        return y;
+    }
+};
+
+} // namespace tide

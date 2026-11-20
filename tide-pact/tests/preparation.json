@@ -1,0 +1,26 @@
+{
+  "pai-touch": [
+    {"name":"ready","action":"wait","ms":1400},
+    {"name":"begin","action":"tap","x":148,"y":201},
+    {"name":"independent","action":"tap","x":82,"y":178},
+    {"name":"prepare","action":"tap","x":233,"y":152},
+    {"name":"forecast","action":"screenshot"},
+    {"name":"show-stops","action":"tap","x":82,"y":152},
+    {"name":"stops","action":"screenshot"},
+    {"name":"target-madeira","action":"tap","x":101,"y":87},
+    {"name":"market","action":"tap","x":92,"y":216},
+    {"name":"quotes","action":"screenshot"},
+    {"name":"buy-batch","action":"tap","x":112,"y":178},
+    {"name":"bought-batch","action":"screenshot"},
+    {"name":"compare","action":"tap","x":258,"y":60},
+    {"name":"comparison","action":"screenshot"},
+    {"name":"back-to-market","action":"tap","x":257,"y":66},
+    {"name":"chart","action":"tap","x":38,"y":216},
+    {"name":"depart","action":"tap","x":233,"y":178},
+    {"name":"passage","action":"wait","ms":2400},
+    {"name":"arrive","action":"screenshot"},
+    {"name":"madeira-market","action":"tap","x":92,"y":216},
+    {"name":"compare-both","action":"tap","x":258,"y":60},
+    {"name":"two-markets","action":"screenshot"}
+  ]
+}

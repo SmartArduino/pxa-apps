@@ -1,0 +1,23 @@
+"""Emit C++ definitions from the preprocessed and versioned game assets."""
+import argparse
+from pathlib import Path
+
+
+def main():
+    cli = argparse.ArgumentParser(description=__doc__)
+    cli.add_argument("output", type=Path)
+    cli.add_argument("source", type=Path)
+    args = cli.parse_args()
+    with args.output.open("w") as out:
+        out.write('#include "assets.hpp"\nnamespace tide::art {\n')
+        for name in ("chart", "harbor", "storm", "portraits", "caravel", "broadside", "glyphs", "wordmark", "skin", "goods", "navigation", "ports", "boarding", "cadiz_duel", "duel_fx", "discoveries"):
+            data = (args.source / (name + ".pxi")).read_bytes()
+            out.write(f'const unsigned char {name}[] =\n')
+            for start in range(0, len(data), 48):
+                out.write('"' + "".join(f"\\x{b:02x}" for b in data[start:start+48]) + '"\n')
+            out.write(";\n")
+        out.write("}\n")
+
+
+if __name__ == "__main__":
+    main()

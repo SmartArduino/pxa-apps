@@ -1,0 +1,305 @@
+{
+  "pai-touch": [
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 1400
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "begin",
+      "action": "tap",
+      "x": 148,
+      "y": 201
+    },
+    {
+      "name": "prologue",
+      "action": "screenshot"
+    },
+    {
+      "name": "independent",
+      "action": "tap",
+      "x": 82,
+      "y": 178
+    },
+    {
+      "name": "market-tab",
+      "action": "tap",
+      "x": 91,
+      "y": 216
+    },
+    {
+      "name": "buy-wine",
+      "action": "tap",
+      "x": 44,
+      "y": 178
+    },
+    {
+      "name": "trade",
+      "action": "screenshot"
+    },
+    {
+      "name": "chart-tab",
+      "action": "tap",
+      "x": 39,
+      "y": 216
+    },
+    {
+      "name": "office-tab",
+      "action": "tap",
+      "x": 198,
+      "y": 216
+    },
+    {
+      "name": "harbor",
+      "action": "screenshot"
+    },
+    {
+      "name": "chart-from-office",
+      "action": "tap",
+      "x": 37,
+      "y": 216
+    },
+    {
+      "name": "zoom-one",
+      "action": "tap",
+      "x": 62,
+      "y": 178
+    },
+    {
+      "name": "zoom-two",
+      "action": "tap",
+      "x": 62,
+      "y": 178
+    },
+    {
+      "name": "zoom-three",
+      "action": "tap",
+      "x": 62,
+      "y": 178
+    },
+    {
+      "name": "atlas",
+      "action": "screenshot"
+    },
+    {
+      "name": "locate",
+      "action": "tap",
+      "x": 94,
+      "y": 178
+    },
+    {
+      "name": "drag-map",
+      "action": "swipe",
+      "x": 118,
+      "y": 91,
+      "x2": 143,
+      "y2": 109,
+      "ms": 240
+    },
+    {
+      "name": "sail",
+      "action": "tap",
+      "x": 234,
+      "y": 178
+    },
+    {
+      "name": "one-day",
+      "action": "wait",
+      "ms": 640
+    },
+    {
+      "name": "underway",
+      "action": "screenshot"
+    },
+    {
+      "name": "reopen",
+      "action": "relaunch"
+    },
+    {
+      "name": "load-save",
+      "action": "wait",
+      "ms": 1000
+    },
+    {
+      "name": "continue-from-title",
+      "action": "tap",
+      "x": 148,
+      "y": 201
+    },
+    {
+      "name": "restored",
+      "action": "screenshot"
+    },
+    {
+      "name": "stop-next-harbor",
+      "action": "tap",
+      "x": 148,
+      "y": 178
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 235,
+      "y": 152
+    },
+    {
+      "name": "approach-harbor",
+      "action": "wait",
+      "ms": 2400
+    },
+    {
+      "name": "next-harbor",
+      "action": "screenshot"
+    }
+  ],
+  "doit-gamekit-1": [
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 1400
+    },
+    {
+      "name": "begin",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 120
+    },
+    {
+      "name": "prologue",
+      "action": "screenshot"
+    },
+    {
+      "name": "choose",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 120
+    },
+    {
+      "name": "chart",
+      "action": "screenshot"
+    },
+    {
+      "name": "focus-alternate",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 120
+    },
+    {
+      "name": "focus",
+      "action": "screenshot"
+    },
+    {
+      "name": "sail",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 120
+    },
+    {
+      "name": "leave-port",
+      "action": "wait",
+      "ms": 720
+    },
+    {
+      "name": "underway",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "controller",
+      "buttons": 64,
+      "ms": 120
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 1500
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "begin",
+      "action": "tap",
+      "x": 195,
+      "y": 782
+    },
+    {
+      "name": "prologue",
+      "action": "screenshot"
+    },
+    {
+      "name": "independent",
+      "action": "tap",
+      "x": 104,
+      "y": 727
+    },
+    {
+      "name": "regional",
+      "action": "screenshot"
+    },
+    {
+      "name": "zoom-one",
+      "action": "tap",
+      "x": 106,
+      "y": 575
+    },
+    {
+      "name": "zoom-two",
+      "action": "tap",
+      "x": 106,
+      "y": 575
+    },
+    {
+      "name": "zoom-three",
+      "action": "tap",
+      "x": 106,
+      "y": 575
+    },
+    {
+      "name": "atlas",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 1500
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "begin",
+      "action": "tap",
+      "x": 206,
+      "y": 326
+    },
+    {
+      "name": "prologue",
+      "action": "screenshot"
+    },
+    {
+      "name": "independent",
+      "action": "tap",
+      "x": 132,
+      "y": 296
+    },
+    {
+      "name": "chart",
+      "action": "screenshot"
+    }
+  ]
+}

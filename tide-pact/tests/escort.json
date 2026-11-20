@@ -1,0 +1,33 @@
+{
+  "pai-touch": [
+    {"name":"ready","action":"wait","ms":1400},
+    {"name":"new-voyage","action":"tap","x":148,"y":201},
+    {"name":"independent","action":"tap","x":82,"y":178},
+    {"name":"office","action":"tap","x":197,"y":216},
+    {"name":"desk","action":"tap","x":73,"y":151},
+    {"name":"desk-options","action":"screenshot"},
+    {"name":"escort","action":"tap","x":120,"y":136},
+    {"name":"briefing","action":"screenshot"},
+    {"name":"accept-escort","action":"tap","x":148,"y":178},
+    {"name":"depart","action":"tap","x":234,"y":178},
+    {"name":"meet-privateer","action":"wait","ms":1000},
+    {"name":"naval-battle","action":"screenshot"},
+    {"name":"fire","action":"tap","x":210,"y":154},
+    {"name":"waiting-for-reload","action":"screenshot"},
+    {"name":"close-and-reload","action":"tap","x":77,"y":154},
+    {"name":"board","action":"tap","x":210,"y":178},
+    {"name":"boarding-duel","action":"screenshot"},
+    {"name":"thrust","action":"tap","x":77,"y":154},
+    {"name":"thrust-animation","action":"screenshot"},
+    {"name":"parry","action":"tap","x":210,"y":154},
+    {"name":"feint","action":"tap","x":77,"y":178},
+    {"name":"battle-result","action":"screenshot"},
+    {"name":"resume","action":"tap","x":148,"y":178},
+    {"name":"return-to-port","action":"wait","ms":2100},
+    {"name":"madeira-office","action":"tap","x":197,"y":216},
+    {"name":"madeira-desk","action":"tap","x":73,"y":151},
+    {"name":"delivery-story","action":"tap","x":120,"y":136},
+    {"name":"publish-ship-charter","action":"tap","x":83,"y":178},
+    {"name":"escort-epilogue","action":"screenshot"}
+  ]
+}
