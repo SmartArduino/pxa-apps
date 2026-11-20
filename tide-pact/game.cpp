@@ -274,6 +274,67 @@ int Game::daily_rations() const { return s.crew>=27 ? 3 : (s.crew>14 ? 2 : 1); }
 int Game::daily_water(SeaWeather weather) const {
     return std::max(1,daily_rations()+(weather==Heat)-(s.first_mate==Quartermaster));
 }
+
+Game::Game() {
+    for (int p=0;p<PlaceCount;++p)
+        if (StartingChart&(1U<<p)) reveal_chart(Anchor[p],18);
+    reveal_chart(Anchor[lisbon],34);
+}
+
+bool Game::charted(int place) const {
+    if (place<0 || place>=PlaceCount) return false;
+    return ((s.chart_marks|s.visited|s.surveyed)&(1U<<place)) ||
+           place==s.origin || place==s.destination ||
+           (s.chapter<Chapters && Story[s.chapter].place==place);
+}
+
+bool Game::chart_cell(int column, int row) const {
+    if (column<0 || column>=ChartColumns || row<0 || row>=ChartRows) return false;
+    const int cell=row*ChartColumns+column;
+    return s.coast[cell/8]&(1U<<(cell%8));
+}
+
+void Game::reveal_chart(Point center, int radius) {
+    const int top=std::max(0,(center.y-radius)/ChartCell);
+    const int left=std::max(0,(center.x-radius)/ChartCell);
+    const int right=std::min(ChartColumns-1,(center.x+radius)/ChartCell);
+    const int bottom=std::min(ChartRows-1,(center.y+radius)/ChartCell);
+    for (int y=top;y<=bottom;++y) {
+        const int dy=y*ChartCell+ChartCell/2-center.y;
+        for (int x=left;x<=right;++x) {
+            const int dx=x*ChartCell+ChartCell/2-center.x;
+            if (dx*dx+dy*dy>radius*radius) continue;
+            const int cell=y*ChartColumns+x;
+            s.coast[cell/8]|=1U<<(cell%8);
+        }
+    }
+}
+
+int Game::sighting(Point center) {
+    const int radius=lookout_radius();
+    reveal_chart(center,radius+12);
+    int seen=-1;
+    for (int p=0;p<PlaceCount;++p) {
+        if (charted(p)) continue;
+        const int dx=center.x-Anchor[p].x, dy=center.y-Anchor[p].y;
+        if (dx*dx+dy*dy>radius*radius) continue;
+        s.chart_marks|=1U<<p;
+        if (seen<0) seen=p;
+    }
+    return seen;
+}
+
+bool Game::heard_rumor(int id) const {
+    return id>=0 && id<RumorCount && (s.heard_rumors&(1U<<id));
+}
+
+bool Game::hear_rumor(int id) {
+    if (!port() || id<0 || id>=RumorCount || heard_rumor(id) || s.origin!=Rumors[id].port)
+        return false;
+    s.heard_rumors|=1U<<id;
+    notice="传闻已记在航海簿上";
+    return true;
+}
 int Game::water_price() const { return s.tales[Monsoon]==Shared ? 18 : 30; }
 
 int Game::tale_stop(int tale) const {
@@ -304,6 +365,7 @@ bool Game::choose_tale(int tale, bool share) {
     if (state==Unmet) {
         if (!share) return false;
         state=InProgress;
+        s.chart_marks|=1U<<Tales[tale].finish;
         notice="故事已记入日志";
         return true;
     }
@@ -354,6 +416,7 @@ void Game::spend_day(int days) {
 
 bool Game::depart(int to) {
     if (sea() || encounter() || to==s.origin) return false;
+    if (!charted(to)) { notice="此处尚未定位，需掌舵探索"; return false; }
     auto path = passage(s.origin, to);
     if (!path.count) return false;
     if (s.hull<=12) { notice="船体破损，需要维修"; return false; }
@@ -403,6 +466,19 @@ void Game::wait_at_port() {
 void Game::restore() {
     route=s.helm?Passage{}:passage(s.origin,s.destination);
     paused = sea() && !encounter();
+    s.chart_marks|=StartingChart;
+    for (int i=0;i<=s.chapter && i<Chapters;++i) s.chart_marks|=1U<<Story[i].place;
+    for (int i=0;i<TaleCount;++i)
+        if (s.tales[i]!=Unmet) s.chart_marks|=1U<<Tales[i].finish;
+    for (int i=0;i<ExpeditionCount;++i)
+        if (s.expeditions[i].flags&HeardWitness) s.chart_marks|=1U<<Expeditions[i].site;
+    if (s.contract>=0) s.chart_marks|=1U<<s.contract;
+    if (s.destination>=0) s.chart_marks|=1U<<s.destination;
+    for (int p=0;p<PlaceCount;++p) {
+        if ((StartingChart|s.visited|s.surveyed)&(1U<<p)) reveal_chart(Anchor[p],18);
+    }
+    reveal_chart(Anchor[lisbon],34);
+    reveal_chart(position(),24);
 }
 
 bool Game::consume_day(SeaConditions weather) {
@@ -434,7 +510,7 @@ bool Game::start_helm(int destination) {
     s.helm_pulse=0;
     s.helm_x=here.x*16;
     s.helm_y=here.y*16;
-    s.destination=destination>=0 && destination<PlaceCount && destination!=s.origin ? destination : -1;
+    s.destination=charted(destination) && destination!=s.origin ? destination : -1;
     const auto target=s.destination>=0?Anchor[s.destination]:Point{here.x-12,here.y};
     s.heading=static_cast<std::uint8_t>(direction_to({target.x-here.x,target.y-here.y}));
     s.event_mask=0;
@@ -447,6 +523,21 @@ bool Game::start_helm(int destination) {
 void Game::clear_helm() {
     s.helm=s.helm_pulse=s.heading=0;
     s.helm_x=s.helm_y=0;
+}
+
+int Game::visible_landmark() const {
+    const auto here=position();
+    const int radius=lookout_radius();
+    int nearest=-1, best=radius*radius+1;
+    for (int p=0;p<PlaceCount;++p) {
+        if (!charted(p)) continue;
+        const int dx=Anchor[p].x-here.x, dy=Anchor[p].y-here.y;
+        const int distance=dx*dx+dy*dy;
+        if (distance>=best) continue;
+        nearest=p;
+        best=distance;
+    }
+    return nearest;
 }
 
 int Game::nearby_anchorage(WaterTest water_at) const {
@@ -499,6 +590,7 @@ void Game::helm_step(WaterTest water_at) {
             return;
         }
         if (!water_at({x/16,y/16})) {
+            sighting(position());
             s.hull-=std::max(1,(s.reefed?2:6)-(has_pilot?3:0));
             notice="触及浅滩，转舵离岸";
             paused=true;
@@ -507,6 +599,11 @@ void Game::helm_step(WaterTest water_at) {
         }
         s.helm_x=x;
         s.helm_y=y;
+    }
+    const int found=sighting(position());
+    if (found>=0) {
+        notice=Places[found].name;
+        paused=true;
     }
     if (++s.helm_pulse<4) return;
     s.helm_pulse=0;
@@ -519,6 +616,7 @@ void Game::helm_step(WaterTest water_at) {
         notice="骤风伤船，缩帆可减损";
         if (s.hull<=0) { rescue(); return; }
     }
+    if (paused) return;
     if (!(s.event_mask&1U) && convoy_battle()) {
         start_encounter(Privateer);
         notice="断铃号拦住了护航商船";
@@ -530,6 +628,12 @@ void Game::helm_step(WaterTest water_at) {
     }
 }
 
+void Game::chart_passage(const Leg& leg, int progress) {
+    for (int mark=s.progress+30;mark<progress;mark+=30)
+        sighting(vessel_at(route,s.leg,float(mark)/leg.nautical_miles));
+    sighting(vessel_at(route,s.leg,float(progress)/leg.nautical_miles));
+}
+
 void Game::advance() {
     if (!sea() || s.helm || paused || encounter()) return;
     spend_day(1);
@@ -539,16 +643,19 @@ void Game::advance() {
                             s.allies,s.first_mate==Pilot);
     const auto& leg = Legs[route.edge[s.leg]];
     if (s.escort==EscortSailing && on_leg(lisbon,madeira) && !(s.event_mask & (1U<<s.leg))) {
+        chart_passage(leg,std::min(leg.nautical_miles-1,s.progress+speed));
         s.progress=std::min(leg.nautical_miles-1,s.progress+speed);
         start_encounter(Privateer);
         notice="断铃号拦住了护航商船";
         return;
     }
     if (s.tales[Lamps]==InProgress && s.beacon==BeaconUnseen && on_leg(madeira,canaries)) {
+        chart_passage(leg,std::min(leg.nautical_miles-1,s.progress+speed));
         s.progress=std::min(leg.nautical_miles-1,s.progress+speed);
         start_encounter(FalseBeacon);
         return;
     }
+    chart_passage(leg,std::min(leg.nautical_miles,s.progress+speed));
     s.progress += speed;
     if (s.progress >= leg.nautical_miles) {
         if (s.stop_next) {
@@ -586,6 +693,7 @@ void Game::arrive() {
         s.visited |= 1U << s.origin;
         if (port()) ++s.renown;
     }
+    reveal_chart(Anchor[s.origin],26);
     notice = port() ? "安全入港" : "到达测绘水域";
 }
 
@@ -608,6 +716,7 @@ void Game::rescue() {
     s.spirits = 48;
     s.crew = std::max(8, s.crew - 3);
     s.visited |= 1U << nearest;
+    reveal_chart(Anchor[nearest],26);
     notice = "获商船救援，部分货物遗失";
 }
 
@@ -704,6 +813,7 @@ void Game::take_contract() {
     if (!port()) return;
     if (s.contract >= 0 && s.day <= s.deadline) { notice = "已有未交付委托"; return; }
     s.contract = proposal();
+    s.chart_marks|=1U<<s.contract;
     s.contract_good = proposal_good();
     s.deadline = s.day + forecast(passage(s.origin,s.contract)).days * 2 + 9;
     notice = "委托已记入航海日志";
@@ -799,6 +909,7 @@ bool Game::consult_witness(int id) {
     auto& record=s.expeditions[id];
     if (record.stage<ReadClue || record.stage>=HasEvidence || (record.flags&HeardWitness)) return false;
     record.flags|=HeardWitness;
+    s.chart_marks|=1U<<Expeditions[id].site;
     notice="口述线索已抄入考察簿";
     return true;
 }
@@ -911,6 +1022,7 @@ void Game::chapter_choice(int choice) {
         break;
     }
     ++s.chapter;
+    if (s.chapter<Chapters) s.chart_marks|=1U<<Story[s.chapter].place;
     ++s.renown;
     notice = s.ending ? "故事已载入航海日志" : "新线索已载入航海日志";
 }
@@ -1239,7 +1351,7 @@ static_assert(4 + 28*4 + 4*4 + GoodsCount + PortCount*GoodsCount +
               TaleCount + 1 + 3*4 + 4 == LegacySaveBytes);
 static_assert(CombatSaveBytes==LegacySaveBytes+7+4+5);
 static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
-static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+4);
+static_assert(SaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1247,7 +1359,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x36445054);
+    put(0x37445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -1270,6 +1382,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     }
     bytes[offset++]=std::byte(s.officer_roster);
     bytes[offset++]=std::byte(s.first_mate);
+    put(s.chart_marks);
+    put(s.heard_rumors);
+    for (auto cell : s.coast) bytes[offset++]=std::byte(cell);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1277,7 +1392,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
 
 bool decode(State& output, std::span<const std::byte> bytes) {
     if (bytes.size()!=LegacySaveBytes && bytes.size()!=CombatSaveBytes &&
-        bytes.size()!=HelmSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -1287,8 +1402,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool latest=version==0x36445054 && bytes.size()==SaveBytes;
-    const bool with_expeditions=latest || (version==0x35445054 && bytes.size()==SaveBytes);
+    const bool latest=version==0x37445054 && bytes.size()==SaveBytes;
+    const bool with_officers=latest || (version==0x36445054 && bytes.size()==OfficerSaveBytes);
+    const bool with_expeditions=with_officers || (version==0x35445054 && bytes.size()==OfficerSaveBytes);
     const bool with_helm=with_expeditions || (version==0x34445054 && bytes.size()==HelmSaveBytes);
     const bool current=with_helm || (version==0x33445054 && bytes.size()==CombatSaveBytes);
     if (!current && (bytes.size()!=LegacySaveBytes ||
@@ -1327,7 +1443,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         for (auto* field : {&s.naval_turn,&s.needs_reload,&s.duel_turn,&s.vigor,&s.rival,&s.escort,&s.cadiz_victory})
             *field=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.guild_stakes=get();
-        if (s.naval_turn>2 || s.needs_reload>1 || s.duel_turn>2 || s.vigor>(latest?62:56) || s.rival>55 ||
+        if (s.naval_turn>2 || s.needs_reload>1 || s.duel_turn>2 || s.vigor>(with_officers?62:56) || s.rival>55 ||
             s.escort>EscortSold || s.cadiz_victory>1 || s.guild_stakes>>PortCount) return false;
     }
     if (with_helm) {
@@ -1352,11 +1468,17 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 (record.stage<HasEvidence && (record.flags&FirstObserver))) return false;
         }
     }
-    if (latest) {
+    if (with_officers) {
         s.officer_roster=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.first_mate=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.officer_roster>>(OfficerLimit-1) || s.first_mate>=OfficerLimit ||
             (s.first_mate!=NoOfficer && !(s.officer_roster & (1U<<(s.first_mate-1))))) return false;
+    }
+    if (latest) {
+        s.chart_marks=get();
+        s.heard_rumors=get();
+        if (s.chart_marks>>PlaceCount || s.heard_rumors>>RumorCount) return false;
+        for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

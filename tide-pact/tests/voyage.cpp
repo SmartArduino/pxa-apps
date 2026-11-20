@@ -6,6 +6,7 @@
 using namespace tide;
 
 void sail_to(Game& game, int destination) {
+    game.s.chart_marks|=1U<<destination;
     assert(game.depart(destination));
     for (int i=0; i<220 && game.sea(); ++i) {
         if (game.encounter()) {
@@ -380,7 +381,7 @@ void ship_officers() {
     assert(ship.hire_officer(Pilot) && !ship.hire_officer(Pilot));
     assert(ship.s.first_mate==Pilot && ship.s.gold==520-Officers[Pilot].fee);
     Game regular=original;
-    assert(regular.depart(azores) && ship.depart(azores));
+    assert(regular.depart(bordeaux) && ship.depart(bordeaux));
     assert(!ship.assign_officer(NoOfficer));
     regular.advance();
     ship.advance();
@@ -430,6 +431,45 @@ void ship_officers() {
     State loaded;
     assert(decode(loaded,encode(combat.s)) && loaded.first_mate==Boatswain &&
            loaded.officer_roster==combat.s.officer_roster && loaded.vigor==combat.s.vigor);
+}
+
+void unknown_waters() {
+    Game game;
+    constexpr int rumor=0;
+    const auto site=Rumors[rumor].site;
+    const auto shore=Anchor[site];
+    const auto exposed=[&] { return game.chart_cell(shore.x/ChartCell,shore.y/ChartCell); };
+    assert(game.charted(lisbon) && game.charted(madeira));
+    assert(!game.charted(site) && !exposed() && !game.depart(site));
+    assert(game.hear_rumor(rumor) && !game.hear_rumor(rumor) && !game.hear_rumor(1));
+    assert(game.heard_rumor(rumor) && !game.charted(site) && !exposed() && !game.depart(site));
+    assert(game.start_helm(-1) && game.s.destination==-1);
+    game.s.helm_x=(shore.x+23)*16;
+    game.s.helm_y=shore.y*16;
+    for (int i=0;i<10 && !game.paused;++i)
+        game.helm_step([](Point) { return true; });
+    const auto visited=game.s.visited;
+    assert(game.charted(site) && exposed() && game.paused &&
+           game.visible_landmark()==site && !(visited&(1U<<site)));
+    State loaded;
+    assert(decode(loaded,encode(game.s)));
+    const auto coast=game.s.coast;
+    game.s=loaded;
+    game.restore();
+    assert(game.charted(site) && game.heard_rumor(rumor) && game.paused && game.s.coast==coast);
+    game.paused=false;
+    for (int steps=0;steps<12 && game.nearby_anchorage()<0;++steps)
+        game.helm_step([](Point) { return true; });
+    assert(game.dock_helm() && game.s.origin==site && (game.s.visited&(1U<<site)));
+    assert(game.depart(lisbon));
+
+    Game official;
+    official.s.origin=madeira;
+    assert(official.read_expedition(WesternReturn)==false);
+    official.s.origin=lisbon;
+    assert(official.read_expedition(WesternReturn));
+    assert(!official.charted(azores) && official.consult_witness(WesternReturn) && official.charted(azores));
+    assert(official.depart(azores));
 }
 
 int main() {
@@ -504,7 +544,8 @@ int main() {
     free_helm();
     expeditions();
     ship_officers();
+    unknown_waters();
     story_journey(1,0);
     story_journey(2,1);
-    std::puts("Routes, contracts, markets, endings, charting, saves, combat, expeditions and officers passed.");
+    std::puts("Routes, contracts, markets, endings, saves, combat, expeditions, officers and exploration passed.");
 }

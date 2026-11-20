@@ -19,7 +19,7 @@ enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
-    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage
+    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -37,8 +37,9 @@ enum Action {
     ShowExpeditions, OpenArchive, OpenObservation, CopyClue, AskWitness, SponsorVoyage, FundVoyage,
     MarkExpedition, ObserveFirst, ObserveSecond, WaitToObserve, FileExpedition, ReadNotes,
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
+    ShowRumors, RecordRumor, MarkRumor, StartExplore,
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
-    ExpeditionEntry=700, OfficerEntry=800
+    ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900
 };
 
 template<class... Args>
@@ -69,6 +70,8 @@ struct VoyageApp {
     Game game;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
+    // The explored chart exceeds the SDK's 512-byte inline packet.
+    std::array<std::byte,SaveBytes+72> save_packet{};
     pxa::Context* context = nullptr;
     std::optional<pxa::Surface> surface;
     pxa::WindowMetrics metrics{};
@@ -82,6 +85,8 @@ struct VoyageApp {
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
     int expedition_item=0;
     int officer_item=Pilot;
+    int rumor_item=0, pinned_rumor=-1;
+    std::optional<Point> scout_course;
     bool officer_talk=false;
     float chart_x=0, chart_y=0, factor=1;
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
@@ -93,7 +98,7 @@ struct VoyageApp {
     int duel_animation=0;
     unsigned long long next_frame=1;
     Screen screen=Chart;
-    Overlay modal=None, activity_back=None;
+    Overlay modal=None, activity_back=None, rumor_back=None;
     bool expedition_from_book=false, show_witness=false;
 
     auto view() {
@@ -119,8 +124,8 @@ struct VoyageApp {
             game.notice = "存档读取失败";
             notify();
         }
-        selected = game.s.destination>=0 ? game.s.destination :
-                   (game.s.origin == lisbon ? madeira : game.s.origin);
+        selected=game.s.destination>=0 ? game.s.destination :
+                 game.s.origin==lisbon && !game.s.helm ? madeira : game.s.origin;
         center_at(game.position());
         loaded=true;
         dirty=true;
@@ -128,7 +133,7 @@ struct VoyageApp {
     }
     pxa::Task<void> save() {
         const auto bytes = encode(game.s);
-        auto result = co_await context->storage().set("voyage-v1",bytes);
+        auto result = co_await context->storage().set("voyage-v1",bytes,save_packet);
         save_active=false;
         save_failed=!result;
         if (result) saved_until=now+1600;
@@ -244,11 +249,12 @@ struct VoyageApp {
             if (now-last_day >= (game.s.helm ? HelmPulseMs : DayMs)) {
                 const int old_day=game.s.day;
                 const int old_hull=game.s.hull;
+                const auto old_marks=game.s.chart_marks;
                 if (game.s.helm) game.helm_step(chart_water);
                 else game.advance();
                 last_day=now;
                 if ((game.s.day!=old_day && (game.s.helm || game.s.day%4==0)) ||
-                    !game.sea() || game.encounter() || game.paused)
+                    !game.sea() || game.encounter() || game.paused || game.s.chart_marks!=old_marks)
                     save_needed=true;
                 if (modal==ExpeditionPage && game.s.day!=old_day) dirty=true;
                 if (game.paused || game.s.hull<old_hull) notify();
@@ -446,6 +452,38 @@ struct VoyageApp {
         d.fill(map,ocean);
         d.image({art::chart},{0,0,ChartWidth,ChartHeight},
                 {tl.x,tl.y,int(std::round(ChartWidth*factor)),int(std::round(ChartHeight*factor))});
+        constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
+        const int left=std::max(0,int((chart_x-map.w/(2*factor))/ChartCell)-1);
+        const int right=std::min(ChartColumns-1,int((chart_x+map.w/(2*factor))/ChartCell)+1);
+        const int top=std::max(0,int((chart_y-map.h/(2*factor))/ChartCell)-1);
+        const int bottom=std::min(ChartRows-1,int((chart_y+map.h/(2*factor))/ChartCell)+1);
+        for (int y=top;y<=bottom;++y) {
+            for (int x=left;x<=right;++x) {
+                if (game.chart_cell(x,y)) continue;
+                const auto a=map_point({x*ChartCell,y*ChartCell});
+                const auto b=map_point({std::min((x+1)*ChartCell,ChartWidth),
+                                        std::min((y+1)*ChartCell,ChartHeight)});
+                d.fill({a.x,a.y,b.x-a.x,b.y-a.y},uncharted);
+                if (x%4==0 && b.x>a.x) d.fill({a.x,a.y,1,b.y-a.y},grid);
+                if (y%4==0 && b.y>a.y) d.fill({a.x,a.y,b.x-a.x,1},grid);
+            }
+        }
+    }
+    void draw_rumor_marks(Draw& d) {
+        for (int id=0;id<RumorCount;++id) {
+            const auto& rumor=Rumors[id];
+            if (!game.heard_rumor(id) || game.charted(rumor.site)) continue;
+            const auto point=map_point(rumor.area);
+            const int radius=std::max(6,int(24*factor));
+            const Color color=id==pinned_rumor?gold:quiet;
+            const Point north{point.x,point.y-radius}, south{point.x,point.y+radius};
+            const Point east{point.x+radius,point.y}, west{point.x-radius,point.y};
+            d.line(north,east,color,true);
+            d.line(east,south,color,true);
+            d.line(south,west,color,true);
+            d.line(west,north,color,true);
+            d.label(point.x-3,point.y-7,"?",color);
+        }
     }
     void draw_routes(Draw& d, const Passage& planned, bool active) {
         for (int l=0;l<planned.count;++l) {
@@ -468,6 +506,7 @@ struct VoyageApp {
         atlas_background(d);
         const auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         draw_routes(d,path,game.sea());
+        draw_rumor_marks(d);
 
         struct Geo { int lon,lat; Text label; bool land; };
         constexpr Geo names[] = {
@@ -500,14 +539,16 @@ struct VoyageApp {
             d.label(p.x+2,p.y+1,text,color);
         };
         for (int i=0;i<PlaceCount;++i) {
+            if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
             if (!map.contains(p)) continue;
-            auto c= i==target() ? gold : (i<PortCount ? ivory : mint);
+            const bool landed=game.s.visited&(1U<<i);
+            auto c=i==target()?gold:i>=PortCount?mint:landed?ivory:quiet;
             d.diamond(p,i==selected ? 6 : i==target() ? 4 : 3,ink);
             d.diamond(p,i==selected ? 4 : 2,c);
         }
         for (const int i : {selected,target(),game.s.origin}) {
-            if (i<0) continue;
+            if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
             const auto label=Places[i].name;
             int left=p.x+7;
@@ -517,11 +558,13 @@ struct VoyageApp {
             draw_label({left,top},label,i==selected ? gold : ivory,true,false);
         }
         for (auto& n:names) {
-            auto p=map_point({(n.lon+45)*7,(ChartNorth-n.lat)*8});
+            const Point source{(n.lon+45)*7,(ChartNorth-n.lat)*8};
+            if (!game.chart_cell(source.x/ChartCell,source.y/ChartCell)) continue;
+            auto p=map_point(source);
             draw_label({p.x-measure(n.label)/2,p.y},n.label,n.land ? rgb(0x293e37) : mist,false,false);
         }
         if (zoom>=3) for (int i=0;i<PlaceCount;++i) {
-            if (i==selected || i==target() || i==game.s.origin) continue;
+            if (!game.charted(i) || i==selected || i==target() || i==game.s.origin) continue;
             const auto p=map_point(Places[i].map);
             if (map.contains(p)) draw_label({p.x+4,p.y-14},Places[i].name,ivory,true,false);
         }
@@ -577,15 +620,21 @@ struct VoyageApp {
         const auto route=game.sea()?game.route:passage(game.s.origin,p);
         const auto forecast=game.sea()?PassageForecast{}:game.forecast(route);
         const bool shortage=forecast.provisions>game.s.stores || forecast.water>game.s.water;
-        const int route_info=route.count ? ShowPreflight : ShowIntel;
-        const Text route_label=route.count ? "航前" : "地理";
         const bool local_study=game.expedition_here()>=0;
-        const Text visit=story_here() ? "会面" : local_study ? "考察" : p>=PortCount ? "测绘" : "港务";
+        const bool scouting=scout_course.has_value() && !game.sea();
+        const int route_info=route.count ? ShowPreflight : scouting ? ShowRumors : ShowIntel;
+        const Text route_label=route.count ? "航前" : scouting ? "传闻" : "地理";
+        const Text visit=scouting ? "出海" : story_here() ? "会面" : local_study ? "考察" :
+                         p>=PortCount ? "测绘" : "探索";
         const int visit_action=story_here() ? ReadStory : local_study ? OpenObservation :
-                               p>=PortCount ? Survey : OpenOffice;
-        d.label(info.x+5,info.y+4,Places[p].name,gold,info.w-10);
+                               p>=PortCount ? Survey : StartExplore;
+        const int visit_command=scouting?StartExplore:visit_action;
+        const auto aim=scout_course.value_or(Anchor[p]);
+        const auto course=format("拟向%s",Bearings[direction_to(
+                {aim.x-Anchor[p].x,aim.y-Anchor[p].y})].data());
+        d.label(info.x+5,info.y+4,scouting?(pinned_rumor>=0?"传闻海域":"自由出海"):Places[p].name,gold,info.w-10);
         if (wide) {
-            if (!game.sea()) d.label(info.x+5,info.y+22,Places[p].region,quiet,info.w-10);
+            if (!game.sea()) d.label(info.x+5,info.y+22,scouting?Text(course):Places[p].region,quiet,info.w-10);
             if (game.sea()) {
                 const int wind=game.wind(game.s.leg);
                 const auto progress=format("%d/%d  %s",game.s.leg+1,game.route.count,
@@ -607,7 +656,7 @@ struct VoyageApp {
                     d.label(info.x+5,info.y+47,"有新剧情",mint,info.w-10);
                 button(d,{info.x+4,info.bottom()-54,info.w-8,23},route_label,route_info);
                 button(d,{info.x+4,info.bottom()-27,info.w-8,23},route.count?"启航":visit,
-                       route.count?Sail:visit_action,true);
+                       route.count?Sail:visit_command,true);
             }
         } else {
             if (game.sea()) {
@@ -622,10 +671,10 @@ struct VoyageApp {
             } else {
                 const auto summary=format("%d海里  %d日",route.miles,forecast.days);
                 const Text detail=shortage ? Text("水粮不足") : Text(summary);
-                d.label(info.x+5,info.y+22,route.count ? detail : Places[p].region,
+                d.label(info.x+5,info.y+22,route.count ? detail : scouting?Text(course):Places[p].region,
                         shortage?vermilion:mist,info.w-10);
                 pair(d,{info.x+4,info.y+43,info.w-8,25},route.count?"启航":visit,
-                     route.count?Sail:visit_action,route_label,route_info,true);
+                     route.count?Sail:visit_command,route_label,route_info,true);
             }
         }
     }
@@ -634,12 +683,13 @@ struct VoyageApp {
         skin_box(d,info,0,5);
         const auto state=game.conditions();
         const auto here=game.nearby_anchorage(chart_water);
+        const auto seen=here>=0?here:game.visible_landmark();
         const auto bearing=format("航向%s",Bearings[game.s.heading].data());
         constexpr Text compact_weather[]{"晴","热","雨","阵"};
         const auto breeze=format("%s→%s%d级",
                                   (wide?compact_weather[state.weather]:SeaWeatherNames[state.weather]).data(),
                                   Bearings[state.direction].data(),state.strength);
-        d.label(info.x+5,info.y+4,here>=0?Places[here].name:Text("自由掌舵"),gold,info.w-10);
+        d.label(info.x+5,info.y+4,seen>=0?Places[seen].name:Text("自由掌舵"),gold,info.w-10);
         if (wide) {
             d.label(info.x+5,info.y+22,bearing,ivory,info.w-10);
             d.label(info.x+5,info.y+41,breeze,mist,info.w-10);
@@ -964,7 +1014,7 @@ struct VoyageApp {
         const int left=marked?17:5;
         d.label(r.x+left,r.y+4,name,highlight ? gold : ivory,r.w-mw-left-8);
         if (mw) d.label(r.right()-mw-4,r.y+4,meta,mist);
-        buttons[button_count++]={r,action};
+        if (action) buttons[button_count++]={r,action};
     }
     void pager(Draw& d, int pages) {
         if (pages<=1) return;
@@ -974,13 +1024,15 @@ struct VoyageApp {
         button(d,{body.right()-50,y,45,20},"下页",Next,false,page+1>=pages);
     }
     void route_list(Draw& d) {
-        page_title(d,"选择目的地");
+        page_title(d,"目的地");
+        button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
+        button(d,{body.right()-89,body.y+3,37,23},"出海",StartExplore);
         std::array<int,PlaceCount> order{};
         int count=0;
         if (target()>=0 && target()!=game.s.origin) order[count++]=target();
         order[count++]=game.s.origin;
         for (int i=0;i<PlaceCount;++i)
-            if (i!=game.s.origin && i!=target()) order[count++]=i;
+            if (game.charted(i) && i!=game.s.origin && i!=target()) order[count++]=i;
         const int rows=list_rows(), pages=(count+rows-1)/rows;
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
@@ -1039,8 +1091,9 @@ struct VoyageApp {
             const int i=page*visible+j;
             const auto& leg=Legs[path.edge[i]];
             const int port=path.reverse[i]?leg.from:leg.to;
-            const auto eta=format("%d日  %s",forecast.arrival_days[i],port<PortCount?"可补给":"测绘点");
-            row(d,j,Places[port].name,eta,Destination+port,port==selected);
+            const bool known=game.charted(port);
+            const auto eta=format("%d日  %s",forecast.arrival_days[i],!known?"待查":port<PortCount?"可补给":"测绘点");
+            row(d,j,known?Places[port].name:Text("未标记水域"),eta,known?Destination+port:0,port==selected);
         }
         pager(d,pages);
     }
@@ -1125,6 +1178,7 @@ struct VoyageApp {
             row(d,2,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"码头决斗",ShowDuel,true);
         else if (game.s.origin==tunis)
             row(d,2,"优素福","招募领航",Recruit,true);
+        button(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors);
     }
     void escort_page(Draw& d) {
         page_title(d,"银铃护航");
@@ -1232,7 +1286,8 @@ struct VoyageApp {
         if (port!=game.s.origin || game.sea()) {
             d.label(x,body.y+32,Places[port].name,gold,w);
             if (!beginning) d.wrap({x,body.y+52,w,body.h-83},tale.opening,ivory);
-            button(d,{x,body.bottom()-28,w,25},"标记到访港口",TaleMark,true,game.sea());
+            if (game.charted(port))
+                button(d,{x,body.bottom()-28,w,25},"标记到访港口",TaleMark,true,game.sea());
             return;
         }
         const int portrait=beginning ? tale.start_portrait : tale.finish_portrait;
@@ -1292,15 +1347,57 @@ struct VoyageApp {
     }
     void atlas_list(Draw& d) {
         page_title(d,"发现图鉴");
-        const int rows=list_rows(), count=PlaceCount-PortCount;
-        const int pages=(count+rows-1)/rows;
+        std::array<int,PlaceCount-PortCount> entries{};
+        int count=0;
+        for (int p=PortCount;p<PlaceCount;++p)
+            if (game.charted(p)) entries[count++]=p;
+        if (!count) {
+            d.label(body.x+6,body.y+38,"出海后逐步收录测绘水域",mist,body.w-12);
+            return;
+        }
+        const int rows=list_rows(), pages=(count+rows-1)/rows;
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
-            const int p=PortCount+page*rows+i;
+            const int p=entries[page*rows+i];
             bool seen=game.s.surveyed & (1U<<p);
             row(d,i,Places[p].name,seen?"已测绘":"待测绘",AtlasEntry+p,seen);
         }
         pager(d,pages);
+    }
+    void rumor_list(Draw& d) {
+        page_title(d,"航海传闻");
+        std::array<int,RumorCount> entries{};
+        int count=0;
+        for (int id=0;id<RumorCount;++id)
+            if (game.port() && Rumors[id].port==game.s.origin) entries[count++]=id;
+        for (int id=0;id<RumorCount;++id)
+            if (game.heard_rumor(id) && (!game.port() || Rumors[id].port!=game.s.origin)) entries[count++]=id;
+        if (!count) {
+            d.label(body.x+6,body.y+38,"这里没有新的航路消息",mist,body.w-12);
+            return;
+        }
+        const int rows=list_rows(), pages=(count+rows-1)/rows;
+        page=std::clamp(page,0,pages-1);
+        for (int i=0;i<rows && page*rows+i<count;++i) {
+            const int id=entries[page*rows+i];
+            const auto& rumor=Rumors[id];
+            const bool found=game.charted(rumor.site);
+            row(d,i,game.heard_rumor(id)||found?Places[rumor.site].name:rumor.speaker,
+                found?"已定位":game.heard_rumor(id)?"已抄录":"新线索",RumorEntry+id,found);
+        }
+        pager(d,pages);
+    }
+    void rumor_page(Draw& d) {
+        const auto& rumor=Rumors[rumor_item];
+        const bool found=game.charted(rumor.site), heard=game.heard_rumor(rumor_item);
+        page_title(d,heard||found?Places[rumor.site].name:rumor.speaker);
+        const int x=body.x+6, w=body.w-12;
+        d.label(x,body.y+29,found?"已记入海图":heard?"只知道大致海域":"可抄下航路传闻",found?mint:mist,w);
+        d.wrap({x,body.y+48,w,body.h-78},rumor.clue,ivory,15);
+        if (!heard && !found)
+            button(d,{x,body.bottom()-28,w,24},"抄录传闻",RecordRumor,true);
+        else
+            button(d,{x,body.bottom()-28,w,24},found?"定位海图":"圈出大致海域",MarkRumor,true,game.sea());
     }
     void expedition_list(Draw& d) {
         page_title(d,"考察簿");
@@ -1369,8 +1466,8 @@ struct VoyageApp {
             d.label(x,y+27,format("%s · %s",Places[study.archive].name.data(),study.archivist.data()),mist,w);
             d.wrap({x,y+49,w,body.h-81},"抄录手记，便能筹措考察经费。其他船也在打听这份手记，赶先完成观测可获首报赏金。",ivory);
             const auto mark_archive=format("标记%s",Places[study.archive].name.data());
-            button(d,actions,at_archive?Text("抄录手记"):Text(mark_archive),
-                   at_archive?CopyClue:MarkExpedition,true,!at_archive && game.sea());
+            button(d,actions,at_archive?Text("抄录手记"):game.charted(study.archive)?Text(mark_archive):"尚无航路",
+                   at_archive?CopyClue:MarkExpedition,true,!at_archive && (game.sea() || !game.charted(study.archive)));
             return;
         }
         const int remaining=record.rival_day-game.s.day;
@@ -1392,7 +1489,8 @@ struct VoyageApp {
                    format("0 / %d",study.purse));
         } else if (mark) {
             const int point=record.stage==ReadClue?study.archive:study.site;
-            button(d,actions,format("在海图标记%s",Places[point].name.data()),MarkExpedition,true,game.sea());
+            button(d,actions,format("在海图标记%s",Places[point].name.data()),MarkExpedition,true,
+                   game.sea() || !game.charted(point));
         }
     }
     void help(Draw& d) {
@@ -1403,7 +1501,7 @@ struct VoyageApp {
             "出发前看预计天数。船员越多耗粮越快。海上可缩帆、停船、掉头或在下站靠泊。遇到私掠船时，火炮齐射后需装填，机动可以贴近并瞄准。距一且有六名船员时可以接舷。",
             "金色菱形标明下一处主线。到青色测绘点后记入图鉴。交易和航行中会自动保存，重开可续航。",
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
-            "航前点掌舵。点海图或用左右舵改航向，近岸时靠泊。储量按食物、淡水显示，热天多耗水，骤风宜缩帆。",
+            "在目的地页点出海，无需先选港口。点海面或用左右舵改航向。未踏查的海图随航行展开。港口商会可打听传闻。",
             "去港务的档案室抄录手记。可出资或领预支，也可询问船工。抵达水域后点考察，按线索观测，再回原港交付。错过首报仍可交复测。"
         };
         page=std::clamp(page,0,int(std::size(instructions))-1);
@@ -1444,6 +1542,8 @@ struct VoyageApp {
         case ExpeditionPage: expedition_page(d); break;
         case Wardroom: officer_list(d); break;
         case OfficerPage: officer_page(d); break;
+        case RumorList: rumor_list(d); break;
+        case RumorPage: rumor_page(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1460,6 +1560,9 @@ struct VoyageApp {
     }
 
     void select(int p) {
+        if (!game.charted(p)) { game.notice="还不知道确切泊地"; notify(); return; }
+        scout_course.reset();
+        pinned_rumor=-1;
         selected=p;
         screen=Chart;
         set_modal(None);
@@ -1469,6 +1572,11 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=RumorEntry) {
+            rumor_item=action-RumorEntry;
+            set_modal(RumorPage);
+            return;
+        }
         if (action>=OfficerEntry) {
             officer_item=action-OfficerEntry;
             officer_talk=false;
@@ -1516,6 +1624,35 @@ struct VoyageApp {
             if (!had_save) { selected=lisbon; set_modal(StoryPage); }
             break;
         case RouteList: page=0; set_modal(Routes); break;
+        case ShowRumors: rumor_back=modal; page=0; set_modal(RumorList); break;
+        case RecordRumor:
+            if (game.hear_rumor(rumor_item)) changed();
+            break;
+        case MarkRumor: {
+            const auto& rumor=Rumors[rumor_item];
+            if (game.charted(rumor.site)) select(rumor.site);
+            else if (!game.sea() && game.heard_rumor(rumor_item)) {
+                scout_course=rumor.area;
+                pinned_rumor=rumor_item;
+                selected=game.s.origin;
+                screen=Chart;
+                set_modal(None);
+                follow=false;
+                center_at(rumor.area);
+            }
+            break;
+        }
+        case StartExplore:
+            if (game.start_helm(-1)) {
+                if (scout_course) {
+                    const auto here=game.position();
+                    game.s.heading=direction_to({scout_course->x-here.x,scout_course->y-here.y});
+                }
+                scout_course.reset();
+                screen=Chart; set_modal(None); follow=true; last_day=now;
+                changed();
+            } else notify();
+            break;
         case Close: back(); break;
         case ZoomIn: set_zoom(zoom+1); break;
         case ZoomOut:
@@ -1763,6 +1900,8 @@ struct VoyageApp {
             else if (modal==EscortPage || modal==DuelInvitation) set_modal(activity_back);
             else if (modal==ExpeditionPage && expedition_from_book) set_modal(ExpeditionList);
             else if (modal==OfficerPage) set_modal(Wardroom);
+            else if (modal==RumorPage) set_modal(RumorList);
+            else if (modal==RumorList) { page=0; set_modal(rumor_back); }
             else if (modal==PortPrices) { page=good/market_rows(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }
@@ -1810,17 +1949,17 @@ struct VoyageApp {
         if (controller.pressed(controller_start) && !title && modal==None &&
             screen==Chart && !game.encounter())
             activate(game.sea() ? Pause : selected!=game.s.origin ? Sail : story_here() ? ReadStory :
-                     game.expedition_here()>=0 ? OpenObservation : OpenOffice);
+                     game.expedition_here()>=0 ? OpenObservation : StartExplore);
     }
     void tap(Point p) {
         for (int i=0;i<button_count;++i) {
             if (buttons[i].rect.contains(p)) { activate(buttons[i].action); return; }
         }
         if (title || modal!=None || screen!=Chart || game.encounter() || !map.contains(p)) return;
+        const int x=int(std::lround(chart_x+(p.x-map.x-map.w/2)/factor));
+        const int y=int(std::lround(chart_y+(p.y-map.y-map.h/2)/factor));
         if (game.s.helm) {
             const auto here=game.position();
-            const int x=int(std::lround(chart_x+(p.x-map.x-map.w/2)/factor));
-            const int y=int(std::lround(chart_y+(p.y-map.y-map.h/2)/factor));
             if (std::abs(x-here.x)+std::abs(y-here.y)>=2) {
                 game.s.heading=static_cast<std::uint8_t>(direction_to({x-here.x,y-here.y}));
                 game.notice="已调整航向";
@@ -1832,12 +1971,23 @@ struct VoyageApp {
         if (game.sea()) return;
         int nearest=-1, best=14*14;
         for (int i=0;i<PlaceCount;++i) {
+            if (!game.charted(i)) continue;
             auto point=map_point(Places[i].map);
             const int dx=point.x-p.x, dy=point.y-p.y;
             const int d=dx*dx+dy*dy;
             if (map.contains(point) && d<best) { nearest=i; best=d; }
         }
-        if (nearest>=0) { selected=nearest; dirty=true; }
+        if (nearest>=0) {
+            selected=nearest;
+            scout_course.reset();
+            pinned_rumor=-1;
+            dirty=true;
+        } else if (x>=0 && x<ChartWidth && y>=0 && y<ChartHeight) {
+            selected=game.s.origin;
+            scout_course=Point{x,y};
+            pinned_rumor=-1;
+            dirty=true;
+        }
     }
     void pointer(const pxa::ui::CanvasPointer& e) {
         using pxa::input::PointerPhase;
