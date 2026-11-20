@@ -18,6 +18,7 @@ inline constexpr int PlaceCount = std::size(Places);
 } // namespace tide
 
 #include "expeditions.hpp"
+#include "languages.hpp"
 #include "rumors.hpp"
 #include "stories.hpp"
 
@@ -32,18 +33,19 @@ enum OfficerId { NoOfficer, Pilot, Quartermaster, Boatswain, OfficerLimit };
 struct Officer {
     int port, fee;
     Text name, specialty, effect, greeting;
+    std::array<Language,2> languages;
 };
 inline constexpr Officer Officers[]{
     {},
     {lisbon,95,"安娜","领航",
      "航路每日多行二十海里。掌舵更快，触礁少伤船。",
-     "小时候我在塔霍河替渡船测深。把铅锤给我，我能听出船底离沙洲有多远。"},
+     "小时候我在塔霍河替渡船测深。把铅锤给我，我能听出船底离沙洲有多远。",{Portuguese,French}},
     {madeira,140,"贝阿特丽丝","司务",
      "每航行或考察一日少用一份淡水，至少仍用一份。",
-     "糖仓漏过一桶水，此后我给每个桶盖都刻了记号。船上也可以照办。"},
+     "糖仓漏过一桶水，此后我给每个桶盖都刻了记号。船上也可以照办。",{Portuguese,Castilian}},
     {cadiz,160,"杜阿尔特","甲板护卫",
      "敌炮每次少伤三点船体。接舷决斗体力增加六点。",
-     "两船靠得再近，也等水手把缆钩扣牢了再跳。这条命是我在直布罗陀学回来的。"}
+     "两船靠得再近，也等水手把缆钩扣牢了再跳。这条命是我在直布罗陀学回来的。",{Castilian,Arabic}}
 };
 static_assert(std::size(Officers)==OfficerLimit);
 
@@ -142,10 +144,13 @@ struct State {
     std::array<std::uint8_t, ChartBytes> coast{};
     std::array<Point,WakeCapacity> wake{};
     std::uint8_t wake_head=0, wake_count=0;
+    std::uint32_t language_skills=0;
+    int interpreter_port=-1;
+    std::uint8_t tide_ledger=LedgerUnseen;
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
-inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, SaveBytes=1216;
+inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216, SaveBytes=1232;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -237,6 +242,19 @@ struct Game {
     int hiring_fee(int officer) const;
     bool hire_officer(int officer);
     bool assign_officer(int officer);
+    Fluency fluency(Language language) const;
+    int crew_interpreter(Language language) const;
+    bool can_study(Language language) const;
+    bool local_interpreter(Language language) const;
+    bool understands(Language language) const;
+    int lesson_fee(Language language) const;
+    int lesson_days(Language language) const;
+    static constexpr int InterpreterFee=24;
+    bool hire_interpreter();
+    bool take_lesson(Language language);
+    bool tide_ledger_here() const;
+    bool copy_tide_ledger();
+    bool decide_tide_ledger(bool publish);
     bool charted(int place) const;
     bool chart_cell(int column, int row) const;
     bool heard_rumor(int id) const;

@@ -21,7 +21,8 @@ enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
-    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings
+    ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
+    LanguageDesk, TideLedger
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -42,7 +43,9 @@ enum Action {
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices,
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
-    ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900
+    ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
+    OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
+    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger
 };
 
 template<class... Args>
@@ -91,6 +94,7 @@ struct VoyageApp {
     int expedition_item=0;
     int officer_item=Pilot;
     int rumor_item=0, pinned_rumor=-1;
+    Language lesson_language=Portuguese;
     HarborApproach approach;
     Point approach_position{-1,-1};
     int approach_port=-1;
@@ -107,7 +111,7 @@ struct VoyageApp {
     int duel_animation=0;
     unsigned long long next_frame=1;
     Screen screen=Chart;
-    Overlay modal=None, activity_back=None, rumor_back=None;
+    Overlay modal=None, activity_back=None, rumor_back=None, language_back=None;
     bool expedition_from_book=false, show_witness=false;
 
     auto view() {
@@ -967,8 +971,8 @@ struct VoyageApp {
         officer_portrait(d,officer_item,portrait);
         const int x=portrait.right()+7, y=body.y+29, w=body.right()-7-x;
         d.label(x,y,person.specialty,gold,w);
-        const Text status=on_duty?"在任副官":aboard?"随船候任":Places[person.port].name;
-        d.label(x,y+17,status,on_duty?mint:mist,w);
+        d.label(x,y+17,format("%s / %s",LanguageNames[person.languages[0]].data(),
+                LanguageNames[person.languages[1]].data()),on_duty?mint:mist,w);
         const int text_y=y+35;
         d.wrap({x,text_y,w,body.bottom()-32-text_y},
                officer_talk?person.greeting:person.effect,ivory,15);
@@ -1256,7 +1260,72 @@ struct VoyageApp {
             row(d,2,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"码头决斗",ShowDuel,true);
         else if (game.s.origin==tunis)
             row(d,2,"优素福","招募领航",Recruit,true);
-        button(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors);
+        pair(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors,"口译与学话",OpenLanguages);
+    }
+    void show_languages(Language preferred) {
+        if (!game.port()) return;
+        language_back=modal;
+        lesson_language=game.can_study(preferred)?preferred:PortSpeech[game.s.origin];
+        set_modal(LanguageDesk);
+    }
+    void language_desk(Draw& d) {
+        const int port=game.s.origin;
+        const Language primary=PortSpeech[port], second=port_second_language(port);
+        page_title(d,"口译与学话");
+        constexpr Text levels[]{"未学","会短语","通晓"};
+        row(d,0,LanguageNames[primary],levels[game.fluency(primary)],SelectPortLanguage,lesson_language==primary);
+        if (second!=LanguageCount)
+            row(d,1,LanguageNames[second],levels[game.fluency(second)],SelectSecondLanguage,lesson_language==second);
+        const int x=body.x+6,w=body.w-12,bottom=body.bottom();
+        const int crew=game.crew_interpreter(lesson_language);
+        const bool local=game.local_interpreter(lesson_language);
+        const auto crew_help=format("%s可随船代译",Officers[crew].name.data());
+        if (game.tide_ledger_here())
+            button(d,{x,bottom-56,w,24},"两岸潮簿",OpenLedger,true);
+        else
+            d.label(x,bottom-53,crew!=NoOfficer?Text(crew_help):
+                    local?"口译跟到离港":"码头口译仅供本次停泊",mist,w);
+        const auto hire=format("口译 %d金",Game::InterpreterFee);
+        const auto rank=game.fluency(lesson_language);
+        const auto learn=format("%s%d金·%d日",rank==Unfamiliar?"短语":"进修",
+                                game.lesson_fee(lesson_language),game.lesson_days(lesson_language));
+        const int half=(w-5)/2;
+        button(d,{x,bottom-28,half,24},local?Text("已约口译"):Text(hire),HireInterpreter,false,
+               local || game.s.gold<Game::InterpreterFee);
+        button(d,{x+half+5,bottom-28,w-half-5,24},rank==Fluent?Text("已通晓"):Text(learn),TakeLesson,true,
+               rank==Fluent || game.s.gold<game.lesson_fee(lesson_language));
+    }
+    void tide_ledger_page(Draw& d) {
+        page_title(d,"两岸潮簿");
+        const int x=body.x+6,y=body.y,w=body.w-12,bottom=body.bottom();
+        const Rect action{x,bottom-28,w,24};
+        const auto stage=game.s.tide_ledger;
+        const bool south=game.s.origin==tangier;
+        d.label(x,y+26,south?"丹吉尔 · 阿拉伯语":"加的斯 · 卡斯蒂利亚语",mist,w);
+        Text dialogue;
+        if (stage>=LedgerPublished) {
+            dialogue=stage==LedgerPublished?
+                "两岸渡船都抄走了一份。孩子替父亲念起对岸的船名，读到最后一个时，恰好有船进湾。" :
+                "船主付了谢金，收回两本簿子。你留下潮图，渡口再听到咒骂时，还是只能隔水喊话。";
+        } else if (south && stage==LedgerCopied) {
+            dialogue="南岸记的是水，北岸却说船应向西。到加的斯找渡船家，把两本簿子并排摊开。";
+            button(d,action,"标记加的斯",MarkLedger,true);
+        } else {
+            const auto language=south?Arabic:Castilian;
+            if (!game.understands(language)) {
+                dialogue=south?"修桨人摊开一本湿潮簿。你认得页角的船形，却看不懂旁边的记号。" :
+                    "渡船家指着旧簿上的一行字。他语速太快，船名和风向混成一串。";
+                button(d,action,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
+                       game.s.gold<Game::InterpreterFee);
+            } else if (south) {
+                dialogue="修桨人说，弟弟出海后一直没回。他记下木屑向东漂，想请你把这一页带给北岸渡船家。";
+                button(d,action,"抄下潮簿",CopyLedger,true);
+            } else {
+                dialogue="北岸记的是风，南岸记的是水。东风往西吹，表层海流仍向东。渡船家问你愿不愿意公开抄本。";
+                pair(d,action,"公开双语抄本",PublishLedger,"交还 · 100金",ReturnLedger);
+            }
+        }
+        d.wrap({x,y+45,w,bottom-32-(y+45)},dialogue,ivory,15);
     }
     void escort_page(Draw& d) {
         page_title(d,"银铃护航");
@@ -1421,7 +1490,15 @@ struct VoyageApp {
             std::abs(l.latitude)/100,std::abs(l.latitude)%100,l.longitude<0?'W':'E',
             std::abs(l.longitude)/100,std::abs(l.longitude)%100);
         d.label(body.x+6,body.y+29,coord,gold,body.w-12);
-        d.wrap({body.x+6,body.y+53,body.w-12,body.h-57},l.note,ivory);
+        int note_y=body.y+53;
+        if (p<PortCount) {
+            const Language language=PortSpeech[p];
+            const bool can_speak=game.fluency(language)==Fluent || game.crew_interpreter(language)!=NoOfficer;
+            d.label(body.x+6,body.y+47,format("%s · %s",LanguageNames[language].data(),
+                    can_speak?"随船可译":"可请本港口译"),mist,body.w-12);
+            note_y=body.y+67;
+        }
+        d.wrap({body.x+6,note_y,body.w-12,body.bottom()-note_y-4},l.note,ivory);
     }
     void atlas_list(Draw& d) {
         page_title(d,"发现图鉴");
@@ -1468,11 +1545,19 @@ struct VoyageApp {
     void rumor_page(Draw& d) {
         const auto& rumor=Rumors[rumor_item];
         const bool found=game.charted(rumor.site), heard=game.heard_rumor(rumor_item);
+        const auto language=PortSpeech[rumor.port];
+        const bool understood=heard || game.understands(language);
         page_title(d,heard||found?Places[rumor.site].name:rumor.speaker);
         const int x=body.x+6, w=body.w-12;
-        d.label(x,body.y+29,found?"已记入海图":heard?"只知道大致海域":"可抄下航路传闻",found?mint:mist,w);
-        d.wrap({x,body.y+48,w,body.h-78},rumor.clue,ivory,15);
-        if (!heard && !found)
+        const auto needed=format("需%s口译",LanguageNames[language].data());
+        d.label(x,body.y+29,found?"已记入海图":heard?"只知道大致海域":
+                understood?"可抄下航路传闻":Text(needed),found?mint:mist,w);
+        const Text clue=understood?rumor.clue:found?"泊地已标在海图上。":
+            game.fluency(language)==Phrases?RumorFragments[rumor_item]:"对方指向海面。找人代译，或先在港口学几句。";
+        d.wrap({x,body.y+48,w,body.h-78},clue,ivory,15);
+        if (!understood && !found)
+            button(d,{x,body.bottom()-28,w,24},"找口译或学话",OpenLanguages,true);
+        else if (!heard && !found)
             button(d,{x,body.bottom()-28,w,24},"抄录传闻",RecordRumor,true);
         else
             button(d,{x,body.bottom()-28,w,24},found?"定位海图":"圈出大致海域",MarkRumor,true,game.sea());
@@ -1542,17 +1627,23 @@ struct VoyageApp {
 
         if (record.stage==UnknownClue) {
             d.label(x,y+27,format("%s · %s",Places[study.archive].name.data(),study.archivist.data()),mist,w);
-            d.wrap({x,y+49,w,body.h-81},"抄录手记，便能筹措考察经费。其他船也在打听这份手记，赶先完成观测可获首报赏金。",ivory);
+            const bool can_copy=game.understands(BookLanguage[expedition_item]);
+            const auto need=format("手记用%s写成。找口译或学会这门语言后，便可抄录。",LanguageNames[BookLanguage[expedition_item]].data());
+            d.wrap({x,y+49,w,body.h-81},at_archive && !can_copy?Text(need):
+                "抄录手记，便能筹措考察经费。其他船也在打听这份手记，赶先完成观测可获首报赏金。",ivory);
             const auto mark_archive=format("标记%s",Places[study.archive].name.data());
-            button(d,actions,at_archive?Text("抄录手记"):game.charted(study.archive)?Text(mark_archive):"尚无航路",
-                   at_archive?CopyClue:MarkExpedition,true,!at_archive && (game.sea() || !game.charted(study.archive)));
+            button(d,actions,at_archive?(can_copy?"抄录手记":"找口译或学话"):
+                game.charted(study.archive)?Text(mark_archive):"尚无航路",
+                at_archive?(can_copy?CopyClue:OpenLanguages):MarkExpedition,true,
+                !at_archive && (game.sea() || !game.charted(study.archive)));
             return;
         }
         const int remaining=record.rival_day-game.s.day;
         d.label(x,y+27,remaining>0?Text(format("首报余 %d 日",remaining)):Text("对手已经先行"),
                 remaining>0?mint:vermilion,w);
         if (witness || at_archive)
-            button(d,{x+w-58,y+24,58,21},show_witness?"手记":"口述",
+            button(d,{x+w-58,y+24,58,21},show_witness?"手记":
+                   !witness && !game.understands(WitnessLanguage[expedition_item])?"找口译":"口述",
                    witness?ReadNotes:AskWitness);
         const bool deciding=record.stage==ReadClue && at_archive;
         const bool mark=record.stage==ReadClue || witness;
@@ -1637,6 +1728,8 @@ struct VoyageApp {
         case RumorList: rumor_list(d); break;
         case RumorPage: rumor_page(d); break;
         case AudioSettings: audio_settings(d); break;
+        case LanguageDesk: language_desk(d); break;
+        case TideLedger: tide_ledger_page(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1665,6 +1758,27 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=OpenLanguages) {
+            switch (action) {
+            case OpenLanguages:
+                show_languages(modal==RumorPage?PortSpeech[Rumors[rumor_item].port]:
+                               modal==ExpeditionPage?BookLanguage[expedition_item]:LanguageCount);
+                break;
+            case SelectPortLanguage: lesson_language=PortSpeech[game.s.origin]; break;
+            case SelectSecondLanguage: lesson_language=port_second_language(game.s.origin); break;
+            case HireInterpreter: if (game.hire_interpreter()) changed(); break;
+            case TakeLesson: if (game.take_lesson(lesson_language)) changed(); break;
+            case OpenLedger: if (game.tide_ledger_here()) set_modal(TideLedger); break;
+            case CopyLedger:
+                if (game.copy_tide_ledger()) { audio.cue(Sound::Page); changed(); }
+                break;
+            case MarkLedger: select(cadiz); break;
+            case PublishLedger: case ReturnLedger:
+                if (game.decide_tide_ledger(action==PublishLedger)) { audio.cue(Sound::Page); changed(); }
+                break;
+            }
+            return;
+        }
         if (action>=RumorEntry) {
             rumor_item=action-RumorEntry;
             set_modal(RumorPage);
@@ -1915,6 +2029,10 @@ struct VoyageApp {
             break;
         case CopyClue: if (game.read_expedition(expedition_item)) changed(); break;
         case AskWitness:
+            if (!game.understands(WitnessLanguage[expedition_item])) {
+                show_languages(WitnessLanguage[expedition_item]);
+                break;
+            }
             if (game.consult_witness(expedition_item)) { show_witness=true; changed(); }
             break;
         case ReadNotes: show_witness=!show_witness; break;
@@ -2017,6 +2135,8 @@ struct VoyageApp {
             else if (modal==OfficerPage) set_modal(Wardroom);
             else if (modal==RumorPage) set_modal(RumorList);
             else if (modal==RumorList) { page=0; set_modal(rumor_back); }
+            else if (modal==LanguageDesk) set_modal(language_back);
+            else if (modal==TideLedger) set_modal(LanguageDesk);
             else if (modal==PortPrices) { page=good/market_rows(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }

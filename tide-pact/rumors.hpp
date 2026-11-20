@@ -28,6 +28,25 @@ inline constexpr Rumor Rumors[] {
 inline constexpr int RumorCount=std::size(Rumors);
 static_assert(RumorCount<=32);
 
+inline constexpr Text RumorFragments[]{
+    "只听懂几个词：往西、黑色石头。",
+    "只听懂几个词：向北、羊毛、河。",
+    "只听懂几个词：向东、沙洲。",
+    "只听懂几个词：向东南、两岸、高岩。",
+    "只听懂几个词：向东南、对岸、候风。",
+    "只听懂几个词：沿东岸向北、陶器、丝绸。",
+    "只听懂几个词：沿北非向东、有潟湖。",
+    "只听懂几个词：东北、山脚、朝南的海湾。",
+    "只听懂几个词：绕到东面、长海湾。",
+    "只听懂几个词：向东、三角洲、香料。",
+    "只听懂几个词：向东南、浅滩、水鸟。",
+    "只听懂几个词：西南方的岛、南岸河谷。",
+    "只听懂几个词：向东、小舟、浪后。",
+    "只听懂几个词：东南、大河、浑水。",
+    "只听懂几个词：沿岸向北、礁盘开口。"
+};
+static_assert(std::size(RumorFragments)==RumorCount);
+
 inline constexpr std::uint32_t StartingChart=(1U<<lisbon)|(1U<<cadiz)|(1U<<madeira)|
                                              (1U<<canaries)|(1U<<bordeaux);
 inline constexpr int ChartCell=12;

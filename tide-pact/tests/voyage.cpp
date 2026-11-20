@@ -333,11 +333,14 @@ void expeditions() {
         game.s.origin=study.archive;
         assert(game.archive_here()==id && game.expedition_here()<0);
         assert(!game.launch_expedition(id,true) && !game.consult_witness(id));
+        if (!game.understands(BookLanguage[id]) || !game.understands(WitnessLanguage[id]))
+            assert(game.hire_interpreter());
         assert(game.read_expedition(id) && !game.read_expedition(id));
         assert(game.consult_witness(id) && !game.consult_witness(id));
         const bool funded=id%2==0;
+        const int gold_before=game.s.gold;
         assert(game.launch_expedition(id,funded) && !game.launch_expedition(id,funded));
-        assert(game.s.gold==520+(funded?study.advance:0));
+        assert(game.s.gold==gold_before+(funded?study.advance:0));
         sail_to(game,study.site);
         assert(game.expedition_here()==id && !game.file_expedition(id));
         if (id==BirdsAtLowWater) {
@@ -372,6 +375,53 @@ void expeditions() {
         assert(game.s.gold==gold+purse && game.s.renown==fame+(won?4:2));
         assert(decode(restored,encode(game.s)) && restored.expeditions[id].stage==FiledReport);
     }
+}
+
+void port_languages() {
+    Game ship;
+    assert(ship.fluency(Portuguese)==Fluent && !ship.can_study(Arabic));
+    assert(ship.hire_officer(Pilot) && ship.assign_officer(NoOfficer));
+    ship.s.origin=bordeaux;
+    assert(ship.crew_interpreter(French)==Pilot && ship.hear_rumor(1));
+    assert(!ship.take_lesson(Swahili) && !ship.take_lesson(Portuguese));
+
+    Game reader;
+    reader.s.origin=cadiz;
+    assert(!reader.read_expedition(TwoShores) && !reader.hear_rumor(3));
+    assert(reader.take_lesson(Arabic) && reader.fluency(Arabic)==Phrases);
+    assert(reader.s.day==1 && reader.s.gold==502 && !reader.read_expedition(TwoShores));
+    assert(reader.take_lesson(Arabic) && reader.fluency(Arabic)==Fluent);
+    assert(reader.s.day==3 && reader.s.gold==464 && reader.read_expedition(TwoShores));
+    assert(!reader.consult_witness(TwoShores));
+    assert(reader.hire_interpreter() && !reader.hire_interpreter());
+    assert(reader.consult_witness(TwoShores) && reader.hear_rumor(3));
+    State saved;
+    assert(decode(saved,encode(reader.s)));
+    reader.s=saved;
+    assert(reader.local_interpreter(Castilian) && reader.fluency(Arabic)==Fluent);
+    assert(reader.depart(lisbon) && reader.s.interpreter_port==-1);
+    assert(decode(saved,encode(reader.s)) && saved.interpreter_port==-1);
+
+    Game ledger;
+    assert(!ledger.tide_ledger_here());
+    ledger.s.origin=tangier;
+    assert(ledger.tide_ledger_here() && !ledger.copy_tide_ledger());
+    assert(ledger.hire_interpreter() && ledger.copy_tide_ledger() && !ledger.copy_tide_ledger());
+    assert(ledger.start_helm(-1) && ledger.s.interpreter_port==-1);
+    assert(decode(saved,encode(ledger.s)) && saved.tide_ledger==LedgerCopied);
+    ledger.s=State{};
+    ledger.s.origin=cadiz;
+    ledger.s.tide_ledger=saved.tide_ledger;
+    assert(ledger.tide_ledger_here() && !ledger.decide_tide_ledger(true));
+    assert(ledger.hire_interpreter());
+    auto returned=ledger;
+    assert(ledger.decide_tide_ledger(true) && ledger.s.trust==2 && ledger.charted(gibraltar));
+    assert(!ledger.decide_tide_ledger(false));
+    const int before=returned.s.gold;
+    assert(returned.decide_tide_ledger(false) && returned.s.gold==before+100 && returned.charted(gibraltar));
+    assert(decode(saved,encode(ledger.s)) && saved.tide_ledger==LedgerPublished);
+    ledger.s.language_skills=3U<<(2*Arabic);
+    assert(!decode(saved,encode(ledger.s)));
 }
 
 void ship_officers() {
@@ -595,6 +645,7 @@ int main() {
     new_events_and_investment();
     free_helm();
     expeditions();
+    port_languages();
     ship_officers();
     unknown_waters();
     harbor_navigation();
