@@ -134,6 +134,37 @@ Point vessel_at(const Passage& route, int leg, float fraction) {
     return p[l.count-1];
 }
 
+namespace {
+const Passage& merchant_lane(int from, int to) {
+    static const auto lanes=[] {
+        std::array<std::array<Passage,MerchantPorts.size()>,MerchantPorts.size()> routes{};
+        for (std::size_t i=0;i<MerchantPorts.size();++i)
+            for (std::size_t j=0;j<MerchantPorts.size();++j)
+                routes[i][j]=passage(MerchantPorts[i],MerchantPorts[j]);
+        return routes;
+    }();
+    return lanes[from][to];
+}
+
+int merchant_leg(const Passage& lane, int& miles) {
+    int leg=0;
+    while (leg+1<lane.count && miles>=Legs[lane.edge[leg]].nautical_miles)
+        miles-=Legs[lane.edge[leg++]].nautical_miles;
+    return leg;
+}
+
+int merchant_days(const Passage& lane) { return (lane.miles+169)/170; }
+}
+
+Point Game::merchant_position(int company) const {
+    const auto& ship=s.merchants[company];
+    if (ship.destination==NoMerchantPort) return Anchor[MerchantPorts[ship.port]];
+    const auto& lane=merchant_lane(ship.port,ship.destination);
+    int miles=ship.progress;
+    const int leg=merchant_leg(lane,miles);
+    return vessel_at(lane,leg,float(miles)/Legs[lane.edge[leg]].nautical_miles);
+}
+
 int Game::capacity() const { return holds[s.ship]; }
 int Game::max_stores() const { return provisions[s.ship]; }
 int Game::food_capacity() const {
@@ -160,12 +191,12 @@ int Game::stock(int good) const {
     return stock_at(s.origin,good,s.stock_delta[s.origin*GoodsCount+good]);
 }
 
-int Game::market_price(int port, int good, bool sell, int supply) const {
+int Game::market_price(int port, int good, bool sell, int supply, bool player) const {
     const int market=base[good]*(100-Bias[port][good]*15+
                      ((s.day/29+good+port*3)%7-3)*3)/100;
     const int price=std::max(7,market+(17-supply)*std::max(1,base[good]/52)+
                              (sell ? -std::max(3,market/11) : std::max(4,market/12)));
-    return !sell && guild_stake(port) ? std::max(7,(price*94+99)/100) : price;
+    return player && !sell && guild_stake(port) ? std::max(7,(price*94+99)/100) : price;
 }
 
 int Game::price_at(int port, int good, bool sell) const {
@@ -442,17 +473,86 @@ Point Game::position(float frame) const {
 
 void Game::earn(int gold) { s.gold = std::clamp(s.gold + gold, 0, 999999); }
 
+void Game::plan_merchant(int company) {
+    auto& ship=s.merchants[company];
+    const int origin=MerchantPorts[ship.port];
+    int best_good=Wine, best_units=0, best_score=0;
+    int best_port=(ship.port+1+company)%MerchantPorts.size();
+    int best_cost=4+2*merchant_days(merchant_lane(ship.port,best_port));
+    for (std::size_t hub=0;hub<MerchantPorts.size();++hub) {
+        if (hub==ship.port) continue;
+        const auto& lane=merchant_lane(ship.port,hub);
+        const int days=merchant_days(lane);
+        const int provisions=4+2*days;
+        const int port=MerchantPorts[hub];
+        for (int good=0;good<GoodsCount;++good) {
+            const int local=s.stock_delta[origin*GoodsCount+good];
+            const int remote=s.stock_delta[port*GoodsCount+good];
+            int cost=provisions, revenue=0;
+            for (int unit=0;unit<MerchantLot && unit<local+48;++unit) {
+                const int available=stock_at(origin,good,local-unit);
+                if (!available) break;
+                cost+=market_price(origin,good,false,available,false);
+                if (cost>ship.gold) break;
+                revenue+=market_price(port,good,true,stock_at(port,good,std::min(48,remote+unit)),false);
+                const int score=(revenue-cost)*12/days;
+                if (score<=best_score) continue;
+                best_score=score;
+                best_port=hub;
+                best_good=good;
+                best_units=unit+1;
+                best_cost=cost;
+            }
+        }
+    }
+    if (best_cost>ship.gold) return;
+    ship.gold-=best_cost;
+    ship.destination=best_port;
+    ship.good=best_good;
+    ship.units=best_units;
+    s.stock_delta[origin*GoodsCount+best_good]-=best_units;
+}
+
+void Game::merchant_day(int company) {
+    auto& ship=s.merchants[company];
+    ship.held=conditions_at(merchant_position(company),s.day).weather==Squall;
+    if (ship.held) return;
+    if (ship.destination==NoMerchantPort) {
+        plan_merchant(company);
+        return;
+    }
+    const auto& lane=merchant_lane(ship.port,ship.destination);
+    int miles=ship.progress;
+    const int leg=merchant_leg(lane,miles);
+    const int wind=sailing_wind(Legs[lane.edge[leg]],lane.reverse[leg],s.day/30%12);
+    ship.progress+=170+wind*2;
+    if (ship.progress<lane.miles) return;
+
+    ship.port=ship.destination;
+    ship.destination=NoMerchantPort;
+    ship.progress=0;
+    const int port=MerchantPorts[ship.port];
+    auto& stock=s.stock_delta[port*GoodsCount+ship.good];
+    for (int unit=0;unit<ship.units;++unit) {
+        ship.gold=std::min(MerchantReserve,ship.gold+
+            market_price(port,ship.good,true,stock_at(port,ship.good,stock),false));
+        if (stock<48) ++stock;
+    }
+}
+
 unsigned Game::roll(unsigned range) {
     s.rng = s.rng * 1664525U + 1013904223U;
     return (s.rng >> 8) % range;
 }
 
 void Game::spend_day(int days) {
-    for (int i = 0; i < days; ++i) {
-        if (s.day < 99999) ++s.day;
+    for (int i = 0; i < days && s.day < 99999; ++i) {
+        ++s.day;
         if (s.day % 12 == 0) {
             for (auto& stock : s.stock_delta) stock += stock > 0 ? -1 : (stock < 0 ? 1 : 0);
         }
+        if (s.day>=2)
+            for (std::size_t company=0;company<s.merchants.size();++company) merchant_day(company);
     }
 }
 
@@ -1637,7 +1737,8 @@ static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
 static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+4);
+static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1645,7 +1746,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x39445054);
+    put(0x41445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -1681,6 +1782,12 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.bargain_good);
     bytes[offset++]=std::byte(s.bargain_rate);
     bytes[offset++]=std::byte(s.drift_stage);
+    for (const auto& ship : s.merchants) {
+        put(ship.gold);
+        put(ship.progress);
+        for (auto value : {ship.port,ship.destination,ship.good,ship.units,ship.held})
+            bytes[offset++]=std::byte(value);
+    }
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1689,7 +1796,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
 bool decode(State& output, std::span<const std::byte> bytes) {
     if (bytes.size()!=LegacySaveBytes && bytes.size()!=CombatSaveBytes &&
         bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes &&
-        bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes &&
+        bytes.size()!=LanguageSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -1699,7 +1807,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool with_languages=version==0x39445054 && bytes.size()==SaveBytes;
+    const bool with_merchants=version==0x41445054 && bytes.size()==SaveBytes;
+    const bool with_languages=with_merchants || (version==0x39445054 && bytes.size()==LanguageSaveBytes);
     const bool with_wake=with_languages || (version==0x38445054 && bytes.size()==WakeSaveBytes);
     const bool with_coast=with_wake || (version==0x37445054 && bytes.size()==CoastSaveBytes);
     const bool with_officers=with_coast || (version==0x36445054 && bytes.size()==OfficerSaveBytes);
@@ -1808,6 +1917,20 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             return false;
         for (int language=1;language<LanguageCount;++language)
             if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
+    }
+    if (with_merchants) {
+        for (auto& ship : s.merchants) {
+            const auto gold=get(), progress=get();
+            for (auto* value : {&ship.port,&ship.destination,&ship.good,&ship.units,&ship.held})
+                *value=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (ship.port>=MerchantPorts.size() || ship.destination>NoMerchantPort ||
+                ship.destination==ship.port || ship.good>=GoodsCount ||
+                ship.units>MerchantLot || ship.held>1 || gold>MerchantReserve) return false;
+            if (ship.destination==NoMerchantPort ? progress!=0 :
+                    progress>=unsigned(merchant_lane(ship.port,ship.destination).miles)) return false;
+            ship.gold=int(gold);
+            ship.progress=int(progress);
+        }
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

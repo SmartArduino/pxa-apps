@@ -25,7 +25,7 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery
+    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -53,7 +53,8 @@ enum Action {
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
     OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate,
     ShowDriftStory, TakeDriftLead, MarkDriftGround, OpenDriftRecovery, BoatForDrift,
-    HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont
+    HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont,
+    ShowMerchants, MarkMerchantFirst, MarkMerchantSecond
 };
 
 template<class... Args>
@@ -568,6 +569,20 @@ struct VoyageApp {
         for (int i=1;i<game.s.wake_count;++i)
             d.line(map_point(game.wake_point(i-1)),map_point(game.wake_point(i)),wake_color);
     }
+    void draw_merchants(Draw& d) {
+        constexpr Color flags[]{rgb(0xb6d7d0),rgb(0xd78f68)};
+        for (std::size_t i=0;i<game.s.merchants.size();++i) {
+            const auto& ship=game.s.merchants[i];
+            if (ship.destination==NoMerchantPort) continue;
+            const auto location=game.merchant_position(i);
+            if (!game.chart_cell(location.x/ChartCell,location.y/ChartCell)) continue;
+            const auto p=map_point(location);
+            if (!map.contains(p)) continue;
+            d.diamond(p,5,ink);
+            d.diamond(p,3,flags[i]);
+            voyage_icon(d,SailIcon,{p.x-6,p.y-13,12,12});
+        }
+    }
     void draw_rumor_marks(Draw& d) {
         for (int id=0;id<RumorCount;++id) {
             const auto& rumor=Rumors[id];
@@ -626,6 +641,7 @@ struct VoyageApp {
         const auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         draw_routes(d,path,game.sea());
         draw_wake(d);
+        draw_merchants(d);
         draw_rumor_marks(d);
         draw_drift_mark(d);
         if (landmark>=0) {
@@ -873,10 +889,14 @@ struct VoyageApp {
         page=std::clamp(page,0,pages-1);
         const int x=body.x, y=body.y, w=body.w;
         skin_box(d,body,0,6);
+        const bool regional=std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
         voyage_icon(d,CargoIcon,{x+5,y+2,13,13});
-        d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold);
+        d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold,regional?w-174:w-21);
         const int right=x+w-4;
-        if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
+        if (regional) {
+            button(d,{right-150,y+1,45,18},"船讯",ShowMerchants);
+            if (w>=315) d.label(right-197,y+2,"买/卖",quiet);
+        } else if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
         button(d,{right-101,y+1,53,18},"议价",ShowBargain,false,false,{},SpeechIcon);
         button(d,{right-44,y+1,42,18},"比价",ShowPortPrices);
         for (int i=0; i<rows && page*rows+i<GoodsCount; ++i) {
@@ -909,6 +929,33 @@ struct VoyageApp {
             const auto price=format("%d%s",offer.gold,step>=48?"金":"");
             button(d,{x+i*step,body.bottom()-31,step-3,PricedButtonHeight},label,BuyOne+i,i==0 || offer.saved,!offer.units,
                    offer.units ? Text(price) : Text("—"));
+        }
+    }
+
+    void merchant_board(Draw& d) {
+        page_title(d,"商队消息",SailIcon);
+        const int h=std::min(52,(body.h-34)/2);
+        for (std::size_t i=0;i<game.s.merchants.size();++i) {
+            const auto& ship=game.s.merchants[i];
+            const bool underway=ship.destination!=NoMerchantPort;
+            const int pier=MerchantPorts[underway?ship.destination:ship.port];
+            const Rect card{body.x+5,body.y+28+int(i)*(h+4),body.w-10,h};
+            const bool focused_card=pad_focus && button_count==focused;
+            plate(d,card,focused_card?ActionPlate:StandardPlate);
+            if (focused_card) focus_marker(d,card);
+            const int x=card.x+6,w=card.w-12;
+            const Text status=ship.held?"等风":underway?"在海上":"已靠港";
+            d.label(x,card.y+4,MerchantNames[i],gold,w-65);
+            d.label(card.right()-6-d.measure(status),card.y+4,status,ship.held?gold:mint);
+            if (underway) {
+                d.label(x,card.y+19,format("%s → %s",Places[MerchantPorts[ship.port]].name.data(),
+                                          Places[pier].name.data()),ivory,w);
+            } else d.label(x,card.y+19,Places[pier].name,ivory,w);
+            if (ship.units)
+                d.label(x,card.y+34,format(underway?"买了%s ×%d":"已卖出%s ×%d",
+                                          GoodsNames[ship.good].data(),int(ship.units)),mist,w);
+            else d.label(x,card.y+34,underway?"空船去找货":"正在码头找货",mist,w);
+            if (game.charted(pier)) buttons[button_count++]={card,MarkMerchantFirst+int(i)};
         }
     }
 
@@ -1935,6 +1982,7 @@ struct VoyageApp {
         case BargainPage: bargain_page(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
+        case MerchantBoard: merchant_board(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -2022,6 +2070,12 @@ struct VoyageApp {
                     font_retry_at=0;
                 }
                 break;
+            case ShowMerchants: if (game.port()) set_modal(MerchantBoard); break;
+            case MarkMerchantFirst: case MarkMerchantSecond: {
+                const auto& ship=game.s.merchants[action-MarkMerchantFirst];
+                if (game.port()) select(MerchantPorts[ship.destination==NoMerchantPort?ship.port:ship.destination]);
+                break;
+            }
             }
             return;
         }
