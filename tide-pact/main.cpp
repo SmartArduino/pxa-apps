@@ -16,6 +16,7 @@ constexpr Color mist = rgb(0xb9cebe), quiet = rgb(0x86a7a3), vermilion = rgb(0xd
 constexpr Color mint = rgb(0x97d5b2), ocean = rgb(0x173d46);
 constexpr Text ship_names[] = {"轻帆艇", "远洋卡拉维尔", "三桅商船"};
 constexpr Text tabs[] = {"海图","市场","船坞","港务","日志"};
+constexpr int PricedButtonHeight=33;
 
 enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum Plate { StandardPlate, ActionPlate, TabPlate, CurrentTabPlate };
@@ -370,8 +371,8 @@ struct VoyageApp {
     void skin_box(Draw& d, Rect r, int tile, int edge) {
         d.nine_slice({art::skin},{tile*72,0,72,72},r,8,edge);
     }
-    void plate(Draw& d, Rect r, Plate style) {
-        d.nine_slice({art::controls},{style*96,0,96,32},r,4,4,true);
+    void plate(Draw& d, Rect r, Plate style, int edge=4) {
+        d.nine_slice({art::controls},{style*96,0,96,32},r,edge,edge,true);
     }
     bool pressed(Rect r) const {
         return pointer_capture.active() && !map_press && r.contains({press_x,press_y}) &&
@@ -383,7 +384,7 @@ struct VoyageApp {
         d.diamond(cue,2,ivory);
     }
     void meter(Draw& d, Rect r, int value, int maximum, bool voyage) {
-        skin_box(d,r,1,3);
+        plate(d,r,StandardPlate,2);
         const Rect fill=r.inset(2);
         if (fill.w<1 || fill.h<1) return;
         d.fill(fill,ink);
@@ -423,18 +424,18 @@ struct VoyageApp {
         if (inactive || down) d.darken(r.inset(3),inactive?6:3);
         if (chosen) focus_marker(d,r);
         const Color color=inactive ? quiet : accent ? gold : ivory;
-        const Rect content{r.x+3,r.y,r.w-6,r.h};
+        const Rect content=r.inset(2);
+        const Rect previous_clip=d.clip;
+        d.clip=d.clipped(content);
         if (!price.empty()) {
-            const int line=d.font.cell;
-            const int y=content.y+(content.h-2*line-1)/2;
-            d.center({content.x,y,content.w,line},text,color);
-            d.center({content.x,y+line+1,content.w,line},price,inactive ? quiet : mist);
+            d.center_lines(content,text,color,price,inactive ? quiet : mist);
         } else if (glyph>=0) {
             const Rect sprite{glyph%3*32,glyph/3*32,32,32};
             d.center_with_icon(content,text,color,{art::voyage_icons},sprite,std::clamp(r.h-7,12,17));
         } else {
             d.center(content,text,color);
         }
+        d.clip=previous_clip;
         if (!inactive && button_count<int(buttons.size())) buttons[button_count++]={r,action};
     }
     void pair(Draw& d, Rect r, Text a, int aa, Text b, int bb, bool accent=false) {
@@ -490,13 +491,15 @@ struct VoyageApp {
             const Color label=active ? gold : ivory;
             const Image images{art::tabs};
             const Rect sprite{i*32,0,32,32};
+            const Rect content=r.inset(2);
             if (r.w>=30+d.measure(tabs[i])) {
-                d.center_with_icon({r.x+4,r.y,r.w-8,r.h},tabs[i],label,images,sprite,20);
+                d.center_with_icon(content,tabs[i],label,images,sprite,20);
             } else {
-                constexpr int size=14;
-                const int y=r.y+(r.h-size-1-d.font.cell)/2;
+                const auto caption=d.fit(tabs[i],content.w,1);
+                const int size=std::min(14,content.h-caption.ink.h-1);
+                const int y=content.y+(content.h-size-1-caption.ink.h)/2;
                 d.image(images,sprite,{r.x+(r.w-size)/2,y,size,size},true);
-                d.center({r.x,y+size+1,r.w,d.font.cell},tabs[i],label);
+                d.center_run({content.x,y+size+1,content.w,caption.ink.h},caption,label);
             }
             buttons[button_count++]={hit,OpenChart+i};
         }
@@ -874,8 +877,8 @@ struct VoyageApp {
         d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold);
         const int right=x+w-4;
         if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
-        button(d,{right-101,y+1,53,17},"议价",ShowBargain,false,false,{},SpeechIcon);
-        button(d,{right-44,y+1,42,17},"比价",ShowPortPrices);
+        button(d,{right-101,y+1,53,18},"议价",ShowBargain,false,false,{},SpeechIcon);
+        button(d,{right-44,y+1,42,18},"比价",ShowPortPrices);
         for (int i=0; i<rows && page*rows+i<GoodsCount; ++i) {
             const int g=page*rows+i;
             const Rect item{x+3,y+19+i*market_pitch(),w-6,market_pitch()-1};
@@ -904,7 +907,7 @@ struct VoyageApp {
             const auto offer=game.trade_quote(good,sell,batch);
             const auto label=format("%s%d",sell?"卖":"买",offer.units ? offer.units : batch);
             const auto price=format("%d%s",offer.gold,step>=48?"金":"");
-            button(d,{x+i*step,body.bottom()-31,step-3,30},label,BuyOne+i,i==0 || offer.saved,!offer.units,
+            button(d,{x+i*step,body.bottom()-31,step-3,PricedButtonHeight},label,BuyOne+i,i==0 || offer.saved,!offer.units,
                    offer.units ? Text(price) : Text("—"));
         }
     }
@@ -1336,9 +1339,9 @@ struct VoyageApp {
         button(d,{x+half+5,body.bottom()-54,w-half-5,20},"卸淡水",UnloadWater,false,!water);
         const auto food_cost=game.resupply_cost(food+10,water);
         const auto water_cost=game.resupply_cost(food,water+10);
-        button(d,{x,body.bottom()-32,half,30},format("食物 +%d",std::min(10,food_cap-food)),
+        button(d,{x,body.bottom()-32,half,PricedButtonHeight},format("食物 +%d",std::min(10,food_cap-food)),
                BuyFood,true,!food_cost || game.s.gold<food_cost,format("%d金",food_cost));
-        button(d,{x+half+5,body.bottom()-32,w-half-5,30},format("淡水 +%d",std::min(10,water_cap-water)),
+        button(d,{x+half+5,body.bottom()-32,w-half-5,PricedButtonHeight},format("淡水 +%d",std::min(10,water_cap-water)),
                BuyWater,true,!water_cost || game.s.gold<water_cost,format("%d金",water_cost));
     }
 
@@ -1835,9 +1838,9 @@ struct VoyageApp {
                show_witness && witness?study.witness:study.book,ivory,15);
         if (deciding) {
             d.label(x,bottom-46,"预支 / 首报交稿金",quiet,w);
-            button(d,{x,bottom-31,half,29},"领资助",SponsorVoyage,true,false,
+            button(d,{x,bottom-31,half,PricedButtonHeight},"领资助",SponsorVoyage,true,false,
                    format("%d / %d",study.advance,study.purse-study.advance*3/2));
-            button(d,{x+half+5,bottom-31,w-half-5,29},"自费出海",FundVoyage,false,false,
+            button(d,{x+half+5,bottom-31,w-half-5,PricedButtonHeight},"自费出海",FundVoyage,false,false,
                    format("0 / %d",study.purse));
         } else if (mark) {
             const int point=record.stage==ReadClue?study.archive:study.site;

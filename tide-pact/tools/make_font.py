@@ -27,11 +27,12 @@ def write_font(path, codes, cell, name):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ttc", type=Path)
+    parser.add_argument("--compact-ttc", required=True, type=Path)
     args = parser.parse_args()
     text = "".join(p.read_text() for p in ROOT.glob("*.?pp"))
     codes = sorted(set(range(32, 127)) | {ord(c) for c in text if 127 < ord(c) <= 0xffff})
     write_font(args.ttc, codes, 14, "glyphs.pxi")
-    write_font(args.ttc, codes, 11, "glyphs_compact.pxi")
+    write_font(args.compact_ttc, codes, 12, "glyphs_compact.pxi")
 
 
 if __name__ == "__main__":
