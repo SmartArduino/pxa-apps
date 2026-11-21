@@ -459,6 +459,70 @@ void dockside_bargaining() {
     assert(interpreter.start_helm(-1) && !interpreter.s.bargain_good);
 }
 
+void search_for_driftwood() {
+    Game ship;
+    assert(!ship.take_drift_lead());
+    ship.s.origin=madeira;
+    assert(ship.take_drift_lead() && !ship.take_drift_lead());
+    assert(!ship.sees_drift() && !ship.near_drift());
+    ship.s.cargo[Timber]=1;
+    assert(ship.start_helm(-1));
+    const auto initial=ship.position();
+    ship.s.heading=direction_to({DriftGround.x-initial.x,DriftGround.y-initial.y});
+    for (int i=0;i<16 && !ship.paused;++i) {
+        if (ship.sees_drift()) {
+            const auto current=ship.position(), target=ship.drift_position();
+            ship.s.heading=direction_to({target.x-current.x,target.y-current.y});
+        }
+        ship.helm_step([](Point){ return true; });
+    }
+    assert(ship.paused && ship.near_drift() && ship.sees_drift());
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.drift_stage==DriftSearching);
+    auto waiting=ship;
+    const int day=waiting.s.day, food=waiting.s.stores, water=waiting.s.water;
+    assert(waiting.wait_for_drift() && waiting.s.day==day+1);
+    assert(waiting.s.stores==food-waiting.daily_rations() && waiting.s.water<water);
+    waiting.s.stores=0;
+    assert(!waiting.wait_for_drift() && waiting.s.day==day+1);
+    auto without_timber=ship;
+    without_timber.s.cargo[Timber]=0;
+    assert(!without_timber.recover_drift(RigHook));
+    assert(ship.recover_drift(RigHook) && !ship.s.cargo[Timber] && !ship.recover_drift(RigHook));
+    assert(decode(saved,encode(ship.s)) && saved.drift_stage==DriftRecovered);
+
+    auto small_boat=waiting;
+    bool saw_calm=false, saw_rough=false;
+    for (int d=0;d<60 && (!saw_calm || !saw_rough);++d) {
+        small_boat.s.day=d;
+        const auto drift=small_boat.drift_position();
+        small_boat.s.helm_x=drift.x*16;
+        small_boat.s.helm_y=drift.y*16;
+        const auto conditions=small_boat.conditions();
+        if (conditions.weather==Squall || conditions.strength>=4) {
+            assert(!small_boat.recover_drift(LaunchBoat));
+            saw_rough=true;
+        } else {
+            auto attempt=small_boat;
+            assert(attempt.recover_drift(LaunchBoat) && attempt.s.cargo[Timber]==1);
+            saw_calm=true;
+        }
+    }
+    assert(saw_calm && saw_rough);
+    Game shore;
+    shore.s.origin=madeira;
+    shore.s.drift_stage=saved.drift_stage;
+    assert(!shore.finish_drift(true));
+    sail_to(shore,cadiz);
+    shore.s.hull=80;
+    assert(!shore.finish_drift(true) && shore.hire_interpreter());
+    auto filed=shore;
+    assert(shore.finish_drift(true) && shore.repair_cost()==30 && shore.s.trust>=3);
+    assert(!shore.finish_drift(false) && decode(saved,encode(shore.s)) && saved.drift_stage==DriftReturned);
+    const int gold=filed.s.gold;
+    assert(filed.finish_drift(false) && filed.s.gold==gold+180 && filed.repair_cost()==40);
+}
+
 void ship_officers() {
     Game ship;
     assert(!ship.hire_officer(Quartermaster) && !ship.assign_officer(Quartermaster));
@@ -682,6 +746,7 @@ int main() {
     expeditions();
     port_languages();
     dockside_bargaining();
+    search_for_driftwood();
     ship_officers();
     unknown_waters();
     harbor_navigation();

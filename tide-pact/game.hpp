@@ -94,6 +94,10 @@ struct SeaConditions {
 inline constexpr Point Directions[]{{0,-16},{11,-11},{16,0},{11,11},{0,16},{-11,11},{-16,0},{-11,-11}};
 inline constexpr Text Bearings[]{"北","东北","东","东南","南","西南","西","西北"};
 inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风"};
+enum DriftStage : std::uint8_t { DriftUnheard, DriftSearching, DriftRecovered, DriftReturned, DriftFiled };
+enum DriftMethod { LaunchBoat, RigHook };
+inline constexpr Point DriftGround{174,335};
+inline constexpr int DriftReach=7;
 SeaConditions conditions_at(Point position, int day);
 int direction_to(Point offset);
 using WaterTest = bool (*)(Point);
@@ -151,6 +155,7 @@ struct State {
     int interpreter_port=-1;
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
+    std::uint8_t drift_stage=DriftUnheard;
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
@@ -262,6 +267,15 @@ struct Game {
     bool tide_ledger_here() const;
     bool copy_tide_ledger();
     bool decide_tide_ledger(bool publish);
+    bool take_drift_lead();
+    Point drift_position() const;
+    bool drift_in_range(int radius) const;
+    bool sees_drift() const;
+    bool near_drift() const;
+    Text drift_block(DriftMethod method) const;
+    bool recover_drift(DriftMethod method);
+    bool wait_for_drift();
+    bool finish_drift(bool return_to_crew);
     bool charted(int place) const;
     bool chart_cell(int column, int row) const;
     bool heard_rumor(int id) const;
