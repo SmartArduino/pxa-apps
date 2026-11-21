@@ -1306,7 +1306,7 @@ void Game::chapter_choice(int choice) {
     ++s.chapter;
     if (s.chapter<Chapters) s.chart_marks|=1U<<Story[s.chapter].place;
     ++s.renown;
-    notice = s.ending ? "故事已载入航海日志" : "新线索已载入航海日志";
+    notice = s.ending ? "结局已记进日志" : "日志里记下了下一站";
 }
 
 bool Game::on_leg(int from, int to) const {
@@ -1407,8 +1407,9 @@ void Game::finish_encounter() {
 
 int Game::naval_intent() const {
     if (s.enemy<=13) return EnemyEvade;
-    constexpr int sequence[]{EnemyFire,EnemyClose,EnemyEvade};
-    return sequence[s.naval_turn%3];
+    if (s.aim && s.range>1 && s.enemy<=25) return EnemyEvade;
+    if (s.range>=4 || (s.range>1 && s.needs_reload)) return EnemyClose;
+    return EnemyFire;
 }
 
 int Game::duel_intent() const {

@@ -215,6 +215,22 @@ void naval_and_duel_combat() {
     assert(lead.convoy_battle() && lead.s.weather==Privateer && lead.s.range==3);
     assert(!lead.encounter_requirement(BoardShip).empty());
 
+    Game tactics=lead;
+    assert(tactics.naval_intent()==EnemyFire);
+    tactics.s.range=4;
+    assert(tactics.naval_intent()==EnemyClose);
+    tactics.s.range=2;
+    tactics.s.needs_reload=1;
+    assert(tactics.naval_intent()==EnemyClose);
+    tactics.s.enemy=24;
+    tactics.s.needs_reload=0;
+    tactics.s.aim=1;
+    assert(tactics.naval_intent()==EnemyEvade);
+    tactics.s.range=1;
+    assert(tactics.naval_intent()==EnemyFire);
+    tactics.s.enemy=13;
+    assert(tactics.naval_intent()==EnemyEvade);
+
     Game guns;
     assert(decode(guns.s,encode(lead.s)));
     guns.restore();
