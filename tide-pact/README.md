@@ -56,4 +56,4 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 标题字标、场景、角色、货物、航海图标及界面材料由内置图像生成工具为游戏制作。帆船循环为 12 帧，炮击为 8 帧，决斗的三种出招各 6 帧。接舷和码头背景及序列图保存在 `art/`。素材可用 `tools/make_art.py --help` 查看预处理入口。
 - 考察插画使用四联图，可用 `tools/make_discoveries.py` 生成运行时图集。阿尔金生态和本格拉寒流注记参考联合国教科文组织与 NASA。游戏按日离散潮汐与天气，手记、考察人物与竞赛为原创虚构。 [阿尔金浅滩](https://whc.unesco.org/en/list/506/) · [本格拉寒流](https://science.nasa.gov/earth/earth-observatory/namibia-3464/)
 - 三位副官的原创肖像由内置图像生成工具绘制，用 `tools/make_officers.py` 从三联图生成运行时图集。
-- 中文点阵来自 Noto Sans CJK SC，随附 SIL OFL 1.1。增加文字后运行 `python tools/make_font.py NotoSansCJK-Regular.ttc --compact-ttc NotoSansCJK-Medium.ttc` 更新标准和紧凑字模。[字体及许可](https://github.com/notofonts/noto-cjk/tree/main/Sans)
+- 标准字模来自 Noto Sans CJK SC。紧凑字模使用缝合像素字体 12px 的简体中文比例版，缺字由 Noto Sans 补齐。增加文字后运行 `python tools/make_font.py NotoSansCJK-Regular.ttc --compact-bdf fusion-pixel-12px-proportional-zh_hans.bdf` 更新两个字模。[Noto Sans](https://github.com/notofonts/noto-cjk/tree/main/Sans) · [缝合像素字体 2026.11.10](https://github.com/TakWolf/fusion-pixel-font/releases/tag/2026.11.10)
