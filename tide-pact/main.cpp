@@ -1101,7 +1101,10 @@ struct VoyageApp {
             d.label(x,body.y+23,format("船距%d  敌船%d  %s",s.range,s.enemy,
                      s.needs_reload?"待装填":s.aim?"已瞄准":"可开炮"),ivory,w);
             const int wind=game.wind(s.leg);
-            const auto threat=format("%s  %s",EnemyOrders[game.naval_intent()].data(),
+            const int intent=game.naval_intent();
+            const Text tell=intent==EnemyClose && s.needs_reload && s.range<4 ?
+                "敌船趁你装填，正靠过来" : EnemyOrders[intent];
+            const auto threat=format("%s  %s",tell.data(),
                                      wind>5?"顺风":wind<-5?"逆风":"风平");
             d.label(x,body.y+40,threat,mist,w);
             const int n=(now/115)%12;
@@ -1116,7 +1119,7 @@ struct VoyageApp {
             return;
         } else {
             const Text copy=weather==FalseBeacon && s.tales[Lamps]==Shared ?
-                "渔会公开的潮表就在桌上。这回可以直接核对灯位，不用等到天亮。" : scene.message;
+                "渔会的潮表就在手边。现在就能认出哪盏灯有假，也不用耗一天水粮。" : scene.message;
             d.wrap({x,body.y+29,w,body.h-66},copy,ivory);
         }
         const int gap=3, step=w/3;
@@ -1397,28 +1400,28 @@ struct VoyageApp {
         const bool at_finish=game.port() && game.s.origin==cadiz;
         Text dialogue;
         if (stage==DriftUnheard) {
-            dialogue="丰沙尔舵匠艾达说，昨夜领工资的小船翻了，装名册的红木匣被风吹到港口西南。还好匣顶绑了两块软木。";
+            dialogue="艾达说，昨晚送工资名册的小船翻了。红匣子绑了软木，沉不了，风把它吹到了丰沙尔西南。";
             button(d,action,at_start?"答应找木匣":"标记丰沙尔",at_start?int(TakeDriftLead):Destination+int(madeira),
                    true,game.sea() || !game.charted(madeira));
         } else if (stage==DriftSearching) {
-            dialogue="旧航图只圈出木匣可能漂过的海面。向丰沙尔西南掌舵，近了才能看见漂浮物。记得备一件木料。";
+            dialogue="从丰沙尔向西南掌舵，到圈出的海面慢慢找。木匣要靠近才看得见。想用钩子捞，就带一件木料。";
             if (!game.sea())
                 button(d,action,at_start?"圈出搜索海域":"标记丰沙尔",
                        at_start?int(MarkDriftGround):Destination+int(madeira),true);
         } else if (stage==DriftRecovered && !at_finish) {
-            dialogue="匣里是加的斯商号的工资名册，背面写着卡斯蒂利亚语。带去加的斯找人辨认，再把欠款送到该收钱的人手里。";
+            dialogue="匣里是份工资名册，背面写的是卡斯蒂利亚语。拿去加的斯，请当地船工看看还有谁没领到工钱。";
             if (!game.sea()) button(d,action,"标记加的斯",Destination+int(cadiz),true);
         } else if (stage==DriftRecovered && !game.understands(Castilian)) {
-            dialogue="名册分成两栏。靠右的几笔重墨盖住了人名。听懂加的斯的船工在说什么，才能核对这几笔工钱。";
+            dialogue="名册右栏有几个名字被墨涂了。船工愿意帮你核对，可你还听不懂他们的话。找个口译来吧。";
             button(d,action,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
                    game.s.gold<Game::InterpreterFee);
         } else if (stage==DriftRecovered) {
-            dialogue="右栏写的是尚欠的工资。把名册交给船工，他们会给你加的斯维修七五折。送进港务馆则能领一百八十金。";
+            dialogue="右栏是拖欠的工钱。名册交给船工，以后在加的斯修船打七五折。交给港务馆，可领一百八十金。";
             pair(d,action,"交给船工",ReturnDriftRoll,"入档领赏",FileDriftRoll,true);
         } else {
             dialogue=stage==DriftReturned?
-                "卸完最后一箱货，船工排队核对名单。此后你在加的斯修船，他们会留下一班人帮你钉板。" :
-                "港务馆把潮湿的纸页压平，以公印核对两栏数字。第一批工钱终于发下来了。";
+                "最后一箱货卸完，船工排起队来核对名单。此后你来加的斯修船，他们总会留几个人帮你钉船板。" :
+                "港务馆晾干名册，逐笔查清了商号欠的钱。头一批工钱总算发了下去。";
         }
         d.wrap({x,y+34,w,body.h-66},dialogue,ivory,15);
     }
@@ -1513,24 +1516,24 @@ struct VoyageApp {
         const int origin=game.s.origin;
         if (stage>=EscortPublished) {
             const Text copy=stage==EscortPublished?
-                "修船人从公开的船契上认出了伪造的印章。银铃号从此在丰沙尔鸣铃入港，每次都等最后一艘渔船靠岸。" :
-                "商号付了三百四十金。银铃号能继续做买卖，码头上有关那枚印章的传闻仍没有停。";
+                "船契贴出去，修船的人一眼就认出了假印。此后银铃号进丰沙尔，总要先鸣铃，再等最后一条渔船靠岸。" :
+                "商号付了三百四十金。银铃号又能做生意了，只是码头上的人还在打听，谁用过那枚假印。";
             d.wrap({x,body.y+34,w,body.h-39},copy,ivory,16);
             return;
         }
         if (stage==EscortOpen) {
             d.wrap({x,body.y+33,w,body.h-66},
-                "伊内丝请你从里斯本护送银铃号去丰沙尔。有人拿着伪造的船契，想把载着木匠和修船料的小商船扣下。",
+                "伊内丝想请你护送银铃号去丰沙尔。船上有木匠和修船料，有人拿假船契要扣船。",
                 ivory,15);
         } else if (stage==EscortSailing) {
             d.wrap({x,body.y+33,w,body.h-66},
-                "银铃号在里斯本等你。从里斯本驶上通往丰沙尔的航段，就能与商船会合。若护航失散，可以回里斯本重试。",
+                "从里斯本开往丰沙尔，银铃号会在这段航路上与你会合。要是走散了，回里斯本重新出发。",
                 ivory,15);
         } else {
             const auto head=stage==EscortWonDuel?
-                "断铃号船长交出了完整船契。"
-                : "炮战过后，水手从漂箱里找到了盖错印的船契。";
-            const auto copy=format("%s在丰沙尔公开它，木匠们就能作证。商号愿意出更多钱私下买走。",head);
+                "断铃号船长交出了船契。"
+                : "炮战后，水手从漂箱里捞出了假船契。";
+            const auto copy=format("%s去丰沙尔公开船契，木匠就能作证。商号也愿出三百四十金私下收走。",head);
             d.wrap({x,body.y+33,w,body.h-66},copy,ivory,15);
         }
         const Rect actions{x,body.bottom()-28,w,24};
@@ -1548,8 +1551,8 @@ struct VoyageApp {
         page_title(d,"加的斯的旧誓");
         const int x=body.x+7, w=body.w-14;
         const Text copy=game.s.cadiz_victory ?
-            "费罗把那枚旧印交给了裁判，并把避开突刺的步法教给你。往后的接舷决斗，你能承受更多次交锋。" :
-            "旧印能证明费罗父亲的清白。费罗要先看看你能否保护证人。格挡克突刺，佯攻破格挡，突刺截佯攻。";
+            "费罗把旧印交给裁判，又教你怎么侧身避剑。今后在敌船上决斗，你的体力会多一些。" :
+            "费罗想用旧印证明父亲的清白。他要先试试你能不能护住证人。见他突刺就挡，见他守就佯攻，见他虚晃便抢先刺过去。";
         d.wrap({x,body.y+33,w,body.h-66},copy,ivory,15);
         if (!game.s.cadiz_victory) {
             const bool local=game.port() && game.s.origin==cadiz;
@@ -1561,17 +1564,26 @@ struct VoyageApp {
     void story(Draw& d) {
         const auto& c=Story[game.s.chapter];
         page_title(d,c.title);
-        const int portrait=std::clamp(body.h-98,34,74);
-        d.image({art::portraits},{c.portrait*86,0,86,86},{body.x+5,body.y+28,portrait,portrait});
-        d.frame({body.x+5,body.y+28,portrait,portrait},border);
-        const int left=body.x+portrait+11;
-        d.label(left,body.y+25,c.speaker,gold);
+        const bool side_by_side=body.w>=340;
+        const int portrait=side_by_side?std::clamp(body.h-98,34,74):20;
+        const Rect face{body.x+6,body.y+27,portrait,portrait};
+        d.image({art::portraits},{c.portrait*86,0,86,86},face);
+        d.frame(face,border);
+        d.label(face.right()+6,face.y+3,c.speaker,gold);
         const Text copy=game.s.chapter==1 && game.s.tales[Lamps]==Shared ?
-            "多亏你的潮表，渔会知道昨夜哪盏灯有问题。你兄长留了半张货单给我。搜失踪渔船的话，抄表的船一日就能来回。" :
+            "渔会有了你的潮表，知道哪盏灯有假。找渔船一天就能回来。我手里有你哥哥留下的货单，等你回来就给你。" :
             c.message;
-        d.wrap({left,body.y+43,body.right()-left-5,body.h-72},copy,ivory,15);
+        const bool more=game.s.chapter+1<Chapters;
+        const int left=side_by_side?face.right()+6:face.x;
+        const int top=side_by_side?face.y+21:face.bottom()+3;
+        const int end=body.bottom()-(more?47:31);
+        d.wrap({left,top,body.right()-left-6,end-top},copy,ivory,14);
+        if (more) {
+            const auto& next=Story[game.s.chapter+1];
+            d.label(face.x,body.bottom()-45,format("下一站  %s",Places[next.place].name.data()),mint,body.w-12);
+        }
         pair(d,{body.x+4,body.bottom()-28,body.w-8,25},
-             game.s.chapter==1 && game.s.tales[Lamps]==Shared ? "搜寻渔船 +1日" : c.first,
+             game.s.chapter==1 && game.s.tales[Lamps]==Shared ? "找渔船 1天" : c.first,
              ChooseFirst,c.second,ChooseSecond,true);
     }
     void tale_list(Draw& d) {
@@ -1617,10 +1629,11 @@ struct VoyageApp {
         const bool beginning=stage==Unmet;
         const int port=game.tale_stop(tale_item);
         if (port!=game.s.origin || game.sea()) {
-            d.label(x,body.y+32,Places[port].name,gold,w);
+            d.label(x,body.y+32,format("到%s找%s",Places[port].name.data(),
+                    (beginning?tale.starter:tale.listener).data()),gold,w);
             if (!beginning) d.wrap({x,body.y+52,w,body.h-83},tale.opening,ivory);
             if (game.charted(port))
-                button(d,{x,body.bottom()-28,w,25},"标记到访港口",TaleMark,true,game.sea());
+                button(d,{x,body.bottom()-28,w,25},"在海图上标记",TaleMark,true,game.sea());
             return;
         }
         const int portrait=beginning ? tale.start_portrait : tale.finish_portrait;
@@ -1629,7 +1642,7 @@ struct VoyageApp {
         const auto requirement=beginning ? Text{} : game.tale_requirement(tale_item);
         if (!requirement.empty()) d.label(x+w-56,body.y+29,tale_item==Chartmakers ? "缺木料" : "缺水粮",mist,56);
         const Text copy=tale_item==Lamps && !beginning && game.s.beacon!=BeaconCharted ?
-            "莱昂可花一日访问归港的渔船，核对灯讯。你可让渔会公布潮表，或将它作价二百二十金卖给船行。" :
+            "莱昂说，问过回港的渔船，一天就能查清灯位。你可以把潮表留给渔会，也可以卖给船行，换二百二十金。" :
             beginning ? tale.opening : tale.delivery;
         d.wrap({x,body.y+47,w,body.h-77},copy,ivory,14);
         const Rect actions{x,body.bottom()-28,w,25};
