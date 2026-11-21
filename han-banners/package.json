@@ -2,9 +2,9 @@
   "format": "pxa-package-source-0.2",
   "id": "pxa-han-banners",
   "name": "三国逐城",
-  "version": "1.4.0",
-  "release_sequence": 9,
-  "description": "原创三国策略。三个历史剧本、四十八城。搜索物资和在野人才，参与州郡军略、季末军议、跨季围城、临阵号令和战后招降。",
+  "version": "1.8.0",
+  "release_sequence": 22,
+  "description": "原创三国策略。三个历史剧本、五十六处城关。沿古道和水路行军，战前排兵布阵，战中分路指挥、调兵增援和阵前单挑。",
   "icon": "assets/icon.png",
   "min_sdk": [
     2,
@@ -59,6 +59,8 @@
           ]
         },
         "storage",
+        "audio",
+        "permission",
         "log"
       ],
       "wasi": {
@@ -69,6 +71,13 @@
           "wall-clock"
         ]
       }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
     }
   ],
   "build": {

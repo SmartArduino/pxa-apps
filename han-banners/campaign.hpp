@@ -35,14 +35,26 @@ struct Discovery {
     int value=0;
 };
 enum class SeasonPlan { regular, relief, drills };
+enum class Difficulty { story, standard, veteran };
+struct DifficultyRules {
+    int graceSeasons, assaultMargin, minimumReserve, transferLimit, hostileSupplyPercent;
+};
+inline constexpr DifficultyRules difficultyRules[]={
+    {4,40,210,0,100}, {2,-45,180,145,100}, {1,-65,200,240,120}
+};
 inline constexpr int grainBySeason[]={100,100,125,90};
 inline constexpr int reliefOrder=14, drillExperience=45, drillRest=18;
 struct SeasonAccounts {
     int gold, grain, goldCost, grainCost;
 };
+struct AttackForecast {
+    Order road;
+    int attackers=0, defenders=0;
+};
 
 struct Campaign {
     int player=0, chapter=0, turn=1, gold=0, grain=0, actions=0;
+    Difficulty difficulty=Difficulty::standard;
     int won=0, commander=0, tours=0, recruited=7;
     bool objectivePaid=false;
     unsigned regionalRewards=0;
@@ -64,12 +76,14 @@ struct Campaign {
         return {site.owner,site.troops,site.yield>=4?2:1,site.fort};
     }
 
-    void start(int side,int scene=0) {
+    void start(int side,int scene=0,Difficulty level=Difficulty::standard) {
         *this={};
         player=side;
         chapter=scene;
+        difficulty=level;
         gold=side==0?430:side==1?580:490;
         grain=side==0?460:side==1?550:610;
+        if (level==Difficulty::story) {gold+=120;grain+=160;}
         for (int i=0;i<cityCount;++i) cities[i]=initialCity(i,scene);
         if (scene==0 && side==0) cities[10].fields=3;
         if (scene==1) recruited=15;
@@ -83,6 +97,7 @@ struct Campaign {
     int capital() const {return story().base[player];}
     int season() const {return (story().season+turn-1)%4;}
     int year() const {return story().year+(story().season+turn-1)/4;}
+    const DifficultyRules& rules() const {return difficultyRules[int(difficulty)];}
 
     bool own(int city) const {return city>=0 && city<cityCount && cities[city].owner==player;}
     int holdings(int side) const {
@@ -371,14 +386,17 @@ struct Campaign {
         return true;
     }
 
-    int dispatch(int from,DispatchSize size=legion) const {
-        const int n=cities[from].troops;
+    static int expeditionSize(int n,DispatchSize size=legion) {
         return std::max(0,std::min(n*levyPercent[size]/100,n-garrison));
+    }
+    int dispatch(int from,DispatchSize size=legion) const {
+        return expeditionSize(cities[from].troops,size);
     }
     static constexpr int marchCost(int troops) {return 24+troops/16;}
     int supplyCost(int from,int to,DispatchSize size,int slot,bool blockade) const {
         int supply=marchCost(dispatch(from,size))+ (blockade?45:0);
         if (own(to)) supply/=2;
+        else supply=(supply*rules().hostileSupplyPercent+99)/100;
         if (generals[slot].gear==saddle) supply=supply*3/4;
         return std::max(1,supply-(hasSpecialty(slot,Specialty::convoy)?22:0));
     }
@@ -451,26 +469,119 @@ struct Campaign {
             cities[o.to].owner!=side && dispatch(o.from)>=180 &&
             !(own(o.to) && ceasefire(side));
     }
+    Order nextAttack() const {
+        for (int side=0;side<ownerCount;++side) {
+            const auto order=orders[side];
+            if (side!=player && own(order.to) && validOrder(order,side)) return order;
+        }
+        return {};
+    }
+    int orderAfterSeason(int city,SeasonPlan plan) const {
+        const int mayor=governor(city);
+        const int civicBonus=hasSpecialty(mayor,Specialty::envoy)?6:0;
+        return std::min(100,cities[city].order+(mayor>=0?8:3)+civicBonus+
+                            (plan==SeasonPlan::relief?reliefOrder:0));
+    }
+    int troopsAfterSeason(int city,int order) const {
+        const auto& c=cities[city];
+        if (own(city)) return std::min(armyLimit,c.troops+25+order/7+(governor(city)>=0?18:0));
+        const int restore=(c.owner<3?63:33)+c.fields*13;
+        const bool seat=c.owner<3 && story().base[c.owner]==city;
+        // Reinforcements can put a city above the limit for local recruitment.
+        const int capacity=std::min(armyLimit,(c.owner<3?1680:1280)+
+            110*sites[city].yield+70*c.fort+(seat?220:0));
+        return c.troops+std::clamp(capacity-c.troops,0,restore);
+    }
+    AttackForecast forecastAttack(SeasonPlan plan) const {
+        const auto road=nextAttack();
+        if (!road) return {};
+        return {road,expeditionSize(troopsAfterSeason(road.from,cities[road.from].order)),
+                troopsAfterSeason(road.to,orderAfterSeason(road.to,plan))};
+    }
+    std::array<int,cityCount> borderPressure() const {
+        std::array<int,cityCount> pressure{};
+        auto inspect=[&](int from,int to) {
+            const int a=cities[from].owner,b=cities[to].owner;
+            if (a==b || (a==player && ceasefire(b)) || (b==player && ceasefire(a))) return;
+            pressure[to]=std::max(pressure[to],dispatch(from));
+        };
+        for (const auto& road:roads) {
+            inspect(road.from,road.to);
+            inspect(road.to,road.from);
+        }
+        for (const auto& unit:columns) if (unit && !own(unit.road.to) &&
+                                             !ceasefire(cities[unit.road.to].owner))
+            pressure[unit.road.to]=std::max(pressure[unit.road.to],unit.troops);
+        return pressure;
+    }
     void makeOrders() {
+        const auto pressure=borderPressure();
+        const auto& policy=rules();
         bool playerTargeted=false;
         std::array<bool,cityCount> targeted{};
         orders={};
-        for (int side=0;side<ownerCount;++side) {
+        for (int i=0;i<ownerCount;++i) {
+            const int side=(i+turn)%ownerCount;
             if (side==player || (side>=3 && (side+turn)%3)) continue;
-            int best=side<3?-45:30;
+            int best=side<3?policy.assaultMargin:45;
             auto consider=[&](int from,int to) {
                 if (!validOrder({from,to},side) || targeted[to]) return;
+                const auto& origin=cities[from];
                 const auto& target=cities[to];
-                if (target.owner==player && (playerTargeted || turn<=2)) return;
-                const int score=dispatch(from)-target.troops-65*target.fort+
-                    (target.owner>=3?175:45)+25*sites[to].yield+
-                    ((to*19+turn*31+side*17)%93);
+                const bool playerCity=target.owner==player;
+                if (playerCity && (playerTargeted || turn<=policy.graceSeasons)) return;
+                const int force=dispatch(from);
+                const int reserve=origin.troops-force;
+                if (target.troops>force*2 || reserve<policy.minimumReserve) return;
+                if (difficulty==Difficulty::veteran && !playerCity &&
+                    force<target.troops+70*target.fort+45) return;
+                const int risk=std::max(0,pressure[from]-reserve-55*origin.fort);
+                const int center=target.owner<3 && story().base[target.owner]==to?75:0;
+                const int retaliation=playerCity && difficulty==Difficulty::veteran?105:0;
+                const int score=force-target.troops-65*target.fort+
+                    (target.owner>=3?170:45)+27*sites[to].yield+center+retaliation-
+                    risk/3+((to*19+turn*31+side*17)%41);
                 if (score>best) {best=score;orders[side]={from,to};}
             };
             for (const auto& r:roads) {consider(r.from,r.to);consider(r.to,r.from);}
             if (orders[side]) {
                 targeted[orders[side].to]=true;
                 if (own(orders[side].to)) playerTargeted=true;
+            }
+        }
+    }
+    void reinforceEnemyBorders(const std::array<Order,ownerCount>& incoming) {
+        const int limit=rules().transferLimit;
+        if (!limit) return;
+        const auto pressure=borderPressure();
+        std::array<bool,cityCount> committed{};
+        for (const auto& order:incoming) if (order) {
+            committed[order.from]=true;
+            committed[order.to]=true;
+        }
+        for (int side=0;side<3;++side) {
+            if (side==player) continue;
+            int best=0,amount=0;
+            Order transfer;
+            auto consider=[&](int from,int to) {
+                if (cities[from].owner!=side || cities[to].owner!=side || committed[from] || committed[to]) return;
+                const int need=pressure[to]+130-cities[to].troops-40*cities[to].fort;
+                const int surplus=cities[from].troops-std::max(330,pressure[from]+150);
+                const int troops=std::min({limit,need,surplus,armyLimit-cities[to].troops});
+                const int score=troops+need/4;
+                if (troops>=75 && pressure[to]>0 && score>best) {
+                    best=score;
+                    amount=troops;
+                    transfer={from,to};
+                }
+            };
+            for (const auto& road:roads) {
+                consider(road.from,road.to);
+                consider(road.to,road.from);
+            }
+            if (transfer) {
+                cities[transfer.from].troops-=amount;
+                cities[transfer.to].troops+=amount;
             }
         }
     }
@@ -492,15 +603,8 @@ struct Campaign {
         for (auto& unit:columns) if (unit && unit.eta) --unit.eta;
         for (int i=0;i<cityCount;++i) {
             auto& c=cities[i];
-            const int mayor=governor(i);
-            if (own(i)) {
-                const int civicBonus=hasSpecialty(mayor,Specialty::envoy)?6:0;
-                c.order=std::min(100,c.order+(mayor>=0?8:3)+civicBonus+(plan==SeasonPlan::relief?reliefOrder:0));
-                c.troops=std::min(armyLimit,c.troops+25+c.order/7+(mayor>=0?18:0));
-            } else {
-                const int restore=(c.owner<3?63:33)+c.fields*13;
-                c.troops=std::min(armyLimit,c.troops+restore);
-            }
+            if (own(i)) c.order=orderAfterSeason(i,plan);
+            c.troops=troopsAfterSeason(i,c.order);
         }
         int approaching=-1;
         for (int side=0;side<ownerCount;++side) {
@@ -508,7 +612,10 @@ struct Campaign {
             if (!validOrder(o,side)) continue;
             auto& a=cities[o.from];
             auto& d=cities[o.to];
-            if (own(o.to)) {defense=o;approaching=side;continue;}
+            if (own(o.to)) {
+                if (!defense) {defense=o;approaching=side;}
+                continue;
+            }
             const int n=dispatch(o.from);
             if (n>d.troops+d.fort*70) {
                 a.troops-=n;
@@ -518,6 +625,7 @@ struct Campaign {
                 d.troops=std::max(garrison,d.troops-n/3);
             }
         }
+        reinforceEnemyBorders(incoming);
         orders={};
         if (defense && !validOrder(defense,approaching)) defense={};
         for (int& remaining:truce) if (remaining>0) --remaining;

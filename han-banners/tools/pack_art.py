@@ -7,6 +7,7 @@ from pathlib import Path
 
 from PIL import Image, ImageDraw, ImageEnhance, ImageFilter, ImageFont, ImageOps
 from fontTools.ttLib import TTFont
+from ui_art import lacquer_panel, progress_strips
 
 ROOT = Path(__file__).resolve().parents[1]
 FONT_ROOT = ROOT / "tools" / "fonts"
@@ -99,7 +100,7 @@ for row,covered in enumerate([*projection,0]):
         start=None
 if len(runs)!=3:
     raise ValueError("Expected three independent HUD bar strips")
-bars_page=new_page(192,36)
+bars_page=new_page(192,48)
 hud_bars=[]
 for i,(top,bottom) in enumerate(runs):
     strip=bar_source.crop((0,top,bar_source.width,bottom))
@@ -147,7 +148,7 @@ city_courtyard=whole(scaled(image("city-courtyard")))
 
 # These UI tiles travel together so the battle scene uses one texture slot for
 # its buttons, icons and action states.
-ui_page=new_page(144,236)
+ui_page=new_page(216,236)
 
 
 def pack_icons(sheet, columns, rows, top, cell_size):
@@ -303,6 +304,11 @@ for enemy in range(2):
             strip.append((march_page,x0,y0,32,28))
         marchers[enemy].append(strip)
 
+compact_map_tiles = [
+    whole(terrain.crop((x,y,x+256,y+256)).resize((224,224),Image.Resampling.LANCZOS))
+    for y in (0,256) for x in (0,256)
+]
+
 source = "".join((ROOT / filename).read_text()
                  for filename in ("main.cpp","expansion_ui.inc","campaign.hpp","world.hpp",
                                   "chapters.hpp","history.hpp","battle.hpp","save.hpp"))
@@ -346,11 +352,64 @@ for i,char in enumerate(chars):
     pages[glyph_slot].paste(solid,(x,y))
     glyphs.append((advance,(glyph_slot,x,y,advance,font_px)))
 
-color_pages=pages[:first_font_page]
+compact_map_pages={tile[0] for tile in compact_map_tiles}
+color_pages=[page for i,page in enumerate(pages[:first_font_page]) if i not in compact_map_pages]
 sample = Image.new("RGB", (256*3, 256*((len(color_pages)+2)//3)), (23,25,23))
 for i, page in enumerate(color_pages):
     sample.paste(page, (256*(i%3), 256*(i//3)), page.getchannel("A"))
 palette_source = sample.quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+# Add the HUD assets after sampling the existing palette to keep the other art intact.
+for i,tone in enumerate((
+        ("#33221a","#4e3324","#38251d"),
+        ("#1d322d","#28413a","#223631"),
+        ("#392721","#50302b","#402620"))):
+    pages[frame_page].paste(lacquer_panel(tone),(0,i*38))
+hud_bars.clear()
+track,*fills=progress_strips()
+for i,strip in enumerate((track,*fills[:-1])):
+    pages[bars_page].paste(strip,(0,i*12))
+    hud_bars.append((bars_page,0,i*12,192,12))
+march_bars=[]
+for i,strip in enumerate((track,fills[3],fills[1])):
+    # The map already binds this atlas. Preserve both caps and collapse the flat middle.
+    x,y=144,98+i*12
+    for a,b,offset in ((0,8,0),(88,104,8),(184,192,24)):
+        pages[ui_page].paste(strip.crop((a,0,b,12)),(x+offset,y))
+    march_bars.append((ui_page,x,y,32,12))
+command_sheet=image("command-icons-v2")
+
+
+def generated_icon(index, x, y, w, h):
+    icon=crop_cell(command_sheet,index%4,index//4,4,4)
+    icon.thumbnail((w-2,h-2),Image.Resampling.LANCZOS)
+    pages[ui_page].paste(icon,(x+(w-icon.width)//2,y+(h-icon.height)//2))
+    return (ui_page,x,y,w,h)
+
+
+for i in range(12):
+    command_icons.append(generated_icon(i,144+i%3*24,i//3*24,24,24))
+for index,prop in ((12,1),(14,0),(15,2)):
+    _,x,y,w,h=map_props[prop]
+    pages[ui_page].paste((0,0,0,0),(x,y,x+w,y+h))
+    map_props[prop]=generated_icon(index,x,y,w,h)
+map_props.append(generated_icon(13,180,108,36,27))
+
+# Finer editions share the same palette and use the renderer's 256 px tiles.
+first_detailed_page=len(pages)
+detailed_backdrops=[]
+for compact,name,w,h,cols,rows in (
+        (cover_wide,"cover",768,432,3,2),
+        (cover_square,"square-cover",512,512,2,2),
+        (war_hall,"war-hall",448,252,2,1),
+        (city_courtyard,"city-courtyard",512,288,2,2),
+        *((tile,name,512,272,2,2) for tile,name in zip(
+            (*battlefields,siege),("battle","hill-battle","river-battle","siege")))):
+    back=image(name).resize((w,h),Image.Resampling.LANCZOS)
+    tw,th=w//cols,h//rows
+    detailed_backdrops.append((compact[0],len(pages),cols,rows,tw,th))
+    for y in range(0,h,th):
+        for x in range(0,w,tw):
+            whole(back.crop((x,y,x+tw,y+th)))
 palette = palette_source.getpalette()[:765]
 colors = [0] + [((r>>3)<<11) | ((g>>2)<<5) | (b>>3)
                 for r,g,b in zip(palette[0::3], palette[1::3], palette[2::3])]
@@ -361,7 +420,7 @@ spec = []
 for i, page in enumerate(pages):
     data = page.convert("RGB").quantize(palette=palette_source, dither=Image.Dither.NONE).tobytes()
     alpha = page.getchannel("A").tobytes()
-    if i >= first_font_page:
+    if first_font_page <= i < first_detailed_page:
         packed = alpha
     else:
         packed = bytes(p + 1 if a >= 105 else 0 for p, a in zip(data, alpha))
@@ -388,13 +447,18 @@ lines = [
     f"inline constexpr int fallbackGlyph = {chars.index('?')};",
     f"inline constexpr int pageCount = {len(pages)};",
     f"inline constexpr int firstFontPage = {first_font_page};",
+    f"inline constexpr int firstDetailedPage = {first_detailed_page};",
+    "struct Backdrop {uint8_t compact,first,columns,rows; uint16_t w,h;};",
+    "inline constexpr Backdrop detailedBackdrops[] = {" +
+    ",".join("{" + ",".join(map(str,tile)) + "}" for tile in detailed_backdrops) + "};",
     "inline constexpr std::array<uint16_t,256> palette = {" + ",".join(map(str,colors)) + "};",
 ]
 for name,t in (("coverWide",cover_wide),("coverSquare",cover_square),("logo",logo),("siege",siege),
                ("warHall",war_hall),("cityCourtyard",city_courtyard)):
     lines.append(f"inline constexpr Tile {name} = {tile_initializer(t)};")
-for name,tiles in (("mapTiles",map_tiles),("battlefields",battlefields),("portraits",portraits),("equipment",equipment),
-                   ("outcomes",outcomes),("hudBars",hud_bars),("commandIcons",command_icons),
+for name,tiles in (("mapTiles",map_tiles),("compactMapTiles",compact_map_tiles),("battlefields",battlefields),
+                   ("portraits",portraits),("equipment",equipment),
+                   ("outcomes",outcomes),("hudBars",hud_bars),("marchBars",march_bars),("commandIcons",command_icons),
                    ("mapProps",map_props),("plaques",plaques),("battlePanels",battle_panels),
                    ("windows",windows)):
     lines.append(f"inline constexpr Tile {name}[{len(tiles)}] = {{" +

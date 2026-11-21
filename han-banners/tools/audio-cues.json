@@ -1,0 +1,130 @@
+{
+  "generator": "Existing models executed on the remote inference workstation. Original prompts and dialogue with synthetic voices.",
+  "comfyui_commit": "46493d824fd7eac25a741e505159e4c9e0ef0ebd",
+  "model_sources": {
+    "music": {
+      "model": "ACE-Step 1.5 Turbo",
+      "source": "https://huggingface.co/ACE-Step/Ace-Step1.5",
+      "license": "MIT",
+      "steps": 8
+    },
+    "effects": {
+      "model": "Stable Audio 3 Small SFX",
+      "source": "https://huggingface.co/stabilityai/stable-audio-3-small-sfx",
+      "license": "Stability AI Community License",
+      "steps": 8
+    },
+    "voices": {
+      "model": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "source": "https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "license": "Apache-2.0",
+      "language": "Chinese",
+      "sampling": {
+        "temperature": 0.76,
+        "top_p": 0.9,
+        "top_k": 36
+      }
+    }
+  },
+  "processing": {
+    "sample_rate": 16000,
+    "channels": 1,
+    "music": "Loop length in bars, one-bar raised-cosine crossfade, Ogg Vorbis",
+    "one_shots": "Trimmed to active onset, high-pass/low-pass filtered, leveled with short fades, S16LE raw PCM"
+  },
+  "music": {
+    "title": {
+      "bpm": 80,
+      "seed": 1936157,
+      "duration": 46,
+      "bars": 8,
+      "start": 2.0,
+      "prompt": "A full-length uninterrupted instrumental historic Chinese title theme with a repeating four-bar melody, 80 BPM in 4/4. Low bamboo xiao and a warm steady guzheng arpeggio, guqin answering the melody, light Chinese barrel drum and wooden percussion giving a regular measured pulse, faint sustained erhu. Original composition in D pentatonic, dignified and heroic, suitable for a late Han grand strategy game, immersive continuous medium arrangement with a strong memorable main motif. Continuous middle of the recording from first to last bar, no extended pauses, only instruments, wordless, no synthesizers."
+    },
+    "atlas": {
+      "bpm": 88,
+      "seed": 1936148,
+      "duration": 57,
+      "bars": 12,
+      "start": 1.75,
+      "prompt": "Loopable in-game strategic map music for an original late Han China campaign. Relaxed steady 88 BPM in 4/4. Delicate guqin and guzheng plucks in a spare D pentatonic melody, breathy dizi replies, occasional soft frame drum and muted woodblock, light sustained strings very far back. Hills, river ferries and campaign planning at dawn. Restrained and absorbable, regular pulses and a flowing repeating development, instrumental only, no vocals, no chants, no dialogue, no environmental sounds, no modern instruments, no long intro or ending."
+    },
+    "battle": {
+      "bpm": 120,
+      "seed": 1936181,
+      "duration": 48,
+      "bars": 16,
+      "start": 6,
+      "prompt": "Active battlefield underscore for an original late Han Three Kingdoms strategy game, 120 BPM in 4/4 with a steady insistent beat. Deep Chinese tanggu and paigu war drums in a rolling pattern with measured accents, tight staccato plucked pipa and a brief bright dizi call high above the drum rhythm. D minor pentatonic, brave and tense with clean low end and an audible rhythmic pocket for spoken commands and sword hits. Continuous mid-battle loop arrangement, no voices, no shouts, no sound effects, no electric guitar, no synth, no giant intro or finale."
+    }
+  },
+  "effects": {
+    "confirm": {
+      "duration": 0.23,
+      "seed": 1936261,
+      "prompt": "TrackType: SFX. Single satisfying short dry clack of a small heavy lacquered wooden command tally placed on a desk, followed by a tiny dull bronze ring. Clear defined transient, near field, silent background, no music or voice."
+    },
+    "march": {
+      "duration": 0.85,
+      "seed": 1936262,
+      "prompt": "TrackType: SFX. Isolated two or three purposeful synchronized boot steps of several soldiers on dry grit and light leather armor creaks. Tight short one-shot ordered troop movement, separated footsteps and quick tail. No crowd, speech, drum or music."
+    },
+    "formation": {
+      "duration": 0.45,
+      "seed": 1936263,
+      "prompt": "TrackType: SFX. Brief close one-shot of a small ancient formation snapping several wooden spear shafts and leather shields into position, two tight knocks with a dry cloth rustle. No voices, no music, no environmental layer."
+    },
+    "clash": {
+      "duration": 0.5,
+      "seed": 1936264,
+      "prompt": "TrackType: SFX. A single compact iron sword striking a riveted bronze-rimmed shield on an ancient battlefield, very crisp metallic attack with a short dull ring and wood thud, isolated dry sound. No blood, voice, crowd, music, extra stabs or rumble."
+    },
+    "arrow": {
+      "duration": 0.55,
+      "seed": 1936265,
+      "prompt": "TrackType: SFX. Short volley sound of several recurved wooden bowstrings snapping with a light pointed arrow whoosh, closely timed, clean sparse sound. No impacts or gunshots, no speech, crowd, wind ambience or music."
+    },
+    "drum": {
+      "duration": 0.78,
+      "seed": 1936266,
+      "prompt": "TrackType: SFX. Two tight deep ancient Chinese barrel war drum strokes, second stronger, woody drumstick strike and warm resonant skin tail. Short tactical command accent, isolated, no words, singing or background music."
+    },
+    "victory": {
+      "duration": 1.35,
+      "seed": 1936267,
+      "prompt": "TrackType: SFX. Very short two-note rising bronze bell signal and one resonant Chinese drum accent, noble and conclusive victory notification for historical China. Brief clean acoustic ringing tail, isolated cue, no voices or layered song."
+    },
+    "defeat": {
+      "duration": 1.35,
+      "seed": 1936268,
+      "prompt": "TrackType: SFX. A muted deep wooden war drum hit and one gently falling hollow bronze bell tone, quiet restrained retreat notification in an ancient Chinese strategy game. Very short dark tender tail, no voices or song."
+    }
+  },
+  "voices": {
+    "instruct": "A fictional late Han Chinese field commander, native standard Mandarin, male around 38, a distinctive grained, firm baritone. Record a single natural disciplined battlefield command: sharply projected from the chest, quite urgent, punch the important syllables, strong and clipped, no lecturing, no announcer cadence. Close clean studio dialogue, dry and isolated, no music, no environmental sound, no echo. Speak exactly the given Chinese characters once.",
+    "start_seed": 1936520,
+    "lines": {
+      "charge": "随我冲锋！",
+      "hold": "稳住阵脚！",
+      "flank": "左右夹击！",
+      "skill": "接招吧！",
+      "break": "破阵！",
+      "rally": "全军听令！",
+      "challenge": "来将接招！",
+      "thrust": "接我一枪！",
+      "parry": "这一招我挡住了！",
+      "feint": "中计了！",
+      "won": "大获全胜！",
+      "lost": "收兵，撤！"
+    },
+    "line_seeds": {
+      "flank": 1936631,
+      "skill": 1936632,
+      "rally": 1936633,
+      "thrust": 1936634,
+      "parry": 1936655,
+      "won": 1936636
+    },
+    "retake_instruct": "A firm adult male Chinese officer in a historical drama, native standard Mandarin. He speaks the provided words verbatim once in a short projected command. Strong and clear like a squad leader, natural medium tempo, articulate every syllable. End promptly. Dry studio vocal, spoken words only, no ambience or music."
+  }
+}

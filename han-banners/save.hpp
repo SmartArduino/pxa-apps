@@ -6,25 +6,31 @@ namespace han {
 
 constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+noGear+
     3*talentFirst+4*columnCount+6+1;
-static_assert(cityCount>expandedCityCount && cityCount<=48);
+static_assert(seventhCityCount==48 && cityCount>seventhCityCount && cityCount<64);
 constexpr size_t fourthSaveWords=thirdSaveWords+3*(expandedCityCount-oldCityCount)+1;
-constexpr size_t fifthSaveWords=thirdSaveWords+3*(cityCount-oldCityCount)+1;
+constexpr size_t fifthSaveWords=thirdSaveWords+3*(seventhCityCount-oldCityCount)+1;
 constexpr size_t sixthSaveWords=fifthSaveWords+1;
-constexpr size_t saveWords=sixthSaveWords+2+3*talentCount;
+constexpr size_t seventhSaveWords=sixthSaveWords+2+3*talentCount;
+constexpr size_t eighthSaveWords=seventhSaveWords+1+3*(cityCount-seventhCityCount);
+constexpr size_t saveWords=eighthSaveWords+1;
 using Save=std::array<std::byte,saveWords*2>;
+using EighthSave=std::array<std::byte,eighthSaveWords*2>;
+using SeventhSave=std::array<std::byte,seventhSaveWords*2>;
 using SixthSave=std::array<std::byte,sixthSaveWords*2>;
 using FifthSave=std::array<std::byte,fifthSaveWords*2>;
 using FourthSave=std::array<std::byte,fourthSaveWords*2>;
 using ThirdSave=std::array<std::byte,thirdSaveWords*2>;
 using SecondSave=std::array<std::byte,194>;
 using LegacySave=std::array<std::byte,78>;
-constexpr const char* saveKey="campaign-v7";
+constexpr const char* saveKey="campaign-v9";
 struct SaveSlot {
     const char* key;
     size_t size;
 };
 inline constexpr SaveSlot saveSlots[] = {
     {saveKey,Save{}.size()},
+    {"campaign-v8",EighthSave{}.size()},
+    {"campaign-v7",SeventhSave{}.size()},
     {"campaign-v6",SixthSave{}.size()},
     {"campaign-v5",FifthSave{}.size()},
     {"campaign-v4",FourthSave{}.size()},
@@ -67,11 +73,11 @@ inline Save encode(const Campaign& c) {
         put(g.fatigue|((g.station+1)<<8));
         put(g.gear);
     };
-    put(0x4842);put(7);put(c.player);put(c.turn);put(c.gold);put(c.grain);
+    put(0x4842);put(9);put(c.player);put(c.turn);put(c.gold);put(c.grain);
     put(c.actions);put(c.won+1);put(c.commander);put(c.recruited);put(c.tours);
     for (int n:c.truce) put(n);
     put(c.chapter);put(c.objectivePaid);
-    for (int word=0;word<3;++word) put((c.surveyed>>(16*word))&65535u);
+    for (int word=0;word<4;++word) put((c.surveyed>>(16*word))&65535u);
     for (const auto& city:c.cities) {
         put(city.owner|(city.fields<<4)|(city.fort<<8));
         put(city.troops);
@@ -92,6 +98,7 @@ inline Save encode(const Campaign& c) {
     put(c.talentSeen);
     put(c.talentHired);
     for (int slot=talentFirst;slot<commanderSlots;++slot) veteran(c.generals[slot]);
+    put(int(c.difficulty));
     put(checksum(bytes,i));
     return bytes;
 }
@@ -144,6 +151,7 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     loaded.surveyed=uint64_t(r.get());
     loaded.surveyed|=uint64_t(r.get())<<16;
     if constexpr (Version>=4) loaded.surveyed|=uint64_t(r.get())<<32;
+    if constexpr (Version>=8) loaded.surveyed|=uint64_t(r.get())<<48;
     if ((loaded.surveyed>>Count) || !readMap(r,loaded,Count))
         return false;
     for (int& count:loaded.stock) {count=r.get();if (count>33) return false;}
@@ -183,6 +191,11 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
         for (int slot=talentFirst;slot<commanderSlots;++slot)
             if (!readVeteran(loaded.generals[slot])) return false;
     }
+    if constexpr (Version>=9) {
+        const int difficulty=r.get();
+        if (difficulty>int(Difficulty::veteran)) return false;
+        loaded.difficulty=Difficulty(difficulty);
+    }
     auto validCaptive=[&](Captive p,bool visiting) {
         if (!p) return p.side==-1 && p.officer==-1 && p.city==-1;
         return p.side<3 && p.side!=loaded.player && p.officer>=0 && p.officer<officerCount &&
@@ -208,13 +221,19 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     return true;
 }
 inline bool decode(const Save& bytes,Campaign& campaign) {
-    return decodeCampaign<7,cityCount>(bytes,campaign);
+    return decodeCampaign<9,cityCount>(bytes,campaign);
+}
+inline bool migrate(const EighthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<8,cityCount>(bytes,campaign);
+}
+inline bool migrate(const SeventhSave& bytes,Campaign& campaign) {
+    return decodeCampaign<7,seventhCityCount>(bytes,campaign);
 }
 inline bool migrate(const SixthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<6,cityCount>(bytes,campaign);
+    return decodeCampaign<6,seventhCityCount>(bytes,campaign);
 }
 inline bool migrate(const FifthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<5,cityCount>(bytes,campaign);
+    return decodeCampaign<5,seventhCityCount>(bytes,campaign);
 }
 inline bool migrate(const FourthSave& bytes,Campaign& campaign) {
     return decodeCampaign<4,expandedCityCount>(bytes,campaign);
@@ -263,6 +282,8 @@ inline bool restoreSave(const Save& data,size_t size,Campaign& campaign) {
     };
     switch (size) {
         case Save{}.size():return decode(data,campaign);
+        case EighthSave{}.size():return older(EighthSave{});
+        case SeventhSave{}.size():return older(SeventhSave{});
         case SixthSave{}.size():return older(SixthSave{});
         case FifthSave{}.size():return older(FifthSave{});
         case FourthSave{}.size():return older(FourthSave{});

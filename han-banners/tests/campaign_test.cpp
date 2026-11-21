@@ -5,22 +5,25 @@
 
 using namespace han;
 
-static Formation counter(Formation f) {
-    return Formation((f+1)%3);
+static BattlePlan planFor(const Campaign& c,Order order,int column) {
+    const int enemy=c.cities[column<0?order.from:order.to].owner;
+    const Officer* lead=enemy<3?&officers[enemy][c.enemyOfficer(enemy,order.to)]:nullptr;
+    const auto troop=counterTroop(Battle::enemyUnit(order.to,enemy,lead));
+    return {troop,wedge,longbow};
 }
 
 static Settlement resolve(Campaign& campaign, Order order,int column) {
     Battle battle;
     const int guard=campaign.fieldLeader(campaign.commander,order.to);
-    battle.start(campaign,order,column,spear,guard);
+    battle.start(campaign,order,column,planFor(campaign,order,column),guard);
     for (int i=0;i<1100 && !battle.result;++i) {
         if (battle.duel.ready()) {
             assert(battle.duelOrder(DuelMove((battle.duelIntent()+1)%3)));
         } else if (!battle.duel.visible()) {
-            battle.order(counter(battle.intent));
             if (battle.morale[1]<62) battle.rally();
-            if (battle.round==1 && battle.morale[1]>42 && battle.signal>=Battle::duelCost)
+            if (battle.round==1 && battle.morale[1]>42 && battle.mayDuel())
                 battle.challenge();
+            else if (battle.signal>58) battle.strike();
         }
         battle.step();
     }
@@ -37,11 +40,11 @@ static void checkSave(const Campaign& c) {
     assert(!decode(data,restored));
 }
 
-static Campaign play(int side,int chapter) {
+static Campaign play(int side,int chapter,Difficulty difficulty=Difficulty::standard) {
     Campaign c;
-    c.start(side,chapter);
+    c.start(side,chapter,difficulty);
     assert(c.own(c.capital()) && c.year()==chapters[chapter].year);
-    for (int attempt=0;!c.won && attempt<440;++attempt) {
+    for (int attempt=0;!c.won && attempt<24*lastTurn;++attempt) {
         if (c.prisoner) {
             if (c.mayAdmit()) assert(c.admit());
             else c.disposeCaptive(true);
@@ -132,17 +135,20 @@ static void checkMigration() {
     current.surveyed=uint64_t(1)<<31;
     auto newest=encode(current);
     ThirdSave third{};
-    constexpr size_t header=18*2;
-    constexpr size_t legacyCities=oldCityCount*6;
-    constexpr size_t preRegionalEnd=FifthSave{}.size()-2;
-    std::copy_n(newest.begin(),header,third.begin());
-    third[2]=std::byte{3};
-    std::copy_n(newest.begin()+header+2,legacyCities,third.begin()+header);
-    std::copy(newest.begin()+header+2+cityCount*6,newest.begin()+preRegionalEnd,
-              third.begin()+header+legacyCities);
-    const auto sum=checksum(third,third.size()-2);
-    third[third.size()-2]=std::byte(sum&255);
-    third.back()=std::byte(sum>>8);
+    const auto writeLegacy=[&](auto& older,int version,int cities) {
+        constexpr size_t baseHeader=18*2;
+        constexpr size_t newHeader=baseHeader+4;
+        const size_t header=baseHeader+(version>=4?2:0);
+        std::copy_n(newest.begin(),header,older.begin());
+        older[2]=std::byte(version);
+        std::copy_n(newest.begin()+newHeader,cities*6,older.begin()+header);
+        const auto body=header+cities*6;
+        std::copy_n(newest.begin()+newHeader+cityCount*6,older.size()-body-2,older.begin()+body);
+        const auto sum=checksum(older,older.size()-2);
+        older[older.size()-2]=std::byte(sum&255);
+        older.back()=std::byte(sum>>8);
+    };
+    writeLegacy(third,3,oldCityCount);
     assert(migrate(third,c) && c.chapter==2 && c.own(32) && c.cities[37].owner==7 &&
            c.surveyed==(uint64_t(1)<<31));
     assert(c.canSearch(32,0));
@@ -154,44 +160,38 @@ static void checkMigration() {
     current.cities[37].troops=432;
     newest=encode(current);
     FourthSave fourth{};
-    constexpr size_t expandedHeader=header+2;
-    std::copy_n(newest.begin(),expandedHeader+expandedCityCount*6,fourth.begin());
-    fourth[2]=std::byte{4};
-    std::copy(newest.begin()+expandedHeader+cityCount*6,newest.begin()+preRegionalEnd,
-              fourth.begin()+expandedHeader+expandedCityCount*6);
-    const auto fourthSum=checksum(fourth,fourth.size()-2);
-    fourth[fourth.size()-2]=std::byte(fourthSum&255);
-    fourth.back()=std::byte(fourthSum>>8);
+    writeLegacy(fourth,4,expandedCityCount);
     assert(migrate(fourth,c) && c.chapter==2 && c.cities[37].troops==432 &&
            c.surveyed==(uint64_t(1)<<37) && c.cities[40].owner==7 && c.own(47));
     c.surveyed|=uint64_t(1)<<47;
     checkSave(c);
 
+    c.regionalRewards=7;
     newest=encode(c);
     FifthSave fifth{};
-    std::copy_n(newest.begin(),preRegionalEnd,fifth.begin());
-    fifth[2]=std::byte{5};
-    const auto fifthSum=checksum(fifth,fifth.size()-2);
-    fifth[fifth.size()-2]=std::byte(fifthSum&255);
-    fifth.back()=std::byte(fifthSum>>8);
-    c.regionalRewards=7;
+    writeLegacy(fifth,5,seventhCityCount);
     Save stored{};
     std::copy(fifth.begin(),fifth.end(),stored.begin());
     assert(!restoreSave(stored,fifth.size()-1,c));
     assert(restoreSave(stored,fifth.size(),c) && c.regionalRewards==0 && c.own(47) && c.cities[37].troops==432 &&
            c.surveyed==((uint64_t(1)<<37)|(uint64_t(1)<<47)));
 
-    c.regionalRewards=7;
-    newest=encode(c);
     SixthSave sixth{};
-    std::copy_n(newest.begin(),sixth.size()-2,sixth.begin());
-    sixth[2]=std::byte{6};
-    const auto sixthSum=checksum(sixth,sixth.size()-2);
-    sixth[sixth.size()-2]=std::byte(sixthSum&255);
-    sixth.back()=std::byte(sixthSum>>8);
+    writeLegacy(sixth,6,seventhCityCount);
     std::copy(sixth.begin(),sixth.end(),stored.begin());
     assert(restoreSave(stored,sixth.size(),c) && c.regionalRewards==7 && c.talentHired==0 &&
            c.own(47) && c.cities[37].troops==432);
+    SeventhSave seventh{};
+    writeLegacy(seventh,7,seventhCityCount);
+    std::copy(seventh.begin(),seventh.end(),stored.begin());
+    assert(restoreSave(stored,seventh.size(),c) && c.own(47) && c.cities[37].troops==432);
+    for (int i=seventhCityCount;i<cityCount;++i) {
+        const auto original=Campaign::initialCity(i,c.chapter);
+        assert(c.cities[i].owner==original.owner && c.cities[i].troops==original.troops);
+        assert(std::any_of(std::begin(roads),std::end(roads),[&](auto& r){return r.from==i||r.to==i;}));
+    }
+    c.surveyed|=uint64_t(1)<<(cityCount-1);
+    checkSave(c);
 }
 
 static void checkSeasonAndRegionalGoals() {
@@ -233,7 +233,7 @@ static void checkSeasonAndRegionalGoals() {
     auto saved=encode(c);
     Campaign restored;
     assert(decode(saved,restored) && restored.regionalPaid(id) && !restored.claimRegional(id));
-    saved[SixthSave{}.size()-3]=std::byte{1};
+    saved[SixthSave{}.size()+6*(cityCount-seventhCityCount)-1]=std::byte{1};
     const auto sum=checksum(saved,saved.size()-2);
     saved[saved.size()-2]=std::byte(sum&255);
     saved.back()=std::byte(sum>>8);
@@ -309,7 +309,7 @@ static void checkBattleAndCaptive() {
     const int id=c.send(10,7,legion,0,false);
     assert(id>=0);
     Battle b;
-    b.start(c,c.columns[id].road,id,spear);
+    b.start(c,c.columns[id].road,id,planFor(c,c.columns[id].road,id));
     assert(!b.mayManeuver(flank) && b.direct(hold) && b.maneuverRounds==2);
     for (int i=0;i<=Battle::approach;++i) b.step();
     assert(b.round==1 && b.maneuverRounds==1 && b.challenge());
@@ -321,7 +321,7 @@ static void checkBattleAndCaptive() {
     }
     assert(b.duel.result>0 && b.morale[1]==std::max(0,morale-24));
     for (int i=0;i<650 && !b.result;++i) {
-        b.order(counter(b.intent));
+        b.strike();
         b.rally();
         b.step();
     }
@@ -400,7 +400,7 @@ static void checkSearchAndTalents() {
     assert(column>=0 && !arms.available(talentFirst+3,10));
     checkSave(arms);
     Battle fight;
-    fight.start(arms,arms.columns[column].road,column,horse);
+    fight.start(arms,arms.columns[column].road,column,{horse,square,saber});
     assert(&fight.officer()==&talents[3].officer && fight.signal==64 && fight.rally());
     assert(fight.losses[1]==talents[3].officer.strength+35);
     arms.cities[11].owner=0;
@@ -410,17 +410,265 @@ static void checkSearchAndTalents() {
     checkSave(arms);
 }
 
+static void checkBattleOrders() {
+    Campaign c;
+    c.start(0);
+    const int id=c.send(10,7,legion,0,false);
+    assert(id>=0);
+    Battle b;
+    b.start(c,c.columns[id].road,id,{horse,wedge,saber});
+    assert(!b.mayStrike() && b.moveGeneral(0,true) && !b.moveGeneral(3,true));
+    assert(b.order(wings) && !b.order(wings) && b.plan.troop==horse);
+    while (!b.round) b.step();
+    assert(b.generalHealth<100 && b.moveGeneral(1,false) && !b.mayStrike());
+    assert(b.moveGeneral(1,true));
+    const int before=b.troops[1], signal=b.signal;
+    assert(b.strike() && b.troops[1]<before && b.signal==signal-Battle::strikeCost && !b.strike());
+    assert(b.moveGeneral(1,false) && b.direct(fallBack));
+    const int health=b.generalHealth;
+    while (b.round<2 && !b.result) b.step();
+    assert(b.rankAdvance[0][1]<0 && b.generalHealth>health);
+}
+
+static void checkDifficultyAndAI() {
+    Campaign story;
+    story.start(0,0,Difficulty::story);
+    Campaign ordinary;
+    ordinary.start(0);
+    assert(story.gold>ordinary.gold && story.grain>ordinary.grain);
+    auto localRecruitment=ordinary;
+    localRecruitment.cities[42]={7,1670,1,1};
+    localRecruitment.orders={};
+    localRecruitment.advance();
+    assert(localRecruitment.cities[42].troops==1680);
+    localRecruitment.cities[42].troops=1900;
+    localRecruitment.orders={};
+    localRecruitment.advance();
+    assert(localRecruitment.cities[42].troops==1900);
+    for (const auto difficulty:{Difficulty::story,Difficulty::standard,Difficulty::veteran}) {
+        Campaign state;
+        state.start(0,0,difficulty);
+        for (auto& city:state.cities) city={1,120,1,1};
+        state.cities[10]={0,180,1,1};
+        state.cities[43]={1,2000,1,1};
+        state.turn=state.rules().graceSeasons;
+        state.makeOrders();
+        assert(!state.orders[1]);
+        ++state.turn;
+        state.makeOrders();
+        assert(state.orders[1].from==43 && state.orders[1].to==10);
+        state.truce[1]=1;
+        state.makeOrders();
+        assert(!state.orders[1]);
+
+        state.truce[1]=0;
+        state.cities[10].troops=1900;
+        state.cities[43].troops=250;
+        state.cities[9].troops=2050;
+        const int transfer=state.rules().transferLimit;
+        state.reinforceEnemyBorders({});
+        assert(state.cities[43].troops==250+transfer);
+        assert(state.cities[9].troops==2050-transfer);
+        std::array<Order,ownerCount> pending{};
+        pending[1]={9,10};
+        state.reinforceEnemyBorders(pending);
+        assert(state.cities[9].troops==2050-transfer && state.cities[43].troops==250+transfer);
+    }
+
+    Campaign veteran;
+    veteran.start(0,0,Difficulty::veteran);
+    checkSave(veteran);
+    auto stored=encode(veteran);
+    EighthSave previous{};
+    std::copy_n(stored.begin(),previous.size()-2,previous.begin());
+    previous[2]=std::byte{8};
+    const auto sum=checksum(previous,previous.size()-2);
+    previous[previous.size()-2]=std::byte(sum&255);
+    previous.back()=std::byte(sum>>8);
+    assert(migrate(previous,ordinary) && ordinary.difficulty==Difficulty::standard);
+    assert(ordinary.cities[10].troops==veteran.cities[10].troops && ordinary.grain==veteran.grain);
+
+    const int column=veteran.send(10,43,legion,0,false);
+    assert(column>=0);
+    Battle b;
+    b.start(veteran,veteran.columns[column].road,column,{bow,square,longbow});
+    assert(b.enemyFormation==square && b.difficulty==Difficulty::veteran);
+    b.round=1;
+    b.losses[1]=180;
+    b.losses[0]=60;
+    b.planEnemyOrder();
+    assert(b.enemyManeuver==hold && !b.enemySkillQueued);
+    b.round=3;
+    b.enemySignal=70;
+    b.planEnemyOrder();
+    assert(b.enemySkillQueued && b.enemySignal<70);
+    b.ticks=Battle::approach+3*Battle::period-1;
+    b.step();
+    assert(b.enemySkillUsed && b.enemySkillTicks>0 && !b.enemySkillQueued);
+    b.round=9;
+    b.enemySignal=100;
+    b.planEnemyOrder();
+    assert(!b.enemySkillQueued);
+}
+
+static void checkScoutingAndWithdrawal() {
+    Campaign frontier;
+    frontier.start(0,0,Difficulty::veteran);
+    frontier.turn=3;
+    frontier.cities[10].troops=650;
+    frontier.cities[10].order=48;
+    frontier.cities[43].troops=1100;
+    frontier.orders={};
+    frontier.orders[2]={43,10};
+    const auto normal=frontier.forecastAttack(SeasonPlan::regular);
+    const auto relief=frontier.forecastAttack(SeasonPlan::relief);
+    assert(relief.road.from==43 && relief.road.to==10);
+    assert(relief.attackers==normal.attackers && relief.defenders>normal.defenders);
+    frontier.truce[2]=1;
+    assert(!frontier.forecastAttack(SeasonPlan::regular).road);
+    frontier.truce[2]=0;
+    frontier.advance(SeasonPlan::relief);
+    assert(frontier.defense.from==43 && frontier.defense.to==10);
+    Battle defense;
+    defense.start(frontier,frontier.defense,-1,{bow,square,longbow},0);
+    assert(defense.initial[0]==relief.defenders && defense.initial[1]==relief.attackers);
+    assert(defense.enemyRetreatCity==43);
+
+    auto lastExchange=[](Battle& battle) {
+        battle.round=4;
+        battle.troops[1]=280;
+        battle.formRanks(1);
+        battle.morale[1]=35;
+        battle.planEnemyOrder();
+        assert(battle.enemyWithdrawalQueued && battle.enemyManeuver==fallBack);
+        battle.ticks=Battle::approach+4*Battle::period-1;
+        battle.step();
+        assert(battle.enemyWithdrew && battle.result>0 && battle.troops[1]>0);
+    };
+    lastExchange(defense);
+    const int attackingCity=frontier.cities[43].troops;
+    const auto defenders=defense.settle(frontier);
+    assert(!frontier.defense && frontier.cities[43].troops==attackingCity-defense.initial[1]+defense.troops[1]);
+    assert(defenders.enemyReturned==defense.troops[1] && !frontier.prisoner);
+
+    Campaign siege;
+    siege.start(0,0,Difficulty::veteran);
+    siege.cities[43].troops=1000;
+    siege.cities[9].troops=340;
+    const int column=siege.send(10,43,legion,0,false);
+    assert(column>=0);
+    Battle attack;
+    attack.start(siege,siege.columns[column].road,column,{bow,square,longbow});
+    assert(attack.enemyRetreatCity==9);
+    auto cutOff=siege;
+    cutOff.cities[9].troops=armyLimit;
+    Battle trapped;
+    trapped.start(cutOff,cutOff.columns[column].road,column,{bow,square,longbow});
+    assert(trapped.enemyRetreatCity<0);
+    trapped.round=4;
+    trapped.troops[1]=280;
+    trapped.formRanks(1);
+    trapped.morale[1]=35;
+    trapped.planEnemyOrder();
+    assert(!trapped.enemyWithdrawalQueued);
+    lastExchange(attack);
+    const auto captured=attack.settle(siege);
+    assert(siege.own(43) && !siege.prisoner && !siege.columns[column]);
+    assert(captured.enemyReturned==attack.troops[1] && siege.cities[9].troops==340+attack.troops[1]);
+    checkSave(siege);
+}
+
+static void checkRankCommands() {
+    Campaign campaign;
+    campaign.start(0);
+    campaign.cities[10].troops=2150;
+    campaign.cities[43].troops=1600;
+    const int column=campaign.send(10,43,legion,0,false);
+    assert(column>=0);
+    Battle normal;
+    normal.start(campaign,campaign.columns[column].road,column,{bow,square,longbow});
+    auto guarded=normal;
+    assert(!guarded.directRank(0,flank));
+    const int before=guarded.signal;
+    assert(guarded.directRank(0,hold) && guarded.signal==before-Battle::rankOrderCost);
+    assert(!guarded.directRank(0,hold) && guarded.stance(0,1)==measured);
+    const auto forecast=guarded.forecastClash();
+    for (int i=0;i<Battle::approach;++i) {normal.step();guarded.step();}
+    assert(guarded.rankLosses[0]==forecast[0] && guarded.rankLosses[1]==forecast[1]);
+    assert(guarded.rankLosses[0][0]<normal.rankLosses[0][0]);
+    assert(guarded.rankLosses[0][1]==normal.rankLosses[0][1]);
+    assert(guarded.rankAdvance[0][0]<0 && guarded.rankAdvance[0][1]==0);
+    assert(guarded.rankOrders[0].rounds==1);
+    for (int i=0;i<Battle::period;++i) guarded.step();
+    assert(guarded.stance(0,0)==measured);
+
+    const auto ranks=guarded.ranks[0];
+    const int donor=guarded.supportSource(0);
+    const int sent=guarded.supportSize(0);
+    const int total=guarded.troops[0];
+    assert(sent>0 && donor==1 && guarded.supportRank(0));
+    assert(guarded.ranks[0][donor]==ranks[donor]-sent &&
+           guarded.ranks[0][0]==ranks[0]+sent && guarded.troops[0]==total);
+    assert(!guarded.supportRank(2));
+    assert(guarded.order(wedge) && guarded.ranks[0]==Battle::deployRanks(total,wedge));
+    assert(guarded.directRank(2,press) && guarded.direct(hold) && guarded.stance(0,2)==hold);
+
+    auto armed=normal;
+    assert(armed.moveGeneral(2,false));
+    const auto enemies=armed.ranks[1];
+    assert(armed.strike());
+    assert(armed.lastStrikeLane==2 && armed.ranks[1][2]<enemies[2]);
+    assert(armed.ranks[1][0]==enemies[0] && armed.ranks[1][1]==enemies[1]);
+    for (int side=0;side<2;++side) {
+        const auto& force=armed.ranks[side];
+        assert(force[0]+force[1]+force[2]==armed.troops[side]);
+    }
+}
+
+static void checkBreakthrough() {
+    Battle battle;
+    battle.ranks[0]={100,100,100};
+    battle.ranks[1]={1,100,100};
+    battle.troops[0]=300;
+    battle.troops[1]=201;
+    const auto exchange=battle.rankAttacks(0,150);
+    assert((exchange==Battle::Ranks{1,50,50}));
+    --battle.troops[1];
+    battle.ranks[1][0]=0;
+    const auto exposed=battle.rankAttacks(0,150);
+    assert((exposed==Battle::Ranks{0,100,50}));
+    const auto flank=battle.rankAttacks(0,120);
+    assert((flank==Battle::Ranks{0,86,40}));
+
+    battle.difficulty=Difficulty::veteran;
+    battle.ranks[0]={190,100,100};
+    battle.ranks[1]={100,250,100};
+    battle.troops[0]=390;
+    battle.troops[1]=450;
+    battle.round=2;
+    battle.rankOrders[0]={press,1};
+    battle.planEnemyOrder();
+    assert(battle.enemyRank==0 && battle.stance(1,0)==hold);
+    assert(battle.stance(1,1)==measured);
+}
+
 int main() {
     checkMigration();
     checkSearchAndTalents();
     checkSeasonAndRegionalGoals();
     checkCivicAndColumns();
     checkBattleAndCaptive();
-    for (int chapter=0;chapter<chapterCount;++chapter)
-        for (int side=0;side<3;++side) {
-            auto outcome=play(side,chapter);
-            std::cout<<chapters[chapter].name<<' '<<factions[side].title<<' '
-                     <<outcome.holdings(side)<<" cities, season "<<outcome.turn<<std::endl;
-            assert(outcome.won==1 && outcome.holdings(side)==cityCount);
-        }
+    checkBattleOrders();
+    checkDifficultyAndAI();
+    checkScoutingAndWithdrawal();
+    checkRankCommands();
+    checkBreakthrough();
+    for (auto difficulty:{Difficulty::story,Difficulty::standard,Difficulty::veteran})
+        for (int chapter=0;chapter<chapterCount;++chapter)
+            for (int side=0;side<3;++side) {
+                auto outcome=play(side,chapter,difficulty);
+                std::cout<<int(difficulty)<<' '<<chapters[chapter].name<<' '<<factions[side].title<<' '
+                         <<outcome.holdings(side)<<" cities, season "<<outcome.turn<<std::endl;
+                assert(outcome.won==1 && outcome.holdings(side)==cityCount);
+            }
 }

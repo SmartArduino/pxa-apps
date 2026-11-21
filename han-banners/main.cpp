@@ -4,12 +4,14 @@
 #include <pxa/ui_display.hpp>
 #include <cmath>
 #include <cstdio>
+#include <cstring>
 #include <limits>
 #include "battle.hpp"
 #include "save.hpp"
 #include "art.hpp"
 #include "sans_text.hpp"
 #include "history.hpp"
+#include "game_audio.hpp"
 
 namespace han {
 
@@ -20,6 +22,7 @@ constexpr uint16_t rgb(int r, int g, int b) {
 constexpr uint16_t ink = rgb(13,20,22), panel = rgb(25,36,35), edge = rgb(104,91,64);
 constexpr uint16_t ivory = rgb(241,226,188), dim = rgb(175,170,146), gold = rgb(244,196,111);
 constexpr uint16_t mint = rgb(128,222,180), coral = rgb(251,142,101);
+constexpr uint16_t seaRoute = rgb(103,161,180), seaRouteActive = rgb(161,218,231);
 constexpr uint16_t colors[] = {mint, rgb(151,180,243), coral, rgb(221,203,153),
     rgb(205,181,241), rgb(243,196,137), rgb(240,228,168), rgb(163,218,218)};
 
@@ -27,6 +30,7 @@ struct Rect {
     int x,y,w,h;
     int cx() const {return x + w/2;}
     int cy() const {return y + h/2;}
+    Rect inset(int dx,int dy) const {return {x+dx,y+dy,w-2*dx,h-2*dy};}
     bool contains(int u,int v) const {return u>=x && v>=y && u<x+w && v<y+h;}
     bool overlaps(Rect r) const {return x<r.x+r.w && r.x<x+w && y<r.y+r.h && r.y<y+h;}
 };
@@ -34,15 +38,18 @@ constexpr Rect standardMap{8,42,264,177};
 constexpr Rect wideMap{8,42,368,177};
 
 enum class Page {home, choose, map, deploy, battle, report, help, ending, replace, council, roster,
-                 cityDesk, dispatch, forces, gear, captive, gazetteer, seasonCouncil, regions, search};
+                 cityDesk, dispatch, forces, gear, captive, gazetteer, seasonCouncil, regions, search,
+                 soundSettings};
 enum class Command {resume, newGame, guide, back, side, seat, work, march, season, select,
                     engage, shift, skill, pause, retreat, accept, home, replace, zoom, council,
                     roster, officer, hire, chooseOfficer, treat, market, militia, skipMarch, atlas,
-                    chapter, cityDesk, survey, forces, chooseSize, approach, send, recall,
+                    chapter, difficulty, cityDesk, survey, forces, chooseSize, approach, send, recall,
                     rosterPage, gear, pickGear, equip, drill, orders, maneuver, duel, duelMove,
-                    captiveChoice, gazetteer, browseCity, choosePlan, advanceSeason,
+                    captiveChoice, gazetteer, browseCity, choosePlan, advanceSeason, inspectThreat,
                     regions, chooseRegion, locateRegionCity, claimRegion,
-                    openSearch, searchOfficer, welcomeTalent};
+                    openSearch, searchOfficer, welcomeTalent, audioMenu, audioToggle, origin,
+                    battleRank, rankSupport, clearRank,
+                    confirmRetreat, centerMap, mapNames, pickTroop, pickWeapon, moveGeneral, strike};
 struct Control {
     Rect box;
     Command command;
@@ -50,10 +57,21 @@ struct Control {
     bool enabled;
 };
 enum UiIcon {coinsIcon,grainIcon,orderIcon,recruitIcon,farmIcon,wallsIcon,marketIcon,
-             pacifyIcon,surveyIcon,spearIcon,bowIcon,horseIcon};
-enum MapProp {cityGate,compassRose,armyTent,mapScroll};
+             pacifyIcon,surveyIcon,spearIcon,bowIcon,horseIcon,namesIcon,squareIcon,wedgeIcon,
+             wingsIcon,bladeIcon,skillIcon,ordersIcon,pauseIcon,moraleIcon,duelIcon,flankIcon,withdrawIcon};
+enum MapProp {cityGate,sinan,armyTent,mapScroll,coastalBoat};
 enum BattlePlaque {bronzePlaque,jadePlaque,vermilionPlaque};
+enum GaugeTone {jadeGauge=1,redGauge,goldGauge,blueMarchGauge,redMarchGauge};
+constexpr UiIcon formationIcons[]={squareIcon,wedgeIcon,wingsIcon};
+constexpr UiIcon weaponIcons[]={spearIcon,bladeIcon,bowIcon};
 inline constexpr const char* seasons[]={"春","夏","秋","冬"};
+inline constexpr const char* rankNames[]={"上路","中路","下路"};
+inline constexpr const char* difficultyNames[]={"入门","常规","群雄"};
+inline constexpr const char* difficultyHints[]={
+    "开局钱粮更多，前四季可安心备战",
+    "前两季备战，敌军会补防和下令",
+    "敌军更早出击，攻城粮耗更高",
+};
 enum class Notice {none, recruited, cultivated, fortified, moved, income, saved, saveError, treaty, supplies, levies,
                     civic, encamped, withdrawn, goal};
 
@@ -64,21 +82,39 @@ struct App {
     std::array<int,art::pageCount> slots{};
     bool loadingArt=false;
     Rect mapWindow=standardMap;
+    bool showMapNames=false;
     std::array<Rect,cityCount> mapLabels{};
+    std::array<Rect,cityCount> mapMarkers{};
+    std::array<std::pair<int,int>,cityCount> cityCenters{};
+    Rect mapCompass{};
+    struct CityLabelPlacement {
+        Rect offset{};
+        float minScale=0;
+    };
+    std::array<CityLabelPlacement,cityCount> cityLabelPlacements{};
+    float labelFontScale=0;
+    int labelYear=0;
     pxa::game::DrawBuffer<32768> commands;
-    std::array<Control,64> controls{};
-    int count = 0, focus = 0, selected = 2, destination = -1, side = 0, formation = spear;
+    // Leave space for the HUD controls when all city markers are visible.
+    std::array<Control,cityCount+20> controls{};
+    int count = 0, focus = 0, selected = 2, destination = -1, side = 0;
+    BattlePlan deployment;
     int width = 0, height = 0;
     float scale = 1, ox = 0, oy = 0;
     bool sansText = false, texelAlpha = false;
     SansText sans;
     Page page = Page::home, helpFrom = Page::home;
+    Page audioFrom=Page::home;
+    GameAudio audio;
     Notice notice = Notice::none;
     Campaign campaign;
     Battle battle;
     Order departure;
     int chosenChapter=0, dispatchLead=-1, defenseLeader=-1, arrivingColumn=-1, gearCursor=0;
-    bool stageSiege=false, tacticsOpen=false;
+    Difficulty chosenDifficulty=Difficulty::standard;
+    bool stageSiege=false, tacticsOpen=false, retreatPrompt=false;
+    int tacticsRank=-1;
+    bool warmingArt=false, lookaheadDone=false;
     DispatchSize dispatchSize=legion;
     int searchingOfficer=-1;
     int gazetteerCity=0;
@@ -87,7 +123,8 @@ struct App {
     Discovery discovery{};
     Settlement aftermath{};
     float mapCenterX=worldWidth/2.f, mapCenterY=worldHeight/2.f;
-    int mapZoom=0, officerSlot=0;
+    float mapZoom=0;
+    int officerSlot=0;
     Page rosterFrom=Page::council;
     std::array<Order,ownerCount> marching{};
     Order playerMarch{};
@@ -100,19 +137,30 @@ struct App {
     bool hasSave = false, saving = false, saveQueued = false, damagedSave = false;
     bool ready = false, dirty = true, resize = false, controllerMode = false;
     bool pointerDown = false;
-    int pointerIndex = -1, pointerId = -1;
+    std::optional<Control> pressedControl;
+    int pointerId = -1;
+    float pressX=0, pressY=0;
+    float pointerX=0, pointerY=0;
+    struct MapPinch {
+        int id;
+        float x,y,distance,scale,worldX,worldY;
+    };
+    std::optional<MapPinch> pinch;
+    float mapTapX=0,mapTapY=0;
+    uint64_t mapTapTime=0;
     int reportWinner = 0, reportCity = 0, reportLoss = 0;
     bool reportDefense = false, reportRetreat = false, reportSiege = false;
     uint64_t previousTick = 0;
+    unsigned clockPeriod = 33;
     unsigned elapsed = 0, drawErrors = 0;
     pxa::input::Controller gamepad;
 
     void info(std::string_view message) { (void)context->log().write(pxa::LogLevel::info,message); }
     void logState(const char* action) {
         char body[160];
-        std::snprintf(body,sizeof body,"han-banners %s page=%d turn=%d side=%d cities=%d actions=%d chapter=%d",
+        std::snprintf(body,sizeof body,"han-banners %s page=%d turn=%d side=%d cities=%d actions=%d chapter=%d difficulty=%d",
                       action,int(page),campaign.turn,campaign.player,campaign.holdings(campaign.player),
-                      campaign.actions,campaign.chapter);
+                      campaign.actions,campaign.chapter,int(campaign.difficulty));
         info(body);
     }
     void on_error(pxa::Context&,pxa::Error error) {
@@ -143,6 +191,10 @@ struct App {
         }
         co_return co_await openRenderer();
     }
+    bool nativeWidePanel() const {
+        return std::min(display.width,display.height)==480 &&
+               std::max(display.width,display.height)==854;
+    }
     void layout() {
         const float fx = float(width)/display.width;
         const float fy = float(height)/display.height;
@@ -150,11 +202,14 @@ struct App {
         float right = fx * std::max(display.safe.right,display.system_bars.right);
         float top = fy * std::max(display.safe.top,display.system_bars.top);
         float bottom = fy * std::max(display.safe.bottom,display.system_bars.bottom);
+        // The ESPP4-A launcher keeps a gesture target even while its bar is hidden.
+        if (nativeWidePanel()) bottom=std::max(bottom,24.f*fy);
         float cw = std::max(1.f,width-left-right), ch = std::max(1.f,height-top-bottom);
         scale = std::min(cw/sceneWidth,ch/sceneHeight);
         const bool useSans=scale/fx>=1.45f && fontSlots()>=10;
         if (sansText!=useSans || sansText) sans.reset();
         sansText=useSans && sans.init();
+        labelFontScale=0;
         ox = std::round(left+(cw-sceneWidth*scale)/2);
         oy = std::round(top+(ch-sceneHeight*scale)/2);
     }
@@ -164,18 +219,34 @@ struct App {
         renderer.reset();
         pxa::game::RenderOptions opt;
         const bool large=std::max(display.width,display.height)>480;
-        // Keep text at panel resolution on common larger PXA displays.
-        const int divisor=unsigned(display.width)*display.height>800u*600u?2:1;
+        const bool nativeWide=nativeWidePanel();
+        const int divisor=!nativeWide && unsigned(display.width)*display.height>=800u*450u?2:1;
         width=std::max(1,int(display.width)/divisor);
         height=std::max(1,int(display.height)/divisor);
         opt.width = width;
         opt.height = height;
-        opt.buffers = 2;
+        opt.buffers = nativeWide||divisor==2?3:2;
         opt.direct_scanout = true;
+        // On the 854x480 panel, rasterize while the display composes the previous frame.
+        opt.borrow_commands=nativeWide;
         opt.max_draw_bytes = commands.capacity();
         auto r = co_await context->game().create(opt);
         if (r) {
             renderer.emplace(std::move(*r));
+        } else if (opt.buffers==3 && (r.error()==pxa::Error::resource_limit ||
+                                     r.error()==pxa::Error::unsupported ||
+                                     (opt.borrow_commands && r.error()==pxa::Error::invalid_argument))) {
+            opt.buffers=2;
+            opt.borrow_commands=false;
+            auto fallback=co_await context->game().create(opt);
+            if (fallback) renderer.emplace(std::move(*fallback));
+            else if (nativeWide && fallback.error()==pxa::Error::resource_limit) {
+                width=opt.width=display.width/2;
+                height=opt.height=display.height/2;
+                auto smaller=co_await context->game().create(opt);
+                if (!smaller) co_return std::unexpected(smaller.error());
+                renderer.emplace(std::move(*smaller));
+            } else co_return std::unexpected(fallback.error());
         } else if (large && divisor==1 && r.error()==pxa::Error::resource_limit) {
             width=opt.width=std::max(1,int(display.width)/2);
             height=opt.height=std::max(1,int(display.height)/2);
@@ -189,16 +260,27 @@ struct App {
         auto palette = pxa::game::Upload(*renderer,commands.bytes()).palette(art::palette);
         if (!palette) co_return palette;
         slots.fill(-1);
+        detailedArt=width>=640 && height>=360 && renderer->info().max_texture_dimension>=256;
         layout();
         ready = true;
         dirty = true;
-        (void)context->clock().set_period(33);
+        if (!audio.bank.context) audio.start(*context);
+        clockPeriod=nativeWide||divisor==2?16:33;
+        (void)context->clock().set_period(clockPeriod);
         logState("ready");
         draw();
         co_return pxa::Result<void>{};
     }
     art::Tile titleBackground() const {
         return width*2>=height*3 ? art::coverWide : art::coverSquare;
+    }
+
+    bool detailedArt=false;
+    art::Backdrop backdropTiles(art::Tile image) const {
+        if (detailedArt && sansText)
+            for (const auto& backdrop:art::detailedBackdrops)
+                if (backdrop.compact==image.page) return backdrop;
+        return {image.page,image.page,1,1,image.w,image.h};
     }
 
     int fontSlots() const {
@@ -213,24 +295,58 @@ struct App {
     art::Tile battlefield() const {
         return battle.walls>=3?art::siege:art::battlefields[sites[battle.to].terrain];
     }
+    static void atlasPath(char (&name)[48],unsigned page) {
+        std::snprintf(name,sizeof name,"assets/atlas-%u.pxr",page);
+    }
+    pxa::Task<void> warmArt(Page source,std::array<art::Tile,4> tiles) {
+        for (auto tile:tiles) {
+            if (page!=source || (source==Page::battle && !tacticsOpen)) break;
+            if (!tile.w || slots[tile.page]>=0) continue;
+            char name[48];
+            atlasPath(name,tile.page);
+            (void)co_await context->assets().prefetch(pxa::AssetKind::texture,name);
+        }
+        warmingArt=false;
+        co_return pxa::Result<void>{};
+    }
+    void warmNextScene() {
+        if (warmingArt || lookaheadDone || !count) return;
+        std::array<art::Tile,4> tiles{};
+        if (page==Page::deploy) {
+            const auto& city=campaign.cities[departure.to];
+            tiles={city.fort>=3?art::siege:art::battlefields[sites[departure.to].terrain],
+                   art::troops[1][0][0],art::tacticTroops[0][0][0],art::tacticTroops[1][0][0]};
+        } else if (page==Page::battle && tacticsOpen && battle.mayDuel()) {
+            tiles={art::siege,art::duelFrames[0][0],art::duelFrames[1][0]};
+        } else return;
+        const auto backdrop=backdropTiles(tiles[0]);
+        tiles[0]={backdrop.first,0,0,backdrop.w,backdrop.h};
+        lookaheadDone=true;
+        warmingArt=true;
+        if (!context->tasks().start(warmArt(page,tiles))) warmingArt=false;
+    }
     Pages pagesNeeded() const {
         Pages set{};
         if (!sansText)
-            for (int i=art::firstFontPage;i<art::pageCount;++i) set[i]=true;
+            for (int i=art::firstFontPage;i<art::firstDetailedPage;++i) set[i]=true;
         auto require=[&](art::Tile image){set[image.page]=true;};
+        auto backdrop=[&](art::Tile image) {
+            const auto tiles=backdropTiles(image);
+            for (int i=0;i<tiles.columns*tiles.rows;++i) set[tiles.first+i]=true;
+        };
         require(art::plaques[0]);
         auto room=[&](art::Tile background=art::warHall) {
-            require(background);
+            backdrop(background);
             require(art::windows[0]);
         };
         auto actor=[&](int slot) {
             if (slot>=0) require(art::portraits[campaign.leader(slot).portrait]);
         };
         switch (page) {
-            case Page::home:require(titleBackground());require(art::logo);break;
-            case Page::replace:require(titleBackground());require(art::windows[0]);break;
+            case Page::home:backdrop(titleBackground());require(art::logo);break;
+            case Page::replace:backdrop(titleBackground());require(art::windows[0]);break;
             case Page::ending:
-                require(titleBackground());require(art::windows[0]);
+                backdrop(titleBackground());require(art::windows[0]);
                 require(art::outcomes[campaign.won>0?0:1]);break;
             case Page::choose:room();require(art::portraits[0]);break;
             case Page::roster:
@@ -240,11 +356,13 @@ struct App {
                 break;
             case Page::map:
                 room();
-                for (auto t:art::mapTiles) require(t);
+                // Keep the tiles resident while panning across quadrant seams.
+                for (int n=0;n<4;++n) require(mapTile(n));
                 if (isMarching() || hasColumns()) require(art::marchers[0][0][0]);
                 break;
             case Page::gazetteer:
             case Page::seasonCouncil:
+            case Page::soundSettings:
             case Page::regions:room();break;
             case Page::dispatch:room();actor(dispatchLead);break;
             case Page::cityDesk:room(art::cityCourtyard);actor(campaign.governor(selected));break;
@@ -266,19 +384,18 @@ struct App {
                 require(art::portraits[battle.officer().portrait]);
                 if (auto* foe=battle.opponent()) require(art::portraits[foe->portrait]);
                 require(art::windows[0]);require(art::hudBars[0]);
-                if (!sansText || !battle.duel.visible()) {
-                    require(battlefield());
+                if (battle.duel.visible()) {
+                    backdrop(art::siege);
+                    require(art::duelFrames[0][0]);require(art::duelFrames[1][0]);
+                } else {
+                    backdrop(battlefield());
                     require(art::troops[0][0][0]);require(art::troops[1][0][0]);
                     require(art::tacticTroops[0][0][0]);require(art::tacticTroops[1][0][0]);
-                }
-                if (!sansText || battle.duel.visible()) {
-                    require(art::siege);
-                    require(art::duelFrames[0][0]);require(art::duelFrames[1][0]);
                 }
                 break;
             case Page::report:
                 require(art::windows[0]);require(art::outcomes[reportWinner>0?0:1]);
-                require(reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);break;
+                backdrop(reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);break;
             case Page::gear:
             case Page::forces:room();require(art::equipment[0]);break;
             case Page::captive:
@@ -311,14 +428,25 @@ struct App {
             if (!needed[i] || slots[i]>=0) continue;
             const auto end=occupied.begin()+max;
             const auto empty=std::find(occupied.begin(),end,false);
-            if (empty==end) {status=std::unexpected(pxa::Error::resource_limit);break;}
             char name[48];
-            std::snprintf(name,sizeof name,"assets/atlas-%u.pxr",i);
-            auto asset=co_await context->assets().load(pxa::AssetKind::texture,name);
-            if (!asset) {status=std::unexpected(asset.error());info(name);break;}
-            int slot=empty-occupied.begin();
-            status=renderer->bind_asset(*asset,{uint8_t(slot)});
-            if (status) {slots[i]=slot;*empty=true;}
+            atlasPath(name,i);
+            if (empty==end) status=std::unexpected(pxa::Error::resource_limit);
+            else {
+                auto asset=co_await context->assets().load(pxa::AssetKind::texture,name);
+                const int slot=empty-occupied.begin();
+                status=asset?renderer->bind_asset(*asset,{uint8_t(slot)})
+                            :std::unexpected(asset.error());
+                if (status) {slots[i]=slot;*empty=true;}
+            }
+            if (!status) {
+                if (i>=art::firstDetailedPage &&
+                    (status.error()==pxa::Error::quota_exceeded || status.error()==pxa::Error::resource_limit)) {
+                    detailedArt=false;
+                    status={};
+                    info("han-banners using compact backgrounds");
+                } else info(name);
+                break;
+            }
         }
         loadingArt=false;
         dirty=bool(status);
@@ -329,11 +457,15 @@ struct App {
         while (saveQueued) {
             saveQueued = false;
             auto data = encode(campaign);
-            auto written = co_await context->storage().set(saveKey,data);
+            // The v7 roster makes the payload larger than the default 512-byte request.
+            std::array<std::byte,8+std::string_view(saveKey).size()+Save{}.size()> packet;
+            auto written = co_await context->storage().set(saveKey,data,packet);
             if (!written) {
                 notice = Notice::saveError;
                 dirty = true;
-                info("han-banners save failed");
+                char message[64];
+                std::snprintf(message,sizeof message,"han-banners save failed error=%d",int(written.error()));
+                info(message);
             } else {
                 damagedSave = false;
                 info("han-banners checkpoint");
@@ -372,7 +504,8 @@ struct App {
         int16_t l = int16_t(sx(x)*16), t = int16_t(sy(y)*16);
         int16_t e = int16_t(sx(u)*16), b = int16_t(sy(v)*16);
         if (l==e && t==b) return;
-        float length = std::max(1.f,std::hypot(float(e-l),float(b-t)));
+        const float vx=e-l,vy=b-t;
+        const float length=std::sqrt(vx*vx+vy*vy);
         int16_t dx = int16_t(-(b-t)*8*thickness*scale/length);
         int16_t dy = int16_t((e-l)*8*thickness*scale/length);
         f.quad({int16_t(l+dx),int16_t(t+dy),int16_t(e+dx),int16_t(b+dy),
@@ -395,19 +528,46 @@ struct App {
         const int x=sx(dst.x),y=sy(dst.y);
         tilePixels(f,tile,{x,y,sx(dst.x+dst.w)-x,sy(dst.y+dst.h)-y},alpha);
     }
-    void coverPixels(pxa::game::Frame& f,art::Tile image,Rect dest,float anchor=.5f) const {
-        if (dest.w<=0 || dest.h<=0) return;
-        const float aspect=float(dest.w)/dest.h;
-        const int w=std::clamp(int(std::round(image.h*aspect)),1,int(image.w));
-        const int h=std::clamp(int(std::round(image.w/aspect)),1,int(image.h));
-        image.x+=int(std::round((image.w-w)*anchor));
-        image.y+=(image.h-h)/2;
-        image.w=w;
-        image.h=h;
-        tilePixels(f,image,dest);
+    void backdropRegion(pxa::game::Frame& f,art::Tile image,Rect region,float anchor) const {
+        if (region.w<=0 || region.h<=0) return;
+        const auto tiles=backdropTiles(image);
+        const int sourceWidth=tiles.w*tiles.columns,sourceHeight=tiles.h*tiles.rows;
+        const float aspect=float(width)/height;
+        const int w=std::clamp(int(std::round(sourceHeight*aspect)),1,sourceWidth);
+        const int h=std::clamp(int(std::round(sourceWidth/aspect)),1,sourceHeight);
+        const int cx=int(std::round((sourceWidth-w)*anchor)),cy=(sourceHeight-h)/2;
+        for (int row=0;row<tiles.rows;++row) for (int col=0;col<tiles.columns;++col) {
+            const int x=col*tiles.w,y=row*tiles.h;
+            const int l=std::max(cx,x),t=std::max(cy,y);
+            const int r=std::min(cx+w,x+tiles.w),b=std::min(cy+h,y+tiles.h);
+            if (l>=r || t>=b) continue;
+            const int dl=(l-cx)*width/w,dt=(t-cy)*height/h;
+            const int dr=(r-cx)*width/w,db=(b-cy)*height/h;
+            const int left=std::max(dl,region.x),top=std::max(dt,region.y);
+            const int right=std::min(dr,region.x+region.w),bottom=std::min(db,region.y+region.h);
+            if (left>=right || top>=bottom) continue;
+            const int sl=l+(left-dl)*(r-l)/(dr-dl),st=t+(top-dt)*(b-t)/(db-dt);
+            const int sr=l+((right-dl)*(r-l)+dr-dl-1)/(dr-dl);
+            const int sb=t+((bottom-dt)*(b-t)+db-dt-1)/(db-dt);
+            const auto page=uint8_t(tiles.first+row*tiles.columns+col);
+            tilePixels(f,{page,uint16_t(sl-x),uint16_t(st-y),uint16_t(sr-sl),uint16_t(sb-st)},
+                       {left,top,right-left,bottom-top});
+        }
     }
     void fillBackground(pxa::game::Frame& f,art::Tile image,float anchor=.5f) const {
-        coverPixels(f,image,{0,0,width,height},anchor);
+        backdropRegion(f,image,{0,0,width,height},anchor);
+    }
+    template<class Paint>
+    static void around(Rect outer,Rect hole,Paint paint) {
+        paint(Rect{outer.x,outer.y,outer.w,hole.y-outer.y});
+        paint(Rect{outer.x,hole.y+hole.h,outer.w,outer.y+outer.h-hole.y-hole.h});
+        paint(Rect{outer.x,hole.y,hole.x-outer.x,hole.h});
+        paint(Rect{hole.x+hole.w,hole.y,outer.x+outer.w-hole.x-hole.w,hole.h});
+    }
+    void mapBackdrop(pxa::game::Frame& f) const {
+        around({0,0,width,height},toPixels(mapWindow),[&](Rect r) {
+            backdropRegion(f,art::warHall,r,.42f);
+        });
     }
     void contain(pxa::game::Frame& f,art::Tile image,Rect area,bool alpha=false) const {
         const auto dest=toPixels(area);
@@ -443,7 +603,7 @@ struct App {
         const auto p=toPixels(area);
         if (p.w<=0 || p.h<=0) return;
         nineSlice(f,art::battlePanels[tone],p,
-                  {19,8,std::max(2,int(14*scale)),std::max(2,int(8*scale))},true);
+                  {12,8,std::max(2,int(7*scale)),std::max(2,int(5*scale))},true);
     }
     void plaque(pxa::game::Frame& f,Rect area,bool enabled=true,bool lit=false) const {
         const auto pixels=toPixels(area);
@@ -464,15 +624,17 @@ struct App {
                                src[i],0,src[i+1]-src[i],tile.h);
         f.sprites({uint8_t(slots[tile.page])},{sprites.data(),size_t(n)});
     }
-    void healthBar(pxa::game::Frame& f,Rect area,int value,int maximum,bool enemy=false) const {
-        Rect p=toPixels(area);
-        drawStrip(f,art::hudBars[0],p);
-        const int inset=p.h>=6?2:1;
-        const int room=p.w-2*inset;
-        if (value<=0 || room<=0 || p.h<=2) return;
-        const int amount=std::clamp(room*value/std::max(1,maximum),1,room);
-        const int x=enemy?p.x+p.w-inset-amount:p.x+inset;
-        drawStrip(f,art::hudBars[enemy?2:1],{x,p.y+1,amount,p.h-2});
+    void gauge(pxa::game::Frame& f,Rect area,int value,int maximum,GaugeTone tone,bool reverse=false) const {
+        const Rect p=toPixels(area);
+        const bool marching=tone>=blueMarchGauge;
+        drawStrip(f,marching?art::marchBars[0]:art::hudBars[0],p);
+        const int border=std::max(1,p.h/6);
+        const int room=p.w-2*border;
+        if (value<=0 || maximum<=0 || room<=0 || p.h<=2*border) return;
+        const int amount=std::max(1,room*std::min(value,maximum)/maximum);
+        const int x=reverse?p.x+p.w-border-amount:p.x+border;
+        const auto fill=marching?art::marchBars[1+tone-blueMarchGauge]:art::hudBars[tone];
+        drawStrip(f,fill,{x,p.y+border,amount,p.h-2*border});
     }
     static uint32_t next(std::string_view& s) {
         uint8_t c = uint8_t(s.front());
@@ -499,11 +661,23 @@ struct App {
     int glyphAdvance(uint32_t code,int height) const {
         return sansText?sans.advance(code,height):glyph(code).advance*(height/art::fontPixels);
     }
+    int textAdvance(std::string_view s,int height) const {
+        int width=0;
+        while (!s.empty()) width+=glyphAdvance(next(s),height);
+        return width;
+    }
     int textWidth(std::string_view s,int size) const {
-        const int height=fontHeight(size);
-        int n=0;
-        while (!s.empty()) n+=glyphAdvance(next(s),height);
-        return n;
+        return textAdvance(s,fontHeight(size));
+    }
+    size_t linePrefix(std::string_view s,int height,int available) const {
+        const size_t length=s.size();
+        int width=0;
+        while (!s.empty()) {
+            const size_t used=length-s.size();
+            width+=glyphAdvance(next(s),height);
+            if (width>available) return used;
+        }
+        return length;
     }
     struct TextStamp {
         art::Tile tile{};
@@ -524,45 +698,87 @@ struct App {
         return {tile,{x,y,tile.w*(height/art::fontPixels),height},uint8_t(slots[tile.page])};
     }
 
-    void text(pxa::game::Frame& f,std::string_view s,int x,int y,int size=14,
-              uint16_t color=ivory,int align=0,uint16_t outline=0) {
-        const int h=fontHeight(size);
-        int u=sx(x);
-        const int v=(sy(y)+sy(y+size)-h)/2;
-        if (align) u-=textWidth(s,size)/(align==1?2:1);
+    void textPixels(pxa::game::Frame& f,std::string_view s,int u,int v,int h,
+                    uint16_t color,uint16_t outline=0,const Rect* clip=nullptr) {
         const bool alpha=sansText && texelAlpha;
-        if (outline) {
-            int left=u;
-            const int stroke=std::max(1,h/12);
+        auto drawRun=[&](uint16_t tint,int stroke) {
+            std::array<pxa::game::Sprite,32> sprites;
+            int n=0,slot=-1,left=u;
+            auto flush=[&] {
+                if (!n) return;
+                f.sprites({uint8_t(slot)},{sprites.data(),size_t(n)},
+                          {.transparent_index0=true,.solid_color=true,.texel_alpha=alpha,.color={tint}});
+                n=0;
+            };
             auto line=s;
             while (!line.empty()) {
                 const auto code=next(line);
                 if (code!=' ') {
-                    const auto [tile,r,slot]=stamp(code,h,left,v);
+                    const auto [tile,r,bank]=stamp(code,h,left,v);
                     if (tile.w) {
-                        const std::array edges={
-                            slice(tile,{r.x-stroke,r.y,r.w,r.h},0,0,tile.w,tile.h),
-                            slice(tile,{r.x+stroke,r.y,r.w,r.h},0,0,tile.w,tile.h),
-                            slice(tile,{r.x,r.y-stroke,r.w,r.h},0,0,tile.w,tile.h),
-                            slice(tile,{r.x,r.y+stroke,r.w,r.h},0,0,tile.w,tile.h),
-                        };
-                        f.sprites({slot},edges,{.solid_color=true,.texel_alpha=alpha,.color={outline}});
+                        if (slot!=bank || n+(stroke?4:1)>int(sprites.size())) flush();
+                        slot=bank;
+                        if (clip && (!clip->contains(r.x,r.y) ||
+                                     !clip->contains(r.x+r.w-1,r.y+r.h-1))) {
+                            const int unit=sansText?1:h/art::fontPixels;
+                            const int l=std::max(0,(clip->x-r.x+unit-1)/unit);
+                            const int t=std::max(0,(clip->y-r.y+unit-1)/unit);
+                            const int rgt=std::min(int(tile.w),(clip->x+clip->w-r.x)/unit);
+                            const int btm=std::min(int(tile.h),(clip->y+clip->h-r.y)/unit);
+                            if (l<rgt && t<btm)
+                                sprites[n++]=slice(tile,{r.x+l*unit,r.y+t*unit,(rgt-l)*unit,(btm-t)*unit},
+                                                   l,t,rgt-l,btm-t);
+                        } else if (stroke) {
+                            sprites[n++]=slice(tile,{r.x-stroke,r.y,r.w,r.h},0,0,tile.w,tile.h);
+                            sprites[n++]=slice(tile,{r.x+stroke,r.y,r.w,r.h},0,0,tile.w,tile.h);
+                            sprites[n++]=slice(tile,{r.x,r.y-stroke,r.w,r.h},0,0,tile.w,tile.h);
+                            sprites[n++]=slice(tile,{r.x,r.y+stroke,r.w,r.h},0,0,tile.w,tile.h);
+                        } else sprites[n++]=slice(tile,r,0,0,tile.w,tile.h);
                     }
                 }
                 left+=glyphAdvance(code,h);
             }
+            flush();
+        };
+        if (outline) drawRun(outline,std::max(1,h/12));
+        drawRun(color,0);
+    }
+    void text(pxa::game::Frame& f,std::string_view s,int x,int y,int size=14,
+              uint16_t color=ivory,int align=0,uint16_t outline=0) {
+        const int h=fontHeight(size);
+        const int dx=align?textAdvance(s,h)/(align==1?2:1):0;
+        textPixels(f,s,sx(x)-dx,(sy(y)+sy(y+size)-h)/2,h,color,outline);
+    }
+    void boxText(pxa::game::Frame& f,std::string_view s,Rect box,int size=14,
+                 uint16_t color=ivory,int align=0) {
+        const Rect p=toPixels(box);
+        if (p.w<=0 || p.h<=0 || s.empty()) return;
+        const int step=sansText?1:art::fontPixels;
+        const int nominal=fontHeight(size);
+        const int minimum=sansText?std::min({p.h,nominal,std::max(9,int(scale*9))}):art::fontPixels;
+        int h=std::clamp(p.h/step*step,minimum,nominal);
+        int w=textAdvance(s,h);
+        while (w>p.w && h>minimum) {
+            h-=step;
+            w=textAdvance(s,h);
         }
-        while (!s.empty()) {
-            const auto code=next(s);
-            if (code!=' ') {
-                const auto [tile,rect,slot]=stamp(code,h,u,v);
-                if (tile.w) {
-                    const auto sprite=slice(tile,rect,0,0,tile.w,tile.h);
-                    f.sprites({slot},{&sprite,1},{.solid_color=true,.texel_alpha=alpha,.color={color}});
-                }
+        char shortened[128];
+        if (w>p.w) {
+            constexpr std::string_view suffix="...";
+            const int suffixWidth=textAdvance(suffix,h);
+            if (suffixWidth>p.w) return;
+            auto count=linePrefix(s,h,p.w-suffixWidth);
+            if (count>sizeof shortened-suffix.size()) {
+                count=sizeof shortened-suffix.size();
+                while (count && (uint8_t(s[count])&0xc0)==0x80) --count;
             }
-            u+=glyphAdvance(code,h);
+            std::memcpy(shortened,s.data(),count);
+            std::memcpy(shortened+count,suffix.data(),suffix.size());
+            s={shortened,count+suffix.size()};
+            w=textAdvance(s,h);
         }
+        const int dx=align?(p.w-w)/(align==1?2:1):0;
+        textPixels(f,s,p.x+dx,p.y+(p.h-h)/2,h,color,0,&p);
     }
     void number(pxa::game::Frame& f,int n,int x,int y,int size,uint16_t color=ivory,int align=0) {
         char str[24];
@@ -570,62 +786,59 @@ struct App {
         text(f,str,x,y,size,color,align);
     }
     bool registerControl(Rect box,Command action,int data,bool enabled=true) {
+        if (count==int(controls.size())) return false;
         int index=count++;
-        if (focus<0 && (action!=Command::select || data==selected)) focus=index;
+        if (enabled && focus<0 && (action!=Command::select || data==selected)) focus=index;
         controls[index]={box,action,data,enabled};
-        return (controllerMode && focus==index) ||
-               (pointerDown && !dragMoved && pointerIndex==index);
+        return enabled && ((controllerMode && focus==index) ||
+               (pressedControl && !dragMoved && pressedControl->command==action && pressedControl->data==data));
     }
     void button(pxa::game::Frame& f,Rect r,const char* label,Command action,int data=0,
                 bool enabled=true,bool main=false,int icon=-1) {
         const bool focused=registerControl(r,action,data,enabled);
         plaque(f,r,enabled,main||focused);
-        if (focused) block(f,{r.x+4,r.y+5,2,r.h-10},gold);
-        if (icon>=0 && sx(r.w)-sx(0)>=textWidth(label,14)+sx(20)-sx(0)+5) {
-            contain(f,art::commandIcons[icon],{r.x+5,r.cy()-8,16,16},true);
-            text(f,label,r.cx()+8,r.cy()-7,14,enabled?ivory:dim,1);
-        } else text(f,label,r.cx(),r.cy()-7,14,enabled?ivory:dim,1);
+        if (focused && r.w>60) block(f,{r.x+4,r.y+5,2,r.h-10},gold);
+        auto labelBox=r.inset(r.w<=60?2:5,r.h<24?1:3);
+        const int iconSize=r.h<=21?12:16;
+        const int iconGap=iconSize+4;
+        if (icon>=0 && textWidth(label,14)<=toPixels(labelBox).w-(sx(iconGap)-sx(0))) {
+            contain(f,art::commandIcons[icon],{labelBox.x+1,r.cy()-iconSize/2,iconSize,iconSize},true);
+            labelBox.x+=iconGap;
+            labelBox.w-=iconGap;
+        }
+        boxText(f,label,labelBox,14,enabled?ivory:dim,1);
     }
     void header(pxa::game::Frame& f,const char* label,const char* sub=nullptr) {
         plaque(f,{7,3,370,31});
         block(f,{16,10,2,16},gold);
-        text(f,label,25,8,19,gold);
-        if (sub) text(f,sub,365,11,13,ivory,2);
+        const int titleEnd=sub?std::min(176,32+int(std::ceil(textWidth(label,19)/scale))):365;
+        boxText(f,label,{25,6,titleEnd-25,24},19,gold);
+        if (sub) boxText(f,sub,{titleEnd+8,6,357-titleEnd,24},13,ivory,2);
     }
-    void bookText(pxa::game::Frame& f,std::string_view line,int x,int y,int w,
-                  uint16_t color=ivory) {
+    void bookText(pxa::game::Frame& f,std::string_view line,Rect box,uint16_t color=ivory) {
         constexpr int size=14;
-        const int height=fontHeight(size),limit=sx(x+w)-sx(x);
-        while (!line.empty()) {
-            auto remainder=line;
-            size_t used=0;
-            int widthUsed=0;
-            while (!remainder.empty()) {
-                const int advance=glyphAdvance(next(remainder),height);
-                if (used && widthUsed+advance>limit) break;
-                widthUsed+=advance;
-                used=line.size()-remainder.size();
-            }
-            text(f,line.substr(0,used),x,y,size,color);
-            line.remove_prefix(used);
-            y+=18;
+        const auto pixels=toPixels(box);
+        const int h=fontHeight(size);
+        const int step=h+std::max(2,int(2*scale));
+        int y=pixels.y;
+        while (!line.empty() && y+h<=pixels.y+pixels.h) {
+            const auto count=linePrefix(line,h,pixels.w);
+            if (!count) break;
+            textPixels(f,line.substr(0,count),pixels.x,y,h,color,0,&pixels);
+            line.remove_prefix(count);
+            y+=step;
         }
     }
     void resourcePlate(pxa::game::Frame& f,Rect area,UiIcon icon,
                        std::string_view value,uint16_t color=ivory) {
         plaque(f,area);
-        contain(f,art::commandIcons[icon],{area.x+5,area.cy()-8,16,16},true);
-        text(f,value,area.cx()+7,area.cy()-7,14,color,1);
+        contain(f,art::commandIcons[icon],{area.x+6,area.cy()-8,16,16},true);
+        boxText(f,value,{area.x+25,area.y+2,area.w-32,area.h-4},14,color,1);
     }
     void portrait(pxa::game::Frame& f,int actor,Rect r) {
         frame(f,{r.x-1,r.y-1,r.w+2,r.h+2},edge,ink);
         contain(f,art::portraits[actor],r);
     }
-    void bar(pxa::game::Frame& f,Rect r,int value,int maximum,uint16_t color) {
-        block(f,r,rgb(56,53,43));
-        block(f,{r.x,r.y,r.w*value/std::max(1,maximum),r.h},color);
-    }
-
     void drawHome(pxa::game::Frame& f) {
         fillBackground(f,titleBackground(),.57f);
         block(f,{14,14,26,2},gold);
@@ -643,6 +856,7 @@ struct App {
             button(f,{28,197,136,29},"玩法说明",Command::guide);
             if (damagedSave) text(f,"存档无法读取",28,232,13,coral);
         }
+        button(f,{274,211,87,27},"音频",Command::audioMenu);
     }
     void drawChoose(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
@@ -655,29 +869,46 @@ struct App {
         }
         constexpr const char* rulers[]={"刘备","曹操","孙权"};
         for (int i=0;i<3;++i) {
-            Rect card{10+122*i,71,118,130};
+            Rect card{10+122*i,69,118,106};
             bool emphasis=registerControl(card,Command::side,i);
             const bool selectedRuler=side==i;
             skinFrame(f,card,selectedRuler||emphasis);
-            portrait(f,i,{card.cx()-38,card.y+5,76,76});
-            block(f,{card.x+7,card.y+83,104,2},colors[i]);
-            text(f,rulers[i],card.cx(),card.y+88,18,selectedRuler?gold:ivory,1);
+            portrait(f,i,{card.cx()-29,card.y+5,58,58});
+            block(f,{card.x+8,card.y+67,102,2},colors[i]);
+            boxText(f,rulers[i],{card.x+7,card.y+70,104,17},16,selectedRuler?gold:ivory,1);
             char base[48];
             std::snprintf(base,sizeof base,"%s · %d城",cityLabel(chapter.base[i],chapter.year),holdings[i]);
-            text(f,base,card.cx(),card.y+111,12,colors[i],1);
+            boxText(f,base,{card.x+8,card.y+87,card.w-16,16},12,colors[i],1);
         }
         for (int i=0;i<chapterCount;++i)
             button(f,{10+122*i,41,118,24},chapters[i].name,Command::chapter,i,true,i==chosenChapter);
-        plaque(f,{10,204,364,22});
-        text(f,chapter.description,192,209,12,ivory,1);
+        boxText(f,chapter.description,{19,175,346,18},12,ivory,1);
+        for (int i=0;i<3;++i)
+            button(f,{10+122*i,194,118,21},difficultyNames[i],Command::difficulty,i,true,i==int(chosenDifficulty));
+        boxText(f,difficultyHints[int(chosenDifficulty)],{18,215,348,16},12,mint,1);
         button(f,{10,231,85,25},"返回",Command::back);
         button(f,{239,231,135,25},"起兵",Command::seat,0,true,true,orderIcon);
     }
     const char* ownerName(int o) const {return factions[o].title;}
     const char* cityName(int i) const {return cityLabel(i,campaign.year());}
+    static constexpr float detailScale=.74f,maxMapScale=1.55f;
+    float overviewScale() const {
+        return std::min(float(mapWindow.w-16)/worldWidth,float(mapWindow.h-16)/worldHeight);
+    }
     float mapScale() const {
-        if (!mapZoom) return std::min(float(mapWindow.w-16)/worldWidth,float(mapWindow.h-16)/worldHeight);
-        return mapZoom==1?.74f:1.13f;
+        if (mapZoom<=1) return std::lerp(overviewScale(),detailScale,mapZoom);
+        return std::lerp(detailScale,maxMapScale,mapZoom-1);
+    }
+    float zoomLevel(float worldScale) const {
+        const float fit=overviewScale();
+        if (worldScale<=fit*1.005f) return 0;
+        worldScale=std::min(worldScale,maxMapScale);
+        return worldScale<=detailScale?(worldScale-fit)/(detailScale-fit):
+            1+(worldScale-detailScale)/(maxMapScale-detailScale);
+    }
+    float zoomStep(int direction) const {
+        return direction>0?std::min(2.f,std::floor(mapZoom+.001f)+1):
+            std::max(0.f,std::ceil(mapZoom-.001f)-1);
     }
     void clampCamera() {
         float halfW=std::min(worldWidth/2.f,mapWindow.w/(mapScale()*2));
@@ -691,17 +922,42 @@ struct App {
         mapCenterY=y;
         clampCamera();
     }
+    void zoomAt(float x,float y) {
+        if (mapZoom>=2) return;
+        const float offsetX=x-mapWindow.cx(),offsetY=y-mapWindow.cy();
+        const float oldScale=mapScale();
+        mapZoom=zoomStep(1);
+        mapCenterX+=offsetX/oldScale-offsetX/mapScale();
+        mapCenterY+=offsetY/oldScale-offsetY/mapScale();
+        clampCamera();
+        focus=-1;
+        dirty=true;
+    }
+    void panMap(float x,float y) {
+        const float previousX=mapCenterX,previousY=mapCenterY;
+        const float zoom=mapScale();
+        mapCenterX-=(x-dragX)/zoom;
+        mapCenterY-=(y-dragY)/zoom;
+        dragX=x;dragY=y;
+        clampCamera();
+        dirty|=mapCenterX!=previousX || mapCenterY!=previousY;
+    }
     float mapLeft() const {return mapWindow.cx()-mapCenterX*mapScale();}
     float mapTop() const {return mapWindow.cy()-mapCenterY*mapScale();}
     int mapX(float x) const {return int(std::round(mapLeft()+x*mapScale()));}
     int mapY(float y) const {return int(std::round(mapTop()+y*mapScale()));}
-    int cityX(int index) const {return mapX(cityMapPoint(index,campaign.year()).first);}
-    int cityY(int index) const {return mapY(cityMapPoint(index,campaign.year()).second);}
     const Road* findRoad(Order order) const {
         for (const auto& r:roads) if (r.joins(order.from,order.to)) return &r;
         return nullptr;
     }
     void drawSegment(pxa::game::Frame& f,int x,int y,int u,int v,uint16_t color,int stroke) {
+        const Rect clip{mapWindow.x+1,mapWindow.y+1,mapWindow.w-2,mapWindow.h-2};
+        if (clip.contains(x,y) && clip.contains(u,v)) {
+            line(f,x,y,u,v,color,stroke);
+            return;
+        }
+        if (std::max(x,u)<clip.x || std::min(x,u)>=clip.x+clip.w ||
+            std::max(y,v)<clip.y || std::min(y,v)>=clip.y+clip.h) return;
         const int dx=u-x, dy=v-y;
         float start=0,end=1;
         auto cut=[&](int p,int q) {
@@ -711,15 +967,15 @@ struct App {
             else end=std::min(t,end);
             return start<=end;
         };
-        if (!cut(-dx,x-mapWindow.x-1) || !cut(dx,mapWindow.x+mapWindow.w-2-x) ||
-            !cut(-dy,y-mapWindow.y-1) || !cut(dy,mapWindow.y+mapWindow.h-2-y)) return;
+        if (!cut(-dx,x-clip.x) || !cut(dx,clip.x+clip.w-1-x) ||
+            !cut(-dy,y-clip.y) || !cut(dy,clip.y+clip.h-1-y)) return;
         int a=x+int(std::round(start*dx)), b=y+int(std::round(start*dy));
         int c=x+int(std::round(end*dx)), d=y+int(std::round(end*dy));
         if (a!=c || b!=d) line(f,a,b,c,d,color,stroke);
     }
     using MapPoint=std::pair<float,float>;
     struct RouteLine {
-        std::array<MapPoint,8> points{};
+        std::array<MapPoint,roadBends+2> points{};
         int count=0;
     };
     RouteLine routeLine(const Road& road) const {
@@ -740,32 +996,61 @@ struct App {
             drawSegment(f,mapX(x),mapY(y),mapX(u),mapY(v),color,stroke);
         }
     }
+    art::Tile mapTile(int n) const {
+        return sansText?art::mapTiles[n]:art::compactMapTiles[n];
+    }
+    Rect mapTileCrop(int n) const {
+        constexpr int w=worldWidth/2,h=worldHeight/2;
+        const int wx=(n%2)*w,wy=(n/2)*h;
+        const auto m=mapScale();
+        const int l=std::clamp(int(std::ceil((mapWindow.x+1-mapLeft())/m))-wx,0,w);
+        const int r=std::clamp(int(std::floor((mapWindow.x+mapWindow.w-1-mapLeft())/m))-wx,0,w);
+        const int t=std::clamp(int(std::ceil((mapWindow.y+1-mapTop())/m))-wy,0,h);
+        const int b=std::clamp(int(std::floor((mapWindow.y+mapWindow.h-1-mapTop())/m))-wy,0,h);
+        return {l,t,r-l,b-t};
+    }
     void mapArt(pxa::game::Frame& f) {
-        frame(f,mapWindow,edge,rgb(25,44,43));
+        const Rect p=toPixels(mapWindow);
+        const Rect interior{p.x+1,p.y+1,p.w-2,p.h-2};
+        around(p,interior,[&](Rect r) {blockPixels(f,r,edge);});
+        int left=p.x+p.w,top=p.y+p.h,right=p.x,bottom=p.y;
+        constexpr int w=worldWidth/2,h=worldHeight/2;
         for (int n=0;n<4;++n) {
-            auto base=art::mapTiles[n];
-            const int wx=(n%2)*(worldWidth/2),wy=(n/2)*(worldHeight/2);
-            const auto m=mapScale();
-            const int l=std::clamp(int(std::ceil((mapWindow.x+1-mapLeft())/m))-wx,0,int(base.w));
-            const int r=std::clamp(int(std::floor((mapWindow.x+mapWindow.w-1-mapLeft())/m))-wx,0,int(base.w));
-            const int t=std::clamp(int(std::ceil((mapWindow.y+1-mapTop())/m))-wy,0,int(base.h));
-            const int b=std::clamp(int(std::floor((mapWindow.y+mapWindow.h-1-mapTop())/m))-wy,0,int(base.h));
-            if (l>=r||t>=b) continue;
-            int x=mapX(wx+l),y=mapY(wy+t);
-            tile(f,{base.page,uint16_t(l),uint16_t(t),uint16_t(r-l),uint16_t(b-t)},
-                  {x,y,mapX(wx+r)-x,mapY(wy+b)-y});
+            const Rect crop=mapTileCrop(n);
+            if (crop.w<=0 || crop.h<=0) continue;
+            const auto base=mapTile(n);
+            const int l=(crop.x*base.w+w/2)/w,r=((crop.x+crop.w)*base.w+w/2)/w;
+            const int t=(crop.y*base.h+h/2)/h,b=((crop.y+crop.h)*base.h+h/2)/h;
+            if (l>=r || t>=b) continue;
+            const int wx=(n%2)*w+crop.x,wy=(n/2)*h+crop.y;
+            const int x=mapX(wx),y=mapY(wy);
+            const int endX=mapX(wx+crop.w),endY=mapY(wy+crop.h);
+            if (x>=endX || y>=endY) continue;
+            const Rect dst{sx(x),sy(y),sx(endX)-sx(x),sy(endY)-sy(y)};
+            tilePixels(f,{base.page,uint16_t(l),uint16_t(t),uint16_t(r-l),uint16_t(b-t)},dst);
+            left=std::min(left,dst.x); top=std::min(top,dst.y);
+            right=std::max(right,dst.x+dst.w); bottom=std::max(bottom,dst.y+dst.h);
+        }
+        const auto fill=[&](Rect r) {blockPixels(f,r,rgb(25,44,43));};
+        if (left>=right || top>=bottom) fill(interior);
+        else {
+            // The four tiles share destination edges, so only the margins need a fill.
+            left=std::max(left,interior.x); top=std::max(top,interior.y);
+            right=std::min(right,interior.x+interior.w); bottom=std::min(bottom,interior.y+interior.h);
+            around(interior,{left,top,right-left,bottom-top},fill);
         }
     }
     MapPoint marchPosition(Order order,float progress) const {
         const auto* road=findRoad(order);
         if (!road) return cityMapPoint(order.from,campaign.year());
         const auto line=routeLine(*road);
-        std::array<float,7> distances{};
+        std::array<float,roadBends+1> distances{};
         float total=0;
         for (int i=1;i<line.count;++i) {
             auto [x,y]=line.points[i-1];
             auto [u,v]=line.points[i];
-            distances[i-1]=std::hypot(u-x,v-y);
+            const float dx=u-x,dy=v-y;
+            distances[i-1]=std::sqrt(dx*dx+dy*dy);
             total+=distances[i-1];
         }
         float distance=total*(order.from==road->from?progress:1-progress);
@@ -783,133 +1068,180 @@ struct App {
     }
     void armyOnMap(pxa::game::Frame& f,Order order,bool own) {
         if (!order) return;
-        if (auto r=findRoad(order)) path(f,*r,own?mint:coral,2);
+        const auto* road=findRoad(order);
+        const bool atSea=road && road->coastal;
+        if (road) path(f,*road,own?(atSea?seaRouteActive:mint):coral,2);
         const float t=std::clamp(float(marchingMs)/marchDuration,0.f,1.f);
         auto [u,v]=marchPosition(order,t);
         int x=mapX(u),y=mapY(v);
         if (!mapWindow.contains(x-15,y-25)||!mapWindow.contains(x+15,y+9)) return;
-        const bool flip=marchPosition(order,std::min(1.f,t+.02f)).first<u;
         int pose=1+marchingMs/115%2;
-        int motion=pose==1?1:0;
-        block(f,{x-14,y+1,28,6},ink);
-        tile(f,art::marchers[!own][flip][pose],{x-16,y-24-motion,32,28},true);
+        const int motion=pose==1?1:0;
+        if (atSea) {
+            contain(f,art::mapProps[coastalBoat],{x-16,y-20-motion,32,24},true);
+        } else {
+            const bool flip=marchPosition(order,std::min(1.f,t+.02f)).first<u;
+            block(f,{x-14,y+1,28,6},ink);
+            tile(f,art::marchers[!own][flip][pose],{x-16,y-24-motion,32,28},true);
+        }
         uint16_t flag=own?mint:coral;
         block(f,{x-7,y-24-motion,1,11},ivory);
         block(f,{x-6,y-24-motion,10,5},flag);
-        bar(f,{x-13,y+5,26,2},marchingMs,marchDuration,flag);
+        gauge(f,{x-13,y+4,26,5},marchingMs,marchDuration,own?blueMarchGauge:redMarchGauge);
     }
-    bool taggedCity(int i) const {
-        constexpr int anchors[]={0,2,3,4,5,8,9,10,13,25,26,28,29,32,34,36,37,38,39,40,41,42};
-        return std::find(std::begin(anchors),std::end(anchors),i)!=std::end(anchors);
-    }
-    Rect labelAt(int i,int direction) const {
-        const int w=int(std::ceil((textWidth(cityName(i),12)+3)/scale));
-        const int h=int(std::ceil((fontHeight(12)+2)/scale));
-        const int x=cityX(i),y=cityY(i);
-        const int mx=std::clamp(x-w/2,mapWindow.x+1,mapWindow.x+mapWindow.w-w-1);
-        const int my=std::clamp(y-h/2,mapWindow.y+1,mapWindow.y+mapWindow.h-h-1);
-        switch (direction) {
-            case 1: return {mx,y-h-6,w,h};
-            case 2: return {x+7,my,w,h};
-            case 3: return {x-w-7,my,w,h};
-            default:return {mx,y+5,w,h};
-        }
-    }
+    static constexpr int mapLabelSize=12;
+    static constexpr Rect cityMarker{-8,-7,17,15};
+    static constexpr int mapLandmarks[]={0,1,2,3,4,5,6,7,8,10,13,22,24,25,26,28,29,32,34,36,37,38,40,42};
+
     bool insideMap(Rect r) const {
         return mapWindow.contains(r.x,r.y)&&mapWindow.contains(r.x+r.w-1,r.y+r.h-1);
     }
-    void placeLabel(int i,bool selectedCity=false) {
-        int lowest=std::numeric_limits<int>::max();
-        Rect best{};
-        for (int d=0;d<4;++d) {
-            const auto name=labelAt(i,d);
-            if (!insideMap(name)) continue;
-            int overlaps=0;
-            for (int j=0;j<cityCount;++j) {
-                if (j==i || !mapWindow.contains(cityX(j),cityY(j))) continue;
-                if (name.overlaps({cityX(j)-5,cityY(j)-5,10,9})) ++overlaps;
-                if (mapLabels[j].w && name.overlaps(mapLabels[j])) overlaps+=3;
+    static float clearAtScale(Rect label,Rect obstacle,MapPoint delta,float from) {
+        // Find the last scale where the projected boxes can intersect.
+        float enter=from,exit=std::numeric_limits<float>::infinity();
+        auto intersectAxis=[&](int first,int past,float distance) {
+            if (distance==0) return first<0 && past>0;
+            float near=first/distance,far=past/distance;
+            if (near>far) std::swap(near,far);
+            enter=std::max(enter,near);
+            exit=std::min(exit,far);
+            return enter<exit;
+        };
+        // Include one logical pixel for rounding each projected city position.
+        if (!intersectAxis(label.x-obstacle.x-obstacle.w-1,label.x+label.w-obstacle.x+1,delta.first) ||
+            !intersectAxis(label.y-obstacle.y-obstacle.h-1,label.y+label.h-obstacle.y+1,delta.second) ||
+            enter>maxMapScale) return 0;
+        return exit;
+    }
+    void planMapLabels(int year) {
+        if (labelFontScale==scale && labelYear==year) return;
+        labelFontScale=scale;
+        labelYear=year;
+        cityLabelPlacements={};
+        std::array<MapPoint,cityCount> centers;
+        for (int i=0;i<cityCount;++i) centers[i]=cityMapPoint(i,year);
+        const float fit=overviewScale();
+        const int h=int(std::ceil((fontHeight(mapLabelSize)+2)/scale));
+        auto plan=[&](int city) {
+            const int w=int(std::ceil((textWidth(cityName(city),mapLabelSize)+3)/scale));
+            const Rect choices[]={{-w/2,-h-8,w,h},{-w/2,9,w,h},{10,-h/2,w,h},{-w-10,-h/2,w,h}};
+            auto& placement=cityLabelPlacements[city];
+            placement={choices[0],std::numeric_limits<float>::infinity()};
+            for (auto offset:choices) {
+                float visible=fit;
+                for (int j=0;j<cityCount;++j) {
+                    if (j==city) continue;
+                    const MapPoint delta{centers[j].first-centers[city].first,centers[j].second-centers[city].second};
+                    visible=std::max(visible,clearAtScale(offset,cityMarker,delta,fit));
+                    const auto& previous=cityLabelPlacements[j];
+                    if (previous.offset.w && previous.minScale<=maxMapScale)
+                        visible=std::max(visible,clearAtScale(offset,previous.offset,delta,previous.minScale));
+                }
+                if (visible<placement.minScale) placement={offset,visible};
             }
-            if (overlaps<lowest) {lowest=overlaps;best=name;}
-            if (lowest==0) break;
+        };
+        for (int city:mapLandmarks) plan(city);
+        for (int i=0;i<cityCount;++i)
+            if (!cityLabelPlacements[i].offset.w) plan(i);
+    }
+    Rect visibleMapLabel(int city,Rect islandLabel) const {
+        Rect name=cityLabelPlacements[city].offset;
+        const auto [x,y]=cityCenters[city];
+        name.x+=x;
+        name.y+=y;
+        if (!insideMap(name) || name.overlaps(mapCompass) ||
+            (islandLabel.w && name.overlaps(islandLabel))) return {};
+        return name;
+    }
+    void layoutMap(Rect islandLabel) {
+        const int year=campaign.year();
+        if (showMapNames) planMapLabels(year);
+        const float zoom=mapScale(),left=mapLeft(),top=mapTop();
+        mapCompass={mapWindow.x+mapWindow.w-47,mapWindow.y+mapWindow.h-51,42,46};
+        mapLabels={};
+        for (int i=0;i<cityCount;++i) {
+            const auto [u,v]=cityMapPoint(i,year);
+            const int x=int(std::round(left+u*zoom)),y=int(std::round(top+v*zoom));
+            cityCenters[i]={x,y};
+            const Rect marker{x+cityMarker.x,y+cityMarker.y,cityMarker.w,cityMarker.h};
+            mapMarkers[i]=insideMap(marker)?marker:Rect{};
+            if (showMapNames && mapMarkers[i].w &&
+                (i==selected || i==destination || zoom>=cityLabelPlacements[i].minScale))
+                mapLabels[i]=visibleMapLabel(i,islandLabel);
         }
-        if (selectedCity||lowest==0) mapLabels[i]=best;
+        if (!showMapNames) return;
+        // Give selected names priority without moving neighbouring labels.
+        for (int i=0;i<cityCount;++i)
+            if (i!=selected && i!=destination && mapLabels[i].w &&
+                ((mapLabels[selected].w && mapLabels[i].overlaps(mapLabels[selected])) ||
+                 (destination>=0 && mapLabels[destination].w && mapLabels[i].overlaps(mapLabels[destination]))))
+                mapLabels[i]={};
     }
     void drawCompass(pxa::game::Frame& f) {
-        const int left=mapWindow.x+4,right=mapWindow.x+mapWindow.w-30;
-        const int top=mapWindow.y+4,bottom=mapWindow.y+mapWindow.h-42;
-        const Rect corners[]={{right,bottom,26,37},{left,bottom,26,37},
-                              {right,top,26,37},{left,top,26,37}};
-        for (auto r:corners) {
-            bool covered=false;
-            for (int i=0;i<cityCount && !covered;++i) {
-                const Rect marker{cityX(i)-8,cityY(i)-8,17,16};
-                covered=r.overlaps(marker) || (mapLabels[i].w && r.overlaps(mapLabels[i]));
-            }
-            if (covered) continue;
-            contain(f,art::mapProps[compassRose],{r.x,r.y,r.w,24},true);
-            text(f,"北",r.cx(),r.y+25,12,gold,1,ink);
-            return;
-        }
+        const auto r=mapCompass;
+        if (!r.w) return;
+        const bool canCenter=mapZoom && !isMarching();
+        const bool focused=canCenter && registerControl(r,Command::centerMap,0);
+        battlePanel(f,r,focused?jadePlaque:bronzePlaque);
+        contain(f,art::mapProps[sinan],{r.cx()-11,r.y+5,22,22},true);
+        boxText(f,canCenter?"回城":"南",{r.x+4,r.y+27,r.w-8,16},12,gold,1);
     }
-    void drawCity(pxa::game::Frame& f,int i) {
-        int x=cityX(i), y=cityY(i), owner=campaign.cities[i].owner;
-        if (!mapWindow.contains(x-8,y-7) || !mapWindow.contains(x+8,y+7)) return;
+    void drawCity(pxa::game::Frame& f,int i,Rect islandLabel,bool threatened) {
+        if (!mapMarkers[i].w) return;
+        const auto [x,y]=cityCenters[i];
+        const int owner=campaign.cities[i].owner;
         bool active=i==selected || i==destination;
         bool emph=!isMarching() && registerControl({x-9,y-7,19,15},Command::select,i);
-        if (active||emph) frame(f,{x-8,y-7,17,15},emph?ivory:gold,ink);
+        if (active || emph || threatened) frame(f,{x-8,y-7,17,15},emph?ivory:threatened?coral:gold,ink);
         contain(f,art::mapProps[cityGate],{x-7,y-8,13,14},true);
         block(f,{x-6,y+4,12,3},ink);
         block(f,{x-5,y+5,10,2},colors[owner]);
-        if (emph && !mapLabels[i].w) placeLabel(i,true);
+        if (showMapNames && emph && !mapLabels[i].w) mapLabels[i]=visibleMapLabel(i,islandLabel);
         const Rect name=mapLabels[i];
         if (!name.w) return;
-        text(f,cityName(i),name.cx(),name.cy()-6,12,emph?ivory:active?gold:ivory,1,ink);
+        text(f,cityName(i),name.cx(),name.cy()-mapLabelSize/2,mapLabelSize,emph?ivory:active?gold:ivory,1,ink);
     }
     void drawCityPanel(pxa::game::Frame& f) {
         char buf[64];
         int inspected=destination<0?selected:destination;
         auto city=campaign.cities[inspected];
         skinFrame(f,{279,42,97,177});
-        text(f,cityName(inspected),288,48,18,gold);
-        text(f,ownerName(city.owner),289,69,13,colors[city.owner]);
-        const bool terrainInOwnerRow=textWidth(ownerName(city.owner),13)+
-            textWidth(terrains[sites[inspected].terrain],12)+2<=sx(369)-sx(289);
-        std::string_view region=sites[inspected].region;
-        if (region.size()>6 && region.ends_with("郡") &&
-            textWidth(region,11)+textWidth(cityName(inspected),18)>sx(369)-sx(288))
-            region.remove_suffix(std::string_view("郡").size());
-        text(f,terrainInOwnerRow?region:terrains[sites[inspected].terrain],369,49,11,dim,2);
-        if (terrainInOwnerRow) text(f,terrains[sites[inspected].terrain],369,70,12,dim,2);
+        boxText(f,cityName(inspected),{287,46,47,21},18,gold);
+        boxText(f,terrains[sites[inspected].terrain],{336,47,32,20},12,dim,2);
+        boxText(f,cityDistrict(inspected,campaign.year()),{287,69,81,15},12,dim);
+        boxText(f,ownerName(city.owner),{287,84,81,16},13,colors[city.owner]);
         std::snprintf(buf,sizeof buf,"守军 %d",city.troops);
-        text(f,buf,289,88,14);
+        boxText(f,buf,{287,100,81,15},13);
         std::snprintf(buf,sizeof buf,"田%d  城防%d",city.fields,city.fort);
-        text(f,buf,289,107,12,dim);
-        block(f,{287,125,81,1},edge);
+        boxText(f,buf,{287,115,81,15},12,dim);
+        block(f,{287,130,81,1},edge);
 
+        const bool editable=!isMarching();
         if (city.owner==campaign.player && destination<0) {
-            button(f,{286,131,83,24},"征募 80",Command::work,recruit,campaign.canWork(selected,recruit),true,recruitIcon);
-            button(f,{286,158,83,24},"屯田 95",Command::work,farm,campaign.canWork(selected,farm),false,farmIcon);
-            button(f,{286,185,55,24},"内政",Command::cityDesk);
+            button(f,{286,134,83,22},"征募 80",Command::work,recruit,editable&&campaign.canWork(selected,recruit),true,recruitIcon);
+            button(f,{286,158,83,24},"屯田 95",Command::work,farm,editable&&campaign.canWork(selected,farm),false,farmIcon);
+            button(f,{286,185,55,24},"内政",Command::cityDesk,0,editable);
         } else {
-            bool local=adjacent(selected,inspected);
-            bool transfer=city.owner==campaign.player;
+            const bool local=adjacent(selected,inspected);
+            const bool transfer=city.owner==campaign.player;
             if (local) {
                 std::snprintf(buf,sizeof buf,"可派 %d",campaign.own(selected)?campaign.dispatch(selected):0);
-                text(f,buf,327,134,13,dim,1);
+                boxText(f,buf,{287,132,81,15},13,dim,1);
                 const auto* road=findRoad({selected,inspected});
-                if (road && road->name) text(f,road->name,327,153,12,gold,1);
-                else if (!transfer) text(f,"相邻可出兵",327,153,13,dim,1);
-            } else text(f,"非相邻城池",327,144,12,dim,1);
+                boxText(f,road && road->name?road->name:"区域通路",{287,147,81,15},12,
+                        road && road->coastal?seaRouteActive:gold,1);
+            } else if (!transfer) boxText(f,"非相邻城池",{287,137,81,20},12,dim,1);
+            if (transfer)
+                button(f,{286,163,83,20},"设为起点",Command::origin,inspected,editable);
             if (!transfer && campaign.ceasefire(city.owner))
-                text(f,"盟约生效",327,164,12,gold,1);
+                boxText(f,"盟约生效",{287,165,81,17},12,gold,1);
             button(f,{286,185,55,24},transfer?"调兵":"出征",Command::march,inspected,
-                   campaign.canMarch(selected,inspected),true);
+                   editable&&campaign.canMarch(selected,inspected),true);
         }
-        button(f,{344,185,25,24},"志",Command::gazetteer,inspected);
+        button(f,{344,185,25,24},"志",Command::gazetteer,inspected,editable);
     }
     void drawMap(pxa::game::Frame& f) {
-        fillBackground(f,art::warHall,.42f);
+        mapBackdrop(f);
         char buf[60];
         const int year=campaign.year();
         if (year<220) std::snprintf(buf,sizeof buf,"建安%d年 %s",year-195,seasons[campaign.season()]);
@@ -923,41 +1255,35 @@ struct App {
         std::snprintf(buf,sizeof buf,"%d/%d",campaign.actions,campaign.actionCapacity());
         resourcePlate(f,{295,6,81,28},orderIcon,buf,mint);
 
+        const auto threat=isMarching()?Order{}:campaign.nextAttack();
         mapArt(f);
         for (const auto& r:roads) {
             const bool near=selected==r.from || selected==r.to;
             if (near && !isMarching()) path(f,r,ink,2);
-            path(f,r,near?gold:rgb(129,121,81),1);
+            const auto color=r.coastal?(near?seaRouteActive:seaRoute):(near?gold:rgb(129,121,81));
+            path(f,r,color,1);
         }
-        for (auto o:campaign.orders) {
-            if (!o || campaign.cities[o.to].owner!=campaign.player || isMarching()) continue;
+        if (threat) {
             for (int j=1;j<6;++j) {
-                auto [a,b]=marchPosition(o,j/6.f);
+                auto [a,b]=marchPosition(threat,j/6.f);
                 const int x=mapX(a),y=mapY(b);
                 if (mapWindow.contains(x-2,y-2) && mapWindow.contains(x+2,y+2))
                     block(f,{x-1,y-1,3,3},coral);
             }
         }
-        mapLabels={};
-        placeLabel(selected,true);
-        if (destination>=0) placeLabel(destination,true);
-        for (int pass=0;pass<3;++pass) {
-            for (int i=0;i<cityCount;++i) {
-                if (mapLabels[i].w || !mapWindow.contains(cityX(i),cityY(i))) continue;
-                if (pass==0 && !adjacent(selected,i)) continue;
-                if (pass==1 && !taggedCity(i)) continue;
-                if (pass==2 && !mapZoom) continue;
-                placeLabel(i);
-            }
+        Rect islandLabel{};
+        if (showMapNames) {
+            const int x=mapX(worldX(121.04f)),y=mapY(worldY(23.65f));
+            const int half=int(std::ceil(textWidth("台湾岛",12)/(2*scale)))+2;
+            islandLabel={x-half,y-8,half*2,16};
+            if (!insideMap(islandLabel)) islandLabel={};
         }
-        for (int i=0;i<cityCount;++i) if (i!=selected && i!=destination) drawCity(f,i);
-        drawCity(f,selected);
-        if (destination>=0) drawCity(f,destination);
-        const int islandX=mapX(worldX(121.04f)),islandY=mapY(worldY(23.65f));
-        const int islandHalf=int(std::ceil(textWidth("台湾岛",12)/(2*scale)))+2;
-        if (insideMap({islandX-islandHalf,islandY-8,islandHalf*2,16}))
-            text(f,"台湾岛",islandX,islandY-6,12,dim,1,ink);
-        drawCompass(f);
+        layoutMap(islandLabel);
+        for (int i=0;i<cityCount;++i)
+            if (i!=selected && i!=destination) drawCity(f,i,islandLabel,i==threat.to);
+        drawCity(f,selected,islandLabel,selected==threat.to);
+        if (destination>=0) drawCity(f,destination,islandLabel,destination==threat.to);
+        if (islandLabel.w && !islandLabel.overlaps(mapCompass)) text(f,"台湾岛",islandLabel.cx(),islandLabel.cy()-6,12,dim,1,ink);
         for (const auto& unit:campaign.columns) {
             if (!unit || !unit.eta) continue;
             auto [u,v]=marchPosition(unit.road,.45f);
@@ -971,9 +1297,21 @@ struct App {
             for (auto column:marching) armyOnMap(f,column,false);
             armyOnMap(f,playerMarch,true);
         }
+        drawCompass(f);
         if (mapWindow.w==standardMap.w) drawCityPanel(f);
 
-        battlePanel(f,{7,220,370,42});
+        battlePanel(f,{8,220,368,21});
+        if (isMarching()) {
+            count=0;
+            focus=0;
+            if (playerMarch) std::snprintf(buf,sizeof buf,"%s → %s",
+                                         cityName(playerMarch.from),cityName(playerMarch.to));
+            else std::snprintf(buf,sizeof buf,"诸军正在进发");
+            boxText(f,buf,{17,222,350,17},12,playerMarch?mint:coral);
+            gauge(f,{12,248,253,9},marchingMs,marchDuration,blueMarchGauge);
+            button(f,{274,243,102,19},"加速抵达",Command::skipMarch,0,true,true,horseIcon);
+            return;
+        }
         const char* status=nullptr;
         uint16_t tone=dim;
         switch (notice) {
@@ -993,36 +1331,37 @@ struct App {
             case Notice::goal: status="剧本悬赏已达成"; tone=gold; break;
             case Notice::none: break;
         }
-        for (auto o:campaign.orders) if (o && campaign.cities[o.to].owner==campaign.player &&
-                                        notice==Notice::none) {
-            std::snprintf(buf,sizeof buf,"%s下季受袭",cityName(o.to));
-            status=buf;
-            tone=coral;
+        if (status) boxText(f,status,{17,222,threat?244:350,17},12,tone);
+        else {
+            std::snprintf(buf,sizeof buf,"领地 %d/%d",campaign.holdings(campaign.player),cityCount);
+            boxText(f,buf,{17,222,threat?83:93,17},12,ivory);
+            block(f,{threat?101:112,225,1,11},edge);
+            boxText(f,"季末",{threat?105:119,222,threat?35:42,17},12,dim,1);
+            for (int i=0;i<2;++i) {
+                std::snprintf(buf,sizeof buf,i?"+%d粮":"+%d金",campaign.income(i!=0));
+                if (threat) boxText(f,buf,{141+61*i,222,60,17},12,i?mint:gold);
+                else {
+                    const int x=168+98*i;
+                    contain(f,art::commandIcons[i?grainIcon:coinsIcon],{x,224,13,13},true);
+                    boxText(f,buf,{x+16,222,78,17},12,i?mint:gold);
+                }
+            }
         }
-        if (!status) {
-            std::snprintf(buf,sizeof buf,"领地 %d/%d  季末 +%d金 +%d粮",
-                          campaign.holdings(campaign.player),cityCount,campaign.income(false),campaign.income(true));
-            status=buf;
+        if (threat) {
+            const bool focus=registerControl({266,222,102,17},Command::inspectThreat,0);
+            block(f,{265,224,1,13},edge);
+            contain(f,art::commandIcons[ordersIcon],{270,224,12,12},true);
+            std::snprintf(buf,sizeof buf,"%s告急",cityName(threat.to));
+            boxText(f,buf,{284,222,83,17},12,focus?gold:coral);
         }
-        if (isMarching()) {
-            count=0;
-            if (focus<0 || focus>=1) focus=0;
-            if (playerMarch) std::snprintf(buf,sizeof buf,"%s → %s",
-                                         cityName(playerMarch.from),cityName(playerMarch.to));
-            else std::snprintf(buf,sizeof buf,"诸军正在进发");
-            text(f,buf,23,226,13,playerMarch?mint:coral);
-            bar(f,{23,247,218,4},marchingMs,marchDuration,playerMarch?mint:coral);
-            button(f,{274,226,102,32},"加速抵达",Command::skipMarch,0,true,true);
-            return;
-        }
-        text(f,status,23,224,12,tone);
-        button(f,{8,240,43,21},"战法",Command::guide);
-        button(f,{54,240,43,21},"封卷",Command::home);
-        button(f,{100,240,43,21},"军议",Command::council);
-        button(f,{146,240,30,21},"−",Command::zoom,-1,mapZoom>0);
-        button(f,{179,240,30,21},"+",Command::zoom,1,mapZoom<2);
-        button(f,{212,240,57,21},mapWindow.w==wideMap.w?"城务":"全图",Command::atlas);
-        button(f,{274,226,102,32},"季末军议",Command::season,0,true,true);
+        button(f,{8,243,41,19},"战法",Command::guide);
+        button(f,{51,243,41,19},"封卷",Command::home);
+        button(f,{94,243,41,19},"军议",Command::council);
+        button(f,{137,243,27,19},"−",Command::zoom,-1,mapZoom>0);
+        button(f,{166,243,27,19},"+",Command::zoom,1,mapZoom<2);
+        button(f,{195,243,42,19},"城名",Command::mapNames,0,true,showMapNames,namesIcon);
+        button(f,{239,243,42,19},mapWindow.w==wideMap.w?"城务":"全图",Command::atlas);
+        button(f,{283,243,93,19},"季末军议",Command::season,0,true,true);
     }
     void drawDeploy(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
@@ -1030,43 +1369,63 @@ struct App {
         const int enemy=campaign.cities[battle.defending?departure.from:departure.to].owner;
         const int lead=plannedLeader();
         header(f,battle.defending?"守城布阵":"出征布阵",cityName(departure.to));
-        if (lead>=0) portrait(f,campaign.leader(lead).portrait,{13,48,63,63});
-        text(f,lead>=0?campaign.leader(lead).name:"城中守备",84,50,17,gold);
+        plaque(f,{12,39,360,38});
+        if (lead>=0) portrait(f,campaign.leader(lead).portrait,{18,42,31,31});
+        const int nameLeft=lead>=0?55:21;
+        boxText(f,lead>=0?campaign.leader(lead).name:"城中守备",{nameLeft,42,125-nameLeft,17},14,mint);
+        number(f,battle.defending?destinationCity.troops:campaign.columns[arrivingColumn].troops,nameLeft,60,13);
+        const auto* foe=enemy<3?&officers[enemy][campaign.enemyOfficer(enemy,departure.to)]:nullptr;
+        if (foe) portrait(f,foe->portrait,{336,42,31,31});
+        const int nameRight=foe?330:361;
+        boxText(f,foe?foe->name:ownerName(enemy),{257,42,nameRight-257,17},14,coral,2);
+        number(f,battle.defending?campaign.dispatch(departure.from):destinationCity.troops,
+               foe?329:361,59,13,ivory,2);
+        const auto threat=Battle::enemyUnit(departure.to,enemy,foe);
         const bool siege=arrivingColumn>=0 && campaign.columns[arrivingColumn].blockade;
-        text(f,siege?"围城已削城防":lead>=0?campaign.leader(lead).skill:"预备兵临阵",84,77,13,dim);
-        if (enemy<3) {
-            const auto& foe=officers[enemy][campaign.enemyOfficer(enemy,departure.to)];
-            portrait(f,foe.portrait,{308,48,63,63});
-            text(f,foe.name,298,51,17,colors[enemy],2);
-        } else text(f,ownerName(enemy),298,51,17,ivory,2);
-        text(f,terrains[sites[departure.to].terrain],298,78,13,dim,2);
-        plaque(f,{12,122,360,35});
-        text(f,"我军",21,132,14,mint);
-        number(f,battle.defending?destinationCity.troops:campaign.columns[arrivingColumn].troops,65,129,19);
-        text(f,"敌军",241,132,14,coral);
-        number(f,battle.defending?campaign.dispatch(departure.from):destinationCity.troops,365,129,19,ivory,2);
-        char desc[48];
-        std::snprintf(desc,sizeof desc,"城防 %d",destinationCity.fort);
-        text(f,desc,191,132,14,gold,1);
+        char desc[58];
+        const auto enemyLine=Battle::enemyFormationFor(departure.to,destinationCity.fort,
+                                                       battle.defending,threat,campaign.difficulty);
+        std::snprintf(desc,sizeof desc,"%s · %s",troopNames[threat],formations[enemyLine]);
+        boxText(f,desc,{128,42,128,17},14,coral,1);
+        std::snprintf(desc,sizeof desc,"%s · %s%d",terrains[sites[departure.to].terrain],
+                      siege?"有效城防":"城防",std::max(0,destinationCity.fort-(siege?2:0)));
+        boxText(f,desc,{128,59,128,16},12,dim,1);
+
+        text(f,"兵种",15,82,12,gold);
         for (int i=0;i<3;++i) {
-            Rect r{12+122*i,170,116,45};
-            bool hi=registerControl(r,Command::shift,i);
-            plaque(f,r,true,i==formation||hi);
-            tile(f,art::troops[0][i][0],{r.x+3,r.y+2,37,37},true);
-            text(f,formations[i],r.x+43,r.y+6,15,ivory);
-            text(f,formationHints[i],r.x+43,r.y+26,12,dim);
+            Rect r{12+121*i,97,117,39};
+            bool hi=registerControl(r,Command::pickTroop,i);
+            plaque(f,r,true,i==deployment.troop||hi);
+            tile(f,art::troops[0][i][0],{r.x+4,r.y+1,34,34},true);
+            boxText(f,troopNames[i],{r.x+42,r.y+3,r.w-48,17},15,ivory);
+            boxText(f,troopHints[i],{r.x+42,r.y+20,r.w-48,17},12,i==counterTroop(threat)?mint:dim);
         }
-        if (!battle.defending) button(f,{12,230,91,26},"撤军",Command::recall,arrivingColumn);
-        else button(f,{12,230,91,26},"换将",Command::roster);
-        button(f,{241,228,131,29},"击鼓开战",Command::engage,0,true,true);
+        text(f,"阵法",15,140,12,gold);
+        boxText(f,formationHints[deployment.formation],{201,138,167,17},12,mint,2);
+        for (int i=0;i<3;++i)
+            button(f,{12+121*i,155,117,26},formations[i],Command::shift,i,true,i==deployment.formation,formationIcons[i]);
+        text(f,"武将兵器",15,185,12,gold);
+        boxText(f,lead>=0?weaponHints[deployment.weapon]:"没有领军武将",{201,183,167,17},12,dim,2);
+        for (int i=0;i<3;++i)
+            button(f,{12+121*i,201,117,25},weaponNames[i],Command::pickWeapon,i,lead>=0,i==deployment.weapon,weaponIcons[i]);
+        if (!battle.defending) button(f,{12,233,92,25},"撤军",Command::recall,arrivingColumn);
+        else button(f,{12,233,92,25},"换将",Command::roster);
+        const int force=battle.defending?destinationCity.troops:campaign.columns[arrivingColumn].troops;
+        const auto lines=Battle::deployRanks(force,deployment.formation);
+        boxText(f,"上 / 中 / 下",{105,225,134,17},12,dim,1);
+        std::snprintf(desc,sizeof desc,"%d / %d / %d",lines[0],lines[1],lines[2]);
+        boxText(f,desc,{106,242,132,17},12,mint,1);
+        button(f,{241,231,130,28},"击鼓开战",Command::engage,0,true,true);
     }
 
     void army(pxa::game::Frame& f,int lane,int who) {
-        int current=battle.troops[who];
+        const int current=battle.ranks[who][lane];
         if (!current) return;
         int step=battle.ticks-Battle::approach;
-        Formation stance=who?battle.intent:battle.stance;
-        int n=std::clamp(1+current*4/std::max(1,battle.initial[who]),1,4);
+        const Troop troop=who?battle.enemyTroop:battle.plan.troop;
+        const Formation formation=who?battle.enemyFormation:battle.plan.formation;
+        const Maneuver maneuver=battle.stance(who,lane);
+        int n=std::clamp(1+current*10/std::max(1,battle.initial[who]),1,4);
         for (int i=n-1;i>=0;--i) {
             int stagger=(i*7+lane*4+who*3)%12;
             int approach=std::min(96,battle.ticks*96/Battle::approach);
@@ -1076,43 +1435,128 @@ struct App {
                 if (action<7) animation=4;
                 else if (action<13) animation=5;
                 else if (action>=31) animation=3;
-                if (stance==bow && action<8) {
+                if (troop==bow && action<8) {
                     int x=who?254-action*8:130+action*8;
                     int y=128+lane*23-action%4*2;
                     line(f,x,y,x+(who?8:-8),y+1,gold,1);
                 }
             }
-            int x=(battle.defending?45:43)+approach+(stance==bow?-22:stance==horse?8:0)-i*23+lane*5;
-            if (!who) {
-                if (battle.maneuver==press) x+=14;
-                else if (battle.maneuver==hold) x-=12;
-                else if (battle.maneuver==flank) x+=lane==1?-12:19;
-            } else x=384-x;
+            const int depth=formation==wedge?(lane==1?17:-12):
+                formation==wings?(lane==1?-13:13):0;
+            const int gap=formation==square?19:23;
+            int x=(battle.defending?45:43)+approach+(troop==bow?-22:troop==horse?8:0)-i*gap+depth;
+            x+=battle.rankAdvance[who][lane];
+            if (maneuver==flank) x+=lane==1?-12:12;
+            if (who) x=384-x;
             const int y=150+lane*22-i%2*4;
             block(f,{x-11,y-4,22,3},rgb(57,46,31));
-            auto sprite=art::troops[who][stance][animation];
+            auto sprite=art::troops[who][troop][animation];
             if (step>=0) {
                 const int phase=(step+stagger)%Battle::period;
-                if (battle.morale[who]<24) sprite=art::tacticTroops[who][stance][phase<18?4:5];
-                else if (!who && battle.maneuver==hold) sprite=art::tacticTroops[who][stance][phase<10?1:0];
-                else if (!who && battle.maneuver==press) sprite=art::tacticTroops[who][stance][phase<11?3:2];
-                else if (battle.round && phase<8 && battle.losses[who]>battle.losses[1-who]*2)
-                    sprite=art::tacticTroops[who][stance][1];
+                if (battle.morale[who]<24) sprite=art::tacticTroops[who][troop][phase<18?4:5];
+                else if (maneuver==hold || maneuver==fallBack) sprite=art::tacticTroops[who][troop][phase<10?1:0];
+                else if (maneuver==press) sprite=art::tacticTroops[who][troop][phase<11?3:2];
+                else if (battle.round && phase<8 && battle.rankLosses[who][lane]>battle.rankLosses[1-who][lane]*2)
+                    sprite=art::tacticTroops[who][troop][1];
             }
             tile(f,sprite,{x-21,y-40,42,42},true);
         }
     }
+    void drawFieldGeneral(pxa::game::Frame& f) {
+        if (battle.commander<0 || !battle.generalHealth) return;
+        const int offset=std::min(36,battle.ticks*36/Battle::approach);
+        const int x=(battle.atFront?125:82)+offset+battle.rankAdvance[0][battle.generalLane]/3;
+        const int y=120+29*battle.generalLane;
+        if (battle.strikeTicks) {
+            const int travel=15-battle.strikeTicks;
+            if (battle.plan.weapon==longbow) {
+                const int flight=x+travel*12;
+                line(f,flight,y+2,flight+19,y+4,gold,2);
+            } else line(f,x+12+travel,y+12,x+32+travel,y-6,gold,3);
+        }
+        portrait(f,battle.officer().portrait,{x-12,y-12,24,24});
+        gauge(f,{x-12,y+12,24,5},battle.generalHealth,100,jadeGauge);
+    }
+    void generalControls(pxa::game::Frame& f) {
+        if (!battle.canMoveGeneral()) return;
+        for (int lane=0;lane<3;++lane) for (int front=0;front<2;++front) {
+            if (!battle.ranks[0][lane] || (lane==battle.generalLane && bool(front)==battle.atFront)) continue;
+            Rect zone{front?111:68,106+31*lane,front?85:43,31};
+            if (registerControl(zone,Command::moveGeneral,lane*2+front)) {
+                around(zone,{zone.x+1,zone.y+1,zone.w-2,zone.h-2},[&](Rect r){block(f,r,gold);});
+                boxText(f,rankNames[lane],{zone.x+2,zone.y+1,zone.w-4,15},11,ivory,1);
+                boxText(f,front?"阵前":"后阵",{zone.x+2,zone.y+15,zone.w-4,15},11,gold,1);
+            }
+        }
+    }
+    void drawRanks(pxa::game::Frame& f) {
+        constexpr const char* names[]={"上","中","下"};
+        for (int lane=0;lane<Battle::rankCount;++lane) {
+            const int y=106+31*lane;
+            const Rect own{8,y,60,21}, foe{316,y,60,21};
+            const bool marked=registerControl(own,Command::battleRank,lane,!battle.result);
+            battlePanel(f,own,marked||battle.rankOrders[lane].rounds?jadePlaque:bronzePlaque);
+            battlePanel(f,foe,battle.enemyRank==lane?vermilionPlaque:bronzePlaque);
+            char count[12];
+            for (int side=0;side<2;++side) {
+                const auto card=side?foe:own;
+                boxText(f,names[lane],{card.x+5,y+2,17,17},12,dim,1);
+                std::snprintf(count,sizeof count,"%d",battle.ranks[side][lane]);
+                boxText(f,count,{card.x+24,y+2,31,17},12,side?coral:mint,2);
+            }
+        }
+    }
+
     void drawPause(pxa::game::Frame& f) {
         count=0;
-        skinFrame(f,{72,83,240,96});
-        text(f,"会战暂停",192,96,20,gold,1);
-        button(f,{89,132,98,30},"继续战斗",Command::pause,0,true,true);
-        button(f,{196,132,99,30},battle.defending?"弃城":"撤军",Command::retreat);
+        battlePanel(f,{72,83,240,122});
+        if (retreatPrompt) {
+            boxText(f,battle.defending?"确认弃城?":"确认撤军?",{84,93,216,27},20,coral,1);
+            button(f,{87,144,101,30},"返回",Command::back,0,true,true);
+            button(f,{196,144,101,30},battle.defending?"弃城":"撤军",Command::confirmRetreat,0,true,false,withdrawIcon);
+            return;
+        }
+        boxText(f,"会战暂停",{84,93,216,27},20,gold,1);
+        button(f,{87,132,101,28},"继续战斗",Command::pause,0,true,true);
+        button(f,{196,132,101,28},battle.defending?"弃城":"撤军",Command::retreat,0,true,false,withdrawIcon);
+        button(f,{142,168,100,25},"音频",Command::audioMenu);
     }
-    void battleHud(pxa::game::Frame& f) const {
-        battlePanel(f,{4,3,148,48},jadePlaque);
-        battlePanel(f,{232,3,148,48},vermilionPlaque);
-        battlePanel(f,{155,3,74,48});
+    void combatCard(pxa::game::Frame& f,Rect card,const Officer* actor,
+                    int value,int total,int morale,bool enemy,bool duel) {
+        battlePanel(f,card,enemy?vermilionPlaque:jadePlaque);
+        const Rect portraitBox{enemy?card.x+card.w-42:card.x+10,card.y+10,32,32};
+        if (actor) portrait(f,actor->portrait,portraitBox);
+        else {
+            frame(f,portraitBox,edge,ink);
+            boxText(f,"守",portraitBox.inset(4,3),18,gold,1);
+        }
+        const int x=card.x+(enemy?9:51);
+        const int align=enemy?2:0;
+        char caption[32];
+        std::snprintf(caption,sizeof caption,"%d",value);
+        boxText(f,duel?(actor?actor->name:"守阵校尉"):caption,{x,card.y+5,80,17},
+                duel?14:16,enemy?coral:mint,align);
+        gauge(f,{x,card.y+23,80,9},value,total,enemy?redGauge:jadeGauge,enemy);
+        std::snprintf(caption,sizeof caption,duel?"体力%d":"军心%d",duel?value:morale);
+        if (!duel) contain(f,art::commandIcons[moraleIcon],{enemy?x+67:x,card.y+34,12,12},true);
+        boxText(f,caption,{x+(enemy||duel?0:15),card.y+33,duel?80:65,16},12,ivory,align);
+    }
+    void battleHud(pxa::game::Frame& f,bool duel=false) {
+        combatCard(f,{8,5,140,55},&battle.officer(),duel?battle.duel.health[0]:battle.troops[0],
+                   duel?100:battle.initial[0],battle.morale[0],false,duel);
+        combatCard(f,{236,5,140,55},battle.opponent(),duel?battle.duel.health[1]:battle.troops[1],
+                   duel?100:battle.initial[1],battle.morale[1],true,duel);
+        battlePanel(f,{153,5,78,55});
+        boxText(f,duel?"阵前斗将":cityName(battle.to),{159,9,66,18},16,gold,1);
+        char line[32];
+        if (duel)
+            std::snprintf(line,sizeof line,"第%d合",std::min(3,battle.duel.round+1));
+        else std::snprintf(line,sizeof line,"敌 %s",troopNames[battle.enemyTroop]);
+        boxText(f,line,{159,28,66,16},13,duel?dim:coral,1);
+        const bool approaching=battle.ticks<Battle::approach;
+        const int progress=approaching?battle.ticks:(battle.ticks-Battle::approach)%Battle::period;
+        gauge(f,{162,47,60,7},duel?battle.duel.round:progress,
+              duel?3:approaching?Battle::approach:Battle::period,goldGauge);
     }
     void drawBattle(pxa::game::Frame& f) {
         if (battle.duel.visible()) {
@@ -1122,32 +1566,12 @@ struct App {
         }
         fillBackground(f,battlefield());
         battleHud(f);
-        portrait(f,battle.officer().portrait,{11,9,34,34});
-        if (auto* foe=battle.opponent()) portrait(f,foe->portrait,{339,9,34,34});
-        else {
-            frame(f,{339,6,38,38});
-            text(f,"守",358,13,20,gold,1);
-        }
-        number(f,battle.troops[0],51,6,17,mint);
-        number(f,battle.troops[1],333,6,17,coral,2);
-        healthBar(f,{51,27,93,9},battle.troops[0],battle.initial[0]);
-        healthBar(f,{240,27,93,9},battle.troops[1],battle.initial[1],true);
-        text(f,"军心",51,37,11,dim);
-        number(f,battle.morale[0],77,36,12);
-        text(f,"军心",310,37,11,dim);
-        number(f,battle.morale[1],307,36,12,ivory,2);
         char buf[44];
-        std::snprintf(buf,sizeof buf,"%s会战",cityName(battle.to));
-        text(f,buf,192,8,16,gold,1);
-        std::snprintf(buf,sizeof buf,"敌令 %s",formations[battle.intent]);
-        text(f,buf,192,26,14,coral,1);
-        int progress=battle.ticks<Battle::approach?battle.ticks:
-            (battle.ticks-Battle::approach)%Battle::period;
-        bar(f,{162,43,60,3},progress,battle.ticks<Battle::approach?Battle::approach:Battle::period,coral);
         for (int lane=0;lane<3;++lane) {
             army(f,lane,0);
             army(f,lane,1);
         }
+        drawFieldGeneral(f);
         if (battle.effects) {
             int trail=25-battle.effects;
             for (int i=0;i<8;++i) {
@@ -1155,30 +1579,58 @@ struct App {
                 line(f,x,y,x+28,y-10,i%2?gold:ivory,2);
             }
             plaque(f,{121,66,142,26},true,true);
-            text(f,battle.officer().skill,192,70,17,gold,1);
+            boxText(f,battle.officer().skill,{131,70,122,17},17,gold,1);
+        } else if (battle.strikeTicks) {
+            number(f,-battle.losses[1],276,111+31*std::max(0,battle.lastStrikeLane),15,coral,1);
         } else if (battle.round && (battle.ticks-Battle::approach)%Battle::period<17) {
             number(f,-battle.losses[0],111,92,15,coral,1);
             number(f,-battle.losses[1],273,92,15,coral,1);
         } else if (battle.ticks<Battle::approach) {
             text(f,"两军列阵",192,69,16,ivory,1);
         }
-        battlePanel(f,{4,212,376,51});
-        bar(f,{11,219,97,4},battle.signal,100,gold);
-        std::snprintf(buf,sizeof buf,"令%d",battle.signal);
-        text(f,buf,116,214,12,gold);
-        text(f,battle.maneuver==measured?formationHints[battle.stance]:maneuvers[battle.maneuver],
-             156,214,12,dim);
-        if (battle.maneuverRounds) number(f,battle.maneuverRounds,198,214,12,gold);
-        for (int i=0;i<3;++i) {
-            Rect r{8+63*i,233,58,24};
-            button(f,r,formations[i],Command::shift,i,i==battle.stance||battle.signal>=Battle::commandCost,
-                   i==battle.stance,spearIcon+i);
+        if (!battle.effects && (battle.enemySkillQueued || battle.enemySkillTicks ||
+                                 battle.enemyManeuver!=measured)) {
+            const char* cue=battle.enemyWithdrawalQueued?"敌军将撤":
+                            battle.enemySkillTicks?battle.opponent()->skill:
+                            battle.enemySkillQueued?"敌将蓄势":nullptr;
+            if (!cue) {
+                std::snprintf(buf,sizeof buf,"敌%s%s",battle.enemyRank<0?"军":rankNames[battle.enemyRank],
+                              maneuvers[battle.enemyManeuver]);
+                cue=buf;
+            }
+            battlePanel(f,{128,65,128,24},vermilionPlaque);
+            boxText(f,cue,{135,67,114,20},13,coral,1);
         }
-        button(f,{199,233,107,24},battle.usedSkill?"将技已用":battle.officer().skill,Command::skill,
-               0,battle.commander>=0&&!battle.usedSkill&&battle.signal>=Battle::skillCost,true);
-        button(f,{311,233,65,24},"号令",Command::orders);
+        if (tacticsOpen) {
+            drawOrders(f);
+            return;
+        }
+        battlePanel(f,{8,210,307,25});
+        gauge(f,{17,218,48,9},battle.signal,100,goldGauge);
+        std::snprintf(buf,sizeof buf,"令%d",battle.signal);
+        boxText(f,buf,{71,214,51,17},12,gold);
+        if (battle.maneuverRounds)
+            std::snprintf(buf,sizeof buf,"%s %d合",maneuvers[battle.maneuver],battle.maneuverRounds);
+        else std::snprintf(buf,sizeof buf,"%s",troopNames[battle.plan.troop]);
+        boxText(f,buf,{128,214,81,17},12,battle.maneuverRounds?mint:dim);
+        if (battle.commander>=0) {
+            const char* status=!battle.generalHealth?"武将退场":
+                battle.atFront?"阵前损体力":"点路牌分兵";
+            boxText(f,status,{212,214,93,17},12,battle.generalHealth?dim:coral,1);
+        }
+        for (int i=0;i<3;++i)
+            button(f,{8+56*i,239,54,21},formations[i],Command::shift,i,
+                   !battle.result&&(i==battle.plan.formation||battle.signal>=Battle::commandCost),
+                   i==battle.plan.formation,formationIcons[i]);
+        button(f,{176,239,58,21},weaponAttacks[battle.plan.weapon],Command::strike,0,
+               battle.mayStrike(),false,weaponIcons[battle.plan.weapon]);
+        button(f,{236,239,69,21},battle.usedSkill?"将技已用":"将技",Command::skill,0,
+               battle.canMoveGeneral()&&!battle.usedSkill&&battle.signal>=Battle::skillCost,true,skillIcon);
+        button(f,{307,239,69,21},"号令",Command::orders,0,!battle.result,false,ordersIcon);
+        button(f,{320,210,56,25},"暂停",Command::pause,0,true,false,pauseIcon);
+        drawRanks(f);
         if (battle.paused) drawPause(f);
-        else if (tacticsOpen) drawOrders(f);
+        else generalControls(f);
     }
     void drawReport(pxa::game::Frame& f) {
         fillBackground(f,reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);
@@ -1189,38 +1641,43 @@ struct App {
         contain(f,art::outcomes[reportWinner>0?0:1],{116,42,152,54},true);
         char heading[56];
         std::snprintf(heading,sizeof heading,"%s · %s",cityName(reportCity),title);
-        text(f,heading,192,105,14,reportWinner>0?gold:coral,1);
+        boxText(f,heading,{59,101,266,23},14,reportWinner>0?gold:coral,1);
         block(f,{67,123,250,1},edge);
         text(f,"我军伤亡",78,139,15);
         number(f,reportLoss,308,138,17,ivory,2);
         const char* extra=reportWinner<=0?(reportLoss==battle.initial[0]?"全军覆没":"余部已撤离前线"):
                            reportDefense?"守军留驻城内":"入城缴获 115金 95粮";
-        text(f,extra,192,159,14,dim,1);
+        if (aftermath.enemyReturned) {
+            char withdrawal[64];
+            std::snprintf(withdrawal,sizeof withdrawal,"敌军 %d 人撤往%s",
+                          aftermath.enemyReturned,cityName(battle.enemyRetreatCity));
+            boxText(f,withdrawal,{60,155,264,23},14,dim,1);
+        } else text(f,extra,192,159,14,dim,1);
         char merit[56];
         if (aftermath.objective) std::snprintf(merit,sizeof merit,"剧本悬赏已达成");
         else if (aftermath.level) std::snprintf(merit,sizeof merit,"领军提升至等级 %d",aftermath.level);
         else std::snprintf(merit,sizeof merit,"领军历练 +%d",aftermath.xp);
         if (aftermath.xp || aftermath.objective) text(f,merit,192,180,13,mint,1);
-        button(f,{121,199,142,27},aftermath.captured?"处置俘将":"返回舆图",Command::accept,0,true,true);
+        button(f,{121,197,142,25},aftermath.captured?"处置俘将":"返回舆图",Command::accept,0,true,true);
     }
     void drawHelp(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
-        header(f,"行军用策","六十四季内一统州郡");
+        header(f,"行军用策","七十二季内一统州郡");
         constexpr const char* titles[]={"治城","进军","临阵","军令"};
         constexpr const char* a[]={"征募补兵，屯田加粮，扩地增令。",
             "点邻城可调兵，围城次季抵达。",
-            "枪克骑，骑克弓，弓克枪。看敌令。",
-            "换阵耗14，将技耗46。军令会回升。"};
-        constexpr const char* b[]={"城内政可任太守、安民、巡访。",
+            "枪克骑，骑克弓，弓克枪。",
+            "点我方战场调将，兵器出招耗12令。"};
+        constexpr const char* b[]={"城池内政可任太守、安民、搜寻。",
             "再点己城切换出发城。红线是敌袭。",
-            "山地利枪，水乡利弓，平原利骑。",
+            "战前选兵种、阵法和武将兵器。",
             "号令控制攻守，单挑影响军心。"};
         for (int i=0;i<4;++i) {
             int y=44+46*i;
             frame(f,{10,y,364,42});
             text(f,titles[i],20,y+11,15,gold);
-            text(f,a[i],60,y+3,13);
-            text(f,b[i],60,y+23,13,dim);
+            boxText(f,a[i],{80,y+2,282,18},13);
+            boxText(f,b[i],{80,y+21,282,18},13,dim);
         }
         button(f,{263,232,111,24},"返回",Command::back,0,true,true);
     }
@@ -1229,7 +1686,7 @@ struct App {
         skinFrame(f,{36,40,312,181});
         contain(f,art::outcomes[campaign.won>0?0:1],{114,54,156,52},true);
         text(f,campaign.won>0?"州郡皆归帐下，山河重定。":
-                campaign.holdings(campaign.player)?"六十四季已过，诸侯割据未平。":"城池尽失，大势已去。",192,122,15,ivory,1);
+                campaign.holdings(campaign.player)?"七十二季已过，诸侯割据未平。":"城池尽失，大势已去。",192,122,15,ivory,1);
         button(f,{120,166,144,30},"返回标题",Command::home,0,true,true);
     }
     void drawReplace(pxa::game::Frame& f) {
@@ -1242,14 +1699,17 @@ struct App {
     }
     void drawCouncil(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
-        header(f,"军议",factions[campaign.player].title);
         char state[68];
+        std::snprintf(state,sizeof state,"%s · %s",factions[campaign.player].title,
+                      difficultyNames[int(campaign.difficulty)]);
+        header(f,"军议",state);
         std::snprintf(state,sizeof state,"%d",campaign.gold);
         resourcePlate(f,{10,41,95,25},coinsIcon,state,gold);
         std::snprintf(state,sizeof state,"%d",campaign.grain);
         resourcePlate(f,{110,41,95,25},grainIcon,state);
         std::snprintf(state,sizeof state,"%d/%d",campaign.actions,campaign.actionCapacity());
         resourcePlate(f,{210,41,95,25},orderIcon,state,mint);
+        button(f,{312,41,62,25},"音频",Command::audioMenu);
         skinFrame(f,{10,70,178,148});
         skinFrame(f,{196,70,178,148});
         text(f,"筹粮练兵",20,79,16,gold);
@@ -1288,7 +1748,7 @@ struct App {
         }
         count=0;
         pxa::game::Frame f(*renderer,commands.bytes());
-        f.clear({ink});
+        // Every page covers the surface with an opaque background.
         switch (page) {
             case Page::home: drawHome(f); break;
             case Page::choose: drawChoose(f); break;
@@ -1303,6 +1763,7 @@ struct App {
             case Page::roster: drawRoster(f); break;
             case Page::cityDesk: drawCityDesk(f);break;
             case Page::search: drawSearch(f);break;
+            case Page::soundSettings: drawSoundSettings(f);break;
             case Page::gazetteer: drawGazetteer(f);break;
             case Page::seasonCouncil: drawSeasonCouncil(f);break;
             case Page::regions: drawRegions(f);break;
@@ -1319,13 +1780,23 @@ struct App {
 
     void show(Page nextPage,int first=0) {
         if (sansText && page!=nextPage) sans.reset();
+        if (page==Page::deploy && nextPage!=Page::battle && nextPage!=Page::deploy)
+            audio.releaseOpening(battle.defending);
         page=nextPage;
+        lookaheadDone=false;
         focus=first;
         count=0;
-        pointerDown=false;
-        mapDragging=false;
+        resetPointer();
         dirty=true;
         previousTick=0;
+        if (nextPage!=Page::soundSettings && nextPage!=Page::help) {
+            const bool title=nextPage==Page::home || nextPage==Page::choose ||
+                nextPage==Page::replace || nextPage==Page::ending;
+            audio.scene(nextPage==Page::battle?Score::battle:title?Score::title:Score::atlas);
+        }
+        audio.pause(!context->foreground() ||
+            ((nextPage==Page::battle || (nextPage==Page::soundSettings && audioFrom==Page::battle)) &&
+            battle.paused));
     }
     void beginMarch(Order order) {
         playerMarch=order;
@@ -1338,6 +1809,7 @@ struct App {
         mapCenterY=y;
         clampCamera();
         logState("march");
+        audio.cue(marchSound);
     }
     void beginSeason() {
         if (!campaign.canAdvance(seasonPlan)) return;
@@ -1363,7 +1835,7 @@ struct App {
             clampCamera();
         }
         if (!first) finishMarch();
-        else logState("enemy-march");
+        else {logState("enemy-march");audio.cue(marchSound);}
     }
     void finishMarch() {
         const Order order=playerMarch;
@@ -1373,6 +1845,7 @@ struct App {
         seasonMarch=false;
         if (season) {
             campaign.advance(seasonPlan);
+            seasonPlan=SeasonPlan::regular;
             notice=Notice::income;
             checkpoint();
             enterMap();
@@ -1402,8 +1875,9 @@ struct App {
             defenseLeader=campaign.fieldLeader(campaign.governor(order.to),order.to);
         }
         const int lead=plannedLeader();
-        formation=sites[order.to].terrain==river?bow:lead>=0?campaign.leader(lead).favored:spear;
-        show(Page::deploy,formation);
+        const auto troop=sites[order.to].terrain==river?bow:lead>=0?campaign.leader(lead).favored:spear;
+        deployment={troop,square,preferredWeapon(troop)};
+        show(Page::deploy,troop);
     }
     void enterMap() {
         if (campaign.won) {show(Page::ending);return;}
@@ -1441,12 +1915,28 @@ struct App {
         notice=aftermath.objective?Notice::goal:Notice::none;
         checkpoint();
         show(Page::report);
-        logState(battle.result>0?"victory":"defeat");
+        audio.cue(battle.result>0?victorySound:defeatSound);
+        audio.cue(battle.result>0?victoryVoice:defeatVoice);
+        logState(aftermath.enemyReturned?"enemy-withdrew":battle.result>0?"victory":"defeat");
+    }
+    void openOrders(int rank) {
+        tacticsRank=rank;
+        tacticsOpen=true;
+        lookaheadDone=false;
+        focus=rank+1;
+        previousTick=0;
+    }
+    void closeOrders() {
+        tacticsOpen=false;
+        focus=battle.plan.formation;
+        previousTick=0;
     }
     void pauseBattle() {
         tacticsOpen=false;
+        retreatPrompt=false;
         battle.paused=!battle.paused;
-        focus=battle.paused?0:battle.stance;
+        audio.pause(battle.paused);
+        focus=battle.paused?0:battle.plan.formation;
         previousTick=0;
         dirty=true;
     }
@@ -1478,13 +1968,15 @@ struct App {
             case Page::forces:show(Page::council);break;
             case Page::gear:show(Page::roster,rosterPosition()-rosterStart());break;
             case Page::search:show(Page::cityDesk);break;
-            case Page::roster:show(rosterFrom,rosterFrom==Page::deploy?formation:0);break;
+            case Page::soundSettings:show(audioFrom);break;
+            case Page::roster:show(rosterFrom,rosterFrom==Page::deploy?deployment.troop:0);break;
             case Page::deploy:
                 if (battle.defending) show(Page::home);
                 else recallColumn(arrivingColumn);
                 break;
             case Page::battle:
-                if (tacticsOpen) {tacticsOpen=false;focus=battle.stance;previousTick=0;dirty=true;}
+                if (retreatPrompt) {retreatPrompt=false;focus=0;dirty=true;}
+                else if (tacticsOpen) {closeOrders();dirty=true;}
                 else pauseBattle();
                 break;
             case Page::report:enterMap();break;
@@ -1504,22 +1996,29 @@ struct App {
                 enterMap();
                 break;
             case Command::newGame:
-                chosenChapter=0;side=0;
+                audio.cue(confirmSound);
+                chosenChapter=0;side=0;chosenDifficulty=Difficulty::standard;
+                seasonPlan=SeasonPlan::regular;
                 show(Page::choose);
                 break;
             case Command::guide:helpFrom=page;show(Page::help);break;
+            case Command::audioMenu:audioFrom=page;show(Page::soundSettings);break;
+            case Command::audioToggle:audio.toggle(unsigned(arg));audio.cue(confirmSound);break;
             case Command::back:(void)on_back();break;
             case Command::chapter:
                 chosenChapter=arg;
+                break;
+            case Command::difficulty:
+                chosenDifficulty=Difficulty(arg);
                 break;
             case Command::side:side=arg;break;
             case Command::seat:
                 if (hasSave||damagedSave) {show(Page::replace);break;}
                 [[fallthrough]];
             case Command::replace:
-                campaign.start(side,chosenChapter);
+                campaign.start(side,chosenChapter,chosenDifficulty);
                 selected=campaign.capital();
-                mapWindow=standardMap;mapZoom=0;focusCamera(selected);
+                mapWindow=standardMap;mapZoom=0;showMapNames=false;focusCamera(selected);
                 discovery={};
                 regionalChoice=0;
                 notice=Notice::none;
@@ -1535,12 +2034,22 @@ struct App {
                 notice=Notice::none;
                 break;
             }
+            case Command::origin:
+                if (campaign.own(arg)) {
+                    selected=arg;
+                    destination=-1;
+                    notice=Notice::none;
+                    focus=-1;
+                    audio.cue(confirmSound);
+                }
+                break;
             case Command::work:
                 if (campaign.develop(selected,Work(arg))) {
                     notice=arg==recruit?Notice::recruited:arg==farm?Notice::cultivated:
                         arg==walls?Notice::fortified:Notice::civic;
                     campaign.makeOrders();
                     checkpoint();
+                    audio.cue(confirmSound);
                     logState("work");
                 }
                 break;
@@ -1561,12 +2070,14 @@ struct App {
                 if (campaign.canSearch(selected,searchingOfficer)) {
                     discovery=campaign.search(selected,searchingOfficer);
                     checkpoint();
+                    audio.cue(confirmSound);
                     logState(discovery.kind==talentFound?"talent-found":"search");
                 }
                 break;
             case Command::welcomeTalent:
                 if (campaign.welcome(selected,arg)) {
                     checkpoint();
+                    audio.cue(confirmSound);
                     logState("talent-recruited");
                 }
                 break;
@@ -1593,16 +2104,37 @@ struct App {
                 break;
             case Command::recall:recallColumn(arg);break;
             case Command::season:
-                seasonPlan=SeasonPlan::regular;
                 show(Page::seasonCouncil);
                 break;
+            case Command::inspectThreat: {
+                const auto threat=campaign.nextAttack();
+                if (!threat) break;
+                selected=threat.to;
+                destination=-1;
+                mapWindow=standardMap;
+                mapZoom=1;
+                focusCamera(selected);
+                if (page==Page::seasonCouncil) show(Page::map,-1);
+                focus=-1;
+                break;
+            }
             case Command::choosePlan:seasonPlan=SeasonPlan(arg);break;
             case Command::advanceSeason:beginSeason();break;
             case Command::skipMarch:finishMarch();break;
-            case Command::zoom:
-                mapZoom=std::clamp(mapZoom+arg,0,2);
-                focusCamera(destination<0?selected:destination);
+            case Command::zoom: {
+                const bool overview=mapZoom==0;
+                mapZoom=zoomStep(arg);
+                if (overview) focusCamera(destination<0?selected:destination);
+                else clampCamera();
                 focus=-1;
+                break;
+            }
+            case Command::centerMap:
+                focusCamera(selected);
+                focus=-1;
+                break;
+            case Command::mapNames:
+                showMapNames=!showMapNames;
                 break;
             case Command::atlas:
                 mapWindow=mapWindow.w==wideMap.w?standardMap:wideMap;
@@ -1625,6 +2157,7 @@ struct App {
             case Command::claimRegion:
                 if (campaign.claimRegional(arg)) {
                     checkpoint();
+                    audio.cue(confirmSound);
                     logState("regional-reward");
                 }
                 break;
@@ -1679,33 +2212,70 @@ struct App {
                 if (campaign.militia()) {notice=Notice::levies;checkpoint();logState("levy");}
                 break;
             case Command::engage:
-                battle.start(campaign,departure,arrivingColumn,Formation(formation),defenseLeader);
+                battle.start(campaign,departure,arrivingColumn,deployment,defenseLeader);
                 elapsed=0;
                 tacticsOpen=false;
-                show(Page::battle,formation);
+                retreatPrompt=false;
+                show(Page::battle,deployment.formation);
+                audio.cue(drumSound);
+                audio.cue(battle.defending?holdVoice:chargeVoice);
                 logState("battle");
                 break;
+            case Command::pickTroop:deployment.troop=Troop(arg);break;
+            case Command::pickWeapon:deployment.weapon=Weapon(arg);break;
             case Command::shift:
-                if (page==Page::deploy) formation=arg;
-                else if (battle.order(Formation(arg))) info("han-banners formation");
+                if (page==Page::deploy) deployment.formation=Formation(arg);
+                else if (battle.order(Formation(arg))) {
+                    audio.cue(formationSound);
+                    info("han-banners formation");
+                }
+                break;
+            case Command::moveGeneral:
+                if (battle.moveGeneral(arg/2,arg%2)) {
+                    if (tacticsOpen) closeOrders();
+                    logState("general-move");
+                }
+                break;
+            case Command::strike:
+                if (battle.strike()) {
+                    audio.cue(battle.plan.weapon==longbow?arrowSound:clashSound);
+                    logState("weapon");
+                }
                 break;
             case Command::skill:
                 if (battle.rally()) {
+                    const auto power=battle.officer().power;
+                    audio.cue(power==charge?breakVoice:power==guard || power==inspire?rallyVoice:skillVoice);
+                    audio.cue(battle.plan.troop==bow?arrowSound:clashSound);
                     info("han-banners skill");
-                    if (battle.result) conclude();
                 }
                 break;
             case Command::orders:
-                tacticsOpen=!tacticsOpen;
-                focus=tacticsOpen?0:battle.stance;
-                previousTick=0;
+                if (tacticsOpen) closeOrders();
+                else openOrders(-1);
+                break;
+            case Command::battleRank:
+                openOrders(arg);
+                break;
+            case Command::rankSupport:
+                if (battle.supportRank(tacticsRank)) {
+                    closeOrders();
+                    audio.cue(confirmSound);
+                    logState("rank-support");
+                }
+                break;
+            case Command::clearRank:
+                if (battle.clearRankOrder(tacticsRank)) closeOrders();
                 break;
             case Command::maneuver:
-                if (battle.direct(Maneuver(arg))) {
-                    tacticsOpen=false;
-                    focus=battle.stance;
-                    previousTick=0;
-                    logState("maneuver");
+                if (tacticsRank<0?battle.direct(Maneuver(arg)):battle.directRank(tacticsRank,Maneuver(arg))) {
+                    closeOrders();
+                    constexpr Clip calls[]={noClip,chargeVoice,holdVoice,flankVoice,holdVoice};
+                    if (tacticsRank<0) {
+                        audio.cue(drumSound);
+                        audio.cue(calls[arg]);
+                    } else audio.cue(confirmSound);
+                    logState(tacticsRank<0?"maneuver":"rank-order");
                 }
                 break;
             case Command::duel:
@@ -1713,14 +2283,24 @@ struct App {
                     tacticsOpen=false;
                     focus=0;
                     previousTick=0;
+                    audio.cue(challengeVoice);
                     logState("duel");
                 }
                 break;
             case Command::duelMove:
-                if (battle.duelOrder(DuelMove(arg))) logState("duel-move");
+                if (battle.duelOrder(DuelMove(arg))) {
+                    constexpr Clip calls[]={thrustVoice,parryVoice,feintVoice};
+                    audio.cue(calls[arg]);
+                    if (battle.duel.recoil>=0) audio.cue(clashSound);
+                    logState("duel-move");
+                }
                 break;
             case Command::pause:pauseBattle();break;
             case Command::retreat:
+                retreatPrompt=true;
+                focus=0;
+                break;
+            case Command::confirmRetreat:
                 battle.result=-1;
                 conclude(true);
                 break;
@@ -1741,6 +2321,7 @@ struct App {
         const auto source=controls[focus].box;
         int best=std::numeric_limits<int>::max(), picked=focus;
         for (int i=0;i<count;++i) {
+            if (!controls[i].enabled) continue;
             const auto dest=controls[i].box;
             int x=dest.cx()-source.cx(), y=dest.cy()-source.cy();
             int along=x*dx+y*dy;
@@ -1751,7 +2332,11 @@ struct App {
         }
         if (picked==focus) {
             // Wrap so every action remains reachable on a directional pad.
-            picked=(focus+(dx+dy>0?1:count-1))%count;
+            const int direction=dx+dy>0?1:count-1;
+            for (int i=1;i<count;++i) {
+                const int next=(focus+i*direction)%count;
+                if (controls[next].enabled) {picked=next;break;}
+            }
         }
         focus=picked;
     }
@@ -1772,84 +2357,187 @@ struct App {
             input(controls[focus]);
         draw();
     }
+    void resetPointer() {
+        pointerDown=false;
+        mapDragging=false;
+        pressedControl.reset();
+        pinch.reset();
+        mapTapTime=0;
+    }
+    void updatePinch() {
+        const auto& gesture=*pinch;
+        const float cx=(pointerX+gesture.x)*.5f,cy=(pointerY+gesture.y)*.5f;
+        const float dx=pointerX-gesture.x,dy=pointerY-gesture.y;
+        const float zoom=zoomLevel(gesture.scale*std::sqrt(dx*dx+dy*dy)/gesture.distance);
+        const float previousX=mapCenterX,previousY=mapCenterY,previousZoom=mapZoom;
+        mapZoom=zoom;
+        const float worldScale=mapScale();
+        mapCenterX=gesture.worldX-(cx-mapWindow.cx())/worldScale;
+        mapCenterY=gesture.worldY-(cy-mapWindow.cy())/worldScale;
+        clampCamera();
+        dirty|=mapCenterX!=previousX || mapCenterY!=previousY || mapZoom!=previousZoom;
+    }
+    bool handlePinch(const pxa::input::Pointer& p,float x,float y) {
+        using P=pxa::input::PointerPhase;
+        if (pinch) {
+            const bool primary=p.pointer_id==pointerId;
+            if ((!primary && p.pointer_id!=pinch->id) || p.action()==P::down) return true;
+            if (p.action()==P::cancel) {
+                resetPointer();
+                return true;
+            }
+            if (primary) {pointerX=x;pointerY=y;}
+            else {pinch->x=x;pinch->y=y;}
+            updatePinch();
+            if (p.action()==P::up) {
+                // The remaining contact can drag immediately and cannot activate a city.
+                if (primary) {
+                    pointerId=pinch->id;
+                    pointerX=pinch->x;
+                    pointerY=pinch->y;
+                }
+                dragX=pointerX;dragY=pointerY;
+                pinch.reset();
+            }
+            return true;
+        }
+        if (!pointerDown || p.pointer_id==pointerId) return false;
+        if (p.action()==P::down && mapDragging && mapWindow.contains(int(x),int(y)) &&
+            mapWindow.contains(int(pointerX),int(pointerY))) {
+            const float dx=pointerX-x,dy=pointerY-y;
+            const float worldScale=mapScale();
+            pinch=MapPinch{p.pointer_id,x,y,std::max(8.f,std::sqrt(dx*dx+dy*dy)),worldScale,
+                mapCenterX+((pointerX+x)*.5f-mapWindow.cx())/worldScale,
+                mapCenterY+((pointerY+y)*.5f-mapWindow.cy())/worldScale};
+            dirty|=pressedControl.has_value();
+            pressedControl.reset();
+            mapTapTime=0;
+            dragMoved=true;
+        }
+        return true;
+    }
     void on_pointer(pxa::Context&,const pxa::input::Pointer& p) {
         if (!ready) return;
         using P=pxa::input::PointerPhase;
-        const float x=(pxa::ui::canvas_to_surface_coordinate(p.x,display)*width/display.width-ox)/scale;
-        const float y=(pxa::ui::canvas_to_surface_coordinate(p.y,display)*height/display.height-oy)/scale;
+        const float x=(float(pxa::ui::canvas_to_surface_coordinate(p.x,display))*width/display.width-ox)/scale;
+        const float y=(float(pxa::ui::canvas_to_surface_coordinate(p.y,display))*height/display.height-oy)/scale;
+        if (handlePinch(p,x,y)) return;
+        if (p.action()==P::move) {
+            if (!pointerDown) return;
+            pointerX=x;pointerY=y;
+            if (!dragMoved && std::abs(x-pressX)+std::abs(y-pressY)>6.f) {
+                dragMoved=true;
+                mapTapTime=0;
+                dirty|=pressedControl.has_value();
+            }
+            if (dragMoved && mapDragging && mapZoom>0) panMap(x,y);
+            return;
+        }
         int hit=-1, nearest=50000;
-        if (x>=0 && y>=0) for (int i=count-1;i>=0;--i) {
-            const auto& control=controls[i];
-            if (page==Page::map && control.command==Command::select) {
-                const bool marker=control.box.contains(int(x),int(y));
-                if (!marker && !mapLabels[control.data].contains(int(x),int(y))) continue;
-                const int dx=int(x)-cityX(control.data),dy=int(y)-cityY(control.data);
-                const int distance=(marker?0:10000)+dx*dx+dy*dy;
-                if (distance<nearest) {nearest=distance;hit=i;}
-            } else if (control.box.contains(int(x),int(y))) {
-                hit=i;
-                break;
+        if ((p.action()==P::down || (p.action()==P::up && !dragMoved)) && x>=0 && y>=0) {
+            for (int i=count-1;i>=0;--i) {
+                const auto& control=controls[i];
+                if (!control.enabled) continue;
+                if (page==Page::map && control.command==Command::select) {
+                    const bool marker=control.box.contains(int(x),int(y));
+                    if (!marker && !mapLabels[control.data].contains(int(x),int(y))) continue;
+                    const auto [cx,cy]=cityCenters[control.data];
+                    const int dx=int(x)-cx,dy=int(y)-cy;
+                    const int distance=(marker?0:10000)+dx*dx+dy*dy;
+                    if (distance<nearest) {nearest=distance;hit=i;}
+                } else if (control.box.contains(int(x),int(y))) {
+                    hit=i;
+                    break;
+                }
             }
         }
         if (p.action()==P::down && !pointerDown) {
+            dirty|=controllerMode || hit>=0;
+            controllerMode=false;
             pointerDown=true;
-            pointerIndex=hit;
-            pointerId=p.pointer_id;
-            mapDragging=page==Page::map && !isMarching() && mapZoom>0 && mapWindow.contains(int(x),int(y));
-            dragX=x;dragY=y;dragMoved=false;
-            dirty=hit>=0 || dirty;
-        } else if (pointerDown && pointerId==p.pointer_id && p.action()==P::move && mapDragging) {
-            if (dragMoved || std::abs(x-dragX)+std::abs(y-dragY)>6) {
-                dragMoved=true;
-                mapCenterX-=(x-dragX)/mapScale();
-                mapCenterY-=(y-dragY)/mapScale();
-                dragX=x;dragY=y;
-                clampCamera();
-                controllerMode=false;
-                dirty=true;
+            if (hit>=0) {
+                pressedControl=controls[hit];
+                mapTapTime=0;
             }
-        } else if (pointerDown && pointerId==p.pointer_id && p.ended()) {
+            pointerId=p.pointer_id;
+            mapDragging=page==Page::map && !isMarching() && mapWindow.contains(int(x),int(y));
+            pressX=dragX=pointerX=x;pressY=dragY=pointerY=y;dragMoved=false;
+        } else if (pointerDown && p.ended()) {
+            if (p.action()==P::up && mapDragging && dragMoved && mapZoom>0) panMap(x,y);
             pointerDown=false;
             mapDragging=false;
-            dirty=pointerIndex>=0 || dirty;
-            if (p.action()==P::up && !dragMoved && hit>=0 && hit==pointerIndex) {
-                controllerMode=false;
-                input(controls[hit]);
-                draw();
+            const auto pressed=pressedControl;
+            pressedControl.reset();
+            if (!pressed) {
+                const bool mapTap=p.action()==P::up && !dragMoved && hit<0 && page==Page::map &&
+                    !isMarching() && mapZoom<2 && mapWindow.contains(int(x),int(y)) &&
+                    mapWindow.contains(int(pressX),int(pressY)) &&
+                    std::abs(x-pressX)+std::abs(y-pressY)<=6.f;
+                if (mapTap && mapTapTime && p.timestamp_us>=mapTapTime &&
+                    p.timestamp_us-mapTapTime<=350000 && std::abs(x-mapTapX)+std::abs(y-mapTapY)<20.f) {
+                    zoomAt(x,y);
+                    mapTapTime=0;
+                    draw();
+                } else {
+                    mapTapTime=mapTap?p.timestamp_us:0;
+                    mapTapX=x;
+                    mapTapY=y;
+                }
+                return;
+            }
+            dirty=true;
+            if (p.action()==P::up && !dragMoved &&
+                std::abs(x-pressX)+std::abs(y-pressY)<=6.f &&
+                ((hit>=0 && controls[hit].command==pressed->command && controls[hit].data==pressed->data) ||
+                 (hit<0 && pressed->box.contains(int(pressX),int(pressY))))) {
+                // Accept a small release drift, but only while this action is still available.
+                for (int i=0;i<count;++i) if (controls[i].command==pressed->command &&
+                    controls[i].data==pressed->data && controls[i].enabled) {
+                    input(controls[i]);
+                    draw();
+                    break;
+                }
             }
         }
     }
     void on_background(pxa::Context&) {
+        audio.pause(true);
         gamepad.reset();
-        pointerDown=false;
+        resetPointer();
         if (page==Page::battle) {battle.paused=true;focus=0;}
         previousTick=0;
         (void)context->clock().set_period(0);
     }
     void on_foreground(pxa::Context&) {
+        audio.pause((page==Page::battle || (page==Page::soundSettings && audioFrom==Page::battle)) &&
+                    battle.paused);
         immersive();
         previousTick=0;
         dirty=true;
-        if (ready) (void)context->clock().set_period(33);
+        if (ready) (void)context->clock().set_period(clockPeriod);
     }
     pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& event) {
+        if (audio.event(event)) return true;
         if (auto d=pxa::ui::decode_display_metrics(event)) {
             resize|=display.width!=d->width || display.height!=d->height;
             display=*d;
             if (ready) layout();
-            pointerDown=false;
+            resetPointer();
             dirty=true;
             return true;
         }
         auto tick=pxa::decode_clock_tick(event);
         if (!tick) return false;
         if (!ready || !context->foreground()) return true;
+        audio.tick(tick->timestamp_us);
         if (resize && !loadingArt) {
             auto task=context->tasks().start(openRenderer());
             if (!task) return std::unexpected(task.error());
             return true;
         }
         if (loadingArt) return true;
+        if (page==Page::deploy && count) audio.warmOpening(battle.defending);
+        warmNextScene();
         if (page==Page::map && isMarching()) {
             auto now=tick->timestamp_us;
             if (previousTick && now>previousTick)
@@ -1862,12 +2550,16 @@ struct App {
             auto now=tick->timestamp_us;
             if (previousTick && now>previousTick) elapsed+=unsigned(std::min<uint64_t>(now-previousTick,100000));
             previousTick=now;
-            while (elapsed>=33333 && (!battle.result || battle.duel.visible())) {
+            const int round=battle.round;
+            const bool animated=!battle.duel.ready() && elapsed>=33333;
+            while (elapsed>=33333 && (!battle.result || battle.duel.visible() || battle.effects || battle.strikeTicks)) {
                 battle.step();
                 elapsed-=33333;
             }
-            if (battle.result && !battle.duel.visible()) conclude();
-            dirty=true;
+            if (battle.result && !battle.duel.visible() && !battle.effects && !battle.strikeTicks) conclude();
+            else if (battle.round!=round && !battle.duel.visible())
+                audio.cue(battle.plan.troop==bow?arrowSound:clashSound);
+            dirty|=animated;
         }
         if (dirty) draw();
         return true;
