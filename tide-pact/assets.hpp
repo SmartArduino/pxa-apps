@@ -4,11 +4,13 @@
 namespace tide::art {
 extern const unsigned char chart[];
 extern const unsigned char harbor[];
+extern const unsigned char title_compact[];
 extern const unsigned char storm[];
 extern const unsigned char portraits[];
 extern const unsigned char caravel[];
 extern const unsigned char broadside[];
 extern const unsigned char glyphs[];
+extern const unsigned char glyphs_compact[];
 extern const unsigned char wordmark[];
 extern const unsigned char skin[];
 extern const unsigned char goods[];

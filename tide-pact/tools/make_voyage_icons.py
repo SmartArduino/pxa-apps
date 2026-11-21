@@ -22,12 +22,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ("atlas", "instruments", "launcher"):
         parser.add_argument(name, type=Path)
+    parser.add_argument("--controls", type=Path, required=True)
     args = parser.parse_args()
     atlas = Image.open(args.atlas).convert("RGBA")
     instruments = Image.open(args.instruments).convert("RGBA")
     tiles = [sprite(atlas, i % 3, i // 3, 3, 3) for i in range(9)]
     tiles[3:5] = [sprite(instruments, i, 0, 2, 1) for i in range(2)]
-    output = Image.new("RGBA", (96, 96))
+    controls = Image.open(args.controls).convert("RGBA")
+    tiles.extend(sprite(controls, i % 3, i // 3, 3, 3) for i in range(9))
+    output = Image.new("RGBA", (96, len(tiles) // 3 * 32))
     for index, tile in enumerate(tiles):
         x = index % 3 * 32 + (32 - tile.width) // 2
         y = index // 3 * 32 + (32 - tile.height) // 2
