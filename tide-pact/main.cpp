@@ -1,6 +1,7 @@
 #include "draw.hpp"
 #include "game_audio.hpp"
 #include "game_save.hpp"
+#include "town.hpp"
 #include <pxa/app.hpp>
 
 #include <array>
@@ -25,7 +26,7 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard
+    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -54,7 +55,8 @@ enum Action {
     OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate,
     ShowDriftStory, TakeDriftLead, MarkDriftGround, OpenDriftRecovery, BoatForDrift,
     HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont,
-    ShowMerchants, MarkMerchantFirst, MarkMerchantSecond
+    ShowMerchants, MarkMerchantFirst, MarkMerchantSecond, OpenTown, ReturnTown,
+    WalkToTownFacility
 };
 
 template<class... Args>
@@ -98,6 +100,12 @@ struct VoyageApp {
     std::array<Button,48> buttons{};
     int button_count=0, focused=0;
     Rect safe{}, body{}, map{};
+    Rect town_area{};
+    TownWalk town;
+    int town_id=-1;
+    unsigned town_frame=0;
+    bool inside_town_facility=false;
+    Overlay town_facility=None;
     int scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
     int expedition_item=0;
@@ -296,6 +304,13 @@ struct VoyageApp {
         }
         if (!surface || opening) return;
 
+        if (modal==HarborTown && town.moving() && now-town_frame>=30) {
+            town_frame=now;
+            const int door=town.update(now);
+            if (door>=0) enter_town_facility(door);
+            dirty=true;
+        }
+
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
             if (now-last_day >= (game.s.helm ? HelmPulseMs : DayMs)) {
@@ -485,6 +500,8 @@ struct VoyageApp {
             const Rect r{hit.x+1,hit.y,hit.w-2,hit.h};
             const bool focused_tab=pad_focus && button_count==focused;
             const bool active=screen==i;
+            const bool town_return=inside_town_facility && i==Office;
+            const Text title=town_return?"回城":tabs[i];
             const bool down=pressed(hit);
             plate(d,r,active || down ? CurrentTabPlate : TabPlate);
             if (down) d.darken(r.inset(3),3);
@@ -493,16 +510,16 @@ struct VoyageApp {
             const Image images{art::tabs};
             const Rect sprite{i*32,0,32,32};
             const Rect content=r.inset(2);
-            if (r.w>=30+d.measure(tabs[i])) {
-                d.center_with_icon(content,tabs[i],label,images,sprite,20);
+            if (r.w>=30+d.measure(title)) {
+                d.center_with_icon(content,title,label,images,sprite,20);
             } else {
-                const auto caption=d.fit(tabs[i],content.w,1);
+                const auto caption=d.fit(title,content.w,1);
                 const int size=std::min(14,content.h-caption.ink.h-1);
                 const int y=content.y+(content.h-size-1-caption.ink.h)/2;
                 d.image(images,sprite,{r.x+(r.w-size)/2,y,size,size},true);
                 d.center_run({content.x,y+size+1,content.w,caption.ink.h},caption,label);
             }
-            buttons[button_count++]={hit,OpenChart+i};
+            buttons[button_count++]={hit,town_return?ReturnTown:OpenChart+i};
         }
     }
 
@@ -1023,8 +1040,10 @@ struct VoyageApp {
             port_scene(d,display,game.s.origin);
             d.darken({display.x,display.y,display.w,std::min(34,display.h)},9);
         }
-        d.label(body.x+9,body.y+6,p.name,gold,body.w-18);
+        const bool has_town=game.port() && town_index(game.s.origin)>=0;
+        d.label(body.x+9,body.y+6,p.name,gold,body.w-(has_town?87:18));
         d.label(body.x+9,body.y+22,p.region,ivory,body.w-18);
+        if (has_town) button(d,{body.right()-66,body.y+6,58,22},"进城",OpenTown,true);
         const int y=body.y+banner+8;
         if (game.port()) {
             const int dest=valid_contract ? game.s.contract : game.proposal();
@@ -1178,6 +1197,99 @@ struct VoyageApp {
         }
     }
 
+    Point town_on_screen(Point p) const {
+        return {town_area.x+p.x*town_area.w/TownExtent,town_area.y+p.y*town_area.h/TownExtent};
+    }
+
+    void town_screen(Draw& d) {
+        skin_box(d,safe,0,5);
+        const auto& layout=Towns[town_id];
+        d.label(safe.x+9,safe.y+9,Places[layout.port].name,gold,safe.w-94);
+        button(d,{safe.right()-74,safe.y+4,68,22},"返回港务",Close);
+        const int maximum_height=safe.h-57;
+        const int w=std::min(safe.w-10,maximum_height*12/5);
+        const int h=std::min(maximum_height,std::max(w/2,maximum_height*4/5));
+        town_area={safe.x+(safe.w-w)/2,safe.y+29+(maximum_height-h)/2,w,h};
+        constexpr int scene_w=288, scene_h=136, sprite_w=24, sprite_h=32;
+        d.image({art::towns},{0,town_id*scene_h,scene_w,scene_h},town_area);
+        d.frame(town_area,border);
+
+        const auto position=town_on_screen(town.position(now));
+        constexpr int stride[]{0,1,2,1};
+        const int frame=town.moving()?stride[(now/108)%4]:1;
+        const bool mirror=town.facing==3;
+        const Rect sprite{frame*sprite_w,std::min(2,town.facing)*sprite_h,sprite_w,sprite_h};
+        const int feet=town_area.w>=345?28:23;
+        d.image({art::town_walk},sprite,
+                {position.x-feet*3/8,position.y-feet*7/8,feet*3/4,feet},true,mirror);
+
+        for (int i=0;i<TownFacilityCount;++i) {
+            if (i==TownArchive && game.archive_here()<0) continue;
+            const auto point=town_on_screen(layout.doors[i]);
+            const int width=std::max(46,d.measure(TownNames[i])+22);
+            const int left=std::clamp(point.x-width/2,town_area.x+2,town_area.right()-width-2);
+            const int offset=i==TownShipyard || i==TownDock?2:i==TownArchive?-39:-21;
+            const Rect label{left,point.y+offset,width,19};
+            const bool focus=pad_focus && focused==button_count;
+            const bool target=town.moving() && town.entrance==i;
+            if (i==TownArchive) d.line({point.x,label.bottom()},point,gold,true);
+            d.diamond(point,2,target?gold:ink);
+            plate(d,label,focus || target?ActionPlate:StandardPlate);
+            if (focus) focus_marker(d,label);
+            d.center_with_icon(label.inset(2),TownNames[i],target?gold:ivory,
+                               {art::town_icons},{i%3*32,i/3*32,32,32},12);
+            buttons[button_count++]={label,WalkToTownFacility+i};
+        }
+
+        if (town.moving() && town.entrance>=0)
+            d.center({safe.x,safe.bottom()-25,safe.w,21},format("去%s",TownNames[town.entrance].data()),mint);
+        else
+            d.center({safe.x,safe.bottom()-25,safe.w,21},
+                     pad_focus?"方向键选设施，按A走过去":"点路面走动，点标牌进设施",mist);
+    }
+
+    void show_town() {
+        if (!game.port()) return;
+        const int city=town_index(game.s.origin);
+        if (city<0) return;
+        if (town_id!=city) {
+            town={.at=Towns[city].doors[TownDock]};
+            town_id=city;
+        }
+        inside_town_facility=false;
+        screen=Office;
+        set_modal(HarborTown);
+    }
+
+    void enter_town_facility(int id) {
+        if (!game.port() || town_id<0 || game.s.origin!=Towns[town_id].port) return;
+        switch (id) {
+        case TownMarket: screen=Market; page=0; set_modal(None); break;
+        case TownShipyard: screen=Shipyard; set_modal(None); break;
+        case TownGuild: set_modal(PortDesk); break;
+        case TownArchive:
+            if (game.archive_here()<0) return;
+            activate(OpenArchive);
+            break;
+        case TownTavern:
+            rumor_back=HarborTown;
+            page=0;
+            set_modal(RumorList);
+            break;
+        case TownDock: select(game.s.origin); return;
+        }
+        inside_town_facility=true;
+        town_facility=modal;
+    }
+
+    void town_go(Point point, int facility=-1) {
+        if (modal!=HarborTown) return;
+        town.at=town.position(now);
+        town.go(point,Towns[town_id].quay,facility,now);
+        if (const int entered=town.update(now); entered>=0) enter_town_facility(entered);
+        dirty=true;
+    }
+
     Rect combat_backdrop(Draw& d, Image art, bool show_arena) {
         const auto previous=d.clip;
         d.clip=body;
@@ -1234,6 +1346,10 @@ struct VoyageApp {
         button(d,{body.right()-49,body.y+3,45,23},"返回",Close);
     }
     void set_modal(Overlay layer) {
+        if (modal==HarborTown && layer!=HarborTown) {
+            town.at=town.position(now);
+            town.cancel();
+        }
         modal=layer;
         focused=layer==StoryPage || layer==EndingPage || layer==Routes || layer==TalePage || layer==EventReport ? 1 : 0;
         dirty=true;
@@ -1944,6 +2060,11 @@ struct VoyageApp {
         layout(d);
         d.fill(d.clip,ink);
         button_count=0;
+        if (modal==HarborTown) {
+            town_screen(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
         if (title) {
             if (modal==AudioSettings) audio_settings(d);
             else start_screen(d);
@@ -1983,6 +2104,7 @@ struct VoyageApp {
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
+        case HarborTown: break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -2000,6 +2122,7 @@ struct VoyageApp {
 
     void select(int p) {
         if (!game.charted(p)) { game.notice="还不知道确切泊地"; notify(); return; }
+        inside_town_facility=false;
         scout_course.reset();
         pinned_rumor=-1;
         selected=p;
@@ -2011,6 +2134,11 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=WalkToTownFacility && action<WalkToTownFacility+int(TownFacilityCount)) {
+            const int id=action-WalkToTownFacility;
+            if (modal==HarborTown) town_go(Towns[town_id].doors[id],id);
+            return;
+        }
         if (action>=OpenLanguages) {
             switch (action) {
             case OpenLanguages:
@@ -2036,6 +2164,7 @@ struct VoyageApp {
             case ShowDriftStory: activity_back=modal; set_modal(DriftStory); break;
             case TakeDriftLead: if (game.take_drift_lead()) changed(); break;
             case MarkDriftGround:
+                inside_town_facility=false;
                 scout_course=DriftGround;
                 pinned_rumor=-1;
                 selected=game.s.origin;
@@ -2076,6 +2205,7 @@ struct VoyageApp {
                 if (game.port()) select(MerchantPorts[ship.destination==NoMerchantPort?ship.port:ship.destination]);
                 break;
             }
+            case OpenTown: case ReturnTown: show_town(); break;
             }
             return;
         }
@@ -2119,6 +2249,7 @@ struct VoyageApp {
         if (action>=GoodsRow) { good=action-GoodsRow; return; }
         if (action>=DockService) { game.service(action-DockService); changed(); return; }
         if (action>=OpenChart && action<=OpenJournal) {
+            inside_town_facility=false;
             screen=Screen(action-OpenChart);
             page=0;
             set_modal(None);
@@ -2143,6 +2274,7 @@ struct VoyageApp {
             const auto& rumor=Rumors[rumor_item];
             if (game.charted(rumor.site)) select(rumor.site);
             else if (!game.sea() && game.heard_rumor(rumor_item)) {
+                inside_town_facility=false;
                 scout_course=rumor.area;
                 pinned_rumor=rumor_item;
                 selected=game.s.origin;
@@ -2155,6 +2287,7 @@ struct VoyageApp {
         }
         case StartExplore:
             if (game.start_helm(-1)) {
+                inside_town_facility=false;
                 if (scout_course) {
                     const auto here=game.position();
                     game.s.heading=direction_to({scout_course->x-here.x,scout_course->y-here.y});
@@ -2429,6 +2562,10 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (inside_town_facility && modal==town_facility) {
+            show_town();
+            return true;
+        }
         if (modal!=None) {
             if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
             else if (modal==TalePage && screen==Journal) set_modal(TaleList);
@@ -2493,6 +2630,12 @@ struct VoyageApp {
     void tap(Point p) {
         for (int i=0;i<button_count;++i) {
             if (buttons[i].rect.contains(p)) { activate(buttons[i].action); return; }
+        }
+        if (modal==HarborTown && town_area.contains(p)) {
+            const Point world{(p.x-town_area.x)*TownExtent/town_area.w,
+                              (p.y-town_area.y)*TownExtent/town_area.h};
+            if (const auto at=town_street(Towns[town_id],world)) town_go(*at);
+            return;
         }
         if (title || modal!=None || screen!=Chart || game.encounter() || !map.contains(p)) return;
         const int x=int(std::lround(chart_x+(p.x-map.x-map.w/2)/factor));

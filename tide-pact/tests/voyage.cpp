@@ -1,4 +1,5 @@
 #include "game.hpp"
+#include "town.hpp"
 
 #include <cassert>
 #include <cstdio>
@@ -206,6 +207,26 @@ void trading_quotes() {
     assert(game.trade_quote(Wine,false,5).units==0);
     game.s.gold=999999;
     assert(game.trade_quote(Salt,true,5).units==0);
+}
+
+void town_walks() {
+    assert(town_index(lisbon)==0 && town_index(cadiz)>=0 && town_index(azores)<0);
+    for (const auto& layout : Towns) {
+        const auto dock=layout.doors[TownDock], market=layout.doors[TownMarket];
+        assert(!town_street(layout,{998,990}));
+        const auto road=town_street(layout,{680,layout.quay+16});
+        assert(road && road->y==layout.quay && road->x==680);
+        TownWalk walk{.at=dock};
+        walk.go(market,layout.quay,TownMarket,0);
+        assert(walk.count==3 && walk.update(1)==-1 && walk.facing==1);
+        assert(walk.position(20).y<dock.y);
+        walk.at=walk.position(20);
+        walk.go(*road,layout.quay,-1,20);
+        assert(walk.update(2000)==-1 && same_town_point(walk.at,*road));
+        walk.go(market,layout.quay,TownMarket,2000);
+        assert(walk.update(4000)==TownMarket && same_town_point(walk.at,market));
+        assert(walk.update(4100)==-1);
+    }
 }
 
 void merchant_trade() {
@@ -808,6 +829,7 @@ int main() {
     voyage_planning();
     trading_quotes();
     merchant_trade();
+    town_walks();
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();
