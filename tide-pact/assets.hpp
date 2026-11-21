@@ -31,4 +31,5 @@ extern const unsigned char town_walk[];
 extern const unsigned char port_people[];
 extern const unsigned char port_ui[];
 extern const unsigned char dispatch_icons[];
+extern const unsigned char weather_icons[];
 }

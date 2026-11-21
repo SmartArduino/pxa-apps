@@ -31,12 +31,37 @@ int sailing_wind(const Leg& leg, bool reverse, int month) {
     return 0;
 }
 
-int sailing_miles_per_day(const State& ship, int load, int spirits, int wind) {
+int sailing_miles_per_day(const State& ship, int load, int spirits, int wind, SeaWeather weather) {
     constexpr int hull_pace[]{92,110,100};
     const int drag=load*26/holds[ship.ship];
+    const int seas=weather==Squall?(ship.reefed?9:24):weather==Rain?5:0;
     return std::clamp(hull_pace[ship.ship]+std::min(18,ship.crew)+(spirits-60)/5-drag+wind
-                     -(ship.reefed?24:0)+(ship.allies&1?6:0)+(ship.allies&2?4:0)
+                     -seas-(ship.reefed?24:0)+(ship.allies&1?6:0)+(ship.allies&2?4:0)
                      +(ship.first_mate==Pilot?12:0),35,170);
+}
+
+int wind_along(int heading, SeaConditions weather) {
+    const auto ship=Directions[heading], breeze=Directions[weather.direction];
+    return (ship.x*breeze.x+ship.y*breeze.y)*weather.strength/64;
+}
+
+int route_wind(const Passage& path, int leg, int day, SeaConditions weather) {
+    const auto& edge=Legs[path.edge[leg]];
+    const bool reverse=path.reverse[leg];
+    const auto from=Anchor[reverse?edge.to:edge.from], to=Anchor[reverse?edge.from:edge.to];
+    return sailing_wind(edge,reverse,(day/30)%12)+wind_along(direction_to({to.x-from.x,to.y-from.y}),weather)/2;
+}
+
+SeaConditions route_weather(const Passage& path, int leg, int progress, int day) {
+    return conditions_at(vessel_at(path,leg,float(progress)/Legs[path.edge[leg]].nautical_miles),day);
+}
+
+int sailing_spirits(int spirits, int day) {
+    return day%6==0 ? std::max(0,spirits-3) : spirits;
+}
+
+int tenths_of_a_knot(int miles_per_day) {
+    return (miles_per_day*10+HoursPerDay/2)/HoursPerDay;
 }
 
 Point helm_displacement(Point direction, int y_subpixels, int miles_per_day) {
@@ -265,34 +290,69 @@ bool Game::negotiate(int good) {
 }
 
 int Game::wind(int leg) const {
-    if (s.helm) {
-        const auto weather=conditions();
-        const auto ship=Directions[s.heading], breeze=Directions[weather.direction];
-        return (ship.x*breeze.x+ship.y*breeze.y)*weather.strength/64;
-    }
-    return sailing_wind(Legs[route.edge[leg]],route.reverse[leg],(s.day/30)%12);
+    if (s.helm) return wind_along(s.heading,conditions());
+    return route_wind(route,leg,s.day,route_weather(route,leg,s.progress,s.day));
+}
+
+int Game::next_route_pace() const {
+    const int day=std::min(99999,s.day+1);
+    const auto weather=route_weather(route,s.leg,s.progress,day);
+    return sailing_miles_per_day(s,load(),sailing_spirits(s.spirits,day),
+                               route_wind(route,s.leg,day,weather),weather.weather);
 }
 
 int Game::speed_in_tenths_of_a_knot() const {
     if (!sea() || paused || encounter()) return 0;
-    const int miles=sailing_miles_per_day(s,load(),s.spirits,wind(s.leg));
-    return (miles*10+HoursPerDay/2)/HoursPerDay;
+    if (!s.helm) return tenths_of_a_knot(next_route_pace());
+    const auto weather=conditions();
+    return tenths_of_a_knot(sailing_miles_per_day(s,load(),s.spirits,
+                                               wind_along(s.heading,weather),weather.weather));
 }
 
 PassageForecast Game::forecast(const Passage& path, int extra_load) const {
+    return forecast_from(path,0,0,path.count,load()+extra_load);
+}
+
+int Game::sailing_target() const {
+    if (!sea() || s.helm) return -1;
+    if (!s.stop_next) return s.destination;
+    const auto& leg=Legs[route.edge[s.leg]];
+    return route.reverse[s.leg]?leg.from:leg.to;
+}
+
+PassageForecast Game::remaining_forecast() const {
+    if (!sea() || s.helm) return {};
+    return forecast_from(route,s.leg,s.progress,s.stop_next?s.leg+1:route.count,load());
+}
+
+std::array<ForecastDay, ForecastDays> Game::local_forecast() const {
+    std::array<ForecastDay, ForecastDays> result{};
+    const auto here=position();
+    for (int i=0;i<ForecastDays;++i) {
+        const int day=std::min(99999,s.day+i+1);
+        const auto weather=conditions_at(here,day);
+        result[i]={day,weather,0,daily_water(weather.weather)};
+    }
+    return result;
+}
+
+PassageForecast Game::forecast_from(const Passage& path, int first_leg, int progress, int end, int cargo) const {
     PassageForecast result;
     int spirits=s.spirits;
-    const int cargo=load()+extra_load;
-    for (int i=0;i<path.count;++i) {
+    for (int i=first_leg;i<end;++i) {
         const auto& leg=Legs[path.edge[i]];
-        int miles=leg.nautical_miles;
-        while (miles>0) {
-            const int day=std::min(99999,s.day+(++result.days));
-            if (day%6==0) spirits=std::max(0,spirits-3);
-            const auto here=vessel_at(path,i,float(leg.nautical_miles-miles)/leg.nautical_miles);
-            result.water+=daily_water(conditions_at(here,day).weather);
-            const int wind=sailing_wind(leg,path.reverse[i],(day/30)%12);
-            miles-=sailing_miles_per_day(s,cargo,spirits,wind);
+        int sailed=i==first_leg?progress:0;
+        while (sailed<leg.nautical_miles) {
+            const int day=std::min(99999,s.day+result.days+1);
+            spirits=sailing_spirits(spirits,day);
+            const auto weather=route_weather(path,i,sailed,day);
+            const int water=daily_water(weather.weather);
+            const int miles=sailing_miles_per_day(s,cargo,spirits,route_wind(path,i,day,weather),weather.weather);
+            if (result.days<ForecastDays)
+                result.outlook[result.days]={day,weather,tenths_of_a_knot(miles),water};
+            ++result.days;
+            sailed+=miles;
+            result.water+=water;
         }
         result.arrival_days[i]=result.days;
     }
@@ -563,8 +623,8 @@ Point Game::position(float frame) const {
     if (!sea()) return Anchor[s.origin];
     if (s.helm) return {s.helm_x/16,s.helm_y/16};
     const auto& edge = Legs[route.edge[s.leg]];
-    const int pace=sailing_miles_per_day(s,load(),s.spirits,wind(s.leg));
-    return vessel_at(route, s.leg, (s.progress + frame*pace) / edge.nautical_miles);
+    const float distance=s.progress+(frame>0?frame*next_route_pace():0);
+    return vessel_at(route,s.leg,distance/edge.nautical_miles);
 }
 
 void Game::earn(int gold) { s.gold = std::clamp(s.gold + gold, 0, 999999); }
@@ -733,9 +793,7 @@ bool Game::consume_day(SeaConditions weather) {
         s.spirits=std::max(0,s.spirits-(thirst?12:8));
         if (s.crew>4 && s.day%2==0) --s.crew;
         notice=thirst?"缺淡水，士气与船况下降":"缺食物，士气与船况下降";
-    } else if (s.day%6==0) {
-        s.spirits=std::max(0,s.spirits-3);
-    }
+    } else s.spirits=sailing_spirits(s.spirits,s.day);
     if (s.hull<=0) { rescue(); return false; }
     return true;
 }
@@ -889,7 +947,8 @@ void Game::helm_step(WaterTest water_at) {
     const auto weather=conditions();
     const bool has_pilot=s.first_mate==Pilot;
     const auto [dx,dy]=helm_displacement(Directions[s.heading],s.helm_y,
-                                       sailing_miles_per_day(s,load(),s.spirits,wind(0)));
+                                       sailing_miles_per_day(s,load(),s.spirits,
+                                                            wind_along(s.heading,weather),weather.weather));
     const int steps=std::max(1,(std::max(std::abs(dx),std::abs(dy))+3)/4);
     const int start_x=s.helm_x, start_y=s.helm_y;
     auto last_cell=position();
@@ -974,9 +1033,10 @@ void Game::chart_passage(const Leg& leg, int progress) {
 void Game::advance() {
     if (!sea() || s.helm || paused || encounter()) return;
     spend_day(1);
-    if (!consume_day(conditions())) return;
-    const int w = wind(s.leg);
-    const int speed=sailing_miles_per_day(s,load(),s.spirits,w);
+    const auto weather=route_weather(route,s.leg,s.progress,s.day);
+    if (!consume_day(weather)) return;
+    const int w=route_wind(route,s.leg,s.day,weather);
+    const int speed=sailing_miles_per_day(s,load(),s.spirits,w,weather.weather);
     const auto& leg = Legs[route.edge[s.leg]];
     if (s.escort==EscortSailing && on_leg(lisbon,madeira) && !(s.event_mask & (1U<<s.leg))) {
         chart_passage(leg,std::min(leg.nautical_miles-1,s.progress+speed));

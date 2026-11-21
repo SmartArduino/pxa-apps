@@ -112,8 +112,16 @@ struct HarborApproach {
     bool direct=false;
 };
 
+inline constexpr int ForecastDays=3;
+struct ForecastDay {
+    int day=0;
+    SeaConditions sea{};
+    int speed_tenths=0, water=0;
+};
+
 struct PassageForecast {
     std::array<int, PlaceCount> arrival_days{};
+    std::array<ForecastDay, ForecastDays> outlook{};
     int days=0;
     int provisions=0, water=0;
 };
@@ -203,6 +211,9 @@ struct Game {
     int wind(int leg) const;
     int speed_in_tenths_of_a_knot() const;
     PassageForecast forecast(const Passage& path, int extra_load=0) const;
+    PassageForecast remaining_forecast() const;
+    std::array<ForecastDay, ForecastDays> local_forecast() const;
+    int sailing_target() const;
     int daily_rations() const;
     int daily_water(SeaWeather weather) const;
     bool tow_needed() const;
@@ -312,6 +323,8 @@ struct Game {
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:
+    PassageForecast forecast_from(const Passage& path, int first_leg, int progress, int end, int cargo) const;
+    int next_route_pace() const;
     unsigned roll(unsigned range);
     void arrive();
     void rescue();
