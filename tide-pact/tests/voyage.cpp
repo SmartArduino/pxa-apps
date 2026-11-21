@@ -558,6 +558,77 @@ void sailing_rations() {
     assert(!helm.rationing(SaveFood));
 }
 
+void sea_stories() {
+    const auto ocean=[](Point){return true;};
+    auto cast_off=[] {
+        Game ship;
+        ship.s.origin=canaries;
+        ship.s.chart_marks|=1U<<ribeira;
+        assert(ship.depart(ribeira));
+        ship.s.progress=180;
+        return ship;
+    };
+    auto shoal=cast_off();
+    for (unsigned seed=1;shoal.s.weather!=ShoalLantern && seed<600;++seed) {
+        shoal=cast_off();
+        shoal.s.rng=seed;
+        shoal.advance();
+    }
+    assert(shoal.s.weather==ShoalLantern && !shoal.heard_rumor(ArguinRumor));
+    assert(!shoal.encounter_requirement(0).empty() && !shoal.encounter_requirement(1).empty());
+    shoal.encounter_action(0);
+    assert(shoal.s.weather==ShoalLantern && !shoal.heard_rumor(ArguinRumor));
+    auto surveyor=shoal;
+    surveyor.s.surveyed|=1U<<arguin;
+    ++surveyor.s.charts;
+    const int supplies=surveyor.s.stores, day=surveyor.s.day;
+    surveyor.encounter_action(1);
+    assert(surveyor.heard_rumor(ArguinRumor) && !surveyor.encounter() && surveyor.s.day==day+1);
+    assert(surveyor.s.stores==supplies-1 && surveyor.s.renown==1);
+    auto leaving=shoal;
+    leaving.encounter_action(2);
+    assert(!leaving.heard_rumor(ArguinRumor) && leaving.s.day==day);
+    shoal.s.cargo[Timber]=1;
+    shoal.encounter_action(0);
+    assert(!shoal.s.cargo[Timber] && shoal.heard_rumor(ArguinRumor) && !shoal.charted(arguin));
+    assert(shoal.s.trust==1 && shoal.s.day==day && !shoal.encounter());
+    State reloaded;
+    assert(decode(reloaded,encode(shoal.s)) && read_sea(reloaded.sea_log[0]).kind==ShoalLantern);
+
+    Game equatorial;
+    assert(equatorial.start_helm(-1));
+    equatorial.s.heading=6;
+    equatorial.s.helm_x=(Anchor[equator].x-30)*16;
+    equatorial.s.helm_y=Anchor[equator].y*16;
+    equatorial.s.sail_watch=SailingWatches-1;
+    equatorial.s.water=30;
+    auto calm=equatorial;
+    for (int day=1;calm.s.weather!=Doldrums && day<120;day+=2) {
+        for (unsigned seed=1;calm.s.weather!=Doldrums && seed<36;++seed) {
+            calm=equatorial;
+            calm.s.day=day;
+            calm.s.rng=seed;
+            calm.helm_step(ocean);
+        }
+    }
+    assert(calm.s.weather==Doldrums && calm.s.helm);
+    assert(decode(reloaded,encode(calm.s)) && reloaded.weather==Doldrums);
+    assert(!calm.encounter_requirement(0).empty() && !calm.encounter_requirement(1).empty());
+    auto drifting=calm;
+    drifting.encounter_action(2);
+    assert(drifting.s.day==calm.s.day+1 && drifting.s.water<calm.s.water && !drifting.encounter());
+    auto pilot=calm;
+    pilot.s.first_mate=Pilot;
+    pilot.encounter_action(1);
+    assert(pilot.s.water==calm.s.water && pilot.s.day==calm.s.day && !pilot.encounter());
+    calm.s.cargo[Cloth]=1;
+    const int water=calm.s.water;
+    calm.encounter_action(0);
+    assert(calm.s.day==drifting.s.day && !calm.encounter() && !calm.s.cargo[Cloth]);
+    assert(calm.s.water>water && calm.s.water==drifting.s.water+10);
+    assert(decode(reloaded,encode(calm.s)) && read_sea(reloaded.sea_log[0]).kind==Doldrums);
+}
+
 void expeditions() {
     for (int id=0;id<ExpeditionCount;++id) {
         const auto& study=Expeditions[id];
@@ -1090,6 +1161,7 @@ int main() {
     sailing_units();
     weather_forecasts();
     sailing_rations();
+    sea_stories();
     expeditions();
     port_languages();
     dockside_bargaining();

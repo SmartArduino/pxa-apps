@@ -1232,10 +1232,33 @@ struct VoyageApp {
         button(d,{actions.x+half+5,actions.y,actions.w-half-5,actions.h},
                officer_talk?"查看专长":"交谈",OfficerTalk);
     }
+    void regional_scene(Draw& d, int kind) {
+        const auto& scene=Encounters[kind];
+        skin_box(d,body,0,6);
+        const int x=body.x+7, w=body.w-14;
+        const int choices_y=body.bottom()-33;
+        d.label(x,body.y+5,scene.title,gold,w);
+        const Rect illustration{x,body.y+25,std::min(w/3,160),std::max(1,choices_y-body.y-31)};
+        constexpr int tile_w=160, tile_h=104;
+        const int crop_w=std::min(tile_w,tile_h*illustration.w/illustration.h);
+        const int crop_h=std::min(tile_h,tile_w*illustration.h/illustration.w);
+        d.image({art::sea_stories},{(kind==Doldrums?tile_w:0)+(tile_w-crop_w)/2,
+                (tile_h-crop_h)/2,crop_w,crop_h},illustration);
+        d.frame(illustration,border);
+        const int text_x=illustration.right()+7;
+        d.wrap({text_x,illustration.y,w+x-text_x,illustration.h},
+               scene.message,ivory,d.font.cell+1);
+        for (int i=0;i<3;++i) {
+            const int left=x+i*(w+3)/3, right=x+(i+1)*(w+3)/3-3;
+            button(d,{left,choices_y,right-left,27},scene.choices[i],FightFirst+i,i==0,
+                   !game.encounter_requirement(i).empty());
+        }
+    }
     void encounter_screen(Draw& d) {
         const auto& s=game.s;
         const auto weather=s.weather;
         if (game.duel()) { duel_screen(d); return; }
+        if (weather==ShoalLantern || weather==Doldrums) { regional_scene(d,weather); return; }
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
         const auto& scene=Encounters[weather];

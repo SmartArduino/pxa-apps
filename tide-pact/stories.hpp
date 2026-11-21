@@ -35,7 +35,7 @@ static_assert(std::size(Tales) == TaleCount);
 
 enum Encounter : std::uint8_t {
     Calm, Storm, Privateer, Castaways, FalseBeacon, Rigging, ReliefShip, Fog,
-    Boarding, DockDuel, ReversedFlag, StrandedPost, EncounterCount
+    Boarding, DockDuel, ReversedFlag, StrandedPost, ShoalLantern, Doldrums, EncounterCount
 };
 enum EscortStage : std::uint8_t {
     EscortOpen, EscortSailing, EscortWonGuns, EscortWonDuel, EscortPublished, EscortSold
@@ -72,9 +72,14 @@ inline constexpr EncounterScene Encounters[] {
     {"倒挂的旗","前面的商船倒挂旗求救，追它的船却打着救援旗。你可以上前迎战，也可给商船四份水，听听出了什么事。",
      {"上前迎战","给水问话","绕礁离开"},{"你靠近了挂假旗的私掠船","船员喝了水，说出了追船的来历","等追船走远，花了一天"}},
     {"搁浅的邮船","邮船卡在礁边，涨潮前出不来。邮袋里还有几张海图。认得水路就能登船，也可用木料帮它脱困。",
-     {"按海图登船","用木料拖船","记下险滩"},{"邮袋拿上来了，海图没泡坏","邮船脱了浅，船主送来谢礼","你在图上标出了这处浅滩"}}
+     {"按海图登船","用木料拖船","记下险滩"},{"邮袋拿上来了，海图没泡坏","邮船脱了浅，船主送来谢礼","你在图上标出了这处浅滩"}},
+    {"浪里一盏灯","渔人萨法举灯求助。桨断了，潮水正把小船推向浅滩。给一件木料能做临时桨。有安娜或测过阿尔金，可花一天带船绕行。",
+     {"送木料做桨","领船绕浅滩","避开沙洲"},{"萨法换上了临时桨，指给你看阿尔金的水鸟往哪儿飞","小船跟在你后面过了浅滩。萨法在图上圈出阿尔金的大致水域","小船举着灯往岸边漂。你驶向深水"}},
+    {"帆垂下来了","风停了，帆布贴在桅杆上。西边落着雨，等一天可用一件织锦接水。有安娜或测过两处水域，也能沿云边找风。",
+     {"铺布接雨","沿云找风","漂一天"},{"雨水汇进桶里。雨歇后，帆也重新鼓了起来","船沿云边驶进一片起风的水面","船在原地漂了一天，傍晚终于起了风"}}
 };
 static_assert(std::size(Encounters) == EncounterCount);
+static_assert(EncounterCount<=16);
 
 struct SeaRecord {
     int kind, choice, day;

@@ -27,7 +27,8 @@ inline constexpr Rumor Rumors[] {
 };
 inline constexpr int RumorCount=std::size(Rumors);
 static_assert(RumorCount<=32);
-inline constexpr int RibeiraRumor=11;
+inline constexpr int ArguinRumor=10, RibeiraRumor=11;
+static_assert(Rumors[ArguinRumor].port==canaries && Rumors[ArguinRumor].site==arguin);
 static_assert(Rumors[RibeiraRumor].port==canaries && Rumors[RibeiraRumor].site==ribeira);
 
 inline constexpr Text RumorFragments[]{

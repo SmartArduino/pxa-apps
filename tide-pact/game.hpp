@@ -340,6 +340,8 @@ private:
     void finish_encounter();
     void finish_dispatch(DispatchOutcome outcome);
     bool on_leg(int from, int to) const;
+    int regional_encounter(Point here) const;
+    void resolve_regional_encounter(int choice);
     void start_encounter(int kind);
     void start_duel(int kind);
     void naval_action(int action);

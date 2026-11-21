@@ -1030,9 +1030,11 @@ void Game::helm_step(WaterTest water_at) {
         notice="断铃号拦住了护航商船";
     } else if (s.tales[Lamps]==InProgress && s.beacon==BeaconUnseen && on_leg(madeira,canaries)) {
         start_encounter(FalseBeacon);
-    } else if (s.day%4==0 && roll(100)<30) {
-        const auto kind=weather.weather==Squall?Storm:(roll(10)<5?ReliefShip:ReversedFlag);
-        start_encounter(kind);
+    } else {
+        const int local=regional_encounter(position());
+        if (local!=Calm && s.day%2==0 && roll(100)<40) start_encounter(local);
+        else if (s.day%4==0 && roll(100)<30)
+            start_encounter(weather.weather==Squall?Storm:roll(10)<5?ReliefShip:ReversedFlag);
     }
 }
 
@@ -1040,6 +1042,23 @@ void Game::chart_passage(const Leg& leg, int progress) {
     for (int mark=s.progress+30;mark<progress;mark+=30)
         sighting(vessel_at(route,s.leg,float(mark)/leg.nautical_miles));
     sighting(vessel_at(route,s.leg,float(progress)/leg.nautical_miles));
+}
+
+int Game::regional_encounter(Point here) const {
+    int kind=Calm;
+    const auto shoal=Anchor[arguin];
+    if (here.x>=shoal.x-82 && here.x<=shoal.x+5 && std::abs(here.y-shoal.y)<=34) {
+        if (conditions_at(here,s.day).weather!=Squall) kind=ShoalLantern;
+    } else if (here.x<Anchor[mpinda].x && std::abs(here.y-Anchor[equator].y)<=40) {
+        const auto sea=conditions_at(here,s.day);
+        if (sea.weather==Heat && sea.strength<=3) kind=Doldrums;
+    }
+    if (kind==Calm) return Calm;
+    for (const auto event : s.sea_log) {
+        const auto entry=read_sea(event);
+        if (entry.kind==kind && s.day-entry.day<12) return Calm;
+    }
+    return kind;
 }
 
 void Game::advance() {
@@ -1081,7 +1100,9 @@ void Game::advance() {
         if (s.reefed) chance /= 2;
         if (roll(100) >= unsigned(chance)) return;
         const auto draw=roll(100);
-        if (here.y>790 || draw<26) start_encounter(Storm);
+        const int local=draw<50?regional_encounter(here):Calm;
+        if (local!=Calm) start_encounter(local);
+        else if (here.y>790 || draw<26) start_encounter(Storm);
         else if (draw<51) start_encounter(Privateer);
         else if (draw<63) start_encounter(Castaways);
         else if (draw<74) start_encounter(Rigging);
@@ -1754,6 +1775,12 @@ Text Game::encounter_requirement(int choice) const {
     if (s.weather==ReliefShip && choice==0 && !s.cargo[Salt]) return "需要一件海盐";
     if (s.weather==ReliefShip && choice==1 && s.gold<water_price()) return "金币不足";
     if (s.weather==Fog && choice==1 && s.charts<2) return "需测绘两处水域";
+    if (s.weather==ShoalLantern && choice==0 && !s.cargo[Timber]) return "需要一件木料";
+    if (s.weather==ShoalLantern && choice==1 && s.first_mate!=Pilot && !(s.surveyed&(1U<<arguin)))
+        return "需安娜领航或测过阿尔金";
+    if (s.weather==Doldrums && choice==0 && !s.cargo[Cloth]) return "需要一件织锦";
+    if (s.weather==Doldrums && choice==1 && s.first_mate!=Pilot && s.charts<2)
+        return "需安娜领航或测过两处水域";
     return {};
 }
 
@@ -1899,11 +1926,32 @@ void Game::check_ship() {
     if (s.hull <= 0) rescue();
 }
 
+void Game::resolve_regional_encounter(int choice) {
+    const int kind=s.weather;
+    const bool delayed=kind==ShoalLantern?choice==1:choice!=1;
+    if (kind==ShoalLantern && choice==0) --s.cargo[Timber];
+    if (kind==Doldrums && choice==0) {
+        --s.cargo[Cloth];
+        s.water=static_cast<std::uint8_t>(std::min(water_capacity(),int(s.water)+10));
+    }
+    if (delayed) spend_day(1);
+    log_encounter(choice);
+    if (delayed && !consume_day(conditions())) return;
+    if (kind==ShoalLantern && choice!=2 && !heard_rumor(ArguinRumor)) {
+        s.heard_rumors|=1U<<ArguinRumor;
+        if (choice==0) ++s.trust;
+        else ++s.renown;
+    }
+    notice=Encounters[kind].results[choice];
+    finish_encounter();
+}
+
 void Game::encounter_action(int action) {
     if (!encounter() || action<0 || action>((duel() || s.weather==Privateer)?3:2)) return;
     if (const auto why=encounter_requirement(action); !why.empty()) { notice=why; return; }
     if (duel()) return duel_action(action);
     if (s.weather==Privateer) return naval_action(action);
+    if (s.weather==ShoalLantern || s.weather==Doldrums) return resolve_regional_encounter(action);
     if (s.weather == Storm) {
         const int loss = action == 0 ? 4 : (action == 1 ? 12 : 20);
         s.hull -= std::max(1, loss + int(roll(8)) - (s.reefed ? 5 : 0));
