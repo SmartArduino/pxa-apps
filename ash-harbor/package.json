@@ -2,8 +2,8 @@
   "format": "pxa-package-source-0.1",
   "id": "pxa-ash-harbor",
   "name": "烬港斗魂",
-  "version": "0.8.1",
-  "release_sequence": 26,
+  "version": "0.8.2",
+  "release_sequence": 27,
   "description": "原创雨港武侠四人格斗。支持局域网双人对战、三战街机巡回和训练模式，四处擂台、三幕剧情，多点触摸与手柄操作。",
   "icon": "assets/icon.png",
   "min_sdk": [

@@ -6,37 +6,26 @@
 #include <cstdio>
 #include <cstring>
 #include "art.hpp"
-#include "frame_dimensions.hpp"
+#include "frame_decode.hpp"
 namespace ash {
 struct FramePixels {
     std::array<std::vector<std::byte>,art::pages> pages;
     std::array<std::byte,65556> upload;
     unsigned reads=0,uploads=0;
     std::array<bool,art::pages> inflight{};
-    pxa::Task<void> load(pxa::Context& ctx,unsigned page){
-        if(inflight[page])co_return std::unexpected(pxa::Error::would_block);
-        if(!pages[page].empty())co_return pxa::Result<void>{};
+    // The bank is embedded in memory: decoding performs no asynchronous I/O.
+    // Immediate coroutine completions otherwise resume one another recursively
+    // across the preload loop and exhaust the S31 native stack.
+    pxa::Result<void> load(unsigned page){
+        if(page>=art::pages)return std::unexpected(pxa::Error::invalid_argument);
+        if(inflight[page])return std::unexpected(pxa::Error::would_block);
+        if(!pages[page].empty())return pxa::Result<void>{};
         inflight[page]=true;
         auto& bytes=pages[page];bytes.resize(art::page_bytes[page]);
-        unsigned offset=0,position=art::page_offset[page],end=position+art::page_rle_bytes[page];
-        const auto* packed=reinterpret_cast<const unsigned char*>(art::frame_rle);
-        bool valid=end<=sizeof(art::frame_rle)-1;
-        while(valid&&position<end){
-            unsigned control=packed[position++],count=(control&127u)+1;
-            if(count>bytes.size()-offset){valid=false;break;}
-            if(control&128u){
-                if(position==end){valid=false;break;}
-                std::fill_n(bytes.data()+offset,count,std::byte(packed[position++]));
-            }else{
-                if(count>end-position){valid=false;break;}
-                std::memcpy(bytes.data()+offset,packed+position,count);position+=count;
-            }
-            offset+=count;
+        if(!decodeFramePage(page,bytes)){
+            bytes.clear();inflight[page]=false;return std::unexpected(pxa::Error::protocol_error);
         }
-        if(!valid||offset!=bytes.size()){
-            bytes.clear();inflight[page]=false;co_return std::unexpected(pxa::Error::protocol_error);
-        }
-        inflight[page]=false;++reads;co_return pxa::Result<void>{};
+        inflight[page]=false;++reads;return pxa::Result<void>{};
     }
     pxa::Result<void> bind(pxa::game::Renderer& renderer,unsigned page,unsigned slot){
         auto result=pxa::game::Upload(renderer,upload).texture({uint8_t(slot)},

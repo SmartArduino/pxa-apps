@@ -125,25 +125,28 @@ struct App {
         char rendererMessage[96];std::snprintf(rendererMessage,sizeof rendererMessage,"Ash Harbor renderer slots=%u capabilities=%u",textureSlotCount,unsigned(renderer->capabilities()));log(rendererMessage);
         if(textureSlotCount>renderer->info().max_textures)co_return std::unexpected(pxa::Error::limit_exceeded);
         if(auto r=pxa::game::Upload(*renderer,buffer.bytes()).palette(art::palette);!r)co_return r;
-        for(unsigned i=0;i<art::static_pages;++i){auto r=co_await loadPage(i);if(!r)co_return r;}
-        for(unsigned actor=0;actor<2;++actor){auto r=co_await loadPage(art::fighters[actor][0][0].page);if(!r)co_return r;}
+        for(unsigned i=0;i<art::static_pages;++i){auto r=loadPage(i);if(!r)co_return r;}
+        for(unsigned actor=0;actor<2;++actor){auto r=loadPage(art::fighters[actor][0][0].page);if(!r)co_return r;}
         layout();ready=true;resizing=false;dirty=true;last=0;
         (void)ctx->clock().set_period(16);log("Ash Harbor ready");state("launch");render();
         co_return pxa::Result<void>{};
     }
-    pxa::Task<void> loadPage(unsigned page){
+    pxa::Result<void> loadPage(unsigned page){
         char path[64];std::snprintf(path,sizeof path,"assets/atlas-%u.pxr",page);
         unsigned slot=page<art::static_pages?page:art::static_pages;
         while(slot<textureSlotCount&&slotPages[slot]>=0)++slot;
-        if(slot>=textureSlotCount)co_return std::unexpected(pxa::Error::resource_limit);
-        auto read=co_await framePixels.load(*ctx,page);if(!read)co_return read;
-        auto bound=framePixels.bind(*renderer,page,slot);if(!bound)co_return bound;
+        if(slot>=textureSlotCount)return std::unexpected(pxa::Error::resource_limit);
+        auto read=framePixels.load(page);if(!read)return read;
+        auto bound=framePixels.bind(*renderer,page,slot);if(!bound)return bound;
         uploaded[page]=true;
-        // UI pages remain in renderer slots; their temporary decode buffers
-        // need not compete with the two fighters in Guest linear memory.
-        if(page<art::static_pages)std::vector<std::byte>().swap(framePixels.pages[page]);
+        // The 48-slot renderer keeps the whole match resident. Upload copies
+        // the pixels, so retaining a second copy in Guest memory only forces
+        // memory.grow to find another large contiguous block on small boards.
+        // Legacy 16-slot renderers still cache fighter pixels for streaming.
+        if(page<art::static_pages||textureSlotCount>16)
+            std::vector<std::byte>().swap(framePixels.pages[page]);
         pageSlots[page]=slot;slotPages[slot]=page;pageUsed[page]=animation;
-        co_return pxa::Result<void>{};
+        return pxa::Result<void>{};
     }
     bool releasePage(unsigned victim){
         // Replace only this slot: a full bind_assets would clear uploaded peers.
@@ -176,7 +179,7 @@ struct App {
                 if((count<textureSlotCount-art::static_pages&&bytes+art::page_bytes[page]<=limit)||victim==art::pages)break;
                 if(!releasePage(victim)){loading=false;co_return std::unexpected(pxa::Error::resource_limit);}
             }
-            auto r=co_await loadPage(page);
+            auto r=loadPage(page);
             if(!r){loading=false;dirty=true;
                 if(r.error()==pxa::Error::would_block||r.error()==pxa::Error::busy||r.error()==pxa::Error::quota_exceeded||r.error()==pxa::Error::resource_limit)
                     co_return pxa::Result<void>{};
@@ -806,12 +809,10 @@ struct App {
             if(textureSlotCount>16)for(unsigned page=art::static_pages;page<art::pages;++page)
                 if(uploaded[page]&&!wanted[page]&&!releasePage(page)){warming=warmRunning=false;co_return std::unexpected(pxa::Error::resource_limit);}
             for(unsigned page=art::static_pages;page<art::pages;++page)if(wanted[page]){
-                auto result=co_await framePixels.load(*ctx,page);
+                auto result=textureSlotCount>16?
+                    (pageReady(page)?pxa::Result<void>{}:loadPage(page)):
+                    framePixels.load(page);
                 if(!result){warming=warmRunning=false;co_return result;}
-                if(textureSlotCount>16&&!pageReady(page)){
-                    auto bound=co_await loadPage(page);
-                    if(!bound){warming=warmRunning=false;co_return bound;}
-                }
                 if(generation!=warmGeneration)break;
             }
         }while(generation!=warmGeneration);
