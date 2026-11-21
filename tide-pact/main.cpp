@@ -27,7 +27,8 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage
+    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
+    DispatchBoard
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -58,8 +59,11 @@ enum Action {
     HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont,
     ShowMerchants, MarkMerchantFirst, MarkMerchantSecond, OpenTown, ReturnTown,
     WalkToTownFacility, ReadPortStory=WalkToTownFacility+int(TownFacilityCount),
-    FindPortStory=ReadPortStory+int(PortStoryCount), PortStoryChooseFirst, PortStoryChooseSecond, PortStoryGuide
+    FindPortStory=ReadPortStory+int(PortStoryCount), PortStoryChooseFirst, PortStoryChooseSecond, PortStoryGuide,
+    OpenDispatch, ViewDispatchReceipt, AcceptDispatch, FileDispatch, MarkDispatch, AskCancelDispatch,
+    CancelDispatch, DispatchEntry
 };
+enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -107,6 +111,8 @@ struct VoyageApp {
     int town_id=-1;
     int port_story_id=0;
     Overlay port_story_back=TaleList;
+    Overlay dispatch_back=None;
+    int dispatch_page=DispatchList;
     unsigned town_frame=0, town_hint_until=0;
     bool inside_town_facility=false;
     Overlay town_facility=None;
@@ -1117,9 +1123,13 @@ struct VoyageApp {
         const auto& s=game.s;
         const int half=(body.w-13)/2;
         skin_box(d,body,0,6);
+        const bool freight=s.dispatch.number || s.dispatch.last;
         d.label(body.x+5,body.y+3,format("声望%d 信任%d 测绘%d/%d",s.renown,s.trust,
-                s.charts,PlaceCount-PortCount),gold,body.w-67);
+                s.charts,PlaceCount-PortCount),gold,body.w-(freight?122:67));
         button(d,{body.right()-57,body.y+2,53,20},"设置",ShowAudio,false,false,{},SettingsIcon);
+        if (freight)
+            button(d,{body.right()-112,body.y+2,51,20},"运单",OpenDispatch,bool(s.dispatch.number),
+                   false,{},LetterIcon);
         d.label(body.x+5,body.y+23,"主线",quiet);
         if (s.ending) {
             d.label(body.x+58,body.y+22,s.ending==1 ? "航图为众人所有" : "商号的独家合约",ivory,body.w-63);
@@ -1504,7 +1514,13 @@ struct VoyageApp {
             d.label(start+16,body.y+30,status,mist);
             d.label(x,body.y+30,Places[selected].name,gold,start-x-4);
         } else d.label(x,body.y+30,Places[selected].name,gold,w);
-        d.label(x,body.y+48,format("%d海里  预计%d日",path.miles,forecast.days),ivory,w);
+        Text timing;
+        if (game.s.dispatch.number && game.dispatch_target()==selected) {
+            if (selected!=DispatchOrders[game.dispatch_order()].to) timing=" · 中途停靠";
+            else timing=game.s.day+forecast.days>game.s.dispatch.due?" · 将逾期":" · 可按期";
+        }
+        d.label(x,body.y+48,format("%d海里  预计%d日%.*s",path.miles,forecast.days,int(timing.size()),
+                timing.empty()?"":timing.data()),ivory,w);
         const int surplus=std::min(game.s.stores-forecast.provisions,int(game.s.water)-forecast.water);
         const int ship_ok=game.s.hull>12;
         const bool ready=path.count && ship_ok && game.s.stores>=game.daily_rations() &&
@@ -1623,6 +1639,8 @@ struct VoyageApp {
 
     void port_desk(Draw& d) {
         page_title(d,"港口商会");
+        if (game.dispatch_board_here())
+            button(d,{body.right()-124,body.y+3,70,23},"港际运单",OpenDispatch,true);
         const bool invested=game.guild_stake(game.s.origin);
         const auto cost=format("入股 %d金",game.guild_cost());
         row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
@@ -1639,6 +1657,95 @@ struct VoyageApp {
         else if (game.s.origin==tunis)
             row(d,2,"优素福","招募领航",Recruit,true);
         pair(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors,"口译与学话",OpenLanguages);
+    }
+    void dispatch_board(Draw& d) {
+        const auto& record=game.s.dispatch;
+        const int active=game.dispatch_order();
+        const int x=body.x+7, y=body.y, width=body.w-14;
+        const Rect bottom{x,body.bottom()-29,width,25};
+        if (dispatch_page==DispatchConfirmCancel && active>=0) {
+            page_title(d,"退回运单",LetterIcon);
+            const auto& rate=DispatchRates[DispatchOrders[active].kind];
+            d.wrap({x,y+35,width,body.h-68},
+                   format("货件或旅客将在本港下船，已付的%d金押金不会退回。",rate.bond),ivory);
+            pair(d,bottom,"继续运送",Close,"确认退单",CancelDispatch,true);
+            return;
+        }
+        if (dispatch_page==DispatchReceipt) {
+            if (!record.last) { dispatch_page=DispatchList; }
+            else {
+                const auto& order=DispatchOrders[record.last-1];
+                constexpr Text outcomes[]{"","按期交付","逾期交付","已退回运单","航程中断"};
+                page_title(d,"最近运单",LetterIcon);
+                d.label(x,y+34,order.title,gold,width);
+                d.label(x,y+54,outcomes[record.outcome],ivory,width);
+                const auto& rate=DispatchRates[order.kind];
+                if (record.outcome==DispatchOnTime || record.outcome==DispatchLate) {
+                    const auto fee=game.dispatch_quote(record.last-1).fee;
+                    d.label(x,y+74,format("运费 %d金 · 退回押金 %d金",
+                            record.outcome==DispatchOnTime?fee:fee/2,rate.bond),mint,width);
+                } else d.label(x,y+74,format("扣除押金 %d金",rate.bond),vermilion,width);
+                button(d,bottom,"返回运单簿",Close);
+                return;
+            }
+        }
+        const int id=active>=0?active:dispatch_page;
+        if (id<0) {
+            page_title(d,"港际运单",LetterIcon);
+            int offer=0;
+            if (game.port()) {
+                for (int i=0;i<DispatchCount;++i) {
+                    const auto& order=DispatchOrders[i];
+                    if (order.from!=game.s.origin) continue;
+                    row(d,offer++,order.title,DispatchRates[order.kind].name,DispatchEntry+i,true);
+                }
+            }
+            if (!offer)
+                d.wrap({x,y+35,width,body.h-68},"本港暂无新运单。可在里斯本、丰沙尔等港的商会接单。",mist);
+            if (record.last) button(d,bottom,"查看最近运单",ViewDispatchReceipt,false,false,{},LetterIcon);
+            return;
+        }
+
+        const auto& order=DispatchOrders[id];
+        const auto& rate=DispatchRates[order.kind];
+        page_title(d,order.title,LetterIcon);
+        if (active>=0 && record.last)
+            button(d,{body.right()-103,y+3,49,23},"回执",ViewDispatchReceipt);
+        const auto known=[&](int p) { return game.charted(p)?Places[p].name.data():"未定位"; };
+        d.image({art::dispatch_icons},{int(order.kind)*32,0,32,32},{x,y+27,27,27},true);
+        d.label(x+32,y+30,format("%s · 送往%s",rate.name.data(),known(order.to)),gold,width-32);
+        if (active<0) {
+            const auto quote=game.dispatch_quote(id);
+            d.label(x+32,y+47,format("占舱%d · 押金%d金",rate.space,rate.bond),mist,width-32);
+            const auto timing=format("预计%d日 · 时限%d日 · 运费%d金",quote.days,quote.days+rate.slack,quote.fee);
+            d.label(x,y+66,timing,ivory,width);
+            const auto requirement=game.dispatch_requirement(id);
+            if (!requirement.empty()) d.label(x,y+84,requirement,vermilion,width);
+            else if (order.stop>=0) d.label(x,y+84,format("须在%s靠港",known(order.stop)),mint,width);
+            else d.label(x,y+84,"迟到运费减半，交付退押金",mist,width);
+            button(d,bottom,"交押金接单",AcceptDispatch,true,!requirement.empty());
+            return;
+        }
+        const bool overdue=game.s.day>record.due;
+        d.label(x+32,y+47,format("限第%d日 · 占舱%d",record.due+1,rate.space),
+                overdue?vermilion:mist,width-32);
+        const int next=game.dispatch_target();
+        const bool ready=game.port() && next==order.to && game.s.origin==order.to;
+        const auto quote=game.dispatch_quote(id);
+        if (next!=order.to)
+            d.label(x,y+66,format("先在%s靠港",known(next)),gold,width);
+        else if (order.stop>=0)
+            d.label(x,y+66,format("已在%s停靠",known(order.stop)),mint,width);
+        else if (overdue) d.label(x,y+66,format("已逾期%d日",game.s.day-record.due),vermilion,width);
+        else d.label(x,y+66,format("余%d日",record.due-game.s.day),mint,width);
+        d.label(x,y+84,format("%s%d金 · 退押金%d金",overdue?"逾期运费":"运费",
+                overdue?quote.fee/2:quote.fee,rate.bond),overdue?vermilion:ivory,width);
+        if (game.port()) {
+            const int half=(width-5)/2;
+            button(d,{bottom.x,bottom.y,half,bottom.h},ready?"交付运单":"标记下一港",
+                   ready?FileDispatch:MarkDispatch,true);
+            button(d,{bottom.x+half+5,bottom.y,width-half-5,bottom.h},"退单",AskCancelDispatch);
+        }
     }
     void drift_story(Draw& d) {
         page_title(d,"红漆木匣",LetterIcon);
@@ -2264,6 +2371,7 @@ struct VoyageApp {
         case EventReport: event_report(d); break;
         case TowRequest: tow_request(d); break;
         case PortDesk: port_desk(d); break;
+        case DispatchBoard: dispatch_board(d); break;
         case EscortPage: escort_page(d); break;
         case DuelInvitation: duel_invitation(d); break;
         case ProvisionsPage: provisions_page(d); break;
@@ -2310,6 +2418,15 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=DispatchEntry && action<DispatchEntry+DispatchCount) {
+            const int id=action-DispatchEntry;
+            if (modal==DispatchBoard && game.port() && !game.s.dispatch.number &&
+                DispatchOrders[id].from==game.s.origin) {
+                dispatch_page=id;
+                focused=0;
+            }
+            return;
+        }
         if (action>=ReadPortStory && action<ReadPortStory+int(PortStoryCount)) {
             const int id=action-ReadPortStory;
             if (modal==TaleList && game.port_story_stage(id)!=PortStoryUnknown) {
@@ -2408,6 +2525,43 @@ struct VoyageApp {
                     game.port_story_stage(port_story_id)>=PortStoryFirst) {
                     rumor_item=RibeiraRumor;
                     activate(MarkRumor);
+                }
+                break;
+            case OpenDispatch:
+                dispatch_back=modal;
+                dispatch_page=DispatchList;
+                set_modal(DispatchBoard);
+                break;
+            case ViewDispatchReceipt:
+                dispatch_page=DispatchReceipt;
+                focused=0;
+                break;
+            case AcceptDispatch:
+                if (modal==DispatchBoard && game.accept_dispatch(dispatch_page)) {
+                    dispatch_page=DispatchList;
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case FileDispatch:
+                if (modal==DispatchBoard && game.deliver_dispatch()) {
+                    dispatch_page=DispatchReceipt;
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case MarkDispatch:
+                if (game.port() && game.s.dispatch.number) select(game.dispatch_target());
+                break;
+            case AskCancelDispatch:
+                dispatch_page=DispatchConfirmCancel;
+                focused=0;
+                break;
+            case CancelDispatch:
+                if (dispatch_page==DispatchConfirmCancel && game.cancel_dispatch()) {
+                    dispatch_page=DispatchReceipt;
+                    focused=0;
+                    changed();
                 }
                 break;
             }
@@ -2772,6 +2926,13 @@ struct VoyageApp {
         }
         if (modal!=None) {
             if (modal==PortStoryPage) set_modal(port_story_back);
+            else if (modal==DispatchBoard) {
+                if (dispatch_page!=DispatchList) {
+                    dispatch_page=DispatchList;
+                    focused=0;
+                    dirty=true;
+                } else set_modal(dispatch_back);
+            }
             else if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
             else if (modal==TalePage && screen==Journal) set_modal(TaleList);
             else if (modal==SeaLog && sea_item>=0) { sea_item=-1; focused=0; dirty=true; }

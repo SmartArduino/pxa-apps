@@ -796,6 +796,79 @@ void port_stories() {
     assert(decode(restored,encode(State{})) && !restored.port_stories);
 }
 
+void port_dispatches() {
+    for (int i=0;i<DispatchCount;++i) {
+        const auto& order=DispatchOrders[i];
+        Game game;
+        game.s.origin=order.from;
+        assert(game.dispatch_board_here());
+        assert(game.dispatch_quote(i).days>0 && game.dispatch_quote(i).fee>0);
+    }
+
+    Game courier;
+    courier.take_contract();
+    const int starting_gold=courier.s.gold, cargo=courier.load();
+    const auto offer=courier.dispatch_quote(0);
+    assert(courier.accept_dispatch(0) && !courier.accept_dispatch(1));
+    assert(courier.s.gold==starting_gold-18 && courier.load()==cargo+1);
+    assert(courier.s.contract==madeira && courier.dispatch_target()==cadiz);
+    assert(!courier.deliver_dispatch());
+    sail_to(courier,cadiz);
+    assert(courier.s.day<=courier.s.dispatch.due);
+    const int arrival_gold=courier.s.gold;
+    assert(courier.deliver_dispatch() && !courier.deliver_dispatch());
+    assert(courier.s.gold==arrival_gold+offer.fee+18 && courier.load()==cargo &&
+           courier.s.dispatch.outcome==DispatchOnTime);
+
+    Game freighter;
+    freighter.s.cargo[Wine]=freighter.capacity()-freighter.load()-5;
+    assert(!freighter.accept_dispatch(1));
+    --freighter.s.cargo[Wine];
+    assert(freighter.accept_dispatch(1) && freighter.load()==freighter.capacity());
+    assert(!freighter.trade_quote(Cloth,false,1).units);
+    assert(freighter.cancel_dispatch() && !freighter.cancel_dispatch());
+    assert(freighter.s.gold==520-45 && freighter.s.dispatch.outcome==DispatchCancelled);
+
+    Game passenger;
+    assert(passenger.accept_dispatch(2));
+    sail_to(passenger,canaries);
+    assert(passenger.dispatch_target()==madeira && !passenger.deliver_dispatch());
+    sail_to(passenger,madeira);
+    assert(passenger.s.dispatch.stopped && passenger.dispatch_target()==canaries);
+    while (passenger.s.day<=passenger.s.dispatch.due) passenger.wait_at_port();
+    assert(passenger.depart(canaries));
+    Game resumed;
+    assert(decode(resumed.s,encode(passenger.s)));
+    resumed.restore();
+    assert(resumed.paused && resumed.s.dispatch.stopped && resumed.dispatch_space()==4);
+    resumed.paused=false;
+    while (resumed.sea() && !resumed.encounter()) resumed.advance();
+    assert(resumed.port() && resumed.s.origin==canaries);
+    const int late_gold=resumed.s.gold;
+    const int late_renown=resumed.s.renown;
+    assert(resumed.deliver_dispatch() && resumed.s.dispatch.outcome==DispatchLate);
+    assert(resumed.s.gold==late_gold+35+resumed.dispatch_quote(2).fee/2 && resumed.s.renown==late_renown);
+    State impossible=freighter.s;
+    impossible.dispatch={.due=5,.number=2};
+    assert(decode(impossible,encode(impossible)));
+    ++impossible.cargo[Wine];
+    assert(!decode(impossible,encode(impossible)));
+
+    Game rescue;
+    assert(rescue.accept_dispatch(0) && rescue.depart(cadiz));
+    rescue.s.stores=0;
+    rescue.s.water=0;
+    rescue.s.hull=1;
+    rescue.advance();
+    assert(rescue.port() && !rescue.dispatch_space() && rescue.s.dispatch.outcome==DispatchLost);
+
+    Game visited;
+    visited.s.origin=canaries;
+    assert(!visited.accept_dispatch(7));
+    visited.s.visited|=1U<<ribeira;
+    assert(visited.accept_dispatch(7) && decode(visited.s,encode(visited.s)));
+}
+
 int main() {
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {
@@ -866,6 +939,7 @@ int main() {
     merchant_trade();
     town_walks();
     port_stories();
+    port_dispatches();
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();

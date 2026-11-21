@@ -18,6 +18,7 @@ inline constexpr int PlaceCount = std::size(Places);
 } // namespace tide
 
 #include "expeditions.hpp"
+#include "dispatch.hpp"
 #include "languages.hpp"
 #include "port_stories.hpp"
 #include "rumors.hpp"
@@ -167,6 +168,7 @@ struct State {
     std::uint8_t bargain_good=0, bargain_rate=0;
     std::uint8_t drift_stage=DriftUnheard;
     std::uint8_t port_stories=0;
+    DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
@@ -198,7 +200,7 @@ struct Game {
     bool negotiate(int good);
     int stock(int good) const;
     int wind(int leg) const;
-    PassageForecast forecast(const Passage& path) const;
+    PassageForecast forecast(const Passage& path, int extra_load=0) const;
     int daily_rations() const;
     int daily_water(SeaWeather weather) const;
     bool tow_needed() const;
@@ -238,6 +240,15 @@ struct Game {
     void service(int action);
     void take_contract();
     void deliver();
+    int dispatch_order() const { return int(s.dispatch.number)-1; }
+    int dispatch_target() const;
+    int dispatch_space() const;
+    bool dispatch_board_here() const;
+    DispatchQuote dispatch_quote(int id) const;
+    Text dispatch_requirement(int id) const;
+    bool accept_dispatch(int id);
+    bool deliver_dispatch();
+    bool cancel_dispatch();
     void survey();
     void chapter_choice(int choice);
     void navigator();
@@ -303,6 +314,7 @@ private:
     void arrive();
     void rescue();
     void finish_encounter();
+    void finish_dispatch(DispatchOutcome outcome);
     bool on_leg(int from, int to) const;
     void start_encounter(int kind);
     void start_duel(int kind);

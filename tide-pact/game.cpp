@@ -176,7 +176,7 @@ int Game::water_capacity() const {
 int Game::crew_limit() const { return berths[s.ship]; }
 
 int Game::load() const {
-    int all = 0;
+    int all = dispatch_space();
     for (const int count : s.cargo) all += count;
     return all;
 }
@@ -261,10 +261,10 @@ int Game::wind(int leg) const {
     return sailing_wind(Legs[route.edge[leg]],route.reverse[leg],(s.day/30)%12);
 }
 
-PassageForecast Game::forecast(const Passage& path) const {
+PassageForecast Game::forecast(const Passage& path, int extra_load) const {
     PassageForecast result;
     int spirits=s.spirits;
-    const int cargo=load();
+    const int cargo=load()+extra_load;
     for (int i=0;i<path.count;++i) {
         const auto& leg=Legs[path.edge[i]];
         int miles=leg.nautical_miles;
@@ -1016,6 +1016,13 @@ void Game::arrive() {
     }
     reveal_chart(Anchor[s.origin],26);
     notice = port() ? "安全入港" : "到达测绘水域";
+    if (s.dispatch.number) {
+        const auto& order=DispatchOrders[dispatch_order()];
+        if (s.origin==order.stop && !s.dispatch.stopped) {
+            s.dispatch.stopped=1;
+            notice="已在中途港停靠";
+        } else if (s.origin==dispatch_target()) notice="可以在港务交付运单";
+    }
 }
 
 void Game::rescue() {
@@ -1038,7 +1045,10 @@ void Game::rescue() {
     s.crew = std::max(8, s.crew - 3);
     s.visited |= 1U << nearest;
     reveal_chart(Anchor[nearest],26);
-    notice = "获商船救援，部分货物遗失";
+    if (s.dispatch.number) {
+        finish_dispatch(DispatchLost);
+        notice="获救入港，运单中断，押金已扣";
+    } else notice="获商船救援，部分货物遗失";
 }
 
 bool Game::tow_needed() const {
@@ -1153,6 +1163,92 @@ void Game::deliver() {
     s.contract = -1;
     s.renown += 3;
     notice = "委托交付，赏金入账";
+}
+
+int Game::dispatch_target() const {
+    if (!s.dispatch.number) return -1;
+    const auto& order=DispatchOrders[dispatch_order()];
+    return order.stop>=0 && !s.dispatch.stopped?order.stop:order.to;
+}
+
+int Game::dispatch_space() const {
+    return s.dispatch.number?DispatchRates[DispatchOrders[dispatch_order()].kind].space:0;
+}
+
+bool Game::dispatch_board_here() const {
+    if (!port()) return false;
+    if (s.dispatch.number) return true;
+    return std::any_of(std::begin(DispatchOrders),std::end(DispatchOrders),
+                       [this](const auto& order) { return order.from==s.origin; });
+}
+
+DispatchQuote Game::dispatch_quote(int id) const {
+    if (id<0 || id>=DispatchCount) return {};
+    const auto& order=DispatchOrders[id];
+    const auto& rate=DispatchRates[order.kind];
+    auto path=passage(order.from,order.stop>=0?order.stop:order.to);
+    if (!path.count) return {};
+    if (order.stop>=0) {
+        const auto second=passage(order.stop,order.to);
+        if (!second.count || path.count+second.count>PlaceCount) return {};
+        std::copy_n(second.edge.begin(),second.count,path.edge.begin()+path.count);
+        std::copy_n(second.reverse.begin(),second.count,path.reverse.begin()+path.count);
+        path.count+=second.count;
+        path.miles+=second.miles;
+    }
+    return {forecast(path,dispatch_order()==id?0:rate.space).days,rate.fee+path.miles/7};
+}
+
+Text Game::dispatch_requirement(int id) const {
+    if (id<0 || id>=DispatchCount || !port() || DispatchOrders[id].from!=s.origin) return "在发单港接单";
+    const auto& order=DispatchOrders[id];
+    const auto& rate=DispatchRates[order.kind];
+    if (s.dispatch.number) return "已有一份运单";
+    if (!charted(order.to) || (order.stop>=0 && !charted(order.stop))) return "先定位沿途港口";
+    if (capacity()-load()<rate.space) return "舱位不足";
+    if (s.gold<rate.bond) return "押金不足";
+    return {};
+}
+
+bool Game::accept_dispatch(int id) {
+    if (!dispatch_requirement(id).empty()) return false;
+    const auto quote=dispatch_quote(id);
+    if (!quote.days) return false;
+    const auto& order=DispatchOrders[id];
+    const auto& rate=DispatchRates[order.kind];
+    earn(-rate.bond);
+    s.chart_marks|=1U<<order.to;
+    if (order.stop>=0) s.chart_marks|=1U<<order.stop;
+    s.dispatch={.due=std::min(99999,s.day+quote.days+rate.slack), .number=std::uint8_t(id+1),
+                .last=s.dispatch.last, .outcome=s.dispatch.outcome};
+    notice="已接运单，货件装船";
+    return true;
+}
+
+bool Game::deliver_dispatch() {
+    if (!s.dispatch.number || !port()) return false;
+    const int id=dispatch_order();
+    const auto& order=DispatchOrders[id];
+    if (s.origin!=order.to || dispatch_target()!=order.to) return false;
+    const auto& rate=DispatchRates[order.kind];
+    const auto quote=dispatch_quote(id);
+    const bool on_time=s.day<=s.dispatch.due;
+    earn(rate.bond+(on_time?quote.fee:quote.fee/2));
+    if (on_time) s.renown=std::min(999999,s.renown+rate.renown);
+    finish_dispatch(on_time?DispatchOnTime:DispatchLate);
+    notice=on_time?"按期交付，押金已退":"逾期交付，运费减半";
+    return true;
+}
+
+bool Game::cancel_dispatch() {
+    if (!s.dispatch.number || !port()) return false;
+    finish_dispatch(DispatchCancelled);
+    notice="已退单，押金不退";
+    return true;
+}
+
+void Game::finish_dispatch(DispatchOutcome outcome) {
+    s.dispatch={.last=s.dispatch.number,.outcome=std::uint8_t(outcome)};
 }
 
 void Game::survey() {
@@ -1817,7 +1913,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Cha
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1869,6 +1965,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     }
     // Reuse one padding byte. Existing merchant saves initialized it to zero.
     bytes[offset++]=std::byte(s.port_stories);
+    for (auto field : {s.dispatch.number,s.dispatch.stopped,s.dispatch.last,s.dispatch.outcome})
+        bytes[offset++]=std::byte(field);
+    put(s.dispatch.due);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2013,6 +2112,20 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             ship.progress=int(progress);
         }
         s.port_stories=std::to_integer<std::uint8_t>(bytes[offset++]);
+        auto& order=s.dispatch;
+        for (auto* field : {&order.number,&order.stopped,&order.last,&order.outcome})
+            *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+        const auto due=get();
+        if (order.number>DispatchCount || order.last>DispatchCount || order.stopped>1 ||
+            order.outcome>DispatchLost || bool(order.last)!=bool(order.outcome) || due>99999 ||
+            (!order.number && (due || order.stopped)) ||
+            (order.number && (!due || (order.stopped && DispatchOrders[order.number-1].stop<0)))) return false;
+        if (order.number) {
+            const auto& cargo=DispatchOrders[order.number-1];
+            if (!(s.chart_marks & (1U<<cargo.to)) ||
+                (cargo.stop>=0 && !(s.chart_marks & (1U<<cargo.stop)))) return false;
+        }
+        order.due=int(due);
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||
@@ -2027,7 +2140,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    int load = 0;
+    int load = s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0;
     for (const int count : s.cargo) load += count;
     if (load > holds[s.ship]) return false;
     if (s.helm) {
