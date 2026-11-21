@@ -358,6 +358,22 @@ sample = Image.new("RGB", (256*3, 256*((len(color_pages)+2)//3)), (23,25,23))
 for i, page in enumerate(color_pages):
     sample.paste(page, (256*(i%3), 256*(i//3)), page.getchannel("A"))
 palette_source = sample.quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+# Use the empty corners of the two existing UI atlases. Both are already
+# resident in deployment and battle, including on the compact texture budget.
+mixed=image("mixed-forces")
+new_sprites=[]
+for i in range(9):
+    source_index=i%3 if i<6 else i-3
+    sprite=crop_cell(mixed,source_index%3,source_index//3,3,2)
+    if i<3:
+        page,x,y,w,h=frame_page,46*i,116,46,46
+    else:
+        page,x,y,w,h=ui_page,144+36*((i-3)%2),143+31*((i-3)//2),36,31
+    sprite.thumbnail((w-2,h-2),Image.Resampling.LANCZOS)
+    if 3<=i<6:
+        sprite=opponent_sprite(sprite)
+    pages[page].paste(sprite,(x+(w-sprite.width)//2,y+h-2-sprite.height))
+    new_sprites.append((page,x,y,w,h))
 # Add the HUD assets after sampling the existing palette to keep the other art intact.
 for i,tone in enumerate((
         ("#33221a","#4e3324","#38251d"),
@@ -460,7 +476,7 @@ for name,tiles in (("mapTiles",map_tiles),("compactMapTiles",compact_map_tiles),
                    ("portraits",portraits),("equipment",equipment),
                    ("outcomes",outcomes),("hudBars",hud_bars),("marchBars",march_bars),("commandIcons",command_icons),
                    ("mapProps",map_props),("plaques",plaques),("battlePanels",battle_panels),
-                   ("windows",windows)):
+                   ("windows",windows),("mixedForces",new_sprites)):
     lines.append(f"inline constexpr Tile {name}[{len(tiles)}] = {{" +
                  ",".join(map(tile_initializer,tiles)) + "};")
 for name,dimension,banks in (("troops","[2][3][6]",troops),

@@ -464,18 +464,19 @@
             button(f,{51+72*(i-press),133,66,26},maneuvers[i],Command::maneuver,i,
                    scoped?battle.mayDirectRank(lane,Maneuver(i)):battle.mayManeuver(Maneuver(i)),
                    (scoped?battle.stance(0,lane):battle.maneuver)==i,icons[i-press]);
-        const auto forecast=battle.forecastClash();
+        const auto forecast=battle.previewClash();
         const auto losses=[&](int side) {
             const auto& ranks=forecast[side];
             return scoped?ranks[lane]:ranks[0]+ranks[1]+ranks[2];
         };
         const int ours=losses(0), theirs=losses(1);
-        std::snprintf(label,sizeof label,"令%d · 下合预计  我损%d · 敌损%d",battle.signal,ours,theirs);
+        std::snprintf(label,sizeof label,"令%d · %s预计  我损%d · 敌损%d",
+                      battle.signal,battle.round?"下合":"接敌",ours,theirs);
         boxText(f,label,{51,198,282,20},13,
                 ours>theirs?coral:ours<theirs?mint:dim,1);
         if (!scoped) {
             button(f,{51,167,112,27},"阵前单挑",Command::duel,0,battle.mayDuel(),true,duelIcon);
-            button(f,{171,167,75,27},"暂停",Command::pause,0,true,false,pauseIcon);
+            button(f,{171,167,75,27},"进军",Command::maneuver,measured,battle.mayManeuver(measured));
             button(f,{254,167,79,27},"返回",Command::orders,0,true,false,withdrawIcon);
             return;
         }

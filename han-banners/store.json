@@ -3,7 +3,7 @@
   "kind": "game",
   "category": "strategy",
   "language": "zh-CN",
-  "summary": "从刘备、曹操或孙权起兵，沿古道行军，经营城池、任用武将，争夺五十六处城关。",
+  "summary": "六类兵种分路混编，率军横越长战场，用冲车或投石车攻破城防，争夺五十六处城关。",
   "tags": [
     "三国",
     "策略",
@@ -12,8 +12,8 @@
     "触屏",
     "手柄"
   ],
-  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。季末查阅敌情和钱粮，选择抚民或整训。沿八项州郡军略夺取目标城池，稳住民心后领取悬赏。还可在城中搜寻钱粮、军械与六位在野人才，延揽后利用各自的将技与专长。会战前可选枪兵、弓兵或骑兵，并排阵、配备武将兵器。会战中可调动武将出招，指挥全军强攻、固守、迂回或回撤，也可发起三合单挑。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。\n\n五十六处城关覆盖中原、巴蜀、江东、岭南、闽地和交趾。军队沿河谷、古道和沿海水路进发。点城池志可查古城地望、开局的史载官员与出处。\n\n原创古风配乐随标题、舆图和会战切换。冲锋、将技和单挑有普通话语音，各类声音可单独开关。",
+  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。季末查阅敌情和钱粮，选择抚民或整训。沿八项州郡军略夺取目标城池，稳住民心后领取悬赏。还可在城中搜寻钱粮、军械与六位在野人才，延揽后利用各自的将技与专长。上、中、下三路可分别配备枪兵、弓兵、骑兵、盾兵、弩兵或重骑。横拖战场能观察远端敌阵，弓弩部队可以先开火或支援相邻一路。攻城时可让冲车随步卒靠近城防，或让投石车在外线削弱守军。会战中可下达分路命令、调动武将出招，也可发起三合单挑。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。\n\n五十六处城关覆盖中原、巴蜀、江东、岭南、闽地和交趾。军队沿河谷、古道和沿海水路进发。点城池志可查古城地望、开局的史载官员与出处。\n\n原创古风配乐随标题、舆图和会战切换。冲锋、将技和单挑有普通话语音，各类声音可单独开关。",
   "icon": "art/store-icon.png",
   "cover": "art/store-cover.png",
-  "changelog": "会战可分别指挥上、中、下三路，调邻路增援，预览下一合伤亡并派武将出招。一路兵力耗尽后，相邻战线会受到侧击，群雄难度的敌将会重点防守受压战线。新增濮阳、官渡、赤壁、麦城等城关，舆图支持双指缩放。配乐、音效和语音可分别开关。\n\nGive orders to individual lanes, shift reinforcements, preview the next clash and send your general to the front. Open lanes expose nearby ranks to flanking attacks, and veteran enemies reinforce their defense on threatened lanes. Explore 56 locations with pinch-to-zoom and separate music, effects and voice controls."
+  "changelog": "加入可横向探索的长战场。上、中、下路可从六类兵种中分别选兵，盾兵抵御箭雨，弩兵可远射破甲，重骑擅长冲阵。攻城可携带冲车或投石车，按射程和军令操作器械，逐步破除城防。整齐收纳战场文字，加入行军扬尘、兵器火星和攻城碎屑。\n\nPan across a longer battlefield and mix six troop types across three independent lanes. Shield infantry resist arrows, crossbows reach farther, and heavy cavalry break shield lines. Bring a ram or stone thrower to breach city defenses. Battle labels stay inside their panels, with dust and impact particles."
 }

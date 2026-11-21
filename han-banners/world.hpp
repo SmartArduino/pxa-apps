@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <utility>
 #include <iterator>
 
@@ -17,13 +18,20 @@ constexpr int armyLimit = 2400;
 constexpr int lastTurn = 72;
 constexpr int worldWidth = 512, worldHeight = 512;
 
-enum Troop { spear, bow, horse };
+enum Troop { spear, bow, horse, shields, crossbow, heavyHorse, troopCount };
 enum Formation { square, wedge, wings };
 enum Weapon { longspear, saber, longbow };
+enum Engine { noEngine, ram, stoneThrower };
+constexpr int laneCount=3;
+using Lineup=std::array<Troop,laneCount>;
 struct BattlePlan {
-    Troop troop=spear;
-    Formation formation=square;
-    Weapon weapon=longspear;
+    constexpr BattlePlan(Troop troop=spear,Formation form=square,Weapon arm=longspear)
+        : lineup{troop,troop,troop},formation(form),weapon(arm) {}
+    Lineup lineup;
+    Formation formation;
+    Weapon weapon;
+    Engine engine=noEngine;
+    int engineLane=1;
 };
 enum Terrain { plain, hills, river };
 enum SiteKind { county, stronghold, crossing, battleSite, pass };
@@ -109,8 +117,11 @@ constexpr Faction factions[] = {
     {"刘备军"},{"曹操军"},{"孙权军"},{"荆南诸郡"},
     {"刘璋军"},{"张鲁军"},{"关西诸部"},{"交州守军"},
 };
-constexpr const char* troopNames[]={"枪兵","弓兵","骑兵"};
-constexpr const char* troopHints[]={"结阵克骑","远射克枪","突袭克弓"};
+constexpr const char* troopNames[]={"枪兵","弓兵","骑兵","盾兵","弩兵","重骑"};
+constexpr const char* troopHints[]={"枪阵拒骑","远射克枪","快袭弓手","举盾挡箭","远射破甲","冲阵破盾"};
+constexpr const char* engineNames[]={"无器械","冲车","投石车"};
+constexpr bool mounted(Troop troop) {return troop==horse || troop==heavyHorse;}
+constexpr bool ranged(Troop troop) {return troop==bow || troop==crossbow;}
 constexpr const char* formations[]={"方阵","锋矢阵","雁行阵"};
 constexpr const char* formationHints[]={"收拢减伤","中军强攻","两翼包抄"};
 constexpr const char* weaponNames[]={"长枪","环首刀","长弓"};
@@ -119,7 +130,10 @@ constexpr const char* weaponHints[]={"前排破骑","前排破阵","后排可射
 constexpr Weapon preferredWeapon(Troop troop) {
     return troop==bow?longbow:troop==horse?saber:longspear;
 }
-constexpr Troop counterTroop(Troop enemy) {return Troop((int(enemy)+1)%3);}
+constexpr Troop counterTroop(Troop enemy) {
+    constexpr Troop counters[]={bow,horse,spear,heavyHorse,shields,spear};
+    return counters[enemy];
+}
 constexpr const char* terrains[] = {"平原", "山地", "水乡"};
 
 // Gazetteer anchors are approximate present-day coordinates for late-Han sites.

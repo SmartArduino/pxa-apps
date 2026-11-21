@@ -52,7 +52,7 @@ struct RankOrder {
 };
 
 struct Battle {
-    static constexpr int rankCount=3;
+    static constexpr int rankCount=laneCount;
     using Ranks=std::array<int,rankCount>;
     using Clash=std::array<Ranks,2>;
     int from=0,to=0,hero=0,enemy=3,commander=0,column=-1;
@@ -60,12 +60,12 @@ struct Battle {
     const Officer* general=&officers[0][0];
     bool defending=false,blockade=false,usedSkill=false,paused=false;
     int troops[2]{},initial[2]{},morale[2]{100,100};
-    Ranks ranks[2]{},rankAdvance[2]{},rankLosses[2]{};
+    Ranks ranks[2]{},fronts[2]{},rankLosses[2]{};
     std::array<RankOrder,rankCount> rankOrders{};
     int enemyRank=-1,lastSupport=-1,lastStrikeLane=-1;
-    int losses[2]{},result=0,round=0,ticks=0,signal=0,effects=0;
+    int losses[2]{},result=0,round=0,ticks=0,roundClock=0,signal=0,effects=0;
     BattlePlan plan{};
-    Troop enemyTroop=spear;
+    Lineup enemyLineup{spear,spear,spear};
     Formation enemyFormation=square;
     Maneuver enemyManeuver=measured;
     Difficulty difficulty=Difficulty::standard;
@@ -78,10 +78,13 @@ struct Battle {
     Maneuver maneuver=measured;
     int maneuverRounds=0;
     Gear gear=noGear;
+    int wallPoints=0,engineShots=0,lastShot=-1,siegeTicks=0;
     Duel duel{};
-    static constexpr int approach=44,period=48,maximumRounds=11;
+    static constexpr int fieldLength=960,campFront=114,fieldMargin=50;
+    static constexpr int period=48,maximumRounds=11;
     static constexpr int commandCost=14,skillCost=46,tacticsCost=18,duelCost=28,strikeCost=12;
-    static constexpr int rankOrderCost=9,supportCost=8;
+    static constexpr int rankOrderCost=9,supportCost=8,skillRange=196;
+    static constexpr int gatePosition=710,engineCost=14;
 
     static Ranks deployRanks(int force,Formation formation) {
         constexpr int wingShare[]={31,24,39};
@@ -90,6 +93,10 @@ struct Battle {
     }
     void formRanks(int side) {
         ranks[side]=deployRanks(troops[side],side?enemyFormation:plan.formation);
+    }
+    static int formationDepth(Formation formation,int lane) {
+        constexpr Ranks depth[]={{0,0,0},{-12,17,-12},{13,-13,13}};
+        return depth[formation][lane];
     }
 
     void start(const Campaign& c,Order order,int expedition,BattlePlan deployment,int defender=-1) {
@@ -130,10 +137,20 @@ struct Battle {
             morale[0]=76;
         }
         if (blockade) signal=std::min(100,signal+10);
-        enemyTroop=enemyUnit(to,enemy,opponent());
-        enemyFormation=enemyFormationFor(to,walls,defending,enemyTroop,difficulty);
+        const auto core=enemyUnit(to,enemy,opponent());
+        enemyLineup=enemyDeployment(to,walls,defending,core,difficulty);
+        enemyFormation=enemyFormationFor(to,walls,defending,core,difficulty);
+        if (!mayBringEngine(walls,defending,blockade)) plan.engine=noEngine;
+        wallPoints=2*std::max(0,walls-(blockade?2:0));
+        engineShots=plan.engine==ram?2:plan.engine==stoneThrower?3:0;
         formRanks(0);
         formRanks(1);
+        for (int lane=0;lane<rankCount;++lane) {
+            const int lead=campFront+formationDepth(plan.formation,lane);
+            const int rival=fieldLength-campFront-formationDepth(enemyFormation,lane);
+            fronts[0][lane]=lead;
+            fronts[1][lane]=rival;
+        }
         enemySignal=difficulty==Difficulty::veteran?32:18;
         if (difficulty!=Difficulty::story) {
             enemyRetreatCity=defending?from:retreatDestination(c);
@@ -145,6 +162,16 @@ struct Battle {
         if (sites[city].terrain==river) return bow;
         if (sites[city].terrain==hills) return spear;
         return lead?lead->favored:Troop((city+enemy)%3);
+    }
+    static Lineup enemyDeployment(int city,int fort,bool advancing,Troop core,Difficulty skill) {
+        if (skill==Difficulty::story) return {core,core,core};
+        switch (sites[city].terrain) {
+            case river: return {bow,core,skill==Difficulty::veteran?crossbow:spear};
+            case hills: return {shields,core,crossbow};
+            case plain: return {skill==Difficulty::veteran?heavyHorse:horse,
+                                !advancing && fort>=3?shields:core,bow};
+        }
+        return {core,core,core};
     }
     static Formation enemyFormationFor(int city,int fort,bool attacking,Troop troop,Difficulty level) {
         if (level==Difficulty::story || (!attacking && fort>=2)) return square;
@@ -166,8 +193,27 @@ struct Battle {
     }
     bool order(Formation next) {
         if (result || paused || duel.visible() || plan.formation==next || signal<commandCost) return false;
+        const auto former=ranks[0];
         plan.formation=next;
-        formRanks(0);
+        const auto weights=deployRanks(troops[0],next);
+        // A change of formation can redistribute units of the same kind.
+        // Each troop pool retains its current strength across a change of shape.
+        std::array<int,troopCount> available{},weight{};
+        for (int lane=0;lane<rankCount;++lane) {
+            available[plan.lineup[lane]]+=former[lane];
+            weight[plan.lineup[lane]]+=std::max(1,weights[lane]);
+        }
+        for (int lane=0;lane<rankCount;++lane) {
+            const auto troop=plan.lineup[lane];
+            const int portion=std::max(1,weights[lane]);
+            ranks[0][lane]=available[troop]*portion/weight[troop];
+            available[troop]-=ranks[0][lane];
+            weight[troop]-=portion;
+        }
+        for (int lane=0;lane<rankCount;++lane) if (!former[lane] && ranks[0][lane]) {
+            const int source=nearestRank(former,lane);
+            if (source>=0) fronts[0][lane]=fronts[0][source];
+        }
         signal-=commandCost;
         return true;
     }
@@ -181,46 +227,64 @@ struct Battle {
         atFront=front;
         return true;
     }
+    int generalPosition(int lane,bool front) const {
+        return std::clamp(fronts[0][lane]+(front?12:-48),20,fieldLength-20);
+    }
+    int generalGap(int lane) const {
+        return std::abs(fronts[1][lane]-generalPosition(generalLane,atFront))+
+            26*std::abs(lane-generalLane);
+    }
+    int strikeTarget() const {
+        int best=-1, distance=plan.weapon==longbow?224:79;
+        for (int lane=0;lane<rankCount;++lane) {
+            if (!ranks[1][lane]) continue;
+            const int gap=generalGap(lane);
+            if (gap<distance) {best=lane;distance=gap;}
+        }
+        return best;
+    }
     bool mayStrike() const {
-        return canMoveGeneral() && ticks>=approach && lastStrike!=round &&
-            ranks[0][generalLane] && signal>=strikeCost &&
-            (atFront || plan.weapon==longbow);
+        return canMoveGeneral() && lastStrike!=round && ranks[0][generalLane] &&
+            signal>=strikeCost && (atFront || plan.weapon==longbow) && strikeTarget()>=0;
     }
     bool strike() {
         if (!mayStrike()) return false;
         signal-=strikeCost;
         lastStrike=round;
         strikeTicks=15;
+        lastStrikeLane=strikeTarget();
         int damage=30+officer().valor/3+(level-1)*5;
         switch (plan.weapon) {
             case longspear:
-                damage+=enemyTroop==horse?38:12;
+                damage+=mounted(troopFor(1,lastStrikeLane))?38:12;
                 break;
             case saber:
                 damage+=generalLane==1?36:19;
                 morale[1]=std::max(0,morale[1]-4);
                 break;
             case longbow:
-                damage+=enemyTroop==spear?22:6;
+                damage+=troopFor(1,lastStrikeLane)==spear?22:6;
                 if (!atFront) damage=damage*4/5;
                 break;
         }
         if (gear==sword) damage+=12;
-        lastStrikeLane=nearestRank(ranks[1],generalLane);
         rankLosses[1]={};
         losses[1]=hurtRank(1,lastStrikeLane,damage);
         evaluate();
         return true;
     }
     bool mayManeuver(Maneuver next) const {
-        return !result && !paused && !duel.visible() && signal>=tacticsCost &&
+        if (result || paused || duel.visible()) return false;
+        if (next==measured) return maneuver!=measured ||
+            std::any_of(rankOrders.begin(),rankOrders.end(),[](const RankOrder& order) {return order.rounds>0;});
+        return signal>=tacticsCost &&
             (next!=maneuver || maneuverRounds<2) && (next!=flank || sites[to].terrain!=river);
     }
     bool direct(Maneuver next) {
         if (!mayManeuver(next)) return false;
-        signal-=tacticsCost;
+        if (next!=measured) signal-=tacticsCost;
         maneuver=next;
-        maneuverRounds=2;
+        maneuverRounds=next==measured?0:2;
         rankOrders={};
         return true;
     }
@@ -248,7 +312,9 @@ struct Battle {
     int supportSource(int lane) const {
         int best=-1;
         for (int source=std::max(0,lane-1);source<=std::min(rankCount-1,lane+1);++source)
-            if (source!=lane && (best<0 || ranks[0][source]>ranks[0][best])) best=source;
+            if (source!=lane && (!ranks[0][lane] || (plan.lineup[source]==plan.lineup[lane] &&
+                 std::abs(fronts[0][source]-fronts[0][lane])<=164)) &&
+                (best<0 || ranks[0][source]>ranks[0][best])) best=source;
         return best;
     }
     int supportSize(int lane) const {
@@ -261,10 +327,45 @@ struct Battle {
     bool supportRank(int lane) {
         const int count=supportSize(lane);
         if (!count) return false;
-        ranks[0][supportSource(lane)]-=count;
+        const int source=supportSource(lane);
+        if (!ranks[0][lane]) {
+            fronts[0][lane]=fronts[0][source];
+            plan.lineup[lane]=plan.lineup[source];
+        }
+        ranks[0][source]-=count;
         ranks[0][lane]+=count;
         lastSupport=round;
         signal-=supportCost;
+        return true;
+    }
+    static bool mayBringEngine(int fort,bool defense,bool siege) {
+        return !defense && fort>=2 && fort>(siege?2:0);
+    }
+    int enginePosition() const {
+        return fronts[0][plan.engineLane]+(plan.engine==ram?16:-49);
+    }
+    int engineRange() const {return plan.engine==ram?151:298;}
+    int engineGap() const {return std::abs(gatePosition-enginePosition());}
+    int effectiveCover() const {return (wallPoints+1)/2;}
+    bool mayFireEngine() const {
+        return plan.engine!=noEngine && engineShots>0 && wallPoints>0 && !result && !paused &&
+            !duel.visible() && ranks[0][plan.engineLane] && lastShot!=round &&
+            signal>=engineCost && engineGap()<=engineRange();
+    }
+    bool fireEngine() {
+        if (!mayFireEngine()) return false;
+        signal-=engineCost;
+        --engineShots;
+        lastShot=round;
+        siegeTicks=23;
+        wallPoints=std::max(0,wallPoints-(plan.engine==ram?2:1));
+        const int lane=plan.engineLane;
+        if (plan.engine==stoneThrower && std::abs(fronts[1][lane]-gatePosition)<=95) {
+            rankLosses[1]={};
+            const int hit=hurtRank(1,lane,44);
+            if (hit) morale[1]=std::max(0,morale[1]-4);
+            evaluate();
+        }
         return true;
     }
     bool mayDuel() const {
@@ -302,8 +403,15 @@ struct Battle {
         }
         return true;
     }
+    bool mayRally() const {
+        if (!canMoveGeneral() || usedSkill || signal<skillCost) return false;
+        if (officer().power==guard || officer().power==inspire) return true;
+        for (int lane=0;lane<rankCount;++lane)
+            if (ranks[1][lane] && generalGap(lane)<=skillRange) return true;
+        return false;
+    }
     bool rally() {
-        if (result || paused || duel.visible() || commander<0 || !generalHealth || usedSkill || signal<skillCost) return false;
+        if (!mayRally()) return false;
         usedSkill=true;
         signal-=skillCost;
         effects=25;
@@ -311,7 +419,7 @@ struct Battle {
         int strike=0;
         switch (lead.power) {
             case charge:
-                strike=lead.strength+(plan.troop==lead.favored?35:0);
+                strike=lead.strength+(troopFor(0,generalLane)==lead.favored?35:0);
                 morale[0]=std::min(100,morale[0]+16);
                 break;
             case guard:shield=2;signal=std::min(100,signal+30+lead.strength);break;
@@ -326,29 +434,48 @@ struct Battle {
                 morale[1]=std::max(0,morale[1]-23);
                 break;
             case volley:
-                strike=lead.strength+(plan.troop==bow?85:0);
+                strike=lead.strength+(ranged(troopFor(0,generalLane))?85:0);
                 break;
         }
         if (strike) strike+=10*(level-1);
         rankLosses[1]={};
         losses[1]=0;
-        const auto portions=splitByRank(strike,ranks[1],troops[1]);
+        Ranks targets{};
+        int count=0;
+        for (int lane=0;lane<rankCount;++lane) if (generalGap(lane)<=skillRange) {
+            targets[lane]=ranks[1][lane];
+            count+=targets[lane];
+        }
+        const auto portions=splitByRank(strike,targets,count);
         for (int lane=0;lane<rankCount;++lane)
             losses[1]+=hurtRank(1,lane,portions[lane]);
         evaluate();
         return true;
     }
     static int advantage(Troop a,Troop b) {
-        return a==b?100:(int(a)+2)%3==int(b)?145:69;
+        constexpr int match[troopCount][troopCount]={
+            {100, 69,145, 85, 94,151},
+            {145,100, 69, 64, 82, 65},
+            { 69,145,100,117,138, 88},
+            {105,124, 85,100,122, 68},
+            {127,117, 72, 86,100,116},
+            { 64,135,120,145,113,100}
+        };
+        return match[a][b];
     }
-    int hit(int attackers,Troop a,Troop b,int spirit,int fort) const {
-        int strength=advantage(a,b);
-        auto terrain=sites[to].terrain;
-        if (a==horse) strength+=terrain==plain?17:-21;
-        if (a==bow && terrain==river) strength+=20;
-        if (a==spear && terrain==hills) strength+=12;
-        strength+=(spirit-62)/3-8*fort;
-        return std::max(18,(attackers/10+27)*std::max(32,strength)/100);
+    int lanePower(int side,int lane,int target) const {
+        const auto troop=troopFor(side,lane);
+        const auto opponent=troopFor(1-side,target);
+        int strength=advantage(troop,opponent)+(morale[side]-62)/3;
+        const auto terrain=sites[to].terrain;
+        if (mounted(troop)) strength+=terrain==plain?17:-21;
+        if (troop==bow && terrain==river) strength+=20;
+        if (troop==spear && terrain==hills) strength+=12;
+        if (side==int(defending)) {
+            const int cover=effectiveCover()-(stance(side,lane)==flank?1:0);
+            strength-=8*std::max(0,cover);
+        }
+        return std::max(32,strength);
     }
     static int nearestRank(const Ranks& force,int lane) {
         int best=-1;
@@ -369,21 +496,15 @@ struct Battle {
         return shares;
     }
     int hurtRank(int side,int lane,int damage) {
-        int lost=0;
-        while (damage>0) {
-            const int target=nearestRank(ranks[side],lane);
-            if (target<0) break;
-            const int hit=std::min(damage,ranks[side][target]);
-            ranks[side][target]-=hit;
-            rankLosses[side][target]+=hit;
-            damage-=hit;
-            lost+=hit;
-        }
+        const int lost=std::min(damage,ranks[side][lane]);
+        ranks[side][lane]-=lost;
+        rankLosses[side][lane]+=lost;
         troops[side]-=lost;
         return lost;
     }
     struct Tactics {int attack,exposure,spirit;};
-    Tactics tactics(int side,Maneuver move) const {
+    Tactics tactics(int side,int lane) const {
+        const auto move=stance(side,lane);
         if (side) {
             constexpr Tactics enemyOrders[]={{100,100,0},{121,112,0},{76,72,7},{132,88,0},{51,62,13}};
             return enemyOrders[move];
@@ -392,29 +513,115 @@ struct Battle {
             case measured:return {100,100,0};
             case press:return {135,122,0};
             case hold:return {75,56,8};
-            case flank:return {enemyTroop==bow?149:120,enemyTroop==horse?114:86,0};
+            case flank:return {ranged(troopFor(1,lane))?149:120,mounted(troopFor(1,lane))?114:86,0};
             case fallBack:return {43,42,14};
         }
         return {100,100,0};
     }
-    Ranks rankAttacks(int side,int base) const {
+    Troop troopFor(int side,int lane) const {return side?enemyLineup[lane]:plan.lineup[lane];}
+    int targetRank(int side,int lane) const {
+        const auto& opposing=ranks[1-side];
+        int target=nearestRank(opposing,lane);
+        if (target>=0 && stance(side,lane)==flank)
+            for (int n=std::max(0,lane-1);n<=std::min(rankCount-1,lane+1);++n)
+                if (opposing[n] && opposing[n]<opposing[target]) target=n;
+        return target;
+    }
+    int laneGap(int side,int lane,int target) const {
+        return std::abs(fronts[side][lane]-fronts[1-side][target])+
+            24*std::abs(lane-target);
+    }
+    int range(int side) const {
+        int furthest=0;
+        for (int lane=0;lane<rankCount;++lane) if (ranks[side][lane])
+            furthest=std::max(furthest,range(side,lane));
+        return furthest;
+    }
+    int range(int side,int lane) const {
+        constexpr int reach[troopCount]={64,144,60,56,168,62};
+        return reach[troopFor(side,lane)];
+    }
+    int attackTarget(int side,int lane) const {
+        const int target=targetRank(side,lane);
+        if (target<0 || laneGap(side,lane,target)<=range(side,lane)) return target;
+        // Archers can cover an adjacent engaged line while their own target is too far off.
+        if (ranged(troopFor(side,lane))) {
+            int best=-1,gap=range(side,lane);
+            for (int n=std::max(0,lane-1);n<=std::min(rankCount-1,lane+1);++n)
+                if (ranks[1-side][n] && laneGap(side,lane,n)<=gap) {
+                    best=n;
+                    gap=laneGap(side,lane,n);
+                }
+            return best;
+        }
+        return -1;
+    }
+    bool canReach(int side,int lane) const {
+        if (!ranks[side][lane]) return false;
+        return attackTarget(side,lane)>=0;
+    }
+    bool inContact() const {
+        for (int side=0;side<2;++side) for (int lane=0;lane<rankCount;++lane)
+            if (canReach(side,lane)) return true;
+        return false;
+    }
+    int closestGap() const {
+        int gap=fieldLength;
+        for (int lane=0;lane<rankCount;++lane) {
+            if (!ranks[0][lane]) continue;
+            for (int foe=0;foe<rankCount;++foe)
+                if (ranks[1][foe]) gap=std::min(gap,laneGap(0,lane,foe));
+        }
+        return gap;
+    }
+    void marchRanks() {
+        Ranks next[2]={fronts[0],fronts[1]};
+        for (int side=0;side<2;++side) for (int lane=0;lane<rankCount;++lane) {
+            if (!ranks[side][lane]) continue;
+            const auto move=stance(side,lane);
+            const int target=targetRank(side,lane);
+            if (target<0 || move==hold) continue;
+            const int x=fronts[side][lane], foe=fronts[1-side][target];
+            const int direction=x==foe?(side?-1:1):foe>x?1:-1;
+            if (move==fallBack) {
+                if (laneGap(side,lane,target)<range(side,lane)+88)
+                    next[side][lane]=std::clamp(x-direction*2,fieldMargin,fieldLength-fieldMargin);
+                continue;
+            }
+            const int lateral=24*std::abs(lane-target);
+            const int reach=range(side,lane);
+            const int stop=std::max(6,(move==press?reach*2/3:reach-6)-lateral);
+            const auto troop=troopFor(side,lane);
+            const bool plainfield=sites[to].terrain==plain;
+            const int speed=2+(troop==horse && plainfield)-(troop==heavyHorse && !plainfield)+
+                (move==press || move==flank);
+            const int step=std::clamp(std::abs(foe-x)-stop,0,speed);
+            next[side][lane]=std::clamp(x+direction*step,fieldMargin,fieldLength-fieldMargin);
+            if (side==1 && plan.engine!=noEngine && wallPoints && move==measured && direction<0 &&
+                (round || ticks<460))
+                next[side][lane]=std::max(next[side][lane],std::min(x,gatePosition-68));
+        }
+        fronts[0]=next[0];
+        fronts[1]=next[1];
+        if (round) ++roundClock;
+    }
+    bool clashReady() const {return round?roundClock>=period:inContact();}
+    Ranks rankAttacks(int side,int base,int extra=0,int modifier=100) const {
         const auto shares=splitByRank(base,ranks[side],troops[side]);
+        const auto bonuses=splitByRank(extra,ranks[side],troops[side]);
         Ranks attacks{};
         for (int lane=0;lane<rankCount;++lane) {
             if (!shares[lane]) continue;
-            const auto move=stance(side,lane);
             const auto& opposing=ranks[1-side];
-            int target=nearestRank(opposing,lane);
-            if (target<0) break;
-            if (move==flank) {
-                for (int n=std::max(0,lane-1);n<=std::min(rankCount-1,lane+1);++n)
-                    if (opposing[n] && opposing[n]<opposing[target]) target=n;
-            }
-            const auto source=tactics(side,move);
-            const auto guard=tactics(1-side,stance(1-side,target));
+            const int target=attackTarget(side,lane);
+            if (target<0) continue;
+            const auto source=tactics(side,lane);
+            const auto guard=tactics(1-side,target);
             // An open lane can hit the side of its neighbor, but never cross two lanes for a bonus.
             const int attack=source.attack+(!opposing[lane] && std::abs(lane-target)==1?15:0);
-            attacks[target]+=shares[lane]*attack*guard.exposure/10000;
+            const int power=std::max(1,shares[lane]*lanePower(side,lane,target)/100);
+            attacks[target]+=(power*formationPower(side,lane)/100+bonuses[lane])*
+                int64_t(modifier)*attack*guard.exposure/1000000;
         }
         for (int lane=0;lane<rankCount;++lane)
             attacks[lane]=std::min(attacks[lane],ranks[1-side][lane]);
@@ -422,7 +629,7 @@ struct Battle {
     }
     void steadyRanks(int side) {
         int weighted=0;
-        for (int i=0;i<rankCount;++i) weighted+=ranks[side][i]*tactics(side,stance(side,i)).spirit;
+        for (int i=0;i<rankCount;++i) weighted+=ranks[side][i]*tactics(side,i).spirit;
         morale[side]=std::min(100,morale[side]+weighted/std::max(1,troops[side]));
     }
     void planEnemyOrder() {
@@ -452,11 +659,16 @@ struct Battle {
             return;
         }
         if (enemySignal<tacticsCost) return;
-        const int balance=troops[1]*advantage(enemyTroop,plan.troop)-
-                          troops[0]*advantage(plan.troop,enemyTroop);
+        int balance=0;
+        bool rangedThreat=false;
+        for (int lane=0;lane<rankCount;++lane) {
+            const auto own=troopFor(0,lane),foe=troopFor(1,lane);
+            balance+=ranks[1][lane]*advantage(foe,own)-ranks[0][lane]*advantage(own,foe);
+            rangedThreat|=ranks[0][lane]>0 && ranged(own) && mounted(foe);
+        }
         if (veteran && morale[1]<40 && troops[1]>initial[1]/5) enemyManeuver=fallBack;
         else if (strained || maneuver==press) enemyManeuver=hold;
-        else if (veteran && plan.troop==bow && enemyTroop!=bow &&
+        else if (veteran && rangedThreat &&
                  sites[to].terrain!=river && balance>=-30000) enemyManeuver=flank;
         else if (balance>15000 && morale[1]>=65) enemyManeuver=press;
         if (veteran && (enemyManeuver==press || enemyManeuver==flank)) {
@@ -482,59 +694,64 @@ struct Battle {
             nextEnemyOrder=round+(veteran?2:3);
         }
     }
-    void enemyDamageModifiers(int& taken,int& dealt) const {
-        switch (enemyFormation) {
-            case square: if (difficulty!=Difficulty::story) dealt=dealt*94/100; break;
-            case wedge:taken=taken*111/100;dealt=dealt*106/100;break;
-            case wings:taken=taken*107/100;break;
+    int formationPower(int side,int lane) const {
+        if (side) {
+            int rate=enemyFormation==wedge?111:enemyFormation==wings?107:100;
+            if (gear==armor) rate=rate*85/100;
+            if (plan.formation==square) rate=rate*89/100;
+            if (plan.formation==wedge || (plan.formation==wings && mounted(troopFor(1,lane))))
+                rate=rate*110/100;
+            return rate;
         }
-        if (!enemySkillQueued) return;
+        int rate=(troopFor(0,lane)==officer().favored?112:100)+(level-1)*4+(gear==sword?12:0);
+        if (plan.formation==wedge)
+            rate=rate*(generalHealth && atFront && generalLane==1?128:116)/100;
+        if (plan.formation==wings)
+            rate=rate*(stance(0,lane)==flank || (generalHealth && atFront && generalLane!=1)?126:108)/100;
+        if (enemyFormation==square && difficulty!=Difficulty::story) rate=rate*94/100;
+        if (enemyFormation==wedge) rate=rate*106/100;
+        return rate;
+    }
+    int enemySkillDamage() const {
+        if (!enemySkillQueued) return 0;
         switch (opponent()->power) {
-            case charge:taken+=std::min(95,opponent()->strength/2+14);break;
-            case guard:dealt=dealt*54/100;break;
-            case guile:break;
-            case inspire:taken+=25;break;
-            case wildfire:taken+=sites[to].terrain==river?82:42;break;
-            case volley:taken+=enemyTroop==bow?81:49;break;
+            case charge:return std::min(95,opponent()->strength/2+14);
+            case inspire:return 25;
+            case wildfire:return sites[to].terrain==river?82:42;
+            case volley:return ranged(troopFor(1,1))?81:49;
+            default:return 0;
         }
     }
     Clash forecastClash() const {
-        const int effectiveWall=std::max(0,walls-(blockade?2:0)-(maneuver==flank?1:0));
-        int taken=hit(troops[1],enemyTroop,plan.troop,morale[1],defending?walls:0);
-        int dealt=hit(troops[0],plan.troop,enemyTroop,morale[0],defending?0:effectiveWall);
-        int prowess=(plan.troop==officer().favored?112:100)+(level-1)*4+(gear==sword?12:0);
-        dealt=dealt*prowess/100;
-        if (gear==armor) taken=taken*85/100;
-        switch (plan.formation) {
-            case square:taken=taken*89/100;break;
-            case wedge:
-                dealt=dealt*(generalHealth && atFront && generalLane==1?128:116)/100;
-                taken=taken*110/100;
-                break;
-            case wings:
-                dealt=dealt*(maneuver==flank || (generalHealth && atFront && generalLane!=1)?126:108)/100;
-                if (enemyTroop==horse) taken=taken*112/100;
-                break;
+        const int enemyGuard=enemySkillQueued && opponent()->power==guard?54:100;
+        return {rankAttacks(1,troops[1]/10+27,enemySkillDamage(),shield?33:100),
+                rankAttacks(0,troops[0]/10+27,0,enemyGuard)};
+    }
+    Clash previewClash() const {
+        auto projection=*this;
+        // During the opening the enemy keeps advancing even while our side holds.
+        const int limit=round?period:fieldLength;
+        for (int i=0;i<limit;++i) {
+            ++projection.ticks;
+            projection.marchRanks();
+            if (projection.clashReady()) return projection.forecastClash();
         }
-        enemyDamageModifiers(taken,dealt);
-        if (shield>0) taken/=3;
-        return {rankAttacks(1,taken),rankAttacks(0,dealt)};
+        return {};
     }
     void step() {
         if (paused) return;
         if (duel.visible()) {duel.tick();return;}
         if (effects) --effects;
         if (strikeTicks) --strikeTicks;
+        if (siegeTicks) --siegeTicks;
         if (enemySkillTicks) --enemySkillTicks;
         if (result) return;
         ++ticks;
-        constexpr int offsets[]={0,14,-12,4,-26};
-        for (int side=0;side<2;++side) for (int lane=0;lane<rankCount;++lane) {
-            auto& position=rankAdvance[side][lane];
-            position+=std::clamp(offsets[stance(side,lane)]-position,-2,2);
-        }
-        if (ticks%5==0) signal=std::min(100,signal+2);
-        if (ticks<approach || (ticks-approach)%period) return;
+        marchRanks();
+        // Give time to issue opening orders without filling the command gauge for free.
+        if (ticks%(round?5:14)==0) signal=std::min(100,signal+2);
+        if (!clashReady()) return;
+        roundClock=0;
         const auto incoming=forecastClash();
         if (enemySkillQueued) {
             enemySkillUsed=true;
@@ -551,7 +768,7 @@ struct Battle {
         if (shield>0) --shield;
         if (commander>=0 && generalHealth) {
             const auto position=stance(0,generalLane);
-            if (atFront) {
+            if (atFront && incoming[0][generalLane]) {
                 const int risk=10+std::clamp(incoming[0][generalLane]/3,0,21)+
                     (position==press?5:0)-(plan.formation==square?5:0);
                 generalHealth=std::max(0,generalHealth-risk);
@@ -559,7 +776,7 @@ struct Battle {
                     atFront=false;
                     morale[0]=std::max(0,morale[0]-12);
                 }
-            } else generalHealth=std::min(100,generalHealth+(position==fallBack?15:8));
+            } else if (!atFront) generalHealth=std::min(100,generalHealth+(position==fallBack?15:8));
         }
         if (maneuverRounds && !--maneuverRounds) maneuver=measured;
         for (auto& command:rankOrders) if (command.rounds) --command.rounds;
@@ -571,8 +788,9 @@ struct Battle {
                 losses[side]+=incoming[side][lane];
             }
             troops[side]-=losses[side];
-            morale[side]=std::max(0,morale[side]-4-105*losses[side]/std::max(240,initial[side]));
         }
+        if (losses[0] || losses[1]) for (int side=0;side<2;++side)
+            morale[side]=std::max(0,morale[side]-4-105*losses[side]/std::max(240,initial[side]));
         if (!ranks[0][generalLane] && troops[0]) {
             generalLane=nearestRank(ranks[0],generalLane);
             atFront=false;

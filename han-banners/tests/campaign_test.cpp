@@ -8,8 +8,11 @@ using namespace han;
 static BattlePlan planFor(const Campaign& c,Order order,int column) {
     const int enemy=c.cities[column<0?order.from:order.to].owner;
     const Officer* lead=enemy<3?&officers[enemy][c.enemyOfficer(enemy,order.to)]:nullptr;
-    const auto troop=counterTroop(Battle::enemyUnit(order.to,enemy,lead));
-    return {troop,wedge,longbow};
+    const auto core=Battle::enemyUnit(order.to,enemy,lead);
+    const auto foes=Battle::enemyDeployment(order.to,c.cities[order.to].fort,column<0,core,c.difficulty);
+    BattlePlan plan{spear,wedge,longbow};
+    for (int lane=0;lane<Battle::rankCount;++lane) plan.lineup[lane]=counterTroop(foes[lane]);
+    return plan;
 }
 
 static Settlement resolve(Campaign& campaign, Order order,int column) {
@@ -38,6 +41,11 @@ static void checkSave(const Campaign& c) {
     assert(data==encode(restored));
     data.back()^=std::byte{1};
     assert(!decode(data,restored));
+}
+
+static void fightUntilRound(Battle& battle,int next) {
+    for (int i=0;i<Battle::fieldLength && !battle.result && battle.round<next;++i) battle.step();
+    assert(battle.round==next || battle.result);
 }
 
 static Campaign play(int side,int chapter,Difficulty difficulty=Difficulty::standard) {
@@ -311,7 +319,7 @@ static void checkBattleAndCaptive() {
     Battle b;
     b.start(c,c.columns[id].road,id,planFor(c,c.columns[id].road,id));
     assert(!b.mayManeuver(flank) && b.direct(hold) && b.maneuverRounds==2);
-    for (int i=0;i<=Battle::approach;++i) b.step();
+    fightUntilRound(b,1);
     assert(b.round==1 && b.maneuverRounds==1 && b.challenge());
     assert(!b.challenge());
     const int morale=b.morale[1];
@@ -401,7 +409,9 @@ static void checkSearchAndTalents() {
     checkSave(arms);
     Battle fight;
     fight.start(arms,arms.columns[column].road,column,{horse,square,saber});
-    assert(&fight.officer()==&talents[3].officer && fight.signal==64 && fight.rally());
+    assert(&fight.officer()==&talents[3].officer && fight.signal==64 && !fight.mayRally());
+    for (int i=0;i<Battle::fieldLength && !fight.mayRally();++i) fight.step();
+    assert(fight.rally());
     assert(fight.losses[1]==talents[3].officer.strength+35);
     arms.cities[11].owner=0;
     auto ordinary=arms;
@@ -417,17 +427,19 @@ static void checkBattleOrders() {
     assert(id>=0);
     Battle b;
     b.start(c,c.columns[id].road,id,{horse,wedge,saber});
-    assert(!b.mayStrike() && b.moveGeneral(0,true) && !b.moveGeneral(3,true));
-    assert(b.order(wings) && !b.order(wings) && b.plan.troop==horse);
-    while (!b.round) b.step();
+    assert(!b.mayStrike() && b.moveGeneral(1,true) && !b.moveGeneral(3,true));
+    assert(b.order(wings) && !b.order(wings) && b.plan.lineup[1]==horse);
+    fightUntilRound(b,1);
     assert(b.generalHealth<100 && b.moveGeneral(1,false) && !b.mayStrike());
     assert(b.moveGeneral(1,true));
+    for (int i=0;i<Battle::period && !b.mayStrike();++i) b.step();
     const int before=b.troops[1], signal=b.signal;
     assert(b.strike() && b.troops[1]<before && b.signal==signal-Battle::strikeCost && !b.strike());
     assert(b.moveGeneral(1,false) && b.direct(fallBack));
     const int health=b.generalHealth;
-    while (b.round<2 && !b.result) b.step();
-    assert(b.rankAdvance[0][1]<0 && b.generalHealth>health);
+    const int position=b.fronts[0][1];
+    fightUntilRound(b,b.round+1);
+    assert(b.fronts[0][1]<position && b.generalHealth>health);
 }
 
 static void checkDifficultyAndAI() {
@@ -502,7 +514,7 @@ static void checkDifficultyAndAI() {
     b.enemySignal=70;
     b.planEnemyOrder();
     assert(b.enemySkillQueued && b.enemySignal<70);
-    b.ticks=Battle::approach+3*Battle::period-1;
+    b.roundClock=Battle::period-1;
     b.step();
     assert(b.enemySkillUsed && b.enemySkillTicks>0 && !b.enemySkillQueued);
     b.round=9;
@@ -541,7 +553,7 @@ static void checkScoutingAndWithdrawal() {
         battle.morale[1]=35;
         battle.planEnemyOrder();
         assert(battle.enemyWithdrawalQueued && battle.enemyManeuver==fallBack);
-        battle.ticks=Battle::approach+4*Battle::period-1;
+        battle.roundClock=Battle::period-1;
         battle.step();
         assert(battle.enemyWithdrew && battle.result>0 && battle.troops[1]>0);
     };
@@ -592,26 +604,29 @@ static void checkRankCommands() {
     const int before=guarded.signal;
     assert(guarded.directRank(0,hold) && guarded.signal==before-Battle::rankOrderCost);
     assert(!guarded.directRank(0,hold) && guarded.stance(0,1)==measured);
-    const auto forecast=guarded.forecastClash();
-    for (int i=0;i<Battle::approach;++i) {normal.step();guarded.step();}
+    const auto forecast=guarded.previewClash();
+    fightUntilRound(normal,1);
+    fightUntilRound(guarded,1);
     assert(guarded.rankLosses[0]==forecast[0] && guarded.rankLosses[1]==forecast[1]);
     assert(guarded.rankLosses[0][0]<normal.rankLosses[0][0]);
     assert(guarded.rankLosses[0][1]==normal.rankLosses[0][1]);
-    assert(guarded.rankAdvance[0][0]<0 && guarded.rankAdvance[0][1]==0);
+    assert(guarded.fronts[0][0]==Battle::campFront && guarded.fronts[0][1]>Battle::campFront);
     assert(guarded.rankOrders[0].rounds==1);
     for (int i=0;i<Battle::period;++i) guarded.step();
     assert(guarded.stance(0,0)==measured);
 
-    const auto ranks=guarded.ranks[0];
-    const int donor=guarded.supportSource(0);
-    const int sent=guarded.supportSize(0);
-    const int total=guarded.troops[0];
-    assert(sent>0 && donor==1 && guarded.supportRank(0));
-    assert(guarded.ranks[0][donor]==ranks[donor]-sent &&
-           guarded.ranks[0][0]==ranks[0]+sent && guarded.troops[0]==total);
-    assert(!guarded.supportRank(2));
-    assert(guarded.order(wedge) && guarded.ranks[0]==Battle::deployRanks(total,wedge));
-    assert(guarded.directRank(2,press) && guarded.direct(hold) && guarded.stance(0,2)==hold);
+    assert(!guarded.supportSize(0));
+    auto reserves=normal;
+    const auto ranks=reserves.ranks[0];
+    const int donor=reserves.supportSource(0);
+    const int sent=reserves.supportSize(0);
+    const int total=reserves.troops[0];
+    assert(sent>0 && donor==1 && reserves.supportRank(0));
+    assert(reserves.ranks[0][donor]==ranks[donor]-sent &&
+           reserves.ranks[0][0]==ranks[0]+sent && reserves.troops[0]==total);
+    assert(!reserves.supportRank(2));
+    assert(reserves.order(wedge) && reserves.ranks[0]==Battle::deployRanks(total,wedge));
+    assert(reserves.directRank(2,press) && reserves.direct(hold) && reserves.stance(0,2)==hold);
 
     auto armed=normal;
     assert(armed.moveGeneral(2,false));
@@ -627,6 +642,9 @@ static void checkRankCommands() {
 
 static void checkBreakthrough() {
     Battle battle;
+    battle.to=1;
+    battle.difficulty=Difficulty::story;
+    battle.morale[0]=62;
     battle.ranks[0]={100,100,100};
     battle.ranks[1]={1,100,100};
     battle.troops[0]=300;
@@ -652,6 +670,96 @@ static void checkBreakthrough() {
     assert(battle.stance(1,1)==measured);
 }
 
+static void checkLongField() {
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    const int column=campaign.send(10,7,legion,0,false);
+    assert(column>=0);
+    Battle battle;
+    battle.start(campaign,campaign.columns[column].road,column,{spear,square,longspear});
+    assert(battle.closestGap()>650 && battle.troopFor(1,1)==bow && !battle.inContact());
+    assert(battle.directRank(0,press) && battle.directRank(2,hold));
+    const auto opening=battle.ranks[0];
+    for (int i=0;i<60;++i) battle.step();
+    assert(!battle.round && battle.ranks[0]==opening);
+    assert(battle.fronts[0][0]>battle.fronts[0][1] && battle.fronts[0][2]==Battle::campFront);
+    assert(!battle.mayStrike());
+    const auto preview=battle.previewClash();
+    fightUntilRound(battle,1);
+    assert(battle.ticks>=110 && battle.ticks<=170);
+    assert(battle.rankLosses[0]==preview[0] && battle.rankLosses[1]==preview[1]);
+    assert(battle.losses[0]>0 && battle.losses[1]==0);
+    assert(battle.canReach(1,0) && !battle.canReach(0,0));
+    assert(!battle.canReach(0,2) && !battle.canReach(1,2));
+    const auto second=battle.previewClash();
+    fightUntilRound(battle,2);
+    assert(battle.rankLosses[0]==second[0] && battle.rankLosses[1]==second[1]);
+    assert(battle.losses[1]>0);
+
+    assert(battle.direct(hold));
+    const int signal=battle.signal;
+    assert(battle.direct(measured) && battle.signal==signal && !battle.maneuverRounds);
+    assert(battle.stance(0,2)==measured && !battle.mayManeuver(measured));
+
+    battle.round=0;
+    battle.enemyLineup.fill(horse);
+    battle.ranks[0]={100,0,0};
+    battle.ranks[1]={0,0,100};
+    battle.troops[0]=battle.troops[1]=100;
+    const auto isolated=battle.previewClash();
+    assert(isolated[0][0]+isolated[1][2]>0);
+    fightUntilRound(battle,1);
+}
+
+static void checkMixedForcesAndSiege() {
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    const int column=campaign.send(10,7,legion,0,false);
+    assert(column>=0);
+    const auto order=campaign.columns[column].road;
+    BattlePlan plan{spear,square,longbow};
+    plan.lineup={shields,crossbow,heavyHorse};
+    plan.engine=ram;
+    plan.engineLane=0;
+    Battle battle;
+    battle.start(campaign,order,column,plan);
+    assert(battle.range(0,1)>battle.range(0,0) && battle.troopFor(0,2)==heavyHorse);
+    assert(Battle::advantage(bow,shields)<Battle::advantage(bow,spear));
+    assert(battle.engineShots==2 && battle.wallPoints==4 && !battle.mayFireEngine());
+    const auto original=battle.ranks[0];
+    assert(battle.order(wedge) && battle.ranks[0]==original);
+    assert(!battle.supportSize(0));
+    auto reserves=battle;
+    reserves.ranks[0][0]=0;
+    reserves.troops[0]-=original[0];
+    assert(reserves.supportRank(0) && reserves.troopFor(0,0)==crossbow);
+    assert(reserves.fronts[0][0]==reserves.fronts[0][1]);
+
+    for (int i=0;i<Battle::fieldLength && !battle.result && !battle.mayFireEngine();++i) battle.step();
+    const int troops=battle.troops[1];
+    assert(battle.fireEngine() && battle.engineShots==1 && battle.wallPoints==2 &&
+           battle.troops[1]==troops && !battle.fireEngine());
+    for (int i=0;i<Battle::fieldLength && !battle.result && !battle.mayFireEngine();++i) battle.step();
+    assert(battle.fireEngine() && !battle.wallPoints && !battle.engineShots && !battle.mayFireEngine());
+
+    plan.engine=stoneThrower;
+    plan.engineLane=1;
+    Battle stones;
+    stones.start(campaign,order,column,plan);
+    for (int i=0;i<Battle::fieldLength && !stones.mayFireEngine();++i) stones.step();
+    const int middle=stones.ranks[1][1];
+    assert(stones.fireEngine() && stones.wallPoints==3 && stones.engineShots==2);
+    assert(stones.ranks[1][1]<middle && !stones.fireEngine());
+
+    Battle supported=stones;
+    supported.fronts[0][1]=500;
+    supported.fronts[1]={800,800,605};
+    assert(supported.attackTarget(0,1)==2);
+    assert(supported.forecastClash()[1][2]>0);
+    assert(!Battle::mayBringEngine(1,false,false) && !Battle::mayBringEngine(3,true,false));
+    assert(!Battle::mayBringEngine(2,false,true));
+}
+
 int main() {
     checkMigration();
     checkSearchAndTalents();
@@ -663,6 +771,8 @@ int main() {
     checkScoutingAndWithdrawal();
     checkRankCommands();
     checkBreakthrough();
+    checkLongField();
+    checkMixedForcesAndSiege();
     for (auto difficulty:{Difficulty::story,Difficulty::standard,Difficulty::veteran})
         for (int chapter=0;chapter<chapterCount;++chapter)
             for (int side=0;side<3;++side) {
