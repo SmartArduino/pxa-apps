@@ -11,6 +11,8 @@ constexpr int base[] = {48,44,86,32,35,22,108,125};
 constexpr int holds[] = {28,48,76};
 constexpr int provisions[] = {90,135,185};
 constexpr int berths[] = {18,27,38};
+constexpr int MerchantMilesPerDay=104;
+constexpr int SailingTimeRevision=1;
 
 int length(Point a, Point b) {
     const int x = a.x-b.x, y = a.y-b.y;
@@ -29,11 +31,21 @@ int sailing_wind(const Leg& leg, bool reverse, int month) {
     return 0;
 }
 
-int knots(int ship, int crew, int hold, int max_hold, int spirits, int wind, int reefed, int allies, bool pilot) {
-    const int overload = hold * 45 / max_hold;
-    return std::max(65, 188 + ship * 16 + crew * 2 + (spirits-60) / 2 - overload +
-                    wind * 2 - (reefed ? 48 : 0) + (allies & 1 ? 12 : 0) + (allies & 2 ? 7 : 0) +
-                    (pilot ? 20 : 0));
+int sailing_miles_per_day(const State& ship, int load, int spirits, int wind) {
+    constexpr int hull_pace[]{92,110,100};
+    const int drag=load*26/holds[ship.ship];
+    return std::clamp(hull_pace[ship.ship]+std::min(18,ship.crew)+(spirits-60)/5-drag+wind
+                     -(ship.reefed?24:0)+(ship.allies&1?6:0)+(ship.allies&2?4:0)
+                     +(ship.first_mate==Pilot?12:0),35,170);
+}
+
+Point helm_displacement(Point direction, int y_subpixels, int miles_per_day) {
+    constexpr float radians_per_degree=0.01745329252f;
+    const float latitude=ChartNorth-y_subpixels/(16.f*ChartLatitudeScale);
+    const float east=direction.x*(60.f/ChartLongitudeScale)*std::cos(latitude*radians_per_degree);
+    const float north=direction.y*(60.f/ChartLatitudeScale);
+    const float step=miles_per_day*(16.f/SailingWatches)/std::sqrt(east*east+north*north);
+    return {int(std::lround(direction.x*step)), int(std::lround(direction.y*step))};
 }
 
 int checksum(std::span<const std::byte> bytes) {
@@ -153,7 +165,7 @@ int merchant_leg(const Passage& lane, int& miles) {
     return leg;
 }
 
-int merchant_days(const Passage& lane) { return (lane.miles+169)/170; }
+int merchant_days(const Passage& lane) { return (lane.miles+MerchantMilesPerDay-1)/MerchantMilesPerDay; }
 }
 
 Point Game::merchant_position(int company) const {
@@ -261,6 +273,12 @@ int Game::wind(int leg) const {
     return sailing_wind(Legs[route.edge[leg]],route.reverse[leg],(s.day/30)%12);
 }
 
+int Game::speed_in_tenths_of_a_knot() const {
+    if (!sea() || paused || encounter()) return 0;
+    const int miles=sailing_miles_per_day(s,load(),s.spirits,wind(s.leg));
+    return (miles*10+HoursPerDay/2)/HoursPerDay;
+}
+
 PassageForecast Game::forecast(const Passage& path, int extra_load) const {
     PassageForecast result;
     int spirits=s.spirits;
@@ -274,7 +292,7 @@ PassageForecast Game::forecast(const Passage& path, int extra_load) const {
             const auto here=vessel_at(path,i,float(leg.nautical_miles-miles)/leg.nautical_miles);
             result.water+=daily_water(conditions_at(here,day).weather);
             const int wind=sailing_wind(leg,path.reverse[i],(day/30)%12);
-            miles-=knots(s.ship,s.crew,cargo,capacity(),spirits,wind,s.reefed,s.allies,s.first_mate==Pilot);
+            miles-=sailing_miles_per_day(s,cargo,spirits,wind);
         }
         result.arrival_days[i]=result.days;
     }
@@ -545,8 +563,7 @@ Point Game::position(float frame) const {
     if (!sea()) return Anchor[s.origin];
     if (s.helm) return {s.helm_x/16,s.helm_y/16};
     const auto& edge = Legs[route.edge[s.leg]];
-    const int pace = knots(s.ship, s.crew, load(), capacity(), s.spirits, wind(s.leg), s.reefed,
-                           s.allies,s.first_mate==Pilot);
+    const int pace=sailing_miles_per_day(s,load(),s.spirits,wind(s.leg));
     return vessel_at(route, s.leg, (s.progress + frame*pace) / edge.nautical_miles);
 }
 
@@ -604,7 +621,7 @@ void Game::merchant_day(int company) {
     int miles=ship.progress;
     const int leg=merchant_leg(lane,miles);
     const int wind=sailing_wind(Legs[lane.edge[leg]],lane.reverse[leg],s.day/30%12);
-    ship.progress+=170+wind*2;
+    ship.progress+=MerchantMilesPerDay+wind;
     if (ship.progress<lane.miles) return;
 
     ship.port=ship.destination;
@@ -733,7 +750,6 @@ bool Game::start_helm(int destination) {
     s.interpreter_port=-1;
     s.bargain_good=s.bargain_rate=0;
     s.helm=1;
-    s.helm_pulse=0;
     s.helm_x=here.x*16;
     s.helm_y=here.y*16;
     s.wake_head=s.wake_count=0;
@@ -749,7 +765,7 @@ bool Game::start_helm(int destination) {
 }
 
 void Game::clear_helm() {
-    s.helm=s.helm_pulse=s.heading=0;
+    s.helm=s.heading=0;
     s.helm_x=s.helm_y=0;
 }
 
@@ -871,33 +887,25 @@ void Game::helm_step(WaterTest water_at) {
     if (!s.helm || paused || encounter()) return;
     const bool started_near_drift=near_drift();
     const auto weather=conditions();
-    const auto heading=Directions[s.heading];
-    const int wind_force=wind(0);
     const bool has_pilot=s.first_mate==Pilot;
-    const int pace=std::max(22,(87+s.ship*10-load()*24/capacity()-(s.reefed?25:0)+(has_pilot?10:0))*
-                                  std::clamp(77+wind_force*2,32,147)/100);
-    const int dx=heading.x*pace/16, dy=heading.y*pace/16;
-    const int steps=std::max(1,std::max(std::abs(dx),std::abs(dy))/4);
+    const auto [dx,dy]=helm_displacement(Directions[s.heading],s.helm_y,
+                                       sailing_miles_per_day(s,load(),s.spirits,wind(0)));
+    const int steps=std::max(1,(std::max(std::abs(dx),std::abs(dy))+3)/4);
     const int start_x=s.helm_x, start_y=s.helm_y;
     auto last_cell=position();
     const int starting_berth=anchorage_at(last_cell,water_at);
     bool reached_berth=false;
+    Text interruption;
     for (int i=1;i<=steps;++i) {
         const int x=start_x+dx*i/steps, y=start_y+dy*i/steps;
         if (x<0 || y<0 || x>=ChartWidth*16 || y>=ChartHeight*16) {
-            record_wake();
-            notice="到达海图边界";
-            paused=true;
-            return;
+            interruption="到达海图边界";
+            break;
         }
         if (!water_at({x/16,y/16})) {
-            record_wake();
-            sighting(position());
             s.hull-=std::max(1,(s.reefed?2:6)-(has_pilot?3:0));
-            notice="触及浅滩，转舵离岸";
-            paused=true;
-            check_ship();
-            return;
+            interruption="触及浅滩，转舵离岸";
+            break;
         }
         s.helm_x=x;
         s.helm_y=y;
@@ -920,10 +928,13 @@ void Game::helm_step(WaterTest water_at) {
         notice="已到锚地，可以靠泊";
         paused=true;
     }
-    const bool new_day=++s.helm_pulse==4;
+    const bool new_day=++s.sail_watch==SailingWatches;
     if (new_day) {
-        s.helm_pulse=0;
+        s.sail_watch=0;
         spend_day(1);
+    }
+    if (s.hull<=0) { rescue(); return; }
+    if (new_day) {
         if (!consume_day(conditions())) return;
         if (weather.weather==Rain)
             s.water=static_cast<std::uint8_t>(std::min(water_capacity(),int(s.water)+1));
@@ -932,6 +943,11 @@ void Game::helm_step(WaterTest water_at) {
             notice="骤风伤船，缩帆可减损";
             if (s.hull<=0) { rescue(); return; }
         }
+    }
+    if (!interruption.empty()) {
+        notice=interruption;
+        paused=true;
+        return;
     }
     if (!paused && !started_near_drift && near_drift()) {
         notice="木匣已靠近船舷，可以打捞";
@@ -960,8 +976,7 @@ void Game::advance() {
     spend_day(1);
     if (!consume_day(conditions())) return;
     const int w = wind(s.leg);
-    const int speed = knots(s.ship, s.crew, load(), capacity(), s.spirits, w, s.reefed,
-                            s.allies,s.first_mate==Pilot);
+    const int speed=sailing_miles_per_day(s,load(),s.spirits,w);
     const auto& leg = Legs[route.edge[s.leg]];
     if (s.escort==EscortSailing && on_leg(lisbon,madeira) && !(s.event_mask & (1U<<s.leg))) {
         chart_passage(leg,std::min(leg.nautical_miles-1,s.progress+speed));
@@ -1913,7 +1928,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Cha
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+1+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1936,7 +1951,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         bytes[offset++]=std::byte(field);
     put(s.guild_stakes);
     put(s.helm_x); put(s.helm_y);
-    for (auto value : {s.water,s.helm,s.heading,s.helm_pulse}) bytes[offset++]=std::byte(value);
+    for (auto value : {s.water,s.helm,s.heading,s.sail_watch}) bytes[offset++]=std::byte(value);
     for (const auto& record : s.expeditions) {
         bytes[offset++]=std::byte(record.stage);
         bytes[offset++]=std::byte(record.flags);
@@ -1968,6 +1983,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (auto field : {s.dispatch.number,s.dispatch.stopped,s.dispatch.last,s.dispatch.outcome})
         bytes[offset++]=std::byte(field);
     put(s.dispatch.due);
+    bytes[offset++]=std::byte(SailingTimeRevision);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1998,6 +2014,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (!current && (bytes.size()!=LegacySaveBytes ||
         (version!=0x31445054 && version!=0x32445054))) return false;
     State s;
+    bool legacy_sailing_time=true;
     for (auto* field : {
         &s.gold,&s.day,&s.hull,&s.stores,&s.spirits,&s.ship,&s.guns,&s.crew,&s.charts,&s.renown,&s.trust,
         &s.origin,&s.destination,&s.leg,&s.progress,&s.reefed,&s.chapter,&s.ending,&s.patron,&s.allies,
@@ -2036,9 +2053,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     }
     if (with_helm) {
         s.helm_x=int(get()); s.helm_y=int(get());
-        for (auto* value : {&s.water,&s.helm,&s.heading,&s.helm_pulse})
+        for (auto* value : {&s.water,&s.helm,&s.heading,&s.sail_watch})
             *value=std::to_integer<std::uint8_t>(bytes[offset++]);
-        if (s.helm>1 || s.heading>7 || s.helm_pulse>3) return false;
+        if (s.helm>1 || s.heading>7 || s.sail_watch>=SailingWatches) return false;
     } else {
         if (s.stores<0 || s.stores>255) return false;
         s.water=static_cast<std::uint8_t>(s.stores);
@@ -2126,6 +2143,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 (cargo.stop>=0 && !(s.chart_marks & (1U<<cargo.stop)))) return false;
         }
         order.due=int(due);
+        const int sailing_revision=std::to_integer<int>(bytes[offset++]);
+        if (sailing_revision>SailingTimeRevision) return false;
+        legacy_sailing_time=sailing_revision==0;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||
@@ -2157,6 +2177,14 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (s.weather==Boarding || s.weather==DockDuel) {
         if (!s.vigor || !s.rival) return false;
     } else if (s.vigor || s.rival || s.duel_turn) return false;
+    // Old contracts were issued at roughly twice the distance per day.
+    // Grant the extra time once, leaving already overdue work overdue.
+    if (legacy_sailing_time) {
+        if (s.contract>=0 && s.deadline>=s.day)
+            s.deadline=std::min(100300,s.deadline+(s.deadline-s.day+1));
+        if (s.dispatch.number && s.dispatch.due>=s.day)
+            s.dispatch.due=std::min(99999,s.dispatch.due+(s.dispatch.due-s.day+1));
+    }
     output = s;
     return true;
 }

@@ -2,6 +2,7 @@
 #include "town.hpp"
 
 #include <cassert>
+#include <cmath>
 #include <cstdio>
 
 using namespace tide;
@@ -384,14 +385,15 @@ void free_helm() {
     const auto wind=ship.conditions().direction;
     following.s.heading=wind;
     beating.s.heading=(wind+4)%8;
+    assert(following.speed_in_tenths_of_a_knot()>beating.speed_in_tenths_of_a_knot());
     following.helm_step(ocean);
     beating.helm_step(ocean);
-    const auto distance=[&](Point p) {
-        const int x=p.x-anchor.x, y=p.y-anchor.y;
+    const auto distance=[&](const Game& vessel) {
+        const int x=vessel.s.helm_x-anchor.x*16, y=vessel.s.helm_y-anchor.y*16;
         return x*x+y*y;
     };
-    assert(distance(following.position())>distance(beating.position()));
-    for (int i=0;i<4;++i) ship.helm_step(ocean);
+    assert(distance(following)>distance(beating));
+    for (int i=0;i<SailingWatches;++i) ship.helm_step(ocean);
     assert(ship.s.day==1 && ship.s.stores==73 && ship.s.water<75);
     State save;
     assert(decode(save,encode(ship.s)) && save.helm && save.helm_x==ship.s.helm_x);
@@ -405,6 +407,11 @@ void free_helm() {
     grounded.helm_step([](Point p){return p.x<=248;});
     assert(grounded.paused && grounded.s.hull==94 && grounded.position().x==248);
     assert(grounded.dock_helm() && grounded.s.origin==lisbon && !grounded.sea());
+    assert(grounded.s.sail_watch==1 && decode(save,encode(grounded.s)) && save.sail_watch==1);
+    auto reembarked=grounded;
+    assert(reembarked.start_helm(-1));
+    for (int i=1;i<SailingWatches;++i) reembarked.helm_step(ocean);
+    assert(reembarked.s.day==1 && reembarked.s.sail_watch==0);
     assert(grounded.resupply(80,74) && grounded.s.stores==80 && grounded.s.water==74);
     assert(grounded.resupply(80,85) && grounded.s.stores==80 && grounded.s.water==85);
     assert(grounded.resupply(80,110) && grounded.s.water==100 && grounded.s.stores==80);
@@ -412,6 +419,27 @@ void free_helm() {
     assert(grounded.unload_provisions(true));
     assert(grounded.resupply(90,90) && grounded.s.stores+grounded.s.water==180);
     assert(decode(save,encode(grounded.s)));
+}
+
+void sailing_units() {
+    const Game at_port;
+    assert(at_port.forecast(passage(lisbon,cadiz)).days==2);
+    assert(at_port.forecast(passage(lisbon,madeira)).days==5);
+    assert(at_port.forecast(passage(lisbon,canaries)).days==8);
+    for (const int latitude : {0,60}) {
+        Game ship;
+        assert(ship.start_helm(-1));
+        const int x=122*16, y=(ChartNorth-latitude)*ChartLatitudeScale*16;
+        ship.s.helm_x=x;
+        ship.s.helm_y=y;
+        ship.s.heading=2;
+        const float indicated=ship.speed_in_tenths_of_a_knot()/10.f;
+        ship.helm_step([](Point){return true;});
+        const float longitude=(ship.s.helm_x-x)/(16.f*ChartLongitudeScale);
+        const float nautical_miles=60.f*longitude*std::cos(latitude*0.01745329252f);
+        assert(std::abs(indicated-nautical_miles/HoursPerWatch)<0.12f);
+        assert(ship.s.sail_watch==1 && ship.s.day==0);
+    }
 }
 
 void expeditions() {
@@ -622,7 +650,7 @@ void ship_officers() {
     assert(!ship.assign_officer(NoOfficer));
     regular.advance();
     ship.advance();
-    assert(ship.s.progress==regular.s.progress+20);
+    assert(ship.s.progress==regular.s.progress+12);
     ship=original;
     assert(ship.hire_officer(Pilot) && ship.start_helm(-1));
     ship.s.heading=2;
@@ -943,6 +971,7 @@ int main() {
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();
+    sailing_units();
     expeditions();
     port_languages();
     dockside_bargaining();

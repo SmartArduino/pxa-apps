@@ -40,7 +40,7 @@ struct Officer {
 inline constexpr Officer Officers[]{
     {},
     {lisbon,95,"安娜","领航",
-     "走航线时每天多行二十海里。自由掌舵时更快，触礁也少受些伤。",
+     "领航顺利时每天约多走十二海里，触礁也少受些伤。",
      "小时候，我常替塔霍河的渡船探水深。给我一根测深绳，我来帮你避开沙洲。",{Portuguese,French}},
     {madeira,140,"贝阿特丽丝","司务",
      "航行或考察时每天省一份淡水，每天至少消耗一份。",
@@ -96,6 +96,7 @@ struct SeaConditions {
 inline constexpr Point Directions[]{{0,-16},{11,-11},{16,0},{11,11},{0,16},{-11,11},{-16,0},{-11,-11}};
 inline constexpr Text Bearings[]{"北","东北","东","东南","南","西南","西","西北"};
 inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风"};
+inline constexpr int HoursPerDay=24, SailingWatches=4, HoursPerWatch=HoursPerDay/SailingWatches;
 enum DriftStage : std::uint8_t { DriftUnheard, DriftSearching, DriftRecovered, DriftReturned, DriftFiled };
 enum DriftMethod { LaunchBoat, RigHook };
 inline constexpr Point DriftGround{174,335};
@@ -155,7 +156,7 @@ struct State {
     std::uint8_t escort=EscortOpen, cadiz_victory=0;
     std::uint32_t guild_stakes=0;
     int helm_x=0, helm_y=0;
-    std::uint8_t water=74, helm=0, heading=0, helm_pulse=0;
+    std::uint8_t water=74, helm=0, heading=0, sail_watch=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
     std::uint32_t chart_marks=StartingChart, heard_rumors=0;
@@ -200,6 +201,7 @@ struct Game {
     bool negotiate(int good);
     int stock(int good) const;
     int wind(int leg) const;
+    int speed_in_tenths_of_a_knot() const;
     PassageForecast forecast(const Passage& path, int extra_load=0) const;
     int daily_rations() const;
     int daily_water(SeaWeather weather) const;

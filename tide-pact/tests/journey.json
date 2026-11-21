@@ -109,7 +109,7 @@
     {
       "name": "one-day",
       "action": "wait",
-      "ms": 640
+      "ms": 1400
     },
     {
       "name": "underway",
@@ -149,7 +149,12 @@
     {
       "name": "approach-harbor",
       "action": "wait",
-      "ms": 2400
+      "ms": 5000
+    },
+    {
+      "name": "approach-harbor-2",
+      "action": "wait",
+      "ms": 4800
     },
     {
       "name": "next-harbor",
@@ -201,7 +206,7 @@
     {
       "name": "leave-port",
       "action": "wait",
-      "ms": 720
+      "ms": 1500
     },
     {
       "name": "underway",

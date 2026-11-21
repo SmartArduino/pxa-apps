@@ -181,7 +181,8 @@ def world(data, mask):
         waypoints += path
     assert {i for edge in data["links"] for i in edge} == set(ids)
     blocks = [
-        f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH};",
+        f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH};\n"
+        f"inline constexpr int ChartLongitudeScale = {SX}, ChartLatitudeScale = {SY};",
         f"inline constexpr int PortCount = {len(data['ports'])};",
         "enum PlaceId {\n    " + ", ".join(ids) + "\n};",
         "inline constexpr Location Places[] = {\n" + "\n".join(locations) + "\n};",

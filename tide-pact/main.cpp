@@ -88,7 +88,7 @@ struct EncounterOutcome {
 struct VoyageApp {
     static constexpr pxa::game::LoopOptions loop_options{
         .simulation_step_us=50000, .frame_period_ms=48, .maximum_updates=1};
-    static constexpr unsigned DayMs=480, HelmPulseMs=220;
+    static constexpr unsigned SailingDayMs=1200, HelmWatchMs=SailingDayMs/SailingWatches;
 
     Game game;
     GameAudio audio;
@@ -327,7 +327,8 @@ struct VoyageApp {
 
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
-            if (now-last_day >= (game.s.helm ? HelmPulseMs : DayMs)) {
+            const unsigned interval=game.s.helm?HelmWatchMs:SailingDayMs;
+            if (now-last_day>=interval) {
                 const int old_day=game.s.day;
                 const int old_hull=game.s.hull;
                 const auto old_marks=game.s.chart_marks;
@@ -337,7 +338,8 @@ struct VoyageApp {
                     game.helm_step(chart_water);
                 }
                 else game.advance();
-                last_day=now;
+                last_day+=interval;
+                if (now-last_day>=interval) last_day=now;
                 if ((game.s.day!=old_day && game.s.day%4==0) ||
                     !game.sea() || game.encounter() || game.paused || game.s.chart_marks!=old_marks)
                     save_needed=true;
@@ -511,7 +513,8 @@ struct VoyageApp {
         };
         int x=stat(safe.x+5,CoinsIcon,game.s.gold,gold);
         x=stat(x,HullIcon,game.s.hull,ivory);
-        const auto date=format("第%d日",game.s.day+1);
+        const auto hour=format(" %02d时",game.s.sail_watch*HoursPerWatch);
+        const auto date=format("第%d日%s",game.s.day+1,game.s.helm || game.s.sail_watch?hour.contents:"");
         const int date_x=safe.right()-6-d.measure(date);
         const auto stores=format("%d/%d",game.s.stores,int(game.s.water));
         const auto compact=format("粮%d 水%d",game.s.stores,int(game.s.water));
@@ -687,11 +690,11 @@ struct VoyageApp {
     void draw_map(Draw& d, int landmark, int berth) {
         const auto before=d.clip;
         d.clip=map;
-        float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/DayMs : 0.f;
+        float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/SailingDayMs : 0.f;
         const auto ship=game.position(std::clamp(fraction,0.f,1.f));
         float ship_x=ship.x, ship_y=ship.y;
         if (game.s.helm) {
-            const auto blend=game.paused?1.f:std::clamp(float(now-last_day)/HelmPulseMs,0.f,1.f);
+            const auto blend=game.paused?1.f:std::clamp(float(now-last_day)/HelmWatchMs,0.f,1.f);
             ship_x=std::lerp(float(previous_helm.x),float(game.s.helm_x),blend)/16;
             ship_y=std::lerp(float(previous_helm.y),float(game.s.helm_y),blend)/16;
         }
@@ -859,10 +862,13 @@ struct VoyageApp {
             if (!game.sea()) d.label(info.x+5,info.y+22,scouting?Text(course):Places[p].region,quiet,info.w-10);
             if (game.sea()) {
                 const int wind=game.wind(game.s.leg);
-                const auto progress=format("%d/%d  %s",game.s.leg+1,game.route.count,
-                                           wind>5 ? "顺风" : wind<-5 ? "逆风" : "风平");
-                d.label(info.x+5,info.y+22,progress,mist);
+                const int speed=game.speed_in_tenths_of_a_knot();
+                const auto progress=format("%d/%d  %d.%d节",game.s.leg+1,game.route.count,speed/10,speed%10);
+                d.label(info.x+5,info.y+22,progress,mist,info.w-10);
                 meter(d,{info.x+5,info.y+39,info.w-10,12},miles_done(route),route.miles,true);
+                const int controls=info.bottom()-80;
+                if (info.y+53+d.font.cell<=controls)
+                    d.label(info.x+5,info.y+53,wind>5?"顺风":wind<-5?"逆风":"风平",quiet,info.w-10);
                 button(d,{info.x+4,info.bottom()-80,info.w-8,23},
                     game.s.reefed ? "张帆" : "缩帆",Trim,false,false,{},game.s.reefed?SailIcon:ReefIcon);
                 button(d,{info.x+4,info.bottom()-52,info.w-8,23},
@@ -882,9 +888,11 @@ struct VoyageApp {
             }
         } else {
             if (game.sea()) {
-                d.label(info.x+5,info.y+22,format("航段 %d/%d  %s",game.s.leg+1,
-                    game.route.count,game.wind(game.s.leg)>5 ? "顺风" : game.wind(game.s.leg)<-5 ? "逆风" : "风平"),
-                    mist,info.w-10);
+                const int speed=game.speed_in_tenths_of_a_knot();
+                const int wind=game.wind(game.s.leg);
+                d.label(info.x+5,info.y+22,format("%d/%d  %d.%d节 %s",game.s.leg+1,game.route.count,
+                        speed/10,speed%10,wind>5?"顺风":wind<-5?"逆风":"风平"),
+                        mist,info.w-89);
                 meter(d,{info.right()-80,info.y+22,73,12},miles_done(route),route.miles,true);
                 const int w=(info.w-14)/3;
                 button(d,{info.x+4,info.y+43,w,25},game.s.reefed ? "张帆" : "缩帆",Trim,
@@ -906,16 +914,19 @@ struct VoyageApp {
     void helm_panel(Draw& d, Rect info, bool wide, int landmark) {
         skin_box(d,info,0,5);
         const auto state=game.conditions();
-        const auto bearing=format("航向%s",Bearings[game.s.heading].data());
+        const int speed=game.speed_in_tenths_of_a_knot();
+        const auto bearing=format("%s %d.%d节",Bearings[game.s.heading].data(),speed/10,speed%10);
         constexpr Text compact_weather[]{"晴","热","雨","阵"};
         const auto breeze=format("%s→%s%d级",
                                   (wide?compact_weather[state.weather]:SeaWeatherNames[state.weather]).data(),
                                   Bearings[state.direction].data(),state.strength);
         d.label(info.x+5,info.y+4,landmark>=0?Places[landmark].name:Text("自由掌舵"),gold,info.w-10);
+        const int wind_y=info.y+(wide?41:43);
+        const bool show_pennant=d.measure(breeze)<=info.w-27;
+        if (show_pennant) voyage_icon(d,PennantIcon,{info.x+5,wind_y-1,14,14});
+        d.label(info.x+(show_pennant?22:5),wind_y,breeze,mist,info.w-(show_pennant?27:10));
         if (wide) {
             d.label(info.x+5,info.y+22,bearing,ivory,info.w-10);
-            voyage_icon(d,PennantIcon,{info.x+5,info.y+40,14,14});
-            d.label(info.x+22,info.y+41,breeze,mist,info.w-27);
             pair(d,{info.x+4,info.bottom()-78,info.w-8,21},"左舵",SteerLeft,"右舵",SteerRight);
             button(d,{info.x+4,info.bottom()-52,info.w-8,22},game.s.reefed?"张帆":"缩帆",Trim,
                    false,false,{},game.s.reefed?SailIcon:ReefIcon);
@@ -923,8 +934,6 @@ struct VoyageApp {
                    true,false,{},game.paused?ResumeIcon:PauseIcon);
         } else {
             d.label(info.x+5,info.y+24,bearing,ivory,info.w-10);
-            voyage_icon(d,PennantIcon,{info.x+5,info.y+42,14,14});
-            d.label(info.x+22,info.y+43,breeze,mist,info.w-27);
             const Text names[]{"左舵","右舵",game.s.reefed?"张帆":"缩帆",game.paused?"继续":"停船"};
             const int actions[]{SteerLeft,SteerRight,Trim,Pause};
             const int glyphs[]{-1,-1,game.s.reefed?SailIcon:ReefIcon,game.paused?ResumeIcon:PauseIcon};
@@ -2308,6 +2317,7 @@ struct VoyageApp {
             "点港口或菱形选择目的地。拖动海图，用加减调整比例。手柄方向键选项，A 确认，B 返回。海图上 START 可启航或停船。",
             "跨港贩货赚取差价。库存和行情会变，连续买入会抬高价格。船坞可加粮、修船、招募及换船。",
             "出发前看预计天数。船员越多耗粮越快。海上可缩帆、停船、掉头或在下站靠泊。遇到私掠船时，火炮齐射后需装填，机动可以贴近并瞄准。距一且有六名船员时可以接舷。",
+            "海里是航程单位。一节等于每小时航行一海里。航线按整日估算。自由掌舵每步推进六小时，靠泊后时刻会保留。",
             "金色菱形标明下一处主线。到青色测绘点后记入图鉴。交易和航行中会自动保存，重开可续航。",
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
             "在目的地页点出海，无需先选港口。点海面或用左右舵改航向。未踏查的海图随航行展开。港口商会可打听传闻。",
