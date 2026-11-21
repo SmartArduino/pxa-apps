@@ -96,8 +96,8 @@ def build_skin(path):
     write_texture(skin, "skin")
 
 
-def build_logo(path):
-    source = Image.open(path).convert("RGBA")
+def build_logo(image):
+    source = image.convert("RGBA")
     mask = source.getchannel("A").point(lambda a: 255 if a >= 120 else 0)
     bbox = mask.getbbox()
     if bbox is None:
@@ -106,6 +106,12 @@ def build_logo(path):
     source.thumbnail((460,200), Image.Resampling.LANCZOS)
     source.save(ASSETS / "wordmark.png", optimize=True)
     write_texture(source, "wordmark")
+
+
+def pack_scene(path, name, size):
+    image = ImageOps.fit(Image.open(path).convert("RGB"), size, Image.Resampling.LANCZOS)
+    image.save(ASSETS / f"{name}.jpg", quality=89, optimize=True)
+    write_texture(image, name)
 
 
 def pack_icons(path, name, cols, rows, size):
@@ -150,11 +156,12 @@ def main():
     cli.add_argument("goods", type=Path)
     cli.add_argument("navigation", type=Path)
     cli.add_argument("ports", type=Path)
+    cli.add_argument("--title-compact", type=Path)
     args = cli.parse_args()
-    for name in ("harbor", "storm"):
-        image = ImageOps.fit(Image.open(getattr(args, name)).convert("RGB"), (372, 248))
-        image.save(ASSETS / f"{name}.jpg", quality=89, optimize=True)
-        write_texture(image, name)
+    pack_scene(args.harbor, "harbor", (384,216))
+    pack_scene(args.storm, "storm", (372,248))
+    if args.title_compact:
+        pack_scene(args.title_compact, "title_compact", (256,256))
     source = Image.open(args.portraits).convert("RGB")
     frame = Image.new("RGB", (6*86, 86))
     width, height = source.width // 3, source.height // 2
@@ -167,7 +174,7 @@ def main():
     sheet([ship_frame(i) for i in range(12)], "caravel")
     sheet([cannon_frame(i) for i in range(8)], "broadside")
     build_skin(args.ui)
-    build_logo(args.wordmark)
+    build_logo(Image.open(args.wordmark))
     pack_icons(args.goods, "goods", 4, 2, 48)
     pack_icons(args.navigation, "navigation", 4, 3, 42)
     pack_ports(args.ports)

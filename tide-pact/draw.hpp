@@ -47,31 +47,39 @@ inline unsigned next_char(Text& text) {
     return code;
 }
 
-inline const unsigned char* glyph(unsigned code) {
-    constexpr int record = 101;
-    const auto* start = art::glyphs+2;
-    int lo = 0, hi = u16(art::glyphs);
-    while (lo < hi) {
-        const int mid = (lo+hi)/2;
-        if (unsigned(u16(start+mid*record)) < code) lo = mid+1; else hi = mid;
-    }
-    if (lo >= u16(art::glyphs) || unsigned(u16(start+lo*record)) != code)
-        return start + int('?' - ' ') * record + 2;
-    return start + lo*record + 2;
-}
+struct FontFace {
+    const unsigned char* atlas;
+    int cell;
+    int stride() const { return (cell+1)/2; }
 
-inline int measure(Text text) {
-    int result = 0;
-    while (!text.empty()) result += *glyph(next_char(text));
-    return result;
-}
+    const unsigned char* glyph(unsigned code) const {
+        const int record=3+cell*stride();
+        const auto* start=atlas+2;
+        const int count=u16(atlas);
+        int lo=0, hi=count;
+        while (lo<hi) {
+            const int mid=(lo+hi)/2;
+            if (unsigned(u16(start+mid*record))<code) lo=mid+1; else hi=mid;
+        }
+        if (lo==count || unsigned(u16(start+lo*record))!=code) lo=int('?' - ' ');
+        return start+lo*record+2;
+    }
+};
+inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_compact,11};
 
 struct Draw {
     pxa::Rgb565Pixels pixels;
     Rect clip;
+    const FontFace& font;
 
-    explicit Draw(pxa::Rgb565Pixels image)
-        : pixels(image), clip{0,0,int(image.width()),int(image.height())} {}
+    explicit Draw(pxa::Rgb565Pixels image, const FontFace& face=StandardFace)
+        : pixels(image), clip{0,0,int(image.width()),int(image.height())}, font(face) {}
+
+    int measure(Text text) const {
+        int result=0;
+        while (!text.empty()) result+=*font.glyph(next_char(text));
+        return result;
+    }
 
     Rect clipped(Rect r) const {
         int x = std::max(r.x, clip.x), y = std::max(r.y, clip.y);
@@ -158,13 +166,13 @@ struct Draw {
         const int end = x+max_width;
         while (!text.empty()) {
             const auto code = next_char(text);
-            const auto* g = glyph(code);
+            const auto* g = font.glyph(code);
             const int advance = *g++ * scale;
             if (x+advance > end) return;
             if (code != ' ') {
-                for (int j = 0; j < 14; ++j) {
-                    for (int i = 0; i < 14; ++i) {
-                        const auto packed = g[j*7 + i/2];
+                for (int j = 0; j < font.cell; ++j) {
+                    for (int i = 0; i < font.cell; ++i) {
+                        const auto packed = g[j*font.stride() + i/2];
                         const int alpha = i % 2 ? packed & 15 : packed >> 4;
                         if (!alpha) continue;
                         auto r = clipped({x+i*scale,y+j*scale,scale,scale});
@@ -182,12 +190,12 @@ struct Draw {
     }
     void center(Rect box, Text text, Color color, int scale = 1) {
         const int w = measure(text)*scale;
-        label(box.x+std::max(0,(box.w-w)/2),box.y+(box.h-14*scale)/2,
+        label(box.x+std::max(0,(box.w-w)/2),box.y+(box.h-font.cell*scale)/2,
               text,color,box.w,scale);
     }
     int wrap(Rect r, Text text, Color color, int spacing = 17) {
         int y = r.y;
-        while (!text.empty() && y + 14 <= r.bottom()) {
+        while (!text.empty() && y + font.cell <= r.bottom()) {
             Text rest = text;
             int width = 0;
             Text before_last = text;
@@ -195,7 +203,7 @@ struct Draw {
                 const Text previous = rest;
                 const auto c = next_char(rest);
                 if (c == '\n') { rest = previous; break; }
-                int next = width + *glyph(c);
+                int next = width + *font.glyph(c);
                 if (next > r.w) { rest = previous; break; }
                 width = next;
                 before_last = previous;
@@ -211,7 +219,7 @@ struct Draw {
             if (rest.size() == text.size()) (void)next_char(rest);
             if (!rest.empty() && rest.front() == '\n') rest.remove_prefix(1);
             text = rest;
-            y += spacing;
+            y += std::max(font.cell,spacing-(StandardFace.cell-font.cell));
         }
         return y;
     }
