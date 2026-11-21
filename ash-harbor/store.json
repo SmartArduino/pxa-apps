@@ -5,7 +5,7 @@
   "language": "zh-CN",
   "summary": "选择四位拳师，用连段和搓招必杀挑战街机擂台，或在局域网与好友对战。",
   "description": "港灯夜擂将开，陆炎、霁岚、韩震和唐绫各有所求，胜者可入听潮阁追查旧事。四位拳师各有招式和中文语音，在雨港、竹院、雪关和灯河四处擂台交手，以跳攻、防御、闪避、投技和连段取消寻找破绽。\n\n街机模式可挑战三战巡回，也可指定对手自由对战。训练模式可选择陪练拳师和防御方式，查看输入记录、连击及伤害。普通投可按时机挣脱，电脑对手会根据距离、攻防和招式收招选择行动。\n\n同一局域网内可创建、搜索房间或输入地址进行双人对战，支持暂停、继续和双方确认再战。联机需要两端运行相同版本，且运行环境支持本地网络通信；不提供互联网匹配。\n\n支持多点触摸和手柄。虚拟按键触摸后显示，切换手柄后隐藏。画面等比取景，配有三幕开幕剧情、四处擂台配乐、角色语音及胜负音乐。",
-  "changelog": "修复 ESP32-S31 进入街机或训练对战时的闪退：移除角色预加载中的同步协程嵌套，并在纹理上传后释放重复的像素缓存，降低内存峰值。\n\nFixes ESP32-S31 crashes when starting arcade or training: removes nested immediately completing preload coroutines and releases duplicate decoded pixels after texture upload to reduce peak memory.",
+  "changelog": "优化 ESP32-S31 对战绘制：合并连续 UI 精灵，缓存翻转图集，并根据渲染进度控制帧提交；战斗模拟和输入仍以 60 Hz 更新。优化不透明场景绘制，补充局域网延迟诊断，并处理授权窗口切回时被取消画面的恢复。\n\nOptimizes ESP32-S31 battle rendering with sprite batching, a bounded mirrored-atlas cache and renderer-aware submission pacing. Combat and input remain at 60 Hz. Adds opaque stage drawing, LAN latency diagnostics and recovery for frames cancelled by permission dialogs.",
   "icon": "assets/icon.png",
   "cover": "art/store/cover.png",
   "tags": [

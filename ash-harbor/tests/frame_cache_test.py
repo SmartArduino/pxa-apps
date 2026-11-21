@@ -45,3 +45,13 @@ for scene in range(4):
    total=sum(widths[i]*heights[i] for i in stage|pages(a)|pages(b))
    assert total<=1152*1024,(scene,a,b,total)
 print('All 64 stage/fighter working sets fit the existing 1152 KiB warm budget.')
+
+# Stage drawing uses the opaque INDEX8 path; no transparent texel may appear.
+for scene in range(4):
+ for i in {layout[f'stage_{scene}_{q}'][0] for q in range(4)}:
+  assert 0 not in (root/resources[i]['source']).read_bytes(),(scene,i)
+# Keep eight of the 48 slots available for the bounded mirrored sprite cache.
+for a in range(4):
+ for b in range(4):
+  assert len(pages(a)|pages(b))+static_count+4+1<=40
+print('Opaque stages and eight reserved mirror slots verified.')

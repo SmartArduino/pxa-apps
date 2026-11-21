@@ -28,4 +28,13 @@ inline bool decodeFramePage(unsigned page,std::span<std::byte> bytes){
     }
     return offset==bytes.size();
 }
+inline bool mirrorFramePage(unsigned page,std::span<std::byte> bytes){
+    if(page>=art::pages||bytes.size()!=art::page_bytes[page])return false;
+    for(unsigned y=0;y<art::page_height[page];++y){
+        auto row=bytes.subspan(y*art::page_width[page],art::page_width[page]);
+        std::reverse(row.begin(),row.end());
+    }
+    return true;
+}
+
 }

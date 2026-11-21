@@ -8,6 +8,7 @@
 #include "camera.hpp"
 #include "game_audio.hpp"
 #include "frame_cache.hpp"
+#include "render_pacing.hpp"
 #include "touch.hpp"
 #include "ui_layout.hpp"
 #include "text_layout.hpp"
@@ -32,11 +33,30 @@ struct App {
     pxa::ui::DisplayMetrics display;
     std::optional<pxa::game::Renderer> renderer;
     pxa::game::DrawBuffer<24576> buffer;
+    std::array<pxa::game::Sprite,128> spriteBatch{};
+    unsigned spriteCount=0;uint8_t spriteSlot=0;
+    bool spriteOpaque=false,spriteFlash=false;uint16_t spriteTint=0;
+    void flushSprites(pxa::game::Frame& frame){
+        if(!spriteCount)return;
+        frame.sprites({spriteSlot},std::span(spriteBatch).first(spriteCount),
+            {.transparent_index0=!spriteOpaque,.solid_color=spriteFlash,.color={spriteTint}});
+        spriteCount=0;
+    }
+    void enqueueSprite(pxa::game::Frame& frame,uint8_t slot,const pxa::game::Sprite& item,bool opaque,bool flash,uint16_t tint){
+        if(spriteCount&&(spriteSlot!=slot||spriteOpaque!=opaque||spriteFlash!=flash||spriteTint!=tint||spriteCount==spriteBatch.size()))flushSprites(frame);
+        spriteSlot=slot;spriteOpaque=opaque;spriteFlash=flash;spriteTint=tint;
+        spriteBatch[spriteCount++]=item;
+    }
     std::array<std::optional<pxa::Asset>,art::pages> textures;
     std::array<bool,art::pages> needed{};
     std::array<unsigned,art::pages> pageUsed{};
     static constexpr unsigned textureSlotCapacity=48;
     unsigned textureSlotCount=16;
+    static constexpr unsigned mirrorCapacity=8;
+    std::array<int16_t,mirrorCapacity> mirrorPages{};
+    std::array<unsigned,mirrorCapacity> mirrorUsed{};
+    std::array<bool,mirrorCapacity> mirrorNeeded{};
+    unsigned normalSlots()const{return textureSlotCount>16?textureSlotCount-mirrorCapacity:textureSlotCount;}
     std::array<uint8_t,art::pages> pageSlots{};
     std::array<int16_t,textureSlotCapacity> slotPages{};
     pxa::input::Controller controller;
@@ -69,7 +89,7 @@ struct App {
     unsigned navigationBottom=0,navigationLeft=0;
     std::array<float,2> healthTrail{100,100},trailHold{};
     uint64_t last=0;
-    unsigned animation=0,drawErrors=0;
+    unsigned animation=0,drawErrors=0;uint64_t renderMetricsAt=0;RenderPacing renderPacing;
     bool ready=false,resizing=false,dirty=true,exiting=false,waitRelease=false,loading=false,resizeWanted=false,virtualKeys=false;
     void log(std::string_view s){(void)ctx->log().write(pxa::LogLevel::info,s);}
     void state(const char* reason){char b[512];std::snprintf(b,sizeof b,
@@ -113,7 +133,7 @@ struct App {
     }
     pxa::Task<void> openRenderer(){
         ready=false;renderer.reset();for(auto& t:textures)t.reset();
-        pageSlots.fill(255);slotPages.fill(-1);uploaded.fill(false);storyPresented=false;
+        pageSlots.fill(255);slotPages.fill(-1);uploaded.fill(false);mirrorPages.fill(-1);mirrorNeeded.fill(false);storyPresented=false;
         auto extent=pixelSurface(display.width,display.height);width=extent.width;height=extent.height;
         pxa::game::RenderOptions options;options.width=width;options.height=height;
         options.buffers=2;options.direct_scanout=true;options.max_draw_bytes=buffer.capacity();
@@ -134,8 +154,8 @@ struct App {
     pxa::Result<void> loadPage(unsigned page){
         char path[64];std::snprintf(path,sizeof path,"assets/atlas-%u.pxr",page);
         unsigned slot=page<art::static_pages?page:art::static_pages;
-        while(slot<textureSlotCount&&slotPages[slot]>=0)++slot;
-        if(slot>=textureSlotCount)return std::unexpected(pxa::Error::resource_limit);
+        while(slot<normalSlots()&&slotPages[slot]>=0)++slot;
+        if(slot>=normalSlots())return std::unexpected(pxa::Error::resource_limit);
         auto read=framePixels.load(page);if(!read)return read;
         auto bound=framePixels.bind(*renderer,page,slot);if(!bound)return bound;
         uploaded[page]=true;
@@ -147,6 +167,25 @@ struct App {
             std::vector<std::byte>().swap(framePixels.pages[page]);
         pageSlots[page]=slot;slotPages[slot]=page;pageUsed[page]=animation;
         return pxa::Result<void>{};
+    }
+    // A bounded renderer-side cache lets mirrored fighters use the 2D sprite
+    // path instead of rasterizing two affine triangles on every frame.
+    int mirroredSlot(unsigned page){
+        if(textureSlotCount<=16)return -1;
+        unsigned victim=mirrorCapacity;
+        for(unsigned i=0;i<mirrorCapacity;++i){
+            if(mirrorPages[i]==int(page)){mirrorUsed[i]=animation;mirrorNeeded[i]=true;return normalSlots()+i;}
+            if(!mirrorNeeded[i]&&(victim==mirrorCapacity||mirrorPages[i]<0||mirrorUsed[i]<mirrorUsed[victim]))victim=i;
+        }
+        if(victim==mirrorCapacity)return -1;
+        if(!framePixels.load(page))return -1;
+        auto& pixels=framePixels.pages[page];
+        mirrorFramePage(page,pixels);
+        auto bound=framePixels.bind(*renderer,page,normalSlots()+victim);
+        std::vector<std::byte>().swap(pixels);
+        if(!bound)return -1;
+        mirrorPages[victim]=page;mirrorUsed[victim]=animation;mirrorNeeded[victim]=true;
+        return normalSlots()+victim;
     }
     bool releasePage(unsigned victim){
         // Replace only this slot: a full bind_assets would clear uploaded peers.
@@ -176,7 +215,7 @@ struct App {
                     if(!needed[i]&&(victim==art::pages||pageUsed[i]<pageUsed[victim]))victim=i;
                 }
                 unsigned limit=(textureSlotCount>16?1152u:448u)*1024;
-                if((count<textureSlotCount-art::static_pages&&bytes+art::page_bytes[page]<=limit)||victim==art::pages)break;
+                if((count<normalSlots()-art::static_pages&&bytes+art::page_bytes[page]<=limit)||victim==art::pages)break;
                 if(!releasePage(victim)){loading=false;co_return std::unexpected(pxa::Error::resource_limit);}
             }
             auto r=loadPage(page);
@@ -209,14 +248,19 @@ struct App {
     int size(float n)const{return std::max(1,int(n*scale*(worldLayer?camera.zoom:1.f)+.5f));}
     void rect(pxa::game::Frame& frame,float x,float y,float w,float h,uint16_t color){
         if(w<=0||h<=0)return;
+        flushSprites(frame);
         int a=px(x)*16,b=py(y)*16,c=px(x+w)*16,d=py(y+h)*16;
         frame.quad({int16_t(a),int16_t(b),int16_t(c),int16_t(b),int16_t(c),int16_t(d),int16_t(a),int16_t(d)},{color});
     }
-    void tile(pxa::game::Frame& frame,art::Tile t,float x,float y,float w=0,float h=0,bool flash=false,bool flip=false,uint16_t tint=ivory){
+    void tile(pxa::game::Frame& frame,art::Tile t,float x,float y,float w=0,float h=0,bool flash=false,bool flip=false,uint16_t tint=ivory,bool opaque=false){
         if(px(x+(w?w:t.w))<=0||py(y+(h?h:t.h))<=0||px(x)>=width||py(y)>=height)return;
         needed[t.page]=true;if(pageReady(t.page))pageUsed[t.page]=animation;
         uint8_t slot=pageReady(t.page)?pageSlots[t.page]:0;
+        if(flip)if(int mirrored=mirroredSlot(t.page);mirrored>=0){
+            slot=mirrored;t.x=art::page_width[t.page]-t.x-t.w;flip=false;
+        }
         if(flip){
+            flushSprites(frame);
             int a=px(x)*16,b=py(y)*16,c=px(x+(w?w:t.w))*16,d=py(y+(h?h:t.h))*16;
             int u=t.x*16,v=t.y*16,uu=(t.x+t.w)*16,vv=(t.y+t.h)*16;
             frame.textured_quad({slot},{pxa::game::Vertex{int16_t(a),int16_t(b),int16_t(uu),int16_t(v),0,0},
@@ -226,7 +270,7 @@ struct App {
                 {.affine_uv=true,.painter=true,.transparent_index0=true});return;
         }
         pxa::game::Sprite s{int16_t(px(x)),int16_t(py(y)),uint16_t(size(w?w:t.w)),uint16_t(size(h?h:t.h)),t.x,t.y,t.w,t.h};
-        frame.sprites({slot},{&s,1},{.transparent_index0=true,.solid_color=flash,.color={uint16_t(flash?tint:0)}});
+        enqueueSprite(frame,slot,s,opaque,flash,flash?tint:0);
     }
     void text(pxa::game::Frame& frame,std::string_view s,float x,float y,int h=11,int align=0){
         if(!s.empty()&&uint8_t(s[0])>=128){
@@ -331,7 +375,7 @@ struct App {
     }
     void backplate(pxa::game::Frame& frame,float ground=190){
         int scene=view==View::home||view==View::roster||view==View::opponent||view==View::stages?stageChoice:stageIndex;
-        for(unsigned i=0;i<4;++i)tile(frame,art::stages[scene][i],int(i%2)*256-96,ground-art::stage_ground+int(i/2)*256);
+        for(unsigned i=0;i<4;++i)tile(frame,art::stages[scene][i],int(i%2)*256-96,ground-art::stage_ground+int(i/2)*256,0,0,false,false,ivory,true);
     }
     void frameFighters(){
         auto a=framingBounds(arena.f[0],arena.sprite(arena.f[0]));
@@ -593,7 +637,7 @@ struct App {
                 if(net.host){net.incoming.release();arena.clearInput();}
             }else if(view==View::online||view==View::pause){view=arena.phase==Phase::match_end?View::result:View::play;last=0;accumulator=0;resetInputs();state("online-play");}
         }
-        if(online&&now-netMetricsAt>1000){netMetricsAt=now;state("online-sync");}
+        if(online&&now-netMetricsAt>1000){netMetricsAt=now;state("online-sync");char b[128];std::snprintf(b,sizeof b,"Ash LAN metrics rtt_ms=%u rx_age_ms=%u pending=%u tick=%u",net.ping,net.connected?net.now-net.lastRx:0,net.outgoing.count,arena.tick);log(b);}
         if(view==View::online||view==View::address)dirty=true;
     }
     void onlinePanel(pxa::game::Frame& frame){
@@ -758,7 +802,18 @@ struct App {
     }
     void render(){
         if(!ready||!renderer||!ctx->foreground())return;
-        needed.fill(false);worldLayer=false;pxa::game::Frame frame(*renderer,buffer.bytes());frame.clear({ink});draw(frame);
+        // Keep simulation/input at 60 Hz, but do not build another DrawList
+        // while the previous one is still being rasterized. Mailbox overwrite
+        // otherwise spends CPU encoding and copying frames nobody can see.
+        auto metrics=renderer->telemetry();
+        if(metrics){
+            if(last-renderMetricsAt>=1000000){renderMetricsAt=last;char b[160];
+                std::snprintf(b,sizeof b,"Ash Render submitted=%llu rendered=%llu dropped=%llu raster_us=%u",
+                    (unsigned long long)metrics->submitted_frames,(unsigned long long)metrics->rendered_frames,
+                    (unsigned long long)metrics->dropped_frames,metrics->last_host_raster_us);log(b);}
+            if(!renderPacing.ready(last,metrics->submitted_frames,metrics->rendered_frames,metrics->dropped_frames,view!=View::play)){dirty=true;return;}
+        }
+        needed.fill(false);mirrorNeeded.fill(false);worldLayer=false;pxa::game::Frame frame(*renderer,buffer.bytes());frame.clear({ink});draw(frame);flushSprites(frame);
         bool missing=false;for(unsigned i=0;i<art::pages;++i)missing|=needed[i]&&!pageReady(i);
         if(missing){dirty=true;if(!loading&&!warming){loading=true;auto task=ctx->tasks().start(streamPages());if(!task){loading=false;log("Ash Harbor texture stream could not start");}}return;}
         auto r=frame.submit();dirty=!r;if(r&&view==View::opening)storyPresented=true;
@@ -816,6 +871,11 @@ struct App {
                 if(generation!=warmGeneration)break;
             }
         }while(generation!=warmGeneration);
+        if(textureSlotCount>16){
+            mirrorNeeded.fill(false);
+            for(int frame:{0,4,8,12,32,36,40,44})
+                (void)mirroredSlot(actorPose(arena.f[1],frame).tile.page);
+        }
         warming=warmRunning=false;accumulator=0;last=0;resetInputs();
         char message[128];std::snprintf(message,sizeof message,"Ash Harbor frame-bank ready bytes=%u reads=%u uploads=%u",framePixels.bytes(),framePixels.reads,framePixels.uploads);log(message);
         co_return pxa::Result<void>{};
