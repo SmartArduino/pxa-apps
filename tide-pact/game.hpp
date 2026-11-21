@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <cstdint>
@@ -30,6 +31,22 @@ enum Goods { Wine, Sugar, Cloth, Wool, Timber, Salt, Pepper, Porcelain, GoodsCou
 inline constexpr std::array<Text, GoodsCount> GoodsNames{
     "葡萄酒", "蔗糖", "织锦", "羊毛", "木料", "海盐", "胡椒", "瓷器"
 };
+
+struct MarketNotice {
+    int port, good, first_day, duration, price_percent, reserve_shift;
+    Text headline;
+    constexpr int phase(int day) const { return (day+84-first_day)%84; }
+    constexpr int until(int day) const { return phase(day)<duration?0:84-phase(day); }
+    constexpr int remaining(int day) const { return std::max(0,duration-phase(day)); }
+};
+inline constexpr MarketNotice MarketNotices[]{
+    {lisbon,Timber,4,9,24,-8,"船坞收木料"},
+    {madeira,Sugar,14,11,-17,12,"新糖进仓"},
+    {cadiz,Salt,27,9,26,-9,"渔队备海盐"},
+    {canaries,Wine,38,12,16,-7,"商船收葡萄酒"},
+    {elmina,Cloth,55,10,21,-8,"集市收织锦"},
+};
+const MarketNotice* market_notice(int port, int good, int day);
 
 enum OfficerId { NoOfficer, Pilot, Quartermaster, Boatswain, OfficerLimit };
 struct Officer {
@@ -214,6 +231,7 @@ struct Game {
     bool can_negotiate(int good) const;
     bool negotiate(int good);
     int stock(int good) const;
+    int market_stock(int port, int good) const;
     int wind(int leg) const;
     int speed_in_tenths_of_a_knot() const;
     PassageForecast forecast(const Passage& path, int extra_load=0) const;
@@ -350,8 +368,7 @@ private:
     void lose_duel(bool yielded);
     void log_encounter(int choice);
     Point provisions_order(int food, int water) const;
-    int stock_at(int port, int good, int stock_change) const;
-    int market_price(int port, int good, bool sell, int supply, bool player=true) const;
+    int market_price(int port, int good, bool sell, int supply, int day, bool player=true) const;
     void merchant_day(int company);
     void plan_merchant(int company);
 

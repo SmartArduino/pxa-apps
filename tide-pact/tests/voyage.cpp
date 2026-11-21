@@ -206,6 +206,11 @@ void trading_quotes() {
     assert(game.price_at(-1,Sugar,false)==0 && game.price_at(madeira,-1,true)==0);
     game.s.stock_delta[Wine]=-48;
     assert(game.trade_quote(Wine,false,5).units==0);
+    game.s.cargo[Wine]=1;
+    assert(game.trade(Wine,true,1).units==1 && game.stock(Wine)==1);
+    game.s.stock_delta[Wine]=48;
+    game.s.cargo[Wine]=1;
+    assert(!game.trade_quote(Wine,true,1).units && game.s.cargo[Wine]==1);
     game.s.gold=999999;
     assert(game.trade_quote(Salt,true,5).units==0);
 }
@@ -239,9 +244,12 @@ void merchant_trade() {
         game.wait_at_port();
         assert(game.s.day==before.day+1);
         assert(game.s.gold==before.gold && game.s.cargo==before.cargo && game.s.rng==before.rng);
-        auto expected=before.stock_delta;
-        if (game.s.day%12==0)
-            for (auto& stock : expected) stock+=stock>0?-1:stock<0?1:0;
+        Game without_merchants;
+        without_merchants.s=before;
+        for (auto& ship : without_merchants.s.merchants)
+            ship=MerchantVoyage{.gold=0,.port=ship.port};
+        without_merchants.wait_at_port();
+        auto expected=without_merchants.s.stock_delta;
         for (std::size_t i=0;i<game.s.merchants.size();++i) {
             const auto& previous=before.merchants[i];
             const auto& current=game.s.merchants[i];
@@ -279,6 +287,44 @@ void merchant_trade() {
     game.s.merchants[0].destination=game.s.merchants[0].port;
     State invalid;
     assert(!decode(invalid,encode(game.s)));
+}
+
+void port_market_cycles() {
+    Game game;
+    for (auto& ship : game.s.merchants) ship.gold=0;
+    game.s.day=3;
+    assert(!market_notice(lisbon,Timber,game.s.day));
+    const int common_stock=game.market_stock(lisbon,Timber);
+    const int common_price=game.price_at(lisbon,Timber,true);
+    game.wait_at_port();
+    assert(game.s.day==4 && market_notice(lisbon,Timber,game.s.day)->remaining(game.s.day)==9);
+    assert(game.market_stock(lisbon,Timber)==common_stock-2);
+    assert(game.price_at(lisbon,Timber,true)>common_price);
+    for (int day=4;day<13;++day) game.wait_at_port();
+    assert(!market_notice(lisbon,Timber,game.s.day));
+    for (int day=13;day<29;++day) game.wait_at_port();
+    assert(game.market_stock(lisbon,Timber)>common_stock-8);
+
+    Game harvest;
+    for (auto& ship : harvest.s.merchants) ship.gold=0;
+    harvest.s.day=13;
+    const int sugar=harvest.market_stock(madeira,Sugar);
+    const int sugar_price=harvest.price_at(madeira,Sugar,false);
+    harvest.wait_at_port();
+    assert(market_notice(madeira,Sugar,14) && market_notice(madeira,Sugar,98));
+    assert(harvest.market_stock(madeira,Sugar)==sugar+2);
+    assert(harvest.price_at(madeira,Sugar,false)<sugar_price);
+
+    Game scarcity;
+    const int reserve=scarcity.stock(Wine);
+    scarcity.s.stock_delta[Wine]=13-reserve;
+    const int well_stocked=scarcity.quote(Wine,false);
+    --scarcity.s.stock_delta[Wine];
+    const int ordinary_step=scarcity.quote(Wine,false)-well_stocked;
+    scarcity.s.stock_delta[Wine]=6-reserve;
+    const int short_stock=scarcity.quote(Wine,false);
+    --scarcity.s.stock_delta[Wine];
+    assert(scarcity.quote(Wine,false)-short_stock>ordinary_step);
 }
 
 void naval_and_duel_combat() {
@@ -1152,6 +1198,7 @@ int main() {
     voyage_planning();
     trading_quotes();
     merchant_trade();
+    port_market_cycles();
     town_walks();
     port_stories();
     port_dispatches();

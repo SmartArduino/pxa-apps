@@ -28,7 +28,7 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage, RationsPage
+    DispatchBoard, ForecastPage, RationsPage, MarketNews
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -51,7 +51,7 @@ enum Action {
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
-    ShowRations, ToggleFoodRation, ToggleWaterRation,
+    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -1001,12 +1001,21 @@ struct VoyageApp {
             d.label(item.x+83,item.y+2,format("%d",s.cargo[g]),mint);
             const auto price=format("%d / %d",game.quote(g,false),game.quote(g,true));
             d.label(right-d.measure(price)-5,item.y+2,price,ivory);
+            if (w>=220) {
+                const int stock=game.stock(g);
+                const Text supply=stock==0?"缺货":stock<=7?"紧缺":stock>=24?"充足":"平稳";
+                d.label(item.x+111,item.y+2,supply,stock<=7?vermilion:stock>=24?mint:quiet,
+                        right-d.measure(price)-120-item.x);
+            }
             buttons[button_count++]={item,GoodsRow+g};
         }
         const bool negotiated=s.bargain_good==good+1;
-        const auto note=format(negotiated?"%s · 五件省%d%%":"选中%s  库存%d",
-                               GoodsNames[good].data(),negotiated?s.bargain_rate:game.stock(good));
-        d.label(x+4,body.bottom()-51,note,negotiated?mint:mist,w-(pages>1?72:10));
+        const auto* news=market_notice(s.origin,good,s.day);
+        const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),
+                               news?(news->price_percent>0?"求购中":"到货中"):"");
+        const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
+        d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
+                negotiated?mint:news?gold:mist,w-(pages>1?72:10));
         if (pages>1) {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
@@ -1705,6 +1714,7 @@ struct VoyageApp {
     void port_prices(Draw& d) {
         const auto title=format("%s比价",GoodsNames[good].data());
         page_title(d,title);
+        button(d,{body.right()-105,body.y+3,52,23},"市况",ShowMarketNews);
         d.label(body.x+6,body.y+28,"已到访港口的当日买价 / 卖价",quiet,body.w-12);
         std::array<int,PortCount> order{};
         int count=0;
@@ -1723,6 +1733,30 @@ struct VoyageApp {
         }
         if (pages>1) pager(d,pages);
         else d.label(body.x+6,body.bottom()-22,"抵达后价格可能变化",quiet,body.w-12);
+    }
+    void market_news(Draw& d) {
+        page_title(d,"各港市况",LetterIcon);
+        d.label(body.x+6,body.y+28,"已知港口的收货与到货消息",mist,body.w-12);
+        const int today=game.s.day;
+        std::array<int,std::size(MarketNotices)> order{};
+        int count=0;
+        for (int i=0;i<int(std::size(MarketNotices));++i)
+            if (game.charted(MarketNotices[i].port)) order[count++]=i;
+        std::sort(order.begin(),order.begin()+count,[&](int a,int b) {
+            return MarketNotices[a].until(today)<MarketNotices[b].until(today);
+        });
+        const int rows=std::clamp((body.h-74)/row_pitch(),1,9);
+        const int pages=std::max(1,(count+rows-1)/rows);
+        page=std::clamp(page,0,pages-1);
+        for (int i=0;i<rows && page*rows+i<count;++i) {
+            const auto& news=MarketNotices[order[page*rows+i]];
+            const auto title=format("%s · %s",Places[news.port].name.data(),news.headline.data());
+            const int days=news.until(today);
+            const auto timing=days?format("%d日后",days):format("还剩%d日",news.remaining(today));
+            row(d,i,title,timing,Destination+news.port,!days,47);
+        }
+        if (pages>1) pager(d,pages);
+        else d.label(body.x+6,body.bottom()-22,"点选消息可在海图上标记港口",quiet,body.w-12);
     }
     void provisions_page(Draw& d) {
         page_title(d,"食物与淡水");
@@ -2539,6 +2573,7 @@ struct VoyageApp {
         case ForecastPage: weather_forecast(d); break;
         case RouteStops: route_stops(d); break;
         case PortPrices: port_prices(d); break;
+        case MarketNews: market_news(d); break;
         case EventReport: event_report(d); break;
         case TowRequest: tow_request(d); break;
         case PortDesk: port_desk(d); break;
@@ -2936,6 +2971,7 @@ struct VoyageApp {
             if (game.request_tow()) { select(game.s.origin); changed(); }
             break;
         case ShowPortPrices: page=0; set_modal(PortPrices); break;
+        case ShowMarketNews: page=0; set_modal(MarketNews); break;
         case NextStop:
             game.s.stop_next=1-game.s.stop_next;
             game.notice=game.s.stop_next?"将在下一处靠泊":"继续前往原目的地";
@@ -3141,6 +3177,7 @@ struct VoyageApp {
             else if (modal==RumorList) { page=0; set_modal(rumor_back); }
             else if (modal==LanguageDesk) set_modal(language_back);
             else if (modal==TideLedger) set_modal(LanguageDesk);
+            else if (modal==MarketNews) { page=0; set_modal(PortPrices); }
             else if (modal==PortPrices) { page=good/market_rows(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }

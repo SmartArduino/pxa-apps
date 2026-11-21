@@ -218,27 +218,57 @@ int Game::load() const {
     return all;
 }
 
-int Game::stock_at(int port, int good, int stock_change) const {
-    const int production=17+Bias[port][good]*6;
+const MarketNotice* market_notice(int port, int good, int day) {
+    for (const auto& notice : MarketNotices)
+        if (notice.port==port && notice.good==good && notice.remaining(day)) return &notice;
+    return nullptr;
+}
+
+namespace {
+int stock_base(int port, int good, int day) {
     constexpr int seasonal[]{-2,0,3,1};
-    return std::clamp(production+seasonal[(s.day/29+port+good)%4]+stock_change,0,65);
+    return 17+Bias[port][good]*6+seasonal[(day/29+port+good)%4];
+}
+
+int stock_limit(int port, int good, int day) {
+    return std::min(65,stock_base(port,good,day)+48);
+}
+
+int daily_stock_change(int port, int good, int delta, int day) {
+    const int base=stock_base(port,good,day);
+    const int supply=std::clamp(base+delta,0,stock_limit(port,good,day));
+    const auto* news=market_notice(port,good,day);
+    const int target=std::max(0,base+(news?news->reserve_shift:0));
+    const bool exports=Bias[port][good]>0;
+    const int interval=news?1:supply<target && !exports?5:3;
+    if ((day+port+good*2)%interval!=0) return delta;
+    const int step=news || (exports && supply<target)?2:1;
+    return supply+std::clamp(target-supply,-step,step)-base;
+}
+}
+
+int Game::market_stock(int port, int good) const {
+    if (port<0 || port>=PortCount || good<0 || good>=GoodsCount) return 0;
+    return std::clamp(stock_base(port,good,s.day)+s.stock_delta[port*GoodsCount+good],0,65);
 }
 
 int Game::stock(int good) const {
-    return stock_at(s.origin,good,s.stock_delta[s.origin*GoodsCount+good]);
+    return market_stock(s.origin,good);
 }
 
-int Game::market_price(int port, int good, bool sell, int supply, bool player) const {
+int Game::market_price(int port, int good, bool sell, int supply, int day, bool player) const {
+    const auto* news=market_notice(port,good,day);
     const int market=base[good]*(100-Bias[port][good]*15+
-                     ((s.day/29+good+port*3)%7-3)*3)/100;
-    const int price=std::max(7,market+(17-supply)*std::max(1,base[good]/52)+
+                     ((day/29+good+port*3)%7-3)*3+(news?news->price_percent:0))/100;
+    const int pressure=17-supply+2*std::max(0,8-supply);
+    const int price=std::max(7,market+pressure*std::max(1,base[good]/52)+
                              (sell ? -std::max(3,market/11) : std::max(4,market/12)));
     return player && !sell && guild_stake(port) ? std::max(7,(price*94+99)/100) : price;
 }
 
 int Game::price_at(int port, int good, bool sell) const {
     if (port<0 || port>=PortCount || good<0 || good>=GoodsCount) return 0;
-    return market_price(port,good,sell,stock_at(port,good,s.stock_delta[port*GoodsCount+good]));
+    return market_price(port,good,sell,market_stock(port,good),s.day);
 }
 
 int Game::quote(int good, bool sell) const { return price_at(s.origin,good,sell); }
@@ -247,18 +277,23 @@ TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
     if (!port() || good<0 || good>=GoodsCount || quantity<=0) return {};
     const int limit=std::min(quantity,sell ? s.cargo[good] : capacity()-load());
     const int budget=sell ? 999999-s.gold : s.gold;
+    const int port=s.origin, base_stock=stock_base(port,good,s.day);
+    const int stock_cap=stock_limit(port,good,s.day);
     const auto quote_order=[&](int rate) {
-        TradeQuote offer{.stock_change=s.stock_delta[s.origin*GoodsCount+good]};
-        int normal_total=0;
+        TradeQuote offer{.stock_change=s.stock_delta[port*GoodsCount+good]};
+        int supply=market_stock(port,good);
+        int normal_total=0, resale=0;
         for (;offer.units<limit;++offer.units) {
-            const int supply=stock_at(s.origin,good,offer.stock_change);
-            const int total=normal_total+market_price(s.origin,good,sell,supply);
-            const int discount=total*rate/100;
-            if ((!sell && supply==0) || total-discount>budget) break;
+            if (sell?supply>=stock_cap:supply==0) break;
+            const int total=normal_total+market_price(port,good,sell,supply,s.day);
+            if (rate) resale+=market_price(port,good,true,supply-1,s.day);
+            const int discount=std::min(total*rate/100,std::max(0,total-resale));
+            if (total-discount>budget) break;
             normal_total=total;
             offer.gold=total-discount;
             offer.saved=discount;
-            offer.stock_change=std::clamp(offer.stock_change+(sell?1:-1),-48,48);
+            supply+=sell?1:-1;
+            offer.stock_change=supply-base_stock;
         }
         return offer;
     };
@@ -652,18 +687,20 @@ void Game::plan_merchant(int company) {
         if (hub==ship.port) continue;
         const auto& lane=merchant_lane(ship.port,hub);
         const int days=merchant_days(lane);
+        const int arrival=std::min(99999,s.day+days);
         const int provisions=4+2*days;
         const int port=MerchantPorts[hub];
         for (int good=0;good<GoodsCount;++good) {
-            const int local=s.stock_delta[origin*GoodsCount+good];
-            const int remote=s.stock_delta[port*GoodsCount+good];
+            const int local=market_stock(origin,good);
+            int remote=s.stock_delta[port*GoodsCount+good];
+            for (int day=s.day+1;day<=arrival;++day) remote=daily_stock_change(port,good,remote,day);
+            const int cap=stock_limit(port,good,arrival);
+            const int supply=std::clamp(stock_base(port,good,arrival)+remote,0,cap);
             int cost=provisions, revenue=0;
-            for (int unit=0;unit<MerchantLot && unit<local+48;++unit) {
-                const int available=stock_at(origin,good,local-unit);
-                if (!available) break;
-                cost+=market_price(origin,good,false,available,false);
+            for (int unit=0;unit<std::min({MerchantLot,local,cap-supply});++unit) {
+                cost+=market_price(origin,good,false,local-unit,s.day,false);
                 if (cost>ship.gold) break;
-                revenue+=market_price(port,good,true,stock_at(port,good,std::min(48,remote+unit)),false);
+                revenue+=market_price(port,good,true,supply+unit,arrival,false);
                 const int score=(revenue-cost)*12/days;
                 if (score<=best_score) continue;
                 best_score=score;
@@ -679,7 +716,9 @@ void Game::plan_merchant(int company) {
     ship.destination=best_port;
     ship.good=best_good;
     ship.units=best_units;
-    s.stock_delta[origin*GoodsCount+best_good]-=best_units;
+    if (best_units)
+        s.stock_delta[origin*GoodsCount+best_good]=
+            market_stock(origin,best_good)-best_units-stock_base(origin,best_good,s.day);
 }
 
 void Game::merchant_day(int company) {
@@ -701,12 +740,13 @@ void Game::merchant_day(int company) {
     ship.destination=NoMerchantPort;
     ship.progress=0;
     const int port=MerchantPorts[ship.port];
-    auto& stock=s.stock_delta[port*GoodsCount+ship.good];
-    for (int unit=0;unit<ship.units;++unit) {
+    const int supply=market_stock(port,ship.good);
+    const int sold=std::min(int(ship.units),stock_limit(port,ship.good,s.day)-supply);
+    for (int unit=0;unit<sold;++unit)
         ship.gold=std::min(MerchantReserve,ship.gold+
-            market_price(port,ship.good,true,stock_at(port,ship.good,stock),false));
-        if (stock<48) ++stock;
-    }
+            market_price(port,ship.good,true,supply+unit,s.day,false));
+    if (sold) s.stock_delta[port*GoodsCount+ship.good]=supply+sold-stock_base(port,ship.good,s.day);
+    ship.units=sold;
 }
 
 unsigned Game::roll(unsigned range) {
@@ -717,9 +757,11 @@ unsigned Game::roll(unsigned range) {
 void Game::spend_day(int days) {
     for (int i = 0; i < days && s.day < 99999; ++i) {
         ++s.day;
-        if (s.day % 12 == 0) {
-            for (auto& stock : s.stock_delta) stock += stock > 0 ? -1 : (stock < 0 ? 1 : 0);
-        }
+        for (int port=0;port<PortCount;++port)
+            for (int good=0;good<GoodsCount;++good) {
+                auto& delta=s.stock_delta[port*GoodsCount+good];
+                delta=daily_stock_change(port,good,delta,s.day);
+            }
         if (s.day>=2)
             for (std::size_t company=0;company<s.merchants.size();++company) merchant_day(company);
     }
