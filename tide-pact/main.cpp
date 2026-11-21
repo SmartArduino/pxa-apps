@@ -22,7 +22,7 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger, BargainPage
+    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -47,7 +47,9 @@ enum Action {
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
-    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate
+    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate,
+    ShowDriftStory, TakeDriftLead, MarkDriftGround, OpenDriftRecovery, BoatForDrift,
+    HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll
 };
 
 template<class... Args>
@@ -547,6 +549,20 @@ struct VoyageApp {
             d.label(point.x-3,point.y-7,"?",color);
         }
     }
+    void draw_drift_mark(Draw& d) {
+        if (game.s.drift_stage!=DriftSearching) return;
+        if (game.sees_drift()) {
+            const auto mark=map_point(game.drift_position());
+            d.diamond(mark,3,gold);
+            voyage_icon(d,LetterIcon,{mark.x-8,mark.y-19,16,16});
+            return;
+        }
+        const auto center=map_point(DriftGround);
+        const int r=std::max(8,int(13*factor));
+        const Point ring[]{{center.x,center.y-r},{center.x+r,center.y},{center.x,center.y+r},{center.x-r,center.y}};
+        for (int side=0;side<4;++side) d.line(ring[side],ring[(side+1)%4],gold,true);
+        d.label(center.x-3,center.y-7,"?",gold);
+    }
     void draw_routes(Draw& d, const Passage& planned, bool active) {
         for (int l=0;l<planned.count;++l) {
             const auto& leg=Legs[planned.edge[l]];
@@ -576,6 +592,7 @@ struct VoyageApp {
         draw_routes(d,path,game.sea());
         draw_wake(d);
         draw_rumor_marks(d);
+        draw_drift_mark(d);
         if (landmark>=0) {
             const auto location=game.position();
             if (approach_port!=landmark || approach_position.x!=location.x || approach_position.y!=location.y) {
@@ -695,6 +712,7 @@ struct VoyageApp {
         }
         if (map.h<35) map.h=35;
         const int berth=game.s.helm?game.nearby_anchorage(chart_water):-1;
+        const bool salvage=berth<0 && game.near_drift();
         const int landmark=berth>=0?berth:game.s.helm?game.visible_landmark():-1;
         draw_map(d,landmark,berth);
 
@@ -703,9 +721,10 @@ struct VoyageApp {
         button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
         button(d,{map.x+2*(icon_w+3),y,36,24},landmark>=0 && zoom<5?"近岸":"定位",Center);
         button(d,{map.x+2*(icon_w+3)+39,y,map.w-2*(icon_w+3)-39,24},
-               game.s.helm ? "靠泊" : game.sea() ? (game.s.stop_next ? "取消停靠" : "下站停靠") : "目的地",
-               game.s.helm ? DockHelm : game.sea() ? NextStop : RouteList,game.s.stop_next || berth>=0,
-               game.s.helm && berth<0,{},game.s.helm?MooringIcon:-1);
+               salvage?"捞木匣":game.s.helm?"靠泊":game.sea()?(game.s.stop_next?"取消停靠":"下站停靠"):"目的地",
+               salvage?OpenDriftRecovery:game.s.helm?DockHelm:game.sea()?NextStop:RouteList,
+               salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},
+               salvage?LetterIcon:game.s.helm?MooringIcon:-1);
         if (game.s.helm) { helm_panel(d,info,wide,landmark); return; }
 
         skin_box(d,info,0,5);
@@ -1311,13 +1330,71 @@ struct VoyageApp {
         const auto cost=format("入股 %d金",game.guild_cost());
         row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
         d.label(body.x+7,body.y+52,"入股后在本港买货约省6%",mist,body.w-14);
-        if (game.s.origin==lisbon || game.s.origin==madeira)
+        if (game.s.origin==madeira ||
+            (game.s.origin==cadiz && game.s.drift_stage>=DriftRecovered)) {
+            pair(d,{body.x+4,body.y+74,body.w-8,21},
+                 game.s.origin==madeira?"银铃护航":"码头决斗",
+                 game.s.origin==madeira?ShowEscort:ShowDuel,"红漆木匣",ShowDriftStory);
+        } else if (game.s.origin==lisbon)
             row(d,2,"银铃护航","航海故事",ShowEscort,true);
         else if (game.s.origin==cadiz)
             row(d,2,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"码头决斗",ShowDuel,true);
         else if (game.s.origin==tunis)
             row(d,2,"优素福","招募领航",Recruit,true);
         pair(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors,"口译与学话",OpenLanguages);
+    }
+    void drift_story(Draw& d) {
+        page_title(d,"红漆木匣",LetterIcon);
+        const int x=body.x+6,y=body.y,w=body.w-12;
+        const Rect action{x,body.bottom()-28,w,24};
+        const auto stage=game.s.drift_stage;
+        const bool at_start=game.port() && game.s.origin==madeira;
+        const bool at_finish=game.port() && game.s.origin==cadiz;
+        Text dialogue;
+        if (stage==DriftUnheard) {
+            dialogue="丰沙尔舵匠艾达说，昨夜领工资的小船翻了，装名册的红木匣被风吹到港口西南。还好匣顶绑了两块软木。";
+            button(d,action,at_start?"答应找木匣":"标记丰沙尔",at_start?int(TakeDriftLead):Destination+int(madeira),
+                   true,game.sea() || !game.charted(madeira));
+        } else if (stage==DriftSearching) {
+            dialogue="旧航图只圈出木匣可能漂过的海面。向丰沙尔西南掌舵，近了才能看见漂浮物。记得备一件木料。";
+            if (!game.sea())
+                button(d,action,at_start?"圈出搜索海域":"标记丰沙尔",
+                       at_start?int(MarkDriftGround):Destination+int(madeira),true);
+        } else if (stage==DriftRecovered && !at_finish) {
+            dialogue="匣里是加的斯商号的工资名册，背面写着卡斯蒂利亚语。带去加的斯找人辨认，再把欠款送到该收钱的人手里。";
+            if (!game.sea()) button(d,action,"标记加的斯",Destination+int(cadiz),true);
+        } else if (stage==DriftRecovered && !game.understands(Castilian)) {
+            dialogue="名册分成两栏。靠右的几笔重墨盖住了人名。听懂加的斯的船工在说什么，才能核对这几笔工钱。";
+            button(d,action,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
+                   game.s.gold<Game::InterpreterFee);
+        } else if (stage==DriftRecovered) {
+            dialogue="右栏写的是尚欠的工资。把名册交给船工，他们会给你加的斯维修七五折。送进港务馆则能领一百八十金。";
+            pair(d,action,"交给船工",ReturnDriftRoll,"入档领赏",FileDriftRoll,true);
+        } else {
+            dialogue=stage==DriftReturned?
+                "卸完最后一箱货，船工排队核对名单。此后你在加的斯修船，他们会留下一班人帮你钉板。" :
+                "港务馆把潮湿的纸页压平，以公印核对两栏数字。第一批工钱终于发下来了。";
+        }
+        d.wrap({x,y+34,w,body.h-66},dialogue,ivory,15);
+    }
+    void drift_recovery(Draw& d) {
+        page_title(d,"打捞红漆木匣",LetterIcon);
+        const int x=body.x+6,y=body.y,w=body.w-12,bottom=body.bottom();
+        const int art_height=std::clamp(body.h-91,28,105);
+        const Rect art_box{x,y+27,w,art_height};
+        const int source_height=std::min(180,320*art_height/w);
+        d.image({art::driftwood},{0,(180-source_height)*3/4,320,source_height},art_box);
+        d.frame(art_box,border);
+        const auto boat=game.drift_block(LaunchBoat);
+        const auto hook=game.drift_block(RigHook);
+        const Text hint=!game.near_drift()?"木匣已经漂远，请重新靠近":
+            !boat.empty()?boat:"浪头不高，可以放艇";
+        d.label(x,art_box.bottom()+5,hint,boat.empty()?mint:mist,w);
+        const int third=(w-8)/3;
+        button(d,{x,bottom-27,third,24},"放艇",BoatForDrift,true,!boat.empty());
+        button(d,{x+third+4,bottom-27,third,24},"架钩×1木",HookForDrift,false,!hook.empty());
+        button(d,{x+(third+4)*2,bottom-27,w-2*(third+4),24},"等一日",WaitForDrift,
+               false,!game.near_drift());
     }
     void show_languages(Language preferred) {
         if (!game.port()) return;
@@ -1455,9 +1532,9 @@ struct VoyageApp {
     void tale_list(Draw& d) {
         page_title(d,"港口故事");
         const int visible=list_rows();
-        const int pages=(TaleCount+2+visible-1)/visible;
+        const int pages=(TaleCount+3+visible-1)/visible;
         page=std::clamp(page,0,pages-1);
-        for (int j=0;j<visible && page*visible+j<TaleCount+2;++j) {
+        for (int j=0;j<visible && page*visible+j<TaleCount+3;++j) {
             const int i=page*visible+j;
             if (i==TaleCount) {
                 const Text harbor=game.s.escort>=EscortPublished?"已完成":
@@ -1467,6 +1544,13 @@ struct VoyageApp {
             }
             if (i==TaleCount+1) {
                 row(d,j,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"加的斯",ShowDuel);
+                continue;
+            }
+            if (i==TaleCount+2) {
+                const auto stage=game.s.drift_stage;
+                const Text status=stage>=DriftReturned?"已完成":stage==DriftRecovered?"加的斯":
+                    stage==DriftSearching?"搜索海面":"丰沙尔";
+                row(d,j,"红漆木匣",status,ShowDriftStory,stage==DriftSearching,28,LetterIcon);
                 continue;
             }
             const auto stage=game.s.tales[i];
@@ -1788,6 +1872,8 @@ struct VoyageApp {
         case LanguageDesk: language_desk(d); break;
         case TideLedger: tide_ledger_page(d); break;
         case BargainPage: bargain_page(d); break;
+        case DriftStory: drift_story(d); break;
+        case DriftRecovery: drift_recovery(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1837,6 +1923,36 @@ struct VoyageApp {
             case ShowBargain: if (game.port()) set_modal(BargainPage); break;
             case Negotiate:
                 if (game.negotiate(good)) { set_modal(None); audio.cue(Sound::Page); changed(); }
+                break;
+            case ShowDriftStory: activity_back=modal; set_modal(DriftStory); break;
+            case TakeDriftLead: if (game.take_drift_lead()) changed(); break;
+            case MarkDriftGround:
+                scout_course=DriftGround;
+                pinned_rumor=-1;
+                selected=game.s.origin;
+                screen=Chart;
+                set_modal(None);
+                follow=false;
+                center_at(DriftGround);
+                break;
+            case OpenDriftRecovery:
+                if (game.near_drift()) { game.paused=true; set_modal(DriftRecovery); }
+                break;
+            case BoatForDrift: case HookForDrift:
+                if (game.recover_drift(action==BoatForDrift?LaunchBoat:RigHook)) {
+                    audio.cue(Sound::Page);
+                    set_modal(None);
+                    changed();
+                } else notify();
+                break;
+            case WaitForDrift:
+                if (game.wait_for_drift()) {
+                    if (!game.near_drift()) set_modal(None);
+                    changed();
+                } else notify();
+                break;
+            case ReturnDriftRoll: case FileDriftRoll:
+                if (game.finish_drift(action==ReturnDriftRoll)) { audio.cue(Sound::Page); changed(); }
                 break;
             }
             return;
@@ -2196,7 +2312,7 @@ struct VoyageApp {
             else if (modal==TalePage && screen==Journal) set_modal(TaleList);
             else if (modal==SeaLog && sea_item>=0) { sea_item=-1; focused=0; dirty=true; }
             else if (modal==RouteStops || (modal==Intel && intel_from_preflight)) set_modal(Preflight);
-            else if (modal==EscortPage || modal==DuelInvitation) set_modal(activity_back);
+            else if (modal==EscortPage || modal==DuelInvitation || modal==DriftStory) set_modal(activity_back);
             else if (modal==ExpeditionPage && expedition_from_book) set_modal(ExpeditionList);
             else if (modal==OfficerPage) set_modal(Wardroom);
             else if (modal==RumorPage) set_modal(RumorList);

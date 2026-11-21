@@ -306,7 +306,9 @@ bool Game::unload_provisions(bool water) {
 
 int Game::repair_cost() const {
     const int price = (100-s.hull)*2;
-    return port() && Zone[s.origin]==1 && s.tales[Chartmakers]==Shared ? (price*3+3)/4 : price;
+    const bool helpers=port() && ((Zone[s.origin]==1 && s.tales[Chartmakers]==Shared) ||
+                                 (s.origin==cadiz && s.drift_stage==DriftReturned));
+    return helpers?(price*3+3)/4:price;
 }
 
 int Game::daily_rations() const { return s.crew>=27 ? 3 : (s.crew>14 ? 2 : 1); }
@@ -688,6 +690,7 @@ bool Game::dock_helm(WaterTest water_at) {
 
 void Game::helm_step(WaterTest water_at) {
     if (!s.helm || paused || encounter()) return;
+    const bool started_near_drift=near_drift();
     const auto weather=conditions();
     const auto heading=Directions[s.heading];
     const int wind_force=wind(0);
@@ -738,18 +741,24 @@ void Game::helm_step(WaterTest water_at) {
         notice="已到锚地，可以靠泊";
         paused=true;
     }
-    if (++s.helm_pulse<4) return;
-    s.helm_pulse=0;
-    spend_day(1);
-    if (!consume_day(conditions())) return;
-    if (weather.weather==Rain)
-        s.water=static_cast<std::uint8_t>(std::min(water_capacity(),int(s.water)+1));
-    if (weather.weather==Squall && !s.reefed) {
-        s.hull-=3;
-        notice="骤风伤船，缩帆可减损";
-        if (s.hull<=0) { rescue(); return; }
+    const bool new_day=++s.helm_pulse==4;
+    if (new_day) {
+        s.helm_pulse=0;
+        spend_day(1);
+        if (!consume_day(conditions())) return;
+        if (weather.weather==Rain)
+            s.water=static_cast<std::uint8_t>(std::min(water_capacity(),int(s.water)+1));
+        if (weather.weather==Squall && !s.reefed) {
+            s.hull-=3;
+            notice="骤风伤船，缩帆可减损";
+            if (s.hull<=0) { rescue(); return; }
+        }
     }
-    if (paused) return;
+    if (!paused && !started_near_drift && near_drift()) {
+        notice="木匣已靠近船舷，可以打捞";
+        paused=true;
+    }
+    if (!new_day || paused) return;
     if (!(s.event_mask&1U) && convoy_battle()) {
         start_encounter(Privateer);
         notice="断铃号拦住了护航商船";
@@ -1084,6 +1093,71 @@ bool Game::decide_tide_ledger(bool publish) {
     else earn(100);
     s.chart_marks|=1U<<gibraltar;
     notice=publish?"渡口挂出了双语潮簿":"收下谢金，潮图留在船上";
+    return true;
+}
+
+bool Game::take_drift_lead() {
+    if (!port() || s.origin!=madeira || s.drift_stage!=DriftUnheard) return false;
+    s.drift_stage=DriftSearching;
+    notice="已圈出丰沙尔西南的搜索海域";
+    return true;
+}
+
+Point Game::drift_position() const {
+    const auto wind=conditions_at(DriftGround,s.day);
+    const auto downwind=Directions[wind.direction];
+    const int drift=std::clamp(wind.strength,1,4)+(s.day%3);
+    return {DriftGround.x+downwind.x*drift/16,DriftGround.y+downwind.y*drift/16};
+}
+
+bool Game::drift_in_range(int radius) const {
+    if (!s.helm || encounter() || s.drift_stage!=DriftSearching) return false;
+    const auto boat=position(), drift=drift_position();
+    const int dx=boat.x-drift.x, dy=boat.y-drift.y;
+    return dx*dx+dy*dy<=radius*radius;
+}
+
+bool Game::sees_drift() const { return drift_in_range(lookout_radius()); }
+bool Game::near_drift() const { return drift_in_range(DriftReach); }
+
+Text Game::drift_block(DriftMethod method) const {
+    if (!near_drift()) return "先掌舵靠近木匣";
+    const auto weather=conditions();
+    if (method==LaunchBoat && (weather.weather==Squall || weather.strength>=4))
+        return "风浪太大，不能放艇";
+    if (method==RigHook && !s.cargo[Timber]) return "架钩须用一件木料";
+    return {};
+}
+
+bool Game::recover_drift(DriftMethod method) {
+    if (const auto block=drift_block(method); !block.empty()) { notice=block; return false; }
+    if (method==RigHook) --s.cargo[Timber];
+    s.drift_stage=DriftRecovered;
+    paused=true;
+    notice="木匣已捞起，带去加的斯";
+    return true;
+}
+
+bool Game::wait_for_drift() {
+    if (!near_drift() || !observation_day()) return false;
+    paused=true;
+    notice=near_drift()?"原地等候一日，已耗水粮":"等候一日，木匣漂出了打捞范围";
+    return true;
+}
+
+bool Game::finish_drift(bool return_to_crew) {
+    if (!port() || s.origin!=cadiz || s.drift_stage!=DriftRecovered || !understands(Castilian))
+        return false;
+    s.drift_stage=return_to_crew?DriftReturned:DriftFiled;
+    if (return_to_crew) {
+        s.trust+=3;
+        ++s.renown;
+        notice="船工认出了名单，本港维修降价";
+    } else {
+        earn(180);
+        s.renown+=2;
+        notice="港务馆收下名册，赏金一百八十";
+    }
     return true;
 }
 
@@ -1562,7 +1636,7 @@ static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
 static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
-static_assert(SaveBytes>=WakeRecordBytes+8+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1605,6 +1679,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     // Earlier language saves left these reserved bytes at zero.
     bytes[offset++]=std::byte(s.bargain_good);
     bytes[offset++]=std::byte(s.bargain_rate);
+    bytes[offset++]=std::byte(s.drift_stage);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1720,9 +1795,10 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         s.tide_ledger=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.bargain_good=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.bargain_rate=std::to_integer<std::uint8_t>(bytes[offset++]);
+        s.drift_stage=std::to_integer<std::uint8_t>(bytes[offset++]);
         const bool pending_deal=s.bargain_good>0 && s.bargain_good<=GoodsCount;
         if (s.language_skills>>(2*LanguageCount) || (s.language_skills&3U) ||
-            s.tide_ledger>LedgerReturned || s.interpreter_port>=PortCount ||
+            s.tide_ledger>LedgerReturned || s.drift_stage>DriftFiled || s.interpreter_port>=PortCount ||
             (s.interpreter_port>=0 && (s.interpreter_port!=s.origin || s.helm || s.destination>=0)))
             return false;
         if (s.bargain_good>BargainUsed ||

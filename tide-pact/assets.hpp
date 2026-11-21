@@ -20,4 +20,5 @@ extern const unsigned char duel_fx[];
 extern const unsigned char discoveries[];
 extern const unsigned char officers[];
 extern const unsigned char voyage_icons[];
+extern const unsigned char driftwood[];
 }
