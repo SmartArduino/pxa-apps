@@ -69,7 +69,7 @@ struct FontFace {
         return {bounds[0],bounds[1],bounds[2]-bounds[0],bounds[3]-bounds[1]};
     }
 };
-inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_compact,11};
+inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_compact,12};
 
 struct Draw {
     struct TextRun {
@@ -233,10 +233,18 @@ struct Draw {
         }
         return {text.substr(0,text.size()-rest.size()),ink};
     }
-    void center(Rect box, Text text, Color color, int scale = 1) {
-        const auto run=fit(text,box.w,scale);
+    void center_run(Rect box, const TextRun& run, Color color, int scale = 1) {
         label(box.x+(box.w-run.ink.w)/2-run.ink.x,box.y+(box.h-run.ink.h)/2-run.ink.y,
               run.text,color,box.w,scale);
+    }
+    void center(Rect box, Text text, Color color, int scale = 1) {
+        center_run(box,fit(text,box.w,scale),color,scale);
+    }
+    void center_lines(Rect box, Text first, Color first_color, Text second, Color second_color) {
+        const auto top=fit(first,box.w,1), bottom=fit(second,box.w,1);
+        const int y=box.y+(box.h-top.ink.h-bottom.ink.h-1)/2;
+        center_run({box.x,y,box.w,top.ink.h},top,first_color);
+        center_run({box.x,y+top.ink.h+1,box.w,bottom.ink.h},bottom,second_color);
     }
     void center_with_icon(Rect box, Text text, Color color, Image atlas, Rect sprite, int size) {
         constexpr int gap=4;
