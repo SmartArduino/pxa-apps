@@ -11,20 +11,22 @@ upstream=json.loads((app/'tools/fonts/upstream.json').read_text())
 assert hashlib.sha256(font.read_bytes()).hexdigest()==upstream['font_sha256']
 source=''.join(p.read_text() for pattern in ('*.hpp','*.inc') for p in app.glob(pattern) if p.name!='font.hpp')+(app/'main.cpp').read_text()
 chars=sorted(set(chr(i) for i in range(32,127))|{c for c in source if ord(c)>127})
-data=[];adv=[];faces=[]
+data=[];adv=[];ink=[];faces=[]
 for size in (12,):
- face=ImageFont.truetype(str(font),size);cw,ch=size,size;stride=(cw*ch+7)//8;offset=len(data);widths=[]
+ face=ImageFont.truetype(str(font),size);cw,ch=size,size;stride=(cw*ch+7)//8;offset=len(data);widths=[];bounds=[]
  for c in chars:
   im=Image.new('1',(cw,ch));d=ImageDraw.Draw(im);d.fontmode='1';d.text((0,0),c,font=face,fill=1,anchor='la')
   pixels=list(im.getdata());packed=bytearray(stride)
   for i,v in enumerate(pixels):
    if v:packed[i//8]|=1<<(i%8)
-  data.extend(packed);widths.append(max(1,round(face.getlength(c))))
- adv.append(widths);faces.append((size,cw,ch,stride,offset))
+  data.extend(packed);widths.append(max(1,round(face.getlength(c))));bounds.append(im.getbbox() or (0,0,0,0))
+ adv.append(widths);ink.append(bounds);faces.append((size,cw,ch,stride,offset))
 header='// Generated Iron Dawn UI Pixel subset of Z Labs Pixel 12px M CN.\n// Font data: SIL OFL 1.1; see assets/third-party/ZLabs-Pixel-OFL.txt.\n#pragma once\n#include <array>\n#include <cstdint>\nnamespace iron {\n'
 header+=f'inline constexpr std::array<uint32_t,{len(chars)}> glyph_codes={{'+','.join(str(ord(c)) for c in chars)+'};\n'
 header+='struct FontStrike {int size,width,height,stride,offset;};\ninline constexpr std::array<FontStrike,1> font_strikes={{'+','.join('{'+','.join(map(str,f))+'}' for f in faces)+'}};\n'
 header+=f'inline constexpr std::array<std::array<uint8_t,{len(chars)}>,1> glyph_advances={{{{'+','.join('{{'+','.join(map(str,row))+'}}' for row in adv)+'}};\n'
+header+='struct GlyphInk {uint8_t left,top,right,bottom;};\n'
+header+=f'inline constexpr std::array<std::array<GlyphInk,{len(chars)}>,1> glyph_ink={{{{'+','.join('{{'+','.join('{'+','.join(map(str,box))+'}' for box in row)+'}}' for row in ink)+'}};\n'
 header+=f'inline constexpr std::array<uint8_t,{len(data)}> glyph_bits={{'+','.join(map(str,data))+'};\n}\n'
 (app/'font.hpp').write_text(header)
 # The app icon is imported by generate_art.py from the generated PNG master.

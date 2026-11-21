@@ -1,10 +1,10 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-iron-dawn",
-  "version": "1.7.2",
-  "release_sequence": 11,
+  "version": "1.10.0",
+  "release_sequence": 15,
   "name": "钢铁黎明",
-  "description": "原创像素即时战略。六章剧情、36至64格战场、车队护送、节点争夺、基地建设与触屏框选。",
+  "description": "原创像素即时战略。北境联军与灰塔守备军拥有不同装甲、空军和建筑，包含八章战役与双阵营无尽守备。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"

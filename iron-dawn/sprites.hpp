@@ -22,12 +22,28 @@ struct Sprites {
   if(id>=art::frames.size()||area.w<=0||area.h<=0)return;auto& f=art::frames[id];float scale=std::min(float(area.w)/std::max(1u,unsigned(f.bw)),float(area.h)/std::max(1u,unsigned(f.bh)));
   int x=area.x+(area.w-int(f.bw*scale))/2-int(f.bx*scale),y=area.y+(area.h-int(f.bh*scale))/2-int(f.by*scale);auto old=r.clip;int left=std::max(old.x,area.x),top=std::max(old.y,area.y),right=std::min(old.x+old.w,area.x+area.w),bottom=std::min(old.y+old.h,area.y+area.h);r.clip={left,top,std::max(0,right-left),std::max(0,bottom-top)};blit(r,id,x,y,scale,scale,variant);r.clip=old;
  }
- static unsigned building_frame(int kind){
+ static unsigned building_frame(int kind,Faction faction=Faction::northern,int landmark=-1){
+  if(landmark>=2)return art::white_island_landmarks_first+unsigned(landmark-2);
+  if(landmark>=0)return art::harbor_landmarks_first+unsigned(landmark);
+  if(faction==Faction::gray_tower){
+   if(kind>=hq&&kind<=turret)return art::gray_tower_buildings_first+kind-hq;
+   if(kind>=shipyard&&kind<=aa_tower)return art::gray_tower_buildings_first+6+kind-shipyard;
+  }
   if(kind>=shipyard&&kind<=aa_tower)return art::combined_structures_first+kind-shipyard;
   return art::buildings_first+std::clamp(kind-int(hq),0,7);
  }
- static unsigned unit_frame(int kind,float angle,unsigned pose=0){
+ static unsigned unit_frame(int kind,float angle,unsigned pose=0,Faction faction=Faction::northern){
   unsigned facing=int(std::lround(angle*4/3.14159265f))&7;
+  if(faction==Faction::gray_tower){
+   switch(kind){
+    case rifle:return (pose?art::gray_tower_walk_first:art::gray_tower_infantry_first)+facing;
+    case rocket:return art::gray_tower_rocket_first+facing;
+    case tank:return art::gray_tower_tank_first+facing;
+    case artillery:return art::gray_tower_artillery_first+facing;
+    case rotorcraft:return art::gray_tower_air_first+facing;
+    case commander:return art::gray_tower_infantry_first+facing;
+   }
+  }
   if(kind==patrol_boat)return art::patrol_boats_first+facing;
   if(kind==landing_craft)return art::landing_craft_first+facing;
   if(kind==rotorcraft)return art::rotorcraft_first+facing;

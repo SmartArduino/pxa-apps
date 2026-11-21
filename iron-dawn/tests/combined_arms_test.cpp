@@ -28,9 +28,9 @@ int main(){
   int armor=w.add(tank,0,{10,13}),sky=w.add(rotorcraft,1,{13,13}),aa=w.add(aa_tower,0,{10,16});
   w.reveal();w.power_update();w.e[sky].cool=999;
   w.fire(armor,sky);assert(!w.shots[0].alive);
-  advance(w,1);assert(w.e[sky].hp==specs[rotorcraft].hp);
+  advance(w,1);assert(w.e[sky].hp==w.spec(w.e[sky]).hp);
   w.add(power,0,{4,7});w.power_update();assert(w.power_net>0);
-  advance(w,2);assert(w.e[sky].hp<specs[rotorcraft].hp&&w.count(rotorcraft,1));
+  advance(w,2);assert(w.e[sky].hp<w.spec(w.e[sky]).hp&&w.count(rotorcraft,1));
  }
  {
   World w;w.init(1);int dock=w.nearest({26,27},shipyard,0);

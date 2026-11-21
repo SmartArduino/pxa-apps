@@ -23,6 +23,20 @@
       "reference": "art/generated/story-portraits-v1.png",
       "sha256": "eb31ba22380ea33b3b3cde28d2b96f90f252d0648cd9e7044d10c45acabc4109",
       "reference_sha256": "45470e79144f8f824b6cbfffd7672d61404b40e62b6ed08ce2740f1503cda60a"
+    },
+    "harbor_landmarks": {
+      "file": "art/generated/harbor-landmarks-v1.png",
+      "prompt": "One transparent PNG sprite atlas, 2 equal columns x 1 row with generous transparent padding, two different civilian coastal control structures for the original Iron Dawn retro isometric strategy game. In left cell, a squat round pale concrete port beacon with a luminous brass yellow marine lamp in an open cage up top, sparse teal panels, dark weathered seawall footing. In right cell, a wider rectangular graphite relay hut with twin slender antenna masts, one cyan light in a small window and rust-orange trim, slate concrete deck footing. Each fully isolated, centered, same scale and ground baseline, faces front-right and front-left with roof visible at shallow 2:1 isometric angle. Deliberate pixel-finished edges and restrained shading, clearly readable silhouette when downscaled to 64 pixels, muted 1990s industrial game art, small contrasts. No lettering, no image split stroke, no people, no weapons, no debris, no exterior shadows, no ground plane beyond the structure's tight footing. Transparent RGBA background, never simulated transparency.",
+      "sha256": "de7307d2704af8aa08d1eb361a179d262c7dc100dd74d93ca8236826e580a9e7"
+    },
+    "white_island_landmarks": {
+      "file": "art/generated/white-island-landmarks-v2.png",
+      "prompt": "Use case: stylized-concept. Make a production sprite atlas for the original Iron Dawn pixel-art RTS. The input sheet is a style reference only. Draw exactly two new separate landmarks in an equal-width two-column contact sheet, one sprite centered in each half, generous empty padding and real transparent alpha. Left: a low stone island electrical substation, a fenced-in pair of compact gray transformers, ceramic insulators, warm warning lamp and small dark teal maintenance shed, easy to recognize at 72 pixels. Right: a tall whitewashed tapered masonry lighthouse with dark teal metal balcony and a dark INACTIVE octagonal glass lantern, alternating subtle darker stone rows and a short front stair. The lighthouse looks taller than the low beacon in reference and its lamp is off. No projected light or floor. Match the reference isometric southwest-facing camera, weathered pale stone, muted olive and slate industrial materials, tight hand-pixelled clusters, hard pixel edges, warm upper-left lighting and restrained shadows. Each object's base is fully visible for world placement. No labels, grid, text, extra props, surface, spill or shadows outside either silhouette.",
+      "reference": "art/generated/harbor-landmarks-v1.png",
+      "source_sha256": "af02e862c1ddc57bab01648902fa5e4bb97e8fa67108073d5633410fba887e49",
+      "cleanup": "Use case: background-extraction. The input is the exact two-sprite masters for Iron Dawn. Keep both buildings, their same perception, proportions, pixels, camera and two-column arrangement. Remove every single pale white, light gray, smoke-like or shadow pixel outside each structure's true hard silhouette. In particular there must be no white rim or gray halo under the pedestal, between rails or around the tower. Replace all pixels outside the structure with true zero-alpha transparent pixels. Every visible pixel must belong to a solid surface of the original building. Keep the colors of the actual stone, walls, dark lantern, window and rails. Production isometric pixel-art cutouts for downsampling, clean alpha, no words, no platform added, no shadows or haze.",
+      "sha256": "2934c1310aca6266a62fb5f472655962a0f41ee9b58bc57c2ef63b7a3d598163",
+      "reference_sha256": "de7307d2704af8aa08d1eb361a179d262c7dc100dd74d93ca8236826e580a9e7"
     }
   }
 }

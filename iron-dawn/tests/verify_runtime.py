@@ -8,6 +8,7 @@ verify --store-screenshots workflow for marketplace uploads.
 from pathlib import Path
 import argparse,concurrent.futures,json,math,os,re,socket,struct,subprocess,time,traceback
 from PIL import Image
+from runtime_geometry import column_center, compact_layout, pause_save_center, wide_layout
 p=argparse.ArgumentParser();p.add_argument('--simulator',type=Path,required=True);p.add_argument('--package',type=Path,required=True);p.add_argument('--publisher-key',type=Path,required=True);p.add_argument('--output',type=Path,required=True);p.add_argument('--profiles',nargs='+');p.add_argument('--density-dpi',type=int);p.add_argument('--save-layout',type=Path,required=True);args=p.parse_args();schema=json.loads(args.save_layout.read_text())
 for name in ('simulator','package','publisher_key','output'):setattr(args,name,getattr(args,name).resolve())
 args.output.mkdir(parents=True,exist_ok=False);profiles={'pai-touch':(296,240),'doit-gamekit-2':(320,240),'esp-mosaico':(480,480),'espp4-a':(480,854),'esp32s31-korvo-1':(800,480),'desktop-1024':(1024,600),'tablet':(1280,800),'desktop-hd':(1920,1080)}
@@ -60,12 +61,19 @@ def run(item):
  try:
   with log.open('w') as stream:
    launch();offset=(w-480)//2;wide='wide=1' in log.read_text();readable=readable and not wide
-   glyph=12*max(1,int(12*density/160+6)//12);line=max(20,math.ceil((glyph+4 if readable else 14)*h/ph));picture=max(30,math.ceil((32*density/160 if readable else 20)*h/ph));row=max(28,line+8 if readable else 28,min(int(h*.18),math.ceil(30*density/160*h/ph)));card=12+picture+line*2;header=line+8;bottom=h-row-10;panel=bottom-header-12-card;tactics=bottom-header-12-row*2-6;cx=w/2;top=max(50,2*line+8) if readable else 50;mid=(top+bottom)/2
+   layout=compact_layout(w,h,ph,density)
+   line,row,card,header=layout.line,layout.row,layout.card,layout.header
+   bottom,panel,tactics,top=layout.top,layout.production,layout.tactics,layout.status
+   cx=w/2;mid=(top+bottom)/2
    menu_row=max(row,12*max(1,int(15*density/160+6)//12)+16) if readable else 32
    home_y=h-2*menu_row-26 if readable else max(214,h-128)
-   pause_save=(h-(48+24+4*menu_row+80))/2+48+24+36+3*(menu_row+8)+menu_row/2 if readable else (h-248)/2+216
+   pause_save=pause_save_center(w,h,pw,ph,menu_row,density if readable else 160)
    if wide:
-    match=re.findall(r'wide=1 world=(\d+) top=(\d+) bottom=(\d+) scale=(\d+)',log.read_text());world_w,top,bottom,scale=map(int,match[-1]);dp=density/160/scale;row=max(24,int(__import__('math').ceil(40*dp)),24);side=w-world_w;map_budget=h-top-2*row-56-3*36;map_size=max(32,min(112,min(max(h//6,round(96*dp)),map_budget)));tabs=top+map_size+20;grid=tabs+row+8;footer=h-row-8;card_height=min((footer-8-grid-12)//3,32+max(20,min(40,round(32*dp)))+12);cw=(side-22)//2;cx=world_w/2;mid=(top+bottom)/2
+    match=re.findall(r'wide=1 world=(\d+) top=(\d+) bottom=(\d+) scale=(\d+)',log.read_text())
+    world_w,top,bottom,scale=map(int,match[-1]);dp=density/160/scale
+    layout=wide_layout(w,h,world_w,top,bottom,dp)
+    row,side,tabs,grid,footer,card_height=layout.row,layout.side,layout.tabs,layout.grid,layout.footer,layout.card
+    cw=(side-22)//2;cx=world_w/2;mid=(top+bottom)/2
     def dock(i):
      if i in [0,1]:tap(world_w+8+i*((side-20)//2+4)+(side-20)//4,tabs+row/2)
     def production(i):tap(world_w+8+(i%2)*(cw+6)+cw/2,grid+(i//2)*(card_height+6)+card_height/2)
@@ -73,14 +81,22 @@ def run(item):
      if i==0:tap(8+(world_w-46)//6+6+(world_w-46)//12,bottom+5+row/2)
      elif i==3:tap(world_w+8+(side-20)//4,footer+row/2)
    else:
-    def dock(i):tap(offset+52+94*i,bottom+5+row/2)
-    def production(i):tap(offset+52+94*i,panel+header+4+card/2)
-    def tactic(i):tap(offset+63+118*(i%4),tactics+header+4+(i//4)*(row+6)+row/2)
+    def dock(i):tap(column_center(w,i,5),bottom+5+row/2)
+    def production(i):tap(column_center(w,i,5),panel+header+4+card/2)
+    def tactic(i):tap(column_center(w,i%4,4),tactics+header+4+(i//4)*(layout.tactic_row+6)+layout.tactic_row/2)
    shot('landscape-home')
    if readable:
     tap(offset+75,home_y+menu_row+10+menu_row/2);shot('campaign-archive');tap(w-75,104+32);shot('campaign-briefing');command('KEY BACK');time.sleep(.2)
     tap(offset+295,home_y+menu_row+10+menu_row/2);shot('manual-first');tap(w-90,h-menu_row/2-12);shot('manual-next');tap(90,h-menu_row/2-12);shot('manual-previous');command('KEY BACK');time.sleep(.2)
-   tap(offset+185,home_y+menu_row+10+menu_row/2 if readable else home_y+64);shot('endless-briefing')
+   tap(offset+185,home_y+menu_row+10+menu_row/2 if readable else home_y+64)
+   deadline=time.monotonic()+4
+   while 'screen=9' not in log.read_text() and time.monotonic()<deadline:
+    time.sleep(.06)
+   assert 'screen=9' in log.read_text()
+   time.sleep(.3)
+   shot('faction-selection')
+   tap(w/3 if w>=720 else w/2,h*.37)
+   shot('endless-briefing')
    for briefing_page in range(6):
     tap(180,h-44)
     if re.search(r'Iron Dawn state .*screen=3',log.read_text()):break

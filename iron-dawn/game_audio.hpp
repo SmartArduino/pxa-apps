@@ -11,8 +11,17 @@ struct GameAudio:motion::Sounds {
  uint64_t milliseconds=0,music_instance=0,retry_music=0;int music_track=-1;float music_gain=-40;
  bool music_ready=false,music_paused=false,opening=false;unsigned accepted_clips=0;
  UnitVoice voices;std::optional<pxa::Asset> voice_clip;int voice_clip_id=-1;bool voice_loading=false,voice_battle=false;uint64_t next_heavy=0;unsigned last_heavy=0;
- void respond(const World& w,UnitCue cue,int preferred=-1){if(!audible())return;int kind=UnitVoice::speaker(w,preferred,voices.last_kind,cue==UnitCue::attack||cue==UnitCue::stop);voices.offer(kind,cue,milliseconds);}
- void unit_ready(int kind){if(audible())voices.offer(kind,UnitCue::ready,milliseconds);}
+ void respond(const World& w,UnitCue cue,int preferred=-1){
+  if(!audible())return;
+  if(w.faction()==Faction::gray_tower){effect(1);return;}
+  int kind=UnitVoice::speaker(w,preferred,voices.last_kind,cue==UnitCue::attack||cue==UnitCue::stop);
+  voices.offer(kind,cue,milliseconds);
+ }
+ void unit_ready(int kind,Faction faction){
+  if(!audible())return;
+  if(faction==Faction::gray_tower)effect(8);
+  else voices.offer(kind,UnitCue::ready,milliseconds);
+ }
  pxa::Task<void> load_voice(int id,unsigned sequence,uint64_t expires){
   // Asset I/O yields to gameplay. Only the last clip retains an application
   // handle; direct S16 assets need no decoder or speech model on the device.

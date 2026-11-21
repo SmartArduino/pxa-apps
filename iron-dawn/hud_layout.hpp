@@ -2,6 +2,10 @@
 #pragma once
 #include "raster.hpp"
 namespace iron {
+inline Rect page_column(int width,int height,int gutter=24,int maximum=760){
+ int breadth=std::min(maximum,width-2*gutter);
+ return {(width-breadth)/2,0,breadth,height};
+}
 struct HudLayout {
  int top,card_height,icon_height,commands;
  explicit HudLayout(int height):top(height-(height<400?138:166)),card_height(height<400?80:108),icon_height(height<400?31:59),commands(top+card_height+14){}
@@ -33,11 +37,22 @@ struct DisplayPlan {
 struct LargeHudLayout {
  int width,height,row,line,side,world_width,top,bottom,map_size,tabs,grid,card_height,footer;
  LargeHudLayout(int w,int h,float dp,float font=1):width(w),height(h){
-  line=12*font_style(std::lround(12*dp*font),false).scale+4;row=std::max({24,int(std::ceil(40*dp)),line+8});side=std::clamp(std::max(w/4,int(std::lround(224*dp))),168,std::min(288,w/3+12));world_width=w-side;top=std::max(36,row+8);bottom=h-row-10;
-  int map_budget=h-top-2*row-56-3*(2*line+4);map_size=std::clamp(std::min(std::max(h/6,int(std::lround(96*dp))),map_budget),32,112);tabs=top+map_size+20;grid=tabs+row+8;footer=h-row-8;card_height=std::min((footer-8-grid-12)/3,2*line+std::clamp(int(std::lround(32*dp)),20,40)+12);
+  line=12*font_style(std::lround(12*dp*font),false).scale+4;
+  row=std::max({24,int(std::ceil(40*dp)),line+8});
+  side=std::clamp(std::max(w/4,int(std::lround(224*dp))),168,std::min(336,w/3+12));
+  world_width=w-side;top=std::max(36,row+8);bottom=h-row-10;footer=h-row-8;
+  int map_budget=h-top-2*row-56-3*(2*line+4);
+  int map_width=side-std::max(68,3*(line-4)+12)-32;
+  int preferred=std::max(h/5,int(std::lround(96*dp)));
+  map_size=std::clamp(std::min({preferred,map_budget,map_width}),32,160);
+  tabs=top+std::max(map_size,row)+20;grid=tabs+row+8;
+  int preferred_card=2*line+std::clamp(h/14,24,56)+12;
+  card_height=std::min((footer-8-grid-12)/3,preferred_card);
  }
  Rect sidebar()const{return {world_width,top,side,height-top};}
  Rect map()const{return {world_width+12,top+12,map_size,map_size};}
+ Rect selection_info()const{int x=map().x+map_size+10;return {x,map().y,width-x-10,tabs-map().y-8};}
+ Rect squad_button()const{auto info=selection_info();return {info.x,info.y+info.h-row,info.w,row};}
  Rect tab(int n)const{return {world_width+8+n*((side-20)/2+4),tabs,(side-20)/2,row};}
  Rect card(int n)const{return {world_width+8+(n%2)*((side-22)/2+6),grid+(n/2)*(card_height+6),(side-22)/2,card_height};}
  Rect command(int n)const{int gap=6,cw=(world_width-16-gap*5)/6;return {8+n*(cw+gap),bottom+5,cw,row};}
@@ -53,22 +68,33 @@ struct DockState {
 // Small displays keep one touchable command row. Drawers overlay the world;
 // they never change its projection or enter the save format.
 struct CompactHudLayout {
- int height,width,offset,row,line,picture,card_height,header,top,status_height;
+ int height,width,row,tactic_row,line,picture,card_height,header,top,status_height;
  static bool applies(int physical_width,int physical_height){return physical_width<400||physical_height<=480||physical_width>=physical_height;}
- explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width),offset((width-480)/2){
+ explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width){
   bool readable=density>=1.25f;int glyph=12*font_style(std::lround(12*density*font),false).scale;
-  line=std::max(20,int(std::ceil((readable?glyph+4:14*font)*canvas_height/physical_height)));
-  row=std::max({28,readable?line+8:28,std::min(int(canvas_height*.18f),int(std::ceil(30*density*canvas_height/physical_height)))});
-  picture=std::max(30,int(std::ceil((readable?32*density:20)*canvas_height/physical_height)));
-  card_height=12+picture+line*2;header=line+8;top=height-row-10;status_height=readable?std::max(50,2*line+8):50;
+  auto logical=[&](float pixels){return int(std::ceil(pixels*height/std::max(1,physical_height)));};
+  line=std::clamp(logical(readable?glyph+4:14*font),20,std::max(20,height/11));
+  row=std::min(std::max(line+8,logical(std::max(36.f,30*density))),height/5);
+  header=line+8;top=height-row-10;
+  status_height=readable?std::clamp(2*line+8,50,height/4):50;
+  int drawer_budget=top-status_height-18;
+  tactic_row=std::clamp(logical(std::max(32.f,24*density)),24,std::max(24,std::min(row,(drawer_budget-header-18)/2)));
+  picture=std::clamp(logical(readable?26*density:22.f),24,std::max(24,drawer_budget-header-24-line*2));
+  card_height=12+picture+line*2;
  }
- Rect command(int index)const{return {offset+8+94*index,top+5,88,row};}
- Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+((panel==DockPanel::tactics||panel==DockPanel::squads)?row*2+6:card_height);return {0,top-size,width,size};}
- Rect card(int index,DockPanel panel)const{return {offset+8+94*index,overlay(panel).y+header+4,88,card_height};}
+ Rect column(int index,int count,int y,int h)const{
+  int space=width-16+6,left=8+space*index/count,right=8+space*(index+1)/count-6;
+  return {left,y,right-left,h};
+ }
+ Rect command(int index)const{return column(index,5,top+5,row);}
+ Rect overlay(DockPanel panel)const{int size=panel==DockPanel::closed?0:header+12+((panel==DockPanel::tactics||panel==DockPanel::squads)?tactic_row*2+6:card_height);return {0,top-size,width,size};}
+ Rect card(int index,DockPanel panel)const{return column(index,5,overlay(panel).y+header+4,card_height);}
  Rect image(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+4,a.y+4,a.w-8,picture};}
  Rect name(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+2,a.y+picture+6,a.w-4,line};}
  Rect price(int index,DockPanel panel)const{auto a=name(index,panel);return {a.x,a.y+line,a.w,line};}
  Rect progress(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+4,a.y+a.h-4,a.w-8,2};}
- Rect tactic(int index,DockPanel panel=DockPanel::tactics)const{return {offset+8+118*(index%4),overlay(panel).y+header+4+(index/4)*(row+6),110,row};}
+ Rect tactic(int index,DockPanel panel=DockPanel::tactics)const{return column(index%4,4,overlay(panel).y+header+4+(index/4)*(tactic_row+6),tactic_row);}
+ Rect map()const{int size=std::clamp(std::min(width,height)/5,80,112);return {width-size-10,status_height+8,size,size};}
+ Rect selection()const{auto m=map();return {m.x,m.y+m.h+8,m.w,std::min(row,40)};}
 };
 }

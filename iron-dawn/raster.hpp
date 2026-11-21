@@ -11,19 +11,23 @@ constexpr uint16_t rgb(int r,int g,int b){return ((r&248)<<8)|((g&252)<<3)|(b>>3
 constexpr uint16_t navy=rgb(12,23,29),panel=rgb(22,37,43),edge=rgb(56,77,78),cream=rgb(224,229,207),muted=rgb(132,156,151),cyan=rgb(109,221,202),gold=rgb(236,182,87),red=rgb(235,102,86);
 inline uint16_t mix(uint16_t a,uint16_t b,int f){int r=(((a>>11)&31)*(16-f)+((b>>11)&31)*f)/16,g=(((a>>5)&63)*(16-f)+((b>>5)&63)*f)/16,bb=((a&31)*(16-f)+(b&31)*f)/16;return (r<<11)|(g<<5)|bb;}
 struct Rect {int x,y,w,h;bool has(int xx,int yy)const{return xx>=x&&yy>=y&&xx<x+w&&yy<y+h;}};
+inline Rect intersect(Rect a,Rect b){
+ int x=std::max(a.x,b.x),y=std::max(a.y,b.y);
+ return {x,y,std::max(0,std::min(a.x+a.w,b.x+b.w)-x),std::max(0,std::min(a.y+a.h,b.y+b.h)-y)};
+}
 struct Pt {float x,y;};
 // Native strikes are baked once; glyphs are always placed on integer pixels.
 struct FontStyle {int face=0,scale=1;};
 inline bool ascii_text(std::string_view s){for(unsigned char c:s)if(c>=128)return false;return true;}
 inline FontStyle font_style(int desired,bool){return {0,std::clamp((desired+6)/12,1,8)};}
 inline int pixel_scale(int value,int numerator,int denominator){int64_t p=int64_t(value)*numerator;return int(p>=0?(p+denominator/2)/denominator:-((-p+denominator/2)/denominator));}
-struct TextCommand {int x,y,size,align;uint16_t color;Rect clip;uint16_t offset,length;};
+struct TextCommand {int x,y,size,align;uint16_t color;Rect clip;uint16_t offset,length;int box_width,box_height;};
 struct NativeText {
  int width=480,height=320,canvas_width=480,canvas_height=320,minimum_scale=1;float text_scale=1;unsigned count=0,bytes=0;bool overflow=false;
  std::array<TextCommand,128> commands{};std::array<char,8192> strings{};
  void reset(int w,int h,int cw,int ch,float scale=1,int minimum=1){width=w;height=h;canvas_width=cw;canvas_height=ch;text_scale=scale;minimum_scale=minimum;count=bytes=0;overflow=false;}
  FontStyle style(std::string_view s,int size)const{auto f=font_style(std::lround(pixel_scale(size,width,canvas_width)*text_scale),ascii_text(s));f.scale=std::max(f.scale,minimum_scale);return f;}
- bool push(int x,int y,std::string_view s,uint16_t c,int size,int align,Rect clip){if(count==commands.size()||bytes+s.size()>strings.size()){overflow=true;return false;}std::copy(s.begin(),s.end(),strings.begin()+bytes);commands[count++]={x,y,size,align,c,clip,uint16_t(bytes),uint16_t(s.size())};bytes+=s.size();return true;}
+ bool push(int x,int y,std::string_view s,uint16_t c,int size,int align,Rect clip,int box_width=0,int box_height=0){if(count==commands.size()||bytes+s.size()>strings.size()){overflow=true;return false;}std::copy(s.begin(),s.end(),strings.begin()+bytes);commands[count++]={x,y,size,align,c,clip,uint16_t(bytes),uint16_t(s.size()),box_width,box_height};bytes+=s.size();return true;}
 };
 struct Raster {
  uint16_t* pixels;int w,h,stride;Rect clip;NativeText* native_text=nullptr;
@@ -43,7 +47,27 @@ struct Raster {
  static uint32_t next(std::string_view& s){if(s.empty())return 0;uint8_t b=s[0];int n=b<128?1:b<224?2:b<240?3:4;if(int(s.size())<n){s={};return '?';}uint32_t c=b&(n==1?127:n==2?31:n==3?15:7);for(int j=1;j<n;++j)c=(c<<6)|(uint8_t(s[j])&63);s.remove_prefix(n);return c;}
  static int glyph(uint32_t c){auto i=std::lower_bound(glyph_codes.begin(),glyph_codes.end(),c);return i==glyph_codes.end()||*i!=c?int(std::lower_bound(glyph_codes.begin(),glyph_codes.end(),uint32_t('?'))-glyph_codes.begin()):int(i-glyph_codes.begin());}
  static int text_width(std::string_view s,FontStyle style){int width=0;while(!s.empty())width+=glyph_advances[style.face][glyph(next(s))]*style.scale;return width;}
+ static Rect ink_bounds(std::string_view s,int face){
+  int pen=0,left=0,top=0,right=0,bottom=0;
+  bool first=true;
+  while(!s.empty()){
+   int g=glyph(next(s));auto b=glyph_ink[face][g];
+   if(b.right>b.left&&b.bottom>b.top){
+    left=first?pen+b.left:std::min(left,pen+b.left);
+    top=first?b.top:std::min(top,int(b.top));
+    right=std::max(right,pen+b.right);bottom=std::max(bottom,int(b.bottom));
+    first=false;
+   }
+   pen+=glyph_advances[face][g];
+  }
+  return {left,top,right-left,bottom-top};
+ }
  int measure(std::string_view s,int size=16)const{auto style=native_text?native_text->style(s,size):font_style(size,ascii_text(s));int width=text_width(s,style);return native_text?(width*native_text->canvas_width+native_text->width-1)/native_text->width:width;}
+ int ink_width(std::string_view s,int size=16)const{
+  auto style=native_text?native_text->style(s,size):font_style(size,ascii_text(s));
+  int width=ink_bounds(s,style.face).w*style.scale;
+  return native_text?(width*native_text->canvas_width+native_text->width-1)/native_text->width:width;
+ }
  int text_height(std::string_view s,int size)const{auto style=native_text?native_text->style(s,size):font_style(size,ascii_text(s));int height=font_strikes[style.face].height*style.scale;return native_text?(height*native_text->canvas_height+native_text->height-1)/native_text->height:height;}
  void bitmap_text(int x,int y,std::string_view s,uint16_t color,FontStyle style,int align=0){
   if(align)x-=text_width(s,style)/(align==1?2:1);auto face=font_strikes[style.face];
@@ -53,15 +77,60 @@ struct Raster {
   }
  }
  [[gnu::noinline]] void text(int x,int y,std::string_view s,uint16_t color=cream,int size=16,int align=0){if(native_text&&native_text->push(x,y,s,color,size,align,clip))return;bitmap_text(x,y,s,color,font_style(size,ascii_text(s)),align);}
+ [[gnu::noinline]] void bitmap_label(Rect area,std::string_view s,uint16_t color,FontStyle style,int align,int minimum=1){
+  Rect bounds=ink_bounds(s,style.face);
+  if(bounds.w<=0||bounds.h<=0||area.w<=0||area.h<bounds.h)return;
+  // Fit and center the ink on the destination pixel grid. Font cells can have
+  // uneven blank edges, and the logical canvas can scale by a fractional ratio.
+  int height_scale=std::min(style.scale,area.h/bounds.h);
+  style.scale=std::clamp(area.w/bounds.w,std::min(minimum,height_scale),height_scale);
+  std::array<char,512> fitted;
+  if(bounds.w*style.scale>area.w){
+   constexpr std::string_view dots="...";
+   auto suffix=ink_bounds(dots,style.face);
+   int pen=0,left=0,right=0;
+   size_t length=0;
+   auto scan=s;
+   while(!scan.empty()){
+    int g=glyph(next(scan));size_t end=s.size()-scan.size();
+    if(end+dots.size()>fitted.size())break;
+    auto b=glyph_ink[style.face][g];
+    if(b.right>b.left){if(!right)left=pen+b.left;right=std::max(right,pen+b.right);}
+    pen+=glyph_advances[style.face][g];
+    int width=std::max(right,pen+suffix.x+suffix.w)-(right?left:pen+suffix.x);
+    if(width*style.scale>area.w)break;
+    length=end;
+   }
+   std::copy_n(s.begin(),length,fitted.begin());
+   std::copy(dots.begin(),dots.end(),fitted.begin()+length);
+   s={fitted.data(),length+dots.size()};bounds=ink_bounds(s,style.face);
+   if(bounds.w*style.scale>area.w||bounds.h*style.scale>area.h)return;
+  }
+  int spare=area.w-bounds.w*style.scale;
+  int x=area.x+(align==1?spare/2:align==2?spare:0)-bounds.x*style.scale;
+  int y=area.y+(area.h-bounds.h*style.scale)/2-bounds.y*style.scale;
+  Rect saved=clip;clip=intersect(clip,area);
+  bitmap_text(x,y,s,color,style);
+  clip=saved;
+ }
  void label(Rect area,std::string_view s,uint16_t color=cream,int size=16,int align=1){
-  if(area.w<=0||area.h<=0)return;int width=measure(s,size),height=text_height(s,size);if(width>area.w||height>area.h)size=std::max(6,std::min(size*area.w/std::max(1,width),size*area.h/std::max(1,height)));std::array<char,512> fitted{};
-  if(measure(s,size)>area.w){auto prefix=s;int dots=measure("...",size);while(!prefix.empty()&&(prefix.size()+3>fitted.size()||measure(prefix,size)+dots>area.w)){size_t n=prefix.size()-1;while(n&&(uint8_t(prefix[n])&0xc0)==0x80)--n;prefix=prefix.substr(0,n);}if(dots>area.w)return;std::copy(prefix.begin(),prefix.end(),fitted.begin());std::copy_n("...",3,fitted.begin()+prefix.size());s={fitted.data(),prefix.size()+3};}
-  text(align==1?area.x+area.w/2:align==2?area.x+area.w:area.x,area.y+(area.h-text_height(s,size))/2,s,color,size,align);
+  if(area.w<=0||area.h<=0||s.empty())return;
+  if(native_text&&native_text->push(area.x,area.y,s,color,size,align,clip,area.w,area.h))return;
+  bitmap_label(area,s,color,font_style(size,ascii_text(s)),align);
  }
  [[gnu::noinline]] void shade(Rect r,uint16_t color,int opacity){for(int y=std::max(clip.y,r.y);y<std::min(clip.y+clip.h,r.y+r.h);++y)blend_span(r.x,y,r.w,color,opacity);}
 };
 inline void draw_native_text(const NativeText& queue,Raster& output){
- for(unsigned i=0;i<queue.count;++i){auto& c=queue.commands[i];auto sx=[&](int v){return pixel_scale(v,queue.width,queue.canvas_width);};auto sy=[&](int v){return pixel_scale(v,queue.height,queue.canvas_height);};int left=std::clamp(sx(c.clip.x),0,output.w),right=std::clamp(sx(c.clip.x+c.clip.w),0,output.w),top=std::clamp(sy(c.clip.y),0,output.h),bottom=std::clamp(sy(c.clip.y+c.clip.h),0,output.h);output.clip={left,top,std::max(0,right-left),std::max(0,bottom-top)};std::string_view text(queue.strings.data()+c.offset,c.length);output.bitmap_text(sx(c.x),sy(c.y),text,c.color,queue.style(text,c.size),c.align);
+ auto sx=[&](int v){return pixel_scale(v,queue.width,queue.canvas_width);};
+ auto sy=[&](int v){return pixel_scale(v,queue.height,queue.canvas_height);};
+ auto map=[&](Rect a){int x=sx(a.x),y=sy(a.y);return Rect{x,y,sx(a.x+a.w)-x,sy(a.y+a.h)-y};};
+ for(unsigned i=0;i<queue.count;++i){
+  const auto& c=queue.commands[i];
+  output.clip=intersect(map(c.clip),{0,0,output.w,output.h});
+  std::string_view text(queue.strings.data()+c.offset,c.length);
+  auto style=queue.style(text,c.size);
+  if(c.box_width>0)output.bitmap_label(map({c.x,c.y,c.box_width,c.box_height}),text,c.color,style,c.align,queue.minimum_scale);
+  else output.bitmap_text(sx(c.x),sy(c.y),text,c.color,style,c.align);
  }
  output.clip={0,0,output.w,output.h};
 }

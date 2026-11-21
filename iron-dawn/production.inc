@@ -19,8 +19,8 @@
   if(!unit_kind(k))return false;
   if(producer>=0&&!can_train_at(k,producer)){say("请先选中对应的生产建筑");return false;}
   if(auto reason=blocked(k)){say(reason);return false;}
-  credits-=specs[k].cost;
-  jobs[job_count++]={uint8_t(k),uint8_t(producer+1),specs[k].build,specs[k].build};
+  credits-=spec(k).cost;
+  jobs[job_count++]={uint8_t(k),uint8_t(producer+1),spec(k).build,spec(k).build};
   say("生产指令已确认");emit_sound(1);return true;
  }
 
@@ -31,14 +31,14 @@
 
  void cancel_job(){
   if(!job_count)return;
-  credits+=specs[jobs[job_count-1].kind].cost;
+  credits+=spec(jobs[job_count-1].kind).cost;
   remove_job(job_count-1);
   say("已取消末项，资金退回");
  }
 
  void refund_destroyed_facility(int id){
   for(int i=job_count-1;i>=0;--i)if(jobs[i].producer==id+1){
-   credits+=specs[jobs[i].kind].cost;
+   credits+=spec(jobs[i].kind).cost;
    remove_job(i);
   }
  }
@@ -55,7 +55,7 @@
   int k=job.kind;
   int home=job.producer?job.producer-1:nearest(base_position(),producer_for(k),0);
   if(job.producer&&!can_train_at(k,home)){
-   credits+=specs[k].cost;remove_job(0);say("生产设施已损毁，资金已退回");return;
+   credits+=spec(k).cost;remove_job(0);say("生产设施已损毁，资金已退回");return;
   }
   job.left=std::max(0.f,job.left-dt*(power_net<0?.45f:1.f));
   if(job.left>0)return;
@@ -73,7 +73,7 @@
     remove_job(0);return;
    }
   }
-  credits+=specs[k].cost;remove_job(0);say("生产无法完成，资金已退回");
+  credits+=spec(k).cost;remove_job(0);say("生产无法完成，资金已退回");
  }
 
  bool build_active() const {return construction_kind(construction.kind);}
@@ -90,14 +90,14 @@
    if(k==helipad)return "需要装甲工厂";
    return "需要步兵营";
   }
-  if(credits<specs[k].cost)return "矿石不足，等待采矿车返航";
+  if(credits<spec(k).cost)return "矿石不足，等待采矿车返航";
   return nullptr;
  }
 
  bool start_construction(int k){
   if(auto reason=build_blocked(k)){say(reason);return false;}
-  credits-=specs[k].cost;
-  construction={uint8_t(k),0,specs[k].build,specs[k].build};
+  credits-=spec(k).cost;
+  construction={uint8_t(k),0,spec(k).build,spec(k).build};
   say("施工开始，完工后选择部署地点");emit_sound(10);return true;
  }
 
@@ -109,7 +109,7 @@
 
  bool cancel_construction(){
   if(!build_active())return false;
-  credits+=specs[construction.kind].cost;construction={};
+  credits+=spec(construction.kind).cost;construction={};
   say("已撤回建筑，资金退回");return true;
  }
 

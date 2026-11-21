@@ -8,6 +8,7 @@ controlled QA states; captures belong under local/artifacts, never store uploads
 from pathlib import Path
 import argparse,json,os,re,socket,struct,subprocess,time,traceback
 import numpy as np
+from runtime_geometry import column_center, compact_layout, pause_save_center
 
 p=argparse.ArgumentParser()
 for name in ('simulator','package','publisher-key','fixture','save-layout','output'):p.add_argument('--'+name,type=Path,required=True)
@@ -45,8 +46,8 @@ class Host:
    else:subprocess.run([str(args.fixture),mode,str(file)],check=True)
   self.launch();assert 'Iron Dawn restored' in self.log.read_text()
  def resume(self):self.tap((self.w-480)//2+365,max(214,self.h-128)+20)
- def wait_log(self,needle,after=0):
-  end=time.monotonic()+6
+ def wait_log(self,needle,after=0,timeout=6):
+  end=time.monotonic()+timeout
   while time.monotonic()<end:
    if needle in self.log.read_text()[after:]:return
    time.sleep(.08)
@@ -56,9 +57,12 @@ class Host:
  def pause(self):
   after=len(self.log.read_text());self.tap(self.w-42,24);self.wait_log('screen=4',after)
 
- def leave(self):self.tap(self.w/2,(self.h-248)/2+216);self.command('KEY BACK');self.closed()
- def save(self,condition=lambda _:True):
-  end=time.monotonic()+4
+ def return_to_command(self,delay=.28):
+  self.tap(self.w/2,pause_save_center(self.w,self.h,self.pw,self.ph),delay=delay)
+
+ def leave(self):self.return_to_command(delay=.8);self.command('KEY BACK');self.closed()
+ def save(self,condition=lambda _:True,timeout=4):
+  end=time.monotonic()+timeout
   while time.monotonic()<end:
    files=[]
    for path in (self.state/'private-files').rglob('iron-dawn-*.save'):
@@ -83,22 +87,29 @@ def scenario(label,run,width=854,height=480,audio=False):
  except Exception:result.update(passed=False,cleanup_error=traceback.format_exc())
  results.append(result);print(label,'passed' if result['passed'] else result,flush=True)
 
-def campaign(host, first=0, last=6):
- host.bootstrap('3');offset=(host.w-480)//2
+def campaign(host, first=0, last=8):
+ host.bootstrap('7');offset=(host.w-480)//2
  for chapter in range(first,last):
   host.tap(offset+75,max(214,host.h-128)+64)
+  current=2
   if chapter==first:
-   host.shot('archive-second-act');host.tap(87,host.h-68);host.shot('archive-first-act')
-  if chapter>=3:host.tap(host.w-87,host.h-68)
-  else:host.tap(87,host.h-68)
-  row=min(112,(host.h-165)//3);host.tap(host.w-66,74+(chapter%3)*row+32);host.shot('briefing-'+str(chapter+1))
+   host.shot('archive-epilogue')
+   host.tap(87,host.h-68);host.shot('archive-second-act')
+   host.tap(87,host.h-68);host.shot('archive-first-act')
+   current=0
+  while current!=chapter//3:
+   forward=current<chapter//3
+   host.tap(host.w-87 if forward else 87,host.h-68)
+   current+=1 if forward else -1
+  step=min(112,(host.h-165)//3);right=(host.w+min(760,host.w-40))//2
+  host.tap(right-53,74+(chapter%3)*step+(step-8)/2);host.shot('briefing-'+str(chapter+1))
   for page in range(6):
    host.tap(180,host.h-44)
    if re.search(r'chapter='+str(chapter)+r' screen=3',host.log.read_text()):break
    host.shot(f'briefing-{chapter+1}-page-{page+2}')
   else:raise AssertionError('Briefing did not deploy')
-  host.shot('battle-'+str(chapter+1));host.objective();host.shot('objective-'+str(chapter+1));host.pause();saved=host.save();assert struct.unpack_from('<i',saved,schema['side'])[0]==(36,44,48,54,60,64)[chapter];host.tap(host.w/2,(host.h-248)/2+216)
- host.command('KEY BACK');host.closed();return {'campaign_pages':2,'maps':[36,44,48,54,60,64][first:last],'normal_ui_deployment':True}
+  host.shot('battle-'+str(chapter+1));host.objective();host.shot('objective-'+str(chapter+1));host.pause();saved=host.save();assert struct.unpack_from('<i',saved,schema['side'])[0]==(36,44,48,54,60,64,64,64)[chapter];host.return_to_command()
+ host.command('KEY BACK');host.closed();return {'campaign_pages':3,'maps':[36,44,48,54,60,64,64,64][first:last],'normal_ui_deployment':True}
 
 def legacy(host):
  host.bootstrap(legacy=6);host.tap((host.w-480)//2+100,max(214,host.h-128)+20);host.shot('migrated-next-chapter')
@@ -178,15 +189,14 @@ def squads(host):
   assign=(host.ww+165,242)
   select_all=(host.ww/12,host.bottom+24)
  else:
-  row=max(28,min(int(host.h*.18),int(np.ceil(30*host.h/host.ph))))
-  line=max(20,int(np.ceil(14*host.h/host.ph)))
-  panel=host.bottom-(line+8+12+row*2+6)
+  layout=compact_layout(host.w,host.h,host.ph)
+  row,line,panel=layout.row,layout.line,layout.tactics
   opener=(host.w-50,panel+4+line/2)
-  recall=((host.w-480)/2+63,panel+line+12+row/2)
+  recall=((host.w-480)/2+63,panel+line+12+layout.tactic_row/2)
   assign=(recall[0],recall[1]+row+6)
   select_all=((host.w-480)/2+240,host.bottom+5+row/2)
  def open_squads():
-  if not wide:host.tap((host.w-480)/2+428,host.bottom+5+row/2)
+  if not wide:host.tap(column_center(host.w,4,5),host.bottom+5+row/2)
   host.tap(*opener)
  open_squads();host.tap(*assign);host.shot('squad-assigned')
  data=host.save(lambda data:data[schema['squads']+5:schema['squads']+7]==b'\x01\x01')
@@ -216,10 +226,9 @@ def tactical_orders(host):
   if host.ww<host.w:
    host.tap(165+78*retreat,host.top+44)
   else:
-   row=max(28,min(int(host.h*.18),int(np.ceil(30*host.h/host.ph))))
-   line=max(20,int(np.ceil(14*host.h/host.ph)))
-   panel=host.bottom-(line+8+12+row*2+6)
-   host.tap((host.w-480)/2+428,host.bottom+5+row/2)
+   layout=compact_layout(host.w,host.h,host.ph)
+   row,line,panel=layout.row,layout.line,layout.tactics
+   host.tap(column_center(host.w,4,5),host.bottom+5+row/2)
    host.shot('tactical-drawer')
    host.tap(host.w-218+82*retreat,panel+4+line/2)
  arm();field(truck_x,truck_y,10)
@@ -291,10 +300,9 @@ def combined_arms(host,mode):
  host.shot('selected-commander')
  if host.ww<host.w:host.tap(323,host.top+44)
  else:
-  row=max(28,min(int(host.h*.18),int(np.ceil(30*host.h/host.ph))))
-  line=max(20,int(np.ceil(14*host.h/host.ph)))
-  panel=host.bottom-(line+8+12+row*2+6)
-  host.tap((host.w-480)/2+428,host.bottom+5+row/2)
+  layout=compact_layout(host.w,host.h,host.ph)
+  row,line,panel=layout.row,layout.line,layout.tactics
+  host.tap(column_center(host.w,4,5),host.bottom+5+row/2)
   host.tap(host.w-302,panel+4+line/2)
  def cooldown(state):
   return struct.unpack_from('<f',state,schema['mission']+20)[0]
@@ -316,8 +324,8 @@ def troop_transport(host):
   return [struct.unpack_from('<h',state,entity+i*56+schema['target_offset'])[0] for i in (5,6)]
  def focus(x,y):
   wide=host.ww<host.w
-  size=96 if wide else 80
-  map_x,map_y=(host.ww+12,host.top+12) if wide else (host.w-90,host.top+8)
+  size=96 if wide else compact_layout(host.w,host.h,host.ph).map_size
+  map_x,map_y=(host.ww+12,host.top+12) if wide else (host.w-size-10,host.top+8)
   px,py=round(x*size/44),round(y*size/44)
   host.tap(map_x+px,map_y+py)
   # Touch coordinates round to whole physical pixels, then truncate in the guest.
@@ -331,11 +339,10 @@ def troop_transport(host):
   if host.ww<host.w:
    host.tap(407,host.top+44)
   else:
-   row=max(28,min(int(host.h*.18),int(np.ceil(30*host.h/host.ph))))
-   line=max(20,int(np.ceil(14*host.h/host.ph)))
-   panel=host.bottom-(line+8+12+row*2+6)
-   host.tap((host.w-480)/2+428,host.bottom+5+row/2)
-   host.tap((host.w-480)/2+417,panel+line+18+row*1.5)
+   layout=compact_layout(host.w,host.h,host.ph)
+   row,line,panel=layout.row,layout.line,layout.tactics
+   host.tap(column_center(host.w,4,5),host.bottom+5+row/2)
+   host.tap(column_center(host.w,3,4),panel+line+18+layout.tactic_row*1.5)
  start=position(boat,data)
  view=focus(*start)
  arm();field(view,*start,12)
@@ -370,8 +377,206 @@ def troop_transport(host):
  host.pause();host.leave()
  return {'passengers':2,'loaded_save_restored':True,'crossed_and_landed':True,'squad_preserved':True}
 
+def acknowledge_radio(host,bit):
+ for _ in range(6):
+  host.tap(host.w/2,host.h-48)
+  if struct.unpack_from('<I',host.save(),schema['mission']+4)[0]&bit:return
+ raise AssertionError('Radio dialog did not acknowledge')
+
+def harbor(host,beacon):
+ host.bootstrap('harbor-beacon' if beacon else 'harbor-shutdown');host.resume()
+ bit=1<<(8 if beacon else 9)
+ def events(state):
+  return struct.unpack_from('<II',state,schema['mission'])
+ def elapsed(state):
+  return struct.unpack_from('<f',state,schema['radio_time'])[0]
+ def field(dx,dy,z=0):
+  host.tap(host.ww/2+(dx-dy)*20,(host.top+host.bottom)/2+(dx+dy)*10-z)
+ host.objective('objective focus x=30.5 y=25.5 side=64')
+ if not beacon:host.objective('objective focus x=16.5 y=37.5 side=64')
+ host.shot('objective')
+ if beacon:field(2.4,0)
+ else:field(0,-1.6)
+ host.save(lambda state:events(state)[0]&bit and not events(state)[1]&bit,timeout=10)
+ host.shot('radio')
+ acknowledge_radio(host,bit)
+ time.sleep(3)
+ host.pause()
+ staged=host.save(lambda state:state[schema['mission']+8]==(1 if beacon else 2))
+ if beacon:assert 0<elapsed(staged)<45
+ host.leave();host.launch();host.resume()
+ assert events(host.save())[1]&bit
+ if beacon:
+  assert elapsed(host.save())>=elapsed(staged)
+  host.objective('objective focus x=30.5 y=25.5 side=64')
+  host.shot('beacon-hold')
+ else:
+  host.objective('objective focus x=12.0 y=52.0 side=64')
+  if host.ww<host.w:
+   host.tap(host.ww*11/12,host.bottom+25)
+  else:
+   layout=compact_layout(host.w,host.h,host.ph)
+   row,line,panel=layout.row,layout.line,layout.tactics
+   host.tap(column_center(host.w,4,5),host.bottom+5+row/2)
+   host.tap(column_center(host.w,1,4),panel+line+18+layout.tactic_row*1.5)
+  field(0,0)
+ host.wait_log('chapter=6 screen=5',timeout=90 if beacon else 45)
+ final=host.save(lambda state:struct.unpack_from('<I',state,24)[0]&(1<<6))
+ assert final[schema['mission']+8]==(1 if beacon else 2)
+ assert final[schema['career_plan']]==(1 if beacon else 2)
+ if beacon:assert elapsed(final)==45
+ host.shot('ending')
+ host.tap(host.w/2,host.h-69)
+ host.shot('white-island-briefing')
+ for page in range(6):
+  host.tap(180,host.h-44)
+  if 'chapter=7 screen=3' in host.log.read_text():break
+  host.shot(f'white-island-briefing-page-{page+2}')
+ else:raise AssertionError('Next chapter did not deploy')
+ host.objective('objective focus x=42.5 y=33.5 side=64')
+ host.shot('white-island-grid')
+ stage=host.save(lambda state:struct.unpack_from('<i',state,20)[0]==7)
+ assert stage[schema['mission_plan']]==(1 if beacon else 2)
+ host.pause();host.leave()
+ return {'route':'beacon' if beacon else 'shutdown','choice_and_radio_restored':True,'chapter_seven_victory':True,'route_carried_to_chapter_eight':True}
+
+def lighthouse(host):
+ host.bootstrap('lighthouse');host.resume()
+ def elapsed(state):
+  return struct.unpack_from('<f',state,schema['radio_time'])[0]
+ def events(state):
+  return struct.unpack_from('<II',state,schema['mission'])
+ def field(dx,dy):
+  host.tap(host.ww/2+(dx-dy)*20,(host.top+host.bottom)/2+(dx+dy)*10)
+ host.objective('objective focus x=42.5 y=33.5 side=64')
+ host.shot('power-station')
+ field(-1,1.3)
+ grid_bit=1<<10
+ host.save(lambda state:events(state)[0]&grid_bit,timeout=10)
+ host.shot('power-restored-radio')
+ acknowledge_radio(host,grid_bit)
+ host.objective('objective focus x=54.5 y=16.5 side=64')
+ host.shot('lighthouse-unlit')
+ field(-2,-2.5)
+ field(0,1.85)
+ light_bit=1<<11
+ host.save(lambda state:events(state)[0]&light_bit,timeout=10)
+ host.shot('ferry-radio')
+ acknowledge_radio(host,light_bit)
+ time.sleep(4)
+ host.shot('lighthouse-lit')
+ host.pause()
+ saved=host.save(lambda state:0<elapsed(state)<35)
+ ferry=struct.unpack_from('<h',saved,schema['convoy'])[0]
+ assert ferry>=0
+ def ferry_y(state):
+  return struct.unpack_from('<f',state,schema['entities']+56*ferry+4)[0]
+ assert ferry_y(saved)<38.5
+ host.leave();host.launch();host.resume()
+ restored=host.save()
+ assert elapsed(restored)>=elapsed(saved) and ferry_y(restored)<=ferry_y(saved)
+ assert events(restored)[1]&(grid_bit|light_bit)==(grid_bit|light_bit)
+ host.objective('objective focus x=54.5 y=16.5 side=64')
+ host.save(lambda state:18<elapsed(state)<35,timeout=28)
+ host.shot('ferries-passing')
+ host.wait_log('chapter=7 screen=5',timeout=50)
+ final=host.save(lambda state:struct.unpack_from('<I',state,24)[0]&(1<<7))
+ assert elapsed(final)==35 and ferry_y(final)==6.5
+ host.shot('white-island-ending')
+ host.command('KEY BACK');time.sleep(.8)
+ host.command('KEY BACK');host.closed()
+ return {'grid_and_lighthouse_captured':True,'ferries_and_dialogue_restored':True,'chapter_eight_victory':True}
+
+def raid_defense(host):
+ host.bootstrap('raid-defense');host.resume()
+ time.sleep(.7)
+ host.shot('two-approaches')
+ def orders(state):
+  tags=[]
+  for i in range(100):
+   entity=schema['entities']+i*56
+   hp=struct.unpack_from('<f',state,entity+24)[0]
+   target=struct.unpack_from('<h',state,entity+schema['target_offset'])[0]
+   if hp>0 and state[entity+51]==1:tags.append(target)
+  return tags
+ time.sleep(2.4)
+ host.pause()
+ before=orders(host.save(lambda state:-307 in orders(state) and -308 in orders(state)))
+ assert len(before)==6
+ host.leave();host.launch();host.resume()
+ time.sleep(7)
+ host.pause()
+ after=orders(host.save(lambda state:-304 in orders(state) and -305 in orders(state)))
+ assert all(target in (-304,-305) for target in after)
+ host.leave()
+ return {'split_wave':True,'rally_restored':True,'both_wings_advanced':True}
+
+def gray_faction(host):
+ host.launch()
+ host.tap(185,max(214,host.h-128)+64)
+ host.wait_log('screen=9')
+ host.shot('choose-faction')
+ host.tap(host.w/2,host.h*.65)
+ host.shot('gray-tower-briefing')
+ for _ in range(6):
+  host.tap(180,host.h-44)
+  if 'screen=3' in host.log.read_text():break
+ else:raise AssertionError('Gray Tower did not deploy')
+ assert struct.unpack_from('<I',host.save(),schema['extra'])[0]==2
+ host.shot('gray-tower-base')
+
+ layout=compact_layout(host.w,host.h,host.ph)
+ card_y=layout.production+layout.header+4+layout.card/2
+ def card(index):
+  host.tap(column_center(host.w,index,5),card_y)
+ def field(x,y,altitude=0,view=(8,10)):
+  cx,cy=view
+  host.tap(host.ww/2+(x-y-cx+cy)*20,(host.top+host.bottom)/2+(x+y-cx-cy)*10-altitude)
+ def find(kind,state):
+  for i in range(100):
+   at=schema['entities']+56*i
+   if state[at+50:at+52]==bytes((kind,0)) and struct.unpack_from('<f',state,at+24)[0]>0:
+    return at
+  return -1
+
+ host.tap(column_center(host.w,1,5),layout.top+5+layout.row/2)
+ host.tap(host.w-137,layout.production+2+(layout.line+4)/2)
+ host.shot('gray-tower-air-construction')
+ card(1)
+ host.save(lambda state:state[schema['construction']]==17)
+ time.sleep(10)
+ card(1)
+ field(10,6)
+ assert find(17,host.save(lambda state:find(17,state)>=0))>=0
+ field(10,6,15)
+ host.shot('interceptor-production')
+ card(0)
+ host.save(lambda state:state[schema['jobs']]==14)
+ state=host.save(lambda state:find(14,state)>=0,timeout=16)
+ aircraft=find(14,state)
+ position=struct.unpack_from('<2f',state,aircraft)
+ field(*position,43)
+ host.shot('interceptor-selected')
+ size=layout.map_size
+ px,py=round(16*size/28),round(12*size/28)
+ host.tap(host.w-size-10+px,layout.status+8+py)
+ field(20,13,view=(px*28/size,py*28/size))
+ time.sleep(4.6)
+ host.shot('interceptor-crossing')
+ host.pause()
+ host.save(lambda state:struct.unpack_from('<f',state,aircraft)[0]>18)
+ host.leave()
+ host.launch()
+ host.resume()
+ state=host.save()
+ assert struct.unpack_from('<I',state,schema['extra'])[0]==2 and find(14,state)>=0
+ host.pause()
+ host.leave()
+ return {'faction_selected':True,'built_launch_pad':True,'interceptor_trained_and_flown':True,'faction_and_aircraft_restored':True}
+
+scenario('gray-faction-small',gray_faction,296,240)
 scenario('campaign-wide',campaign)
-scenario('campaign-small',lambda host:campaign(host,3,6),296,240)
+scenario('campaign-small',lambda host:campaign(host,3),296,240)
 def legacy_convoy(host):
  host.bootstrap(legacy=7);host.resume();host.objective('objective focus x=21.0 y=18.0 side=44')
  host.pause();data=host.save();assert struct.unpack_from('<i',data,schema['side'])[0]==44
@@ -398,6 +603,15 @@ for mode in ['combined-water','combined-sky','combined-hero']:
 scenario('combined-hero-small',lambda host:combined_arms(host,'combined-hero'),296,240)
 scenario('transport',troop_transport)
 scenario('transport-small',troop_transport,296,240)
+scenario('harbor-beacon',lambda host:harbor(host,True))
+scenario('harbor-shutdown',lambda host:harbor(host,False))
+scenario('harbor-shutdown-small',lambda host:harbor(host,False),296,240)
+scenario('lighthouse-small',lighthouse,296,240)
+scenario('lighthouse-wide',lighthouse)
+scenario('raid-defense',raid_defense)
 for stage in range(4):scenario('construction-'+str(stage),lambda h,s=stage:construction(h,s,complete=s==0))
+if args.scenarios:
+ missing=set(args.scenarios)-{x['scenario'] for x in results}
+ if missing:p.error('Unknown scenarios '+', '.join(sorted(missing)))
 (args.output/'result.json').write_text(json.dumps({'passed':all(x['passed'] for x in results),'scenarios':results,'capture':'signed production app, official SDK simulator and controlled fixture saves'},ensure_ascii=False,indent=2)+'\n')
 raise SystemExit(0 if all(x['passed'] for x in results) else 1)

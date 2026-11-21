@@ -37,18 +37,18 @@
 
  bool commander_support(){
   int id=selected_commander();
-  if(id<0){say("请先选中林岚");return false;}
+  if(id<0){say("请先选中指挥官");return false;}
   if(mission.support_left>0){say("整备指令冷却中");return false;}
   auto position=e[id].p;
   bool repaired=false;
   for(auto& a:e){
-   if(!deployed(a)||a.team!=0||!combat_kind(a.kind)||a.kind==rotorcraft||a.hp>=specs[a.kind].hp)continue;
+   if(!deployed(a)||a.team!=0||!combat_kind(a.kind)||a.kind==rotorcraft||a.hp>=spec(a).hp)continue;
    if(distance_squared(a.p,position)>support_radius*support_radius)continue;
-   a.hp=std::min(float(specs[a.kind].hp),a.hp+specs[a.kind].hp*.24f);
+   a.hp=std::min(float(spec(a).hp),a.hp+spec(a).hp*.24f);
    blast(a.p,3);repaired=true;
   }
   if(!repaired){say("整备范围内没有受损部队");return false;}
   mission.support_left=support_cooldown;
-  say("林岚：战地整备已完成。",7);emit_sound(5);
+  say("指挥官：战地整备已完成。",7);emit_sound(5);
   return true;
  }

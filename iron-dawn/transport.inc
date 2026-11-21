@@ -68,7 +68,9 @@
  void update_boarding(int id,float dt){
   auto& a=e[id];int boat=boarding_ship(a);
   if(!transport_exists(boat)||e[boat].moving){cancel_boarding(a);return;}
-  if(distance_squared(a.p,a.goal)<.28f*.28f&&bank_cell(a.p,e[boat].p)){
+  // Movement stops just short of the ramp. Check its tile against the boat's
+  // reach so troops approaching from inland can board at the edge of range.
+  if(distance_squared(a.p,a.goal)<.28f*.28f&&bank_cell(a.goal,e[boat].p)&&open(a.p)&&terrain[cell(a.p)]!=bridge){
    a.target=int16_t(passenger_order_base-boat);
    a.p=a.goal=a.step=e[boat].p;a.moving=false;a.selected=false;a.stuck=0;
    blast(a.p,3);

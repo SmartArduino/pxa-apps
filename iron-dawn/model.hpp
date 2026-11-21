@@ -8,7 +8,8 @@
 #include <new>
 #include <initializer_list>
 namespace iron {
-constexpr int N=64,MAX=100,CHAPTERS=6,squad_count=3;
+constexpr int N=64,MAX=100,CHAPTERS=8,squad_count=3;
+constexpr int harbor_chapter=6,lighthouse_chapter=7;
 struct Vec {float x=0,y=0;};
 inline float distance_squared(Vec a,Vec b){float x=a.x-b.x,y=a.y-b.y;return x*x+y*y;}
 inline float dist(Vec a,Vec b){return std::hypot(a.x-b.x,a.y-b.y);}
@@ -61,9 +62,50 @@ inline constexpr Spec specs[]={
  {"摆渡运输艇",340,470,1.85f,0,0,1,8,0}
 };
 static_assert(std::size(specs)==kind_count);
+enum class Faction : uint8_t { northern, gray_tower };
+constexpr uint32_t gray_tower_defense=2;
+constexpr Faction faction_for(uint32_t mode,int team){
+ int gray_team=mode==gray_tower_defense?0:1;
+ return team==gray_team?Faction::gray_tower:Faction::northern;
+}
+inline constexpr Spec gray_tower_specs[]={
+ {"铁卫步兵",100,110,1.08f,3.7f,14,.76f,3.5f,0},
+ {"矢锋导弹兵",160,94,1.f,4.5f,36,1.85f,4.5f,0},
+ {"壁垒重坦",385,490,1.6f,4.8f,44,1.6f,7.5f,0},
+ {"震地火炮",470,250,1.35f,7.4f,80,3.3f,9,0},
+ {"重型矿运车",290,440,1.62f,0,0,1,5.5f,0},
+ {"灰塔指挥堡",0,2320,0,0,0,1,1,-10},
+ {"熔炉电站",230,700,0,0,0,1,6,60},
+ {"高炉精炼厂",370,940,0,0,0,1,7.5f,-15},
+ {"铁卫兵营",225,740,0,0,0,1,5.5f,-10},
+ {"壁垒工厂",530,1200,0,0,0,1,10,-30},
+ {"堡垒炮台",275,685,0,5.5f,34,1.32f,6.5f,-15},
+ specs[relay],specs[supply],
+ {"黑潮巡逻艇",310,375,1.95f,5.5f,40,1.4f,7,0},
+ {"隼式截击机",545,320,3.8f,6.2f,26,.95f,10,0},
+ {"灰塔督导",550,360,1.4f,4.8f,34,.9f,11,0},
+ {"灰塔船坞",375,890,0,0,0,1,8.5f,-15},
+ {"截击机坪",460,910,0,0,0,1,9.5f,-25},
+ {"天幕防空塔",290,650,0,7.8f,61,1.16f,7,-15},
+ {"重型登陆艇",360,505,1.75f,0,0,1,9,0}
+};
+static_assert(std::size(gray_tower_specs)==kind_count);
+constexpr const Spec& faction_spec(int kind,Faction faction){
+ return faction==Faction::gray_tower?gray_tower_specs[kind]:specs[kind];
+}
 struct Entity {Vec p{},goal{},step{};float hp=0,cool=0,progress=0,dir=0,flash=0,stuck=0;int16_t target=-1;uint8_t kind=0,team=0,cargo=0,kills=0;bool selected=false,moving=false;};
 constexpr int retreat_order=-3,escort_order_base=-4;
 constexpr int board_order_base=escort_order_base-MAX,passenger_order_base=board_order_base-MAX;
+// Enemy orders occupy six previously unused values beneath the passenger range.
+enum class RaidRole : uint8_t { assault, flank, intercept, count };
+constexpr int raid_order_base=passenger_order_base-MAX,raid_roles=int(RaidRole::count);
+constexpr int last_raid_order=raid_order_base-2*raid_roles+1;
+constexpr int raid_order(RaidRole role,bool staging){
+ return raid_order_base-int(role)-(staging?raid_roles:0);
+}
+inline bool raider(const Entity& a){return a.target<=raid_order_base&&a.target>=last_raid_order;}
+inline bool rallying(const Entity& a){return raider(a)&&a.target<=raid_order_base-raid_roles;}
+inline RaidRole raid_role(const Entity& a){return RaidRole((raid_order_base-a.target)%raid_roles);}
 constexpr int transport_capacity=4;
 constexpr float boarding_range=2.25f;
 inline int bound_order_slot(const Entity& a,int base){
@@ -85,7 +127,15 @@ inline unsigned veteran_rank(const Entity& a){return a.kills>=9?3:a.kills>=5?2:a
 struct Blast {Vec p{};float age=0;uint8_t type=0;bool alive=false;};
 struct Job {uint8_t kind=0,producer=0;float left=0,total=0;};
 struct Expansion {uint32_t mode=0,seed=0,cleared=0;uint8_t damage=0,armor=0,research=0,map_rules=0;float research_left=0;};
-struct Mission {uint32_t events=0,read_events=0;uint8_t stage=0,delivered=0;std::array<uint8_t,3> waypoint{};std::array<int16_t,3> convoy{{-1,-1,-1}};float support_left=0;};
+enum HarborRoute : uint8_t { harbor_choice, harbor_beacon, harbor_shutdown };
+struct Mission {uint32_t events=0,read_events=0;uint8_t stage=0,delivered=0;std::array<uint8_t,3> waypoint{};HarborRoute harbor_plan=harbor_choice;std::array<int16_t,3> convoy{{-1,-1,-1}};float support_left=0;};
+constexpr Vec harbor_beacon_site{30.5f,25.5f},harbor_switch_site{16.5f,37.5f};
+constexpr float harbor_hold_seconds=45;
+constexpr unsigned harbor_beacon_radio=8,harbor_shutdown_radio=9;
+enum LighthouseStage : uint8_t { restore_grid, capture_lighthouse, guide_ferries };
+constexpr Vec island_grid_site{42.5f,33.5f},lighthouse_site{54.5f,16.5f};
+constexpr float lighthouse_hold_seconds=35;
+constexpr unsigned island_grid_radio=10,lighthouse_radio=11;
 enum class GroundMaterial : uint8_t { grass, red_gravel, marsh, scree, asphalt };
 struct CampaignMap {
  int side, credits, first_wave;
@@ -95,13 +145,16 @@ struct CampaignMap {
  const char* arrival;
 };
 inline constexpr CampaignMap campaign_maps[] = {
- {36, 1300, 84, GroundMaterial::red_gravel, {7,25}, {11,22}, {{{31,7},{31,25}}}, "林岚：西南矿场已经复工。沿运矿路北上，夺回灰塔电台。"},
- {44, 1500, 105, GroundMaterial::marsh, {36,24}, {32,24}, {{{5,8},{4,34}}}, "苏弥：电台在西岸。抢下公路桥，给平民留出撤离的时间。"},
- {48, 1600, 115, GroundMaterial::asphalt, {23,7}, {23,12}, {{{6,35},{42,39}}}, "林岚：两座电站分在东西两侧。先断电，再进入南区。"},
- {54, 1750, 125, GroundMaterial::scree, {9,40}, {14,37}, {{{48,10},{48,42}}}, "苏弥：北隘口和东侧矿场各有一座电台。先拿到两段行车记录。"},
- {60, 1900, 135, GroundMaterial::grass, {51,10}, {47,16}, {{{16,12},{22,47}}}, "何舟：车队在东北货场。先派装甲过渠，接通西岸的引导台。"},
- {64, 2100, 150, GroundMaterial::asphalt, {53,53}, {52,48}, {{{7,12},{48,7}}}, "林岚：沿东南大道推进，逐段接管调度站。医院的线路必须保住。"},
+ {36, 1300, 84, GroundMaterial::red_gravel, {7,25}, {11,22}, {{{31,7},{31,25}}}, "林岚：矿车开始干活了。沿运矿路走，灰塔的指挥堡在东北。"},
+ {44, 1500, 105, GroundMaterial::marsh, {36,24}, {32,24}, {{{5,8},{4,34}}}, "苏弥：居民在西岸。我们先过河，去占领中继站。"},
+ {48, 1600, 115, GroundMaterial::asphalt, {23,7}, {23,12}, {{{6,35},{42,39}}}, "林岚：东西两边各有一座军用电站。先打电站，再去南边。"},
+ {54, 1750, 125, GroundMaterial::scree, {9,40}, {14,37}, {{{48,10},{48,42}}}, "苏弥：先去占领北边山口和东边矿场的电台。我需要里面的记录。"},
+ {60, 1900, 135, GroundMaterial::grass, {51,10}, {47,16}, {{{16,12},{22,47}}}, "何舟：卡车在东北货场等着。先占领货场电台，我们才能出发。"},
+ {64, 2100, 150, GroundMaterial::asphalt, {53,53}, {52,48}, {{{7,12},{48,7}}}, "林岚：沿东南大道进城。先占领三座调度站，保住医院用电。"},
+ {64, 1900, 105, GroundMaterial::marsh, {44,9}, {43,16}, {{{9,49},{18,54}}}, "苏弥：可以搭船去岛上的信标，也可以沿南边的堤道去停机站。"},
+ {64, 2150, 135, GroundMaterial::scree, {16,43}, {21,44}, {{{55,36},{56,9}}}, "苏弥：白石岛的灯没亮。先去岛上的配电站，船在礁区外等着。"},
 };
+static_assert(std::size(campaign_maps)==CHAPTERS);
 struct World {
  std::array<Entity,MAX> e{};std::array<Shot,64> shots{};std::array<Blast,48> blasts{};
  std::array<uint8_t,N*N> terrain{},ore{},fog{},seen{},obstacles{};std::array<Job,6> jobs{};
@@ -114,19 +167,23 @@ struct World {
  uint32_t random(){rng^=rng<<13;rng^=rng>>17;rng^=rng<<5;return rng;}
  void say(const char* s,float duration=5){std::snprintf(notice,sizeof notice,"%s",s);notice_time=duration;}
  bool building(int k)const{return !unit_kind(k);}
+ Faction faction(int team=0)const{return faction_for(extra.mode,team);}
+ const Spec& spec(int kind,int team=0)const{return faction_spec(kind,faction(team));}
+ const Spec& spec(const Entity& a)const{return spec(a.kind,a.team);}
  int count(int k,int team=0)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==team&&a.kind==k;return n;}
  int army(int team=0)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==team&&combat_kind(a.kind);return n;}
  bool open(Vec p,int ignore=-1)const{if(p.x<1||p.y<1||p.x>=side-1||p.y>=side-1||(terrain[cell(p)]==water||terrain[cell(p)]==ridge))return false;for(int i=0;i<MAX;++i){auto& a=e[i];if(i!=ignore&&a.hp>0&&building(a.kind)&&distance_squared(a.p,p)<(defence_kind(a.kind)?.4225f:1.44f))return false;}return true;}
- int add(int kind,int team,Vec p){for(int i=0;i<MAX;++i)if(e[i].hp<=0){squads[i]=0;e[i]={};auto& a=e[i];a.p=a.goal=a.step=p;a.hp=specs[kind].hp;a.kind=kind;a.team=team;if(combat_kind(kind)||defence_kind(kind))a.cargo=uint8_t(random()%255+1);a.dir=team?3.14f:0;return i;}return -1;}
- void init(int ch) {
+ int add(int kind,int team,Vec p){for(int i=0;i<MAX;++i)if(e[i].hp<=0){squads[i]=0;e[i]={};auto& a=e[i];a.p=a.goal=a.step=p;a.hp=spec(kind,team).hp;a.kind=kind;a.team=team;if(combat_kind(kind)||defence_kind(kind))a.cargo=uint8_t(random()%255+1);a.dir=team?3.14f:0;return i;}return -1;}
+ void init(int ch,HarborRoute plan=harbor_choice) {
   new(this) World{};
   chapter = std::clamp(ch, 0, CHAPTERS-1);
+  if(chapter==lighthouse_chapter)mission.harbor_plan=plan;
   init_campaign();
  }
  // Defense keeps its seeded 28-cell battlefield and its separate career.
- void init_defense(uint32_t seed) {
+ void init_defense(uint32_t seed,Faction player=Faction::northern) {
   new(this) World{};
-  extra.mode = 1;
+  extra.mode = player==Faction::gray_tower?gray_tower_defense:1;
   extra.map_rules = 1;
   extra.seed = seed ? seed : 83711;
   credits = 1500;
@@ -150,7 +207,9 @@ struct World {
   add(factory,0,{7,5});add(power,0,{3,4});add(turret,0,{10,9});
   add(supply,2,{13,8});add(supply,2,{9,18});add(supply,2,{19,16});
   for(int y=18;y<21;++y)for(int x=13;x<16;++x)ore[y*N+x]=200+random()%55;
-  build_defense_landscape();say("苏弥：守住前哨。每次击退敌军，补给队就能靠近。",8);power_update();reveal();
+  build_defense_landscape();
+  say(player==Faction::gray_tower?"灰塔前哨：稳住防线，等待电网恢复。":"苏弥：守住前哨。每次击退敌军，补给队就能靠近。",8);
+  power_update();reveal();
  }
  // Terrain is stored in the existing byte grid; published save prefixes stay intact.
  void build_defense_landscape(){
@@ -168,8 +227,10 @@ struct World {
  }
  bool paved(Vec p)const{return terrain[cell(p)]==road||terrain[cell(p)]==bridge;}
  bool in_cover(const Entity& a)const{return extra.map_rules&&(a.kind<=rocket||a.kind==commander)&&(terrain[cell(a.p)]==woodland||terrain[cell(a.p)]==crater||terrain[cell(a.p)]==ruins);}
- float move_speed(const Entity& a)const{float speed=specs[a.kind].speed;if(a.kind==rotorcraft||naval_kind(a.kind))return speed;bool vehicle=a.kind>=tank&&a.kind<=harvester;if(a.kind==harvester&&a.cargo)speed=1.42f;if(paved(a.p))speed*=vehicle?1.2f:1.05f;else if(terrain[cell(a.p)]==woodland)speed*=vehicle?.82f:.95f;else if(terrain[cell(a.p)]==crater||terrain[cell(a.p)]==ruins)speed*=vehicle?.78f:.9f;return speed;}
+ float move_speed(const Entity& a)const{float speed=spec(a).speed;if(a.kind==rotorcraft||naval_kind(a.kind))return speed;bool vehicle=a.kind>=tank&&a.kind<=harvester;if(a.kind==harvester&&a.cargo)speed=1.42f;if(paved(a.p))speed*=vehicle?1.2f:1.05f;else if(terrain[cell(a.p)]==woodland)speed*=vehicle?.82f:.95f;else if(terrain[cell(a.p)]==crater||terrain[cell(a.p)]==ruins)speed*=vehicle?.78f:.9f;return speed;}
  Vec wave_entry(int next) const {
+  if(!extra.mode&&chapter==harbor_chapter&&mission.stage==harbor_beacon)
+   return next%2?Vec{27.5f,9.5f}:Vec{29.5f,47.5f};
   if (authored_map()) return campaign_maps[chapter].entries[(next-1)&1];
   if (extra.mode) {
    constexpr Vec edges[]={{23,5},{24,22},{5,24}};
@@ -179,31 +240,13 @@ struct World {
   return chapter==1?Vec{23,24}:Vec{24,22};
  }
  const char* wave_direction(int next) const {
+  if(dual_raid_entry(next))return "双路";
   auto p=wave_entry(next);
   if (!authored_map()) return p.x<10?"南路":p.y<10?"东北":"东南";
   int east = p.x > side*2.f/3, west = p.x < side/3.f;
   if (p.y < side/3.f) return west?"西北":east?"东北":"北面";
   if (p.y > side*2.f/3) return west?"西南":east?"东南":"南面";
   return west?"西面":east?"东面":"中路";
- }
- Vec raid_goal(int next,int unit) const {
-  if (chapter==4 && !extra.mode && unit%2) {
-   for (int id : mission.convoy) if (active_convoy(id)) return e[id].p;
-  }
-  if (chapter==1 && !extra.mode) {
-   int id = nearest(base_position(),relay,0);
-   if (id>=0) return e[id].p;
-  }
-  if (authored_map()) {
-   const auto& map=campaign_maps[chapter];
-   if (next>=2 && unit%3==1) {
-    int id=nearest(map.home,next%2?refinery:factory,0);
-    if (id>=0) return e[id].p;
-   }
-   return map.front;
-  }
-  if(extra.map_rules&&next>=2&&unit%3==1)return next%2?Vec{5,13}:Vec{7,5};
-  return {7,10};
  }
  GroundMaterial material() const {
   return authored_map() ? campaign_maps[chapter].material : GroundMaterial::grass;
@@ -222,7 +265,7 @@ struct World {
   say(ammo?"弹药改良完成：作战火力增强":"复合装甲完成：受到伤害降低",7);emit_sound(4);
  }
  void defense_clear(){extra.cleared=wave;int reward=150+25*wave;credits=std::min(10000000,credits+reward);next_wave=time+18;
-  int base=nearest({6,9},hq,0);if(base>=0)for(auto& a:e)if(a.hp>0&&a.team==0&&unit_kind(a.kind)&&dist(a.p,e[base].p)<8){if(a.hp<specs[a.kind].hp)a.hp=std::min(float(specs[a.kind].hp),a.hp+specs[a.kind].hp*.12f);blast(a.p,3);}
+  int base=nearest({6,9},hq,0);if(base>=0)for(auto& a:e)if(a.hp>0&&a.team==0&&unit_kind(a.kind)&&dist(a.p,e[base].p)<8){if(a.hp<spec(a).hp)a.hp=std::min(float(spec(a).hp),a.hp+spec(a).hp*.12f);blast(a.p,3);}
   if(wave%3==0){Vec station=wave%2?Vec{15,16}:Vec{18,8};if(open(station)&&add(supply,2,station)>=0)power_update();}
   char text[120];std::snprintf(text,sizeof text,"第 %d 波已击退！补给 +%d，前哨维修完成",wave,reward);say(text,8);emit_sound(5);
  }
@@ -231,7 +274,7 @@ struct World {
   power_net=0;
   for(const auto& a:e){
    if(a.hp<=0||!building(a.kind))continue;
-   if(a.team==0&&a.progress<=0)power_net+=specs[a.kind].supply;
+   if(a.team==0&&a.progress<=0)power_net+=spec(a).supply;
    int x=int(a.p.x),y=int(a.p.y);
    float limit=defence_kind(a.kind)?.4225f:1.44f;
    for(int yy=std::max(0,y-1);yy<=std::min(N-1,y+1);++yy)
@@ -241,7 +284,7 @@ struct World {
     }
   }
  }
- int ready_count(int k)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==0&&a.kind==k&&a.progress<=0;return n;}
+ int ready_count(int k,int team=0)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==team&&a.kind==k&&a.progress<=0;return n;}
  bool unlocked(int k)const{
   if(unit_kind(k))return ready_count(producer_for(k))>0;
   if(k==factory)return ready_count(barracks)&&ready_count(refinery);
@@ -256,7 +299,7 @@ struct World {
    if(count(commander))return "林岚已在战场";
    for(int i=0;i<job_count;++i)if(jobs[i].kind==commander)return "林岚正在集结";
   }
-  if(credits<specs[k].cost)return "矿石不足，等待采矿车返航";
+  if(credits<spec(k).cost)return "矿石不足，等待采矿车返航";
   if(job_count>=6)return "生产队列已满";
   int roster=army();
   for(int i=0;i<job_count;++i)roster+=combat_kind(jobs[i].kind);
@@ -295,7 +338,7 @@ struct World {
  [[gnu::noinline]] void reveal(){
   fog.fill(0);
   for(const auto& a:e)if(deployed(a)&&a.team==0){
-   int radius=a.kind==rotorcraft?9:a.kind==hq?7:6;
+   int radius=a.kind==rotorcraft?9:a.kind==hq?7:lighthouse_landmark(a)==1?11:6;
    int left=std::max(0,int(a.p.x)-radius),right=std::min(side-1,int(a.p.x)+radius);
    int top=std::max(0,int(a.p.y)-radius),bottom=std::min(side-1,int(a.p.y)+radius);
    for(int y=top;y<=bottom;++y){
@@ -385,8 +428,12 @@ struct World {
   for(int j=0;j<id;++j)if(deployed(e[j])&&unit_kind(e[j].kind)&&naval_kind(e[j].kind)==naval_kind(a.kind)&&(e[j].kind==rotorcraft)==(a.kind==rotorcraft)){float d2=distance_squared(a.p,e[j].p);if(d2>.01f*.01f&&d2<.38f*.38f){float dd=std::sqrt(d2);Vec n={a.p.x+(a.p.x-e[j].p.x)/dd*dt*.25f,a.p.y+(a.p.y-e[j].p.y)/dd*dt*.25f};if(open_for(a.kind,n,id))a.p=n;}}
  }
  void blast(Vec p,int type=0){for(auto& b:blasts)if(!b.alive){b={p,0,uint8_t(type),true};return;}}
+ bool shielded(const Entity& a)const{
+  return !extra.mode&&a.team==1&&a.kind==hq&&
+   ((chapter==5&&mission.stage<2)||(chapter==harbor_chapter&&mission.stage!=harbor_shutdown));
+ }
  void damage(int id,float value,int source=-1,int weapon=-1){
-  if(id<0||id>=MAX||!deployed(e[id]))return;auto& a=e[id];if(!extra.mode&&chapter==5&&a.team==1&&a.kind==hq&&mission.stage<2)return;if(a.team==0)value*=1-extra.armor*.10f;int attack_kind=weapon>=0?weapon:source>=0&&source<MAX?int(e[source].kind):-1;if(in_cover(a)&&attack_kind>=0&&attack_kind!=artillery)value*=.75f;a.hp-=value;a.flash=.14f;
+  if(id<0||id>=MAX||!deployed(e[id]))return;auto& a=e[id];if(shielded(a))return;if(a.team==0)value*=1-extra.armor*.10f;int attack_kind=weapon>=0?weapon:source>=0&&source<MAX?int(e[source].kind):-1;if(in_cover(a)&&attack_kind>=0&&attack_kind!=artillery)value*=.75f;a.hp-=value;a.flash=.14f;
   if(a.hp>0)return;
   a.hp=0;if(a.kind==landing_craft)remove_transport_passengers(id);
   if(a.kind==harvester&&a.team!=1)finish_escort_target(id);
@@ -398,33 +445,34 @@ struct World {
   if(a.team==1){++killed;credits+=building(a.kind)?100:25;}else if(a.team==0){++lost;if(production_building(a.kind))refund_destroyed_facility(id);}
   if(source>=0&&source<MAX&&e[source].hp>0&&e[source].team!=a.team&&e[source].team!=2&&a.team!=2){
    auto& killer=e[source];unsigned before=veteran_rank(killer);killer.kills=std::min(255,int(killer.kills)+1);
-   if(veteran_rank(killer)>before){if(killer.hp<specs[killer.kind].hp)killer.hp=std::min(float(specs[killer.kind].hp),killer.hp+specs[killer.kind].hp*.2f);blast(killer.p,4);if(killer.team==0){say("部队晋升！火力增强，战地修复已完成");emit_sound(4);}}
+   if(veteran_rank(killer)>before){if(killer.hp<spec(killer).hp)killer.hp=std::min(float(spec(killer).hp),killer.hp+spec(killer).hp*.2f);blast(killer.p,4);if(killer.team==0){say("部队晋升！火力增强，战地修复已完成");emit_sound(4);}}
   }
   if(building(a.kind)||(was_ridge&&terrain[c]!=ridge))power_update();
  }
+ float attack_damage(const Entity& attacker,const Entity& victim)const{
+  float value=spec(attacker).damage;
+  if(attacker.kind==rotorcraft&&victim.kind==rotorcraft&&faction(attacker.team)==Faction::gray_tower)value*=2.2f;
+  return value;
+ }
  void fire(int id,int target){auto& a=e[id];if(!deployed(e[target])||!can_target(a.kind,e[target].kind))return;bool admitted=false;
-  for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=specs[a.kind].damage*(1+veteran_rank(a)*.12f)*(a.team==0?1+extra.damage*.12f:1);s.duration=a.kind==artillery?.85f:(a.kind==rocket||a.kind==aa_tower||a.kind==rotorcraft)?.5f:.22f;s.alive=true;admitted=true;break;}
-  if(!admitted)return;a.cool=specs[a.kind].reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);unsigned cue=(a.kind==rifle||a.kind==commander)?6:(a.kind==rocket||a.kind==aa_tower||a.kind==rotorcraft)?7:a.kind==artillery?9:8;if(sound<=2)sound=cue;else if(sound>=6&&sound<=9)sound=std::max(sound,cue);
+  for(auto& s:shots)if(!s.alive){s={};s.from=a.p;s.p=a.p;s.dest=e[target].p;s.target=int16_t(target|(unsigned(a.cargo)<<7));s.team=uint8_t((id+1)*2+a.team);s.kind=a.kind;s.damage=attack_damage(a,e[target])*(1+veteran_rank(a)*.12f)*(a.team==0?1+extra.damage*.12f:1);s.duration=a.kind==artillery?.85f:(a.kind==rocket||a.kind==aa_tower||a.kind==rotorcraft)?.5f:.22f;s.alive=true;admitted=true;break;}
+  if(!admitted)return;a.cool=spec(a).reload;a.dir=std::atan2(e[target].p.y-a.p.y,e[target].p.x-a.p.x);unsigned cue=(a.kind==rifle||a.kind==commander)?6:(a.kind==rocket||a.kind==aa_tower||a.kind==rotorcraft)?7:a.kind==artillery?9:8;if(sound<=2)sound=cue;else if(sound>=6&&sound<=9)sound=std::max(sound,cue);
  }
  void supply_tick(Entity& station,float dt){
   bool friendly=false,contested=false;for(auto& a:e)if(deployed(a)&&land_combat(a.kind)&&dist(a.p,station.p)<2.7f){friendly|=a.team==0;contested|=a.team==1;}
   if(!friendly){station.progress=std::max(0.f,station.progress-dt*.5f);return;}
   if(contested)return;station.progress+=dt;if(station.progress<5)return;
-  credits+=280;for(auto& a:e)if(deployed(a)&&a.team==0&&combat_kind(a.kind)&&dist(a.p,station.p)<4){if(a.hp<specs[a.kind].hp)a.hp=std::min(float(specs[a.kind].hp),a.hp+specs[a.kind].hp*.3f);blast(a.p,3);}
+  credits+=280;for(auto& a:e)if(deployed(a)&&a.team==0&&combat_kind(a.kind)&&dist(a.p,station.p)<4){if(a.hp<spec(a).hp)a.hp=std::min(float(spec(a).hp),a.hp+spec(a).hp*.3f);blast(a.p,3);}
   station.hp=0;terrain[cell(station.p)]=3;blast(station.p,6);power_update();say("补给接收！矿石 +280，附近部队已维修",7);emit_sound(5);
  }
  bool strike(Vec p){if(strike_cd>0){say("支援还在冷却中");return false;}if(credits<180){say("空袭需要 180 矿石");return false;}if(!fog[cell(p)]){say("空袭需要可见目标");return false;}credits-=180;strike_cd=45;for(int i=0;i<MAX;++i)if(e[i].hp>0&&e[i].team==1&&e[i].kind!=rotorcraft&&dist(e[i].p,p)<3.8f)damage(i,260);for(int i=0;i<7;++i)blast({p.x+(int(random()%400)-200)*.01f,p.y+(int(random()%400)-200)*.01f},2);say("空中支援：雷鸣打击已抵达！");emit_sound(3);return true;}
- void repair(){for(auto& a:e)if(a.selected&&a.hp>0&&a.team==0){int cost=int((specs[a.kind].hp-a.hp)*.2f);if(cost<=0)continue;if(credits<cost){say("修复资金不足");return;}credits-=cost;a.hp=specs[a.kind].hp;blast(a.p,3);}say("维修完成");}
- void defense_wave(){bool slot=false;for(auto& a:e)slot|=a.hp<=0;if(!slot){next_wave=time+2;return;}++wave;
-  auto spawn=wave_entry(wave);int units=std::min(12,3+wave);bool raid=wave%5==0;
-  for(int j=0;j<units;++j){int kind=j%3==0?tank:j%3==1?rifle:rocket;if(wave>=4&&j==units-1)kind=artillery;if(raid&&j%3==0)kind=artillery;if(wave>=6&&wave%3==0&&j==units-1)kind=rotorcraft;
-   int id=add(kind,1,{spawn.x+j%3*.45f,spawn.y+j/3*.45f});if(id>=0){auto& a=e[id];a.goal=raid_goal(wave,j);a.step=a.p;a.moving=true;if(extra.map_rules){constexpr uint8_t ranks[]={0,2,5,9};a.kills=ranks[std::min(3,(wave-1)/8)];a.hp*=1+std::min(.6f,(wave/10)*.08f);}if(raid){a.hp*=1.25f;a.kills=std::max(uint8_t(2),a.kills);}}
-  }
-  char text[100];std::snprintf(text,sizeof text,raid?"第 %d 波：灰塔重装突袭！保护前哨电站！":"第 %d 波来袭！拦截接近矿线的敌军",wave);say(text,7);
- }
- void wave_spawn(){++wave;next_wave=time+(authored_map()?std::max(42.f,68.f-wave*3.f):std::max(24.f,55.f-wave*2.f-chapter*4.f));Vec spawn=wave_entry(wave);int units=std::min(7,2+wave/2+(chapter==2?1:chapter));for(int j=0;j<units;++j){int k=j%3==0?tank:j%3==1?rifle:rocket;if(chapter==2&&wave>=3&&j==units-1)k=artillery;int id=add(k,1,{spawn.x+(j%3)*.6f,spawn.y+(j/3)*.6f});if(id>=0){e[id].goal=raid_goal(wave,j);e[id].moving=true;e[id].step=e[id].p;}}say("侦察：敌方增援正向基地推进！",6);}
+ void repair(){for(auto& a:e)if(a.selected&&a.hp>0&&a.team==0){int cost=int((spec(a).hp-a.hp)*.2f);if(cost<=0)continue;if(credits<cost){say("修复资金不足");return;}credits-=cost;a.hp=spec(a).hp;blast(a.p,3);}say("维修完成");}
  [[gnu::noinline]] void tick(float dt){if(won||defeated)return;dt=std::clamp(dt,0.f,.1f);time+=dt;route_credits=6;autosave+=dt;notice_time=std::max(0.f,notice_time-dt);strike_cd=std::max(0.f,strike_cd-dt);reveal_timer-=dt;
-  if(reveal_timer<=0){reveal();reveal_timer=.5f;}if(extra.mode){if(wave==int(extra.cleared)&&army(1)==0&&time>=next_wave)defense_wave();}else if(time>=next_wave&&count(hq,1))wave_spawn();research_tick(dt);
+  if(std::floor(time*2)!=std::floor((time-dt)*2))enemy_orders();
+  if(reveal_timer<=0){reveal();reveal_timer=.5f;}if(extra.mode){if(wave==int(extra.cleared)&&army(1)==0&&time>=next_wave)spawn_raid();}else if(time>=next_wave&&count(hq,1)){
+   if(chapter==harbor_chapter&&mission.stage==harbor_beacon)harbor_raid();
+   else spawn_raid();
+  }research_tick(dt);
   mission.support_left=std::max(0.f,mission.support_left-dt);
   construction_tick(dt);training_tick(dt);
   for(int i=0;i<MAX;++i){auto& a=e[i];if(!deployed(a))continue;a.flash=std::max(0.f,a.flash-dt);a.cool=std::max(0.f,a.cool-dt);
@@ -442,11 +490,22 @@ struct World {
     if(escort_id(a)>=0)update_escort(a,dt);
    }
    if(a.kind==landing_craft){if(a.moving)move(i,dt);continue;}
-   int target=-1;float best=specs[a.kind].range;
+   int target=-1;float best=spec(a).range;
    if(a.target>=0&&a.target<MAX&&deployed(e[a.target])&&e[a.target].team!=a.team&&e[a.target].team!=2&&can_target(a.kind,e[a.target].kind)){if(dist(a.p,e[a.target].p)<best+(building(e[a.target].kind)?1:0))target=a.target;else if(unit_kind(a.kind)){a.goal=e[a.target].p;a.moving=true;}}
-   else if(escort_id(a)<0)a.target=-1;
-   if(target<0)for(int j=0;j<MAX;++j){auto& b=e[j];if(!deployed(b)||b.team==a.team||!can_target(a.kind,b.kind)||(b.team==2&&(a.team!=1||chapter!=4||b.kind!=harvester))||(!fog[cell(b.p)]&&a.team==0))continue;float pad=building(b.kind)?.6f:0,range=best+pad;float d2=distance_squared(a.p,b.p);if(range>0&&d2<range*range){target=j;best=std::sqrt(d2)-pad;}}
-   bool powered=!defence_kind(a.kind)||(a.team==1?((chapter!=2&&chapter!=5)||count(power,1)>0):power_net>=0);
+   else if(escort_id(a)<0&&!raider(a))a.target=-1;
+   if(target<0){
+    bool interceptor=a.kind==rotorcraft&&faction(a.team)==Faction::gray_tower,tracking_air=false;
+    for(int j=0;j<MAX;++j){
+     auto& b=e[j];
+     if(!deployed(b)||b.team==a.team||!can_target(a.kind,b.kind)||(b.team==2&&(a.team!=1||chapter!=4||b.kind!=harvester))||(!fog[cell(b.p)]&&a.team==0))continue;
+     bool air_priority=interceptor&&b.kind==rotorcraft;
+     if(tracking_air&&!air_priority)continue;
+     float pad=building(b.kind)?.6f:0,range=(air_priority&&!tracking_air?spec(a).range:best)+pad;
+     float d2=distance_squared(a.p,b.p);
+     if(range>0&&d2<range*range){target=j;best=std::sqrt(d2)-pad;tracking_air=air_priority;}
+    }
+   }
+   bool powered=!defence_kind(a.kind)||(a.team==1?enemy_defences_powered():power_net>=0);
    if(target>=0&&powered){if(a.cool<=0)fire(i,target);}else if(a.moving&&unit_kind(a.kind))move(i,dt);
   }
   sync_passengers();
@@ -457,7 +516,9 @@ struct World {
    blast(s.dest,0);if(s.kind==artillery)for(int j=0;j<MAX;++j)if(j!=victim_id&&e[j].hp>0&&e[j].team!=shot_team(s)&&e[j].team!=2&&e[j].kind!=rotorcraft&&dist(e[j].p,s.dest)<1.7f)damage(j,value*.5f,source,artillery);
   }}
   for(auto& b:blasts)if(b.alive){b.age+=dt;float life=b.type==2?2.2f:b.type==1?1.1f:b.type==3?.7f:b.type==4?1.f:b.type==5?.16f:b.type==6?1.2f:.65f;if(b.age>life)b.alive=false;}
-  if(!extra.mode&&chapter>=3){frontier_tick(dt);}
+  if(!extra.mode&&chapter==lighthouse_chapter){lighthouse_tick(dt);}
+  else if(!extra.mode&&chapter==harbor_chapter){harbor_tick(dt);}
+  else if(!extra.mode&&chapter>=3){frontier_tick(dt);}
   else if(!extra.mode&&chapter==1){int r=nearest(base_position(),relay,2);if(r>=0){bool near=false;for(auto& a:e)if(deployed(a)&&a.team==0&&land_combat(a.kind)&&dist(a.p,e[r].p)<3)near=true;if(near){capture+=dt;if(capture>=8){e[r].team=0;story_beat=true;mission.events|=1u<<5;say("苏弥：中继站已上线。坚持住，平民正在撤离！",8);}}}if(count(relay,0)){radio_time+=dt;if(radio_time>=90)won=true;}if(!count(relay,0)&&!count(relay,2))defeated=true;}
   else if(!extra.mode&&!count(hq,1)&&(chapter!=2||!count(power,1)))won=true;
   if(!count(hq,0))defeated=true;if(defeated)won=false;
@@ -472,5 +533,8 @@ struct World {
 #include "production.inc"
 #include "campaign_map.inc"
 #include "frontier.inc"
+#include "harbor.inc"
+#include "lighthouse.inc"
+#include "enemy_ai.inc"
 };
 }

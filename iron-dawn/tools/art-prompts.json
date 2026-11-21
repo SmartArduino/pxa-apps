@@ -100,5 +100,64 @@
     "art/generated/terrain.png": "46a0c76fc17bb4faad32cbac940e2729980dd6ba5a333df286147a879df6c5da",
     "art/generated/ui-icons.png": "7a2d8cf1b4dc2e8f9200c3eb3fb9d648cfac8d680493dd5e5b37ad8bbe3daca8",
     "art/generated/wordmark.png": "992a11b0a48dfe1ea7e258a6029ceff9611f3f9d69cb788a9cd216d1246a33ec"
+  },
+  "gray_tower": {
+    "tool": "built-in image_gen",
+    "use_case": "stylized-concept",
+    "shared_prompt": "Production sprite atlas for the original game Iron Dawn. Match the existing game art's hand-pixelled pre-rendered 1990s isometric strategy appearance, compact clustered opaque pixels, muted warm olive gray stone and soot-dark steel, tiny rust-red faction markings, strong cool shadow contours, warm upper-left light, detailed but legible downsampled. Each sprite is isolated on true alpha. No floor, shadows, gradients outside silhouettes, text, numerals, grid lines or annotations. Camera pitches downward 30 degrees. Give each sprite transparent margins.",
+    "atlases": [
+      {
+        "path": "art/generated/gray-tower-air-v1.png",
+        "style_references": [
+          "art/generated/air-combined-v1.png"
+        ],
+        "prompt": "Design a new compact fictional twin-exhaust VTOL interceptor with swept delta slab wings, two aft vertical stabilizers, a wedge-shaped dark smoke-gray fuselage and small ember-red canopy. Fixed wing with no rotor or skids. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-armor-v1.png",
+        "style_references": [
+          "art/generated/tank.png"
+        ],
+        "prompt": "Design a heavy fantasy siege tank with a short wide angular body, blocky sloped gun mantlet, twin short parallel barrels and distinct high tracks with metal fenders. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-infantry-v1.png",
+        "style_references": [
+          "art/generated/rifle.png"
+        ],
+        "prompt": "Design a compact science-fiction guard sprite with charcoal full-face visor, rust-red shoulder panels, blocky dark gray armor, heavy boots and a small fictional rifle held near the chest. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-infantry-step-v1.png",
+        "style_references": [
+          "art/generated/gray-tower-infantry-v1.png"
+        ],
+        "prompt": "Generate alternate walk frames for the same armored guard with matching armor, rifle, head height, headings and scale. Reverse the walk phase so the forward and back feet swap. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-missile-infantry-v1.png",
+        "style_references": [
+          "art/generated/gray-tower-infantry-v1.png",
+          "art/generated/rocket-v2.png"
+        ],
+        "prompt": "Design a member of the gray and rust troops with a taller helmet, yellow single-lens visor, square heavy shoulder launcher and tall red-stripe reserve pack. No projectiles in flight. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-artillery-v1.png",
+        "style_references": [
+          "art/generated/gray-tower-armor-v1.png",
+          "art/generated/artillery-v2.png"
+        ],
+        "prompt": "Design mobile artillery with one long raised cannon, a low gray rectangular open carriage, rear ammunition cage, narrow paired treads and angular wedge frontal armor. Uniform four columns by two rows at the same camera elevation and scale. Directions are down-right, down, down-left, left, up-left, up, up-right, right."
+      },
+      {
+        "path": "art/generated/gray-tower-buildings-v1.png",
+        "style_references": [
+          "art/generated/structures-combined-v1.png",
+          "Iron Dawn desktop battlefield and construction sidebar"
+        ],
+        "prompt": "Make a 3 by 3 isometric atlas with nine isolated buildings in gray basalt concrete with rust red banding. Row 1 is armored octagonal command bunker, reactor cylinder power station and black hopper refinery. Row 2 is stepped barracks, split-roof factory with red gantry and low pillbox. Row 3 is shore dock with crane, flush aircraft launch pad and radar air-defense tower."
+      }
+    ]
   }
 }

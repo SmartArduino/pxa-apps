@@ -21,12 +21,14 @@
  const char* short_title(int kind)const{
   constexpr const char* titles[]={"游骑","破甲","坦克","火炮","矿车","指挥中心","电站","矿厂","兵营","工厂","炮塔","中继站","补给",
      "巡逻艇","旋翼机","林岚","船坞","机坪","防空塔","渡运艇"};
-  return titles[kind];
+  constexpr const char* gray_titles[]={"铁卫","矢锋","重坦","震地炮","矿运车","指挥堡","熔炉","高炉","铁卫营","壁垒厂","炮台","中继站","补给",
+     "黑潮艇","截击机","督导","船坞","截击坪","天幕塔","登陆艇"};
+  return world.faction()==Faction::gray_tower?gray_titles[kind]:titles[kind];
  }
 
  const char* production_label()const{
   int id=world.selected_producer();
-  return id<0?"点选生产设施":specs[world.e[id].kind].name;
+  return id<0?"点选生产设施":world.spec(world.e[id]).name;
  }
 
  const char* construction_label()const{
@@ -56,10 +58,10 @@
  }
 
  void production_picture(Raster& r,int k,Rect area,const CardState& state){
-  if(k>=power&&k<=turret&&state.active&&!world.build_ready()){
+  if(k>=power&&k<=turret&&state.active&&!world.build_ready()&&world.faction()==Faction::northern){
    unsigned stage=std::min(3u,unsigned(state.progress*4));
    Sprites::fit(r,art::construction_first+(k-power)*4+stage,area);
-  }else Skin::picture(r,k,area,state.enabled?0:4);
+  }else Skin::picture(r,k,area,state.enabled?0:4,world.faction());
  }
 
  void production_action(int k){
@@ -84,7 +86,7 @@
    auto& a=world.e[i];
    if(a.hp<=0||unit_kind(a.kind)||(a.team!=0&&!world.fog[cell(a.p)]))continue;
    auto point=field.project(a.p);
-   auto& f=art::frames[Sprites::building_frame(a.kind)];
+   auto& f=art::frames[Sprites::building_frame(a.kind,world.faction(a.team),world.mission_landmark(a))];
    float z=field.zoom,left=point.x+(int(f.bx)-f.ox)*z,top=point.y+(int(f.by)-f.oy)*z;
    if(x>=left&&x<left+f.bw*z&&y>=top&&y<top+f.bh*z&&a.p.x+a.p.y>=depth){
     depth=a.p.x+a.p.y;best=i;

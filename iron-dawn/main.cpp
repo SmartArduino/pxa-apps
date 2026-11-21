@@ -20,8 +20,10 @@
 #include "story.hpp"
 #include "story_text.hpp"
 namespace iron {
-enum class Screen {home,campaign,briefing,battle,pause,result,help,research,radio};
-enum Action {start=1,resume,missions,help,home,exit_game,begin,pausing,restart,next,select_army,base,units,buildings,repair,strike,zooming,cancel,save_return,sound_toggle,difficulty,box_select,stop_army,endless,research_open,research_ammo,research_armor,research_cancel,tactics_open,dock_close,campaign_prev,campaign_next,radio_continue,objective_focus,brief_next,brief_previous,help_next,help_previous,cancel_build,squads_open,tactic_escort,tactic_retreat,cancel_tactic,construction_page,hero_support,tactic_transport,mission0=50,squad_recall0=70,squad_assign0=80,produce0=100};
+static_assert(std::size(chapters)==CHAPTERS&&std::size(radio_scripts)==lighthouse_radio+1);
+constexpr int campaign_acts=(CHAPTERS+2)/3;
+enum class Screen {home,campaign,briefing,battle,pause,result,help,research,radio,factions};
+enum Action {start=1,resume,missions,help,home,exit_game,begin,pausing,restart,next,select_army,base,units,buildings,repair,strike,zooming,cancel,save_return,sound_toggle,difficulty,box_select,stop_army,endless,research_open,research_ammo,research_armor,research_cancel,tactics_open,dock_close,campaign_prev,campaign_next,radio_continue,objective_focus,brief_next,brief_previous,help_next,help_previous,cancel_build,squads_open,tactic_escort,tactic_retreat,cancel_tactic,construction_page,hero_support,tactic_transport,north_defense,gray_defense,mission0=50,squad_recall0=70,squad_assign0=80,produce0=100};
 enum class TacticalMode : uint8_t {none,escort,retreat,board,land};
 struct Button {Rect r;int action;};
 struct App {
@@ -54,23 +56,44 @@ struct App {
    if(at==bytes.size()&&closed){auto committed=co_await ctx->fs().replace("iron-dawn.tmp",save_buffer.generation%2?"iron-dawn-1.save":"iron-dawn-0.save");if(committed){save_bank=save_buffer.generation;save_flash=1.5f;log("Iron Dawn saved");}else log("Iron Dawn save publish failed");}else log("Iron Dawn save write failed");
   }saving=false;co_return pxa::Result<void>{};}
 
- void new_mission(int ch){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init(ch);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=false;set_clock(100);save();}
- void new_defense(uint32_t seed=0){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init_defense(seed?seed:uint32_t(now)^0x51d39f17u);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=true;selection.cancel();save();}
+ void new_mission(int ch){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init(ch,career.harbor_plan);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=false;set_clock(100);save();}
+ void new_defense(uint32_t seed=0,Faction faction=Faction::northern){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init_defense(seed?seed:uint32_t(now)^0x51d39f17u,faction);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=true;selection.cancel();save();}
  void report(){char s[200];std::snprintf(s,sizeof s,"Iron Dawn state chapter=%d screen=%d time=%u credits=%d army=%d enemy=%d queue=%d power=%d selected=%d won=%d defeated=%d",world.chapter,int(screen),unsigned(world.time),world.credits,world.army(),world.army(1),world.job_count,world.power_net,world.selected(),world.won,world.defeated);log(s);}
- void finish(){tactical=TacticalMode::none;selection.cancel();pressing=false;dragging=false;screen=Screen::result;has_run=false;if(world.extra.mode){defense_best=std::max(defense_best,world.extra.cleared);sounds.play(motion::Cue::impact);}else if(world.won){career.unlocked=std::max(career.unlocked,unsigned(std::min(CHAPTERS-1,world.chapter+1)));career.wins|=1u<<world.chapter;auto& best=career.best[world.chapter];uint32_t seconds=std::max(1u,unsigned(world.time));if(!best||seconds<best)best=seconds;sounds.play(motion::Cue::win);}else sounds.play(motion::Cue::impact);placing=-1;set_clock(100);save();report();}
+ void finish(){
+  tactical=TacticalMode::none;selection.cancel();pressing=false;dragging=false;screen=Screen::result;has_run=false;
+  if(world.extra.mode){
+   defense_best=std::max(defense_best,world.extra.cleared);sounds.play(motion::Cue::impact);
+  }else if(world.won){
+   career.unlocked=std::max(career.unlocked,unsigned(std::min(CHAPTERS-1,world.chapter+1)));
+   career.wins|=1u<<world.chapter;
+   if(world.chapter==harbor_chapter)career.harbor_plan=HarborRoute(world.mission.stage);
+   uint32_t seconds=std::max(1u,unsigned(world.time));
+   auto& best=career.best[world.chapter];
+   if(!best||seconds<best)best=seconds;
+   sounds.play(motion::Cue::win);
+  }else sounds.play(motion::Cue::impact);
+  placing=-1;set_clock(100);save();report();
+ }
  void action(int a){
   if(a!=tactic_escort&&a!=tactic_retreat&&a!=tactic_transport&&a!=objective_focus&&a!=zooming&&a!=base)tactical=TacticalMode::none;
   if(a!=box_select)selection.cancel();sounds.play(motion::Cue::click);if(a>=mission0&&a<mission0+CHAPTERS){if(unsigned(a-mission0)<=career.unlocked)new_mission(a-mission0);return;}
   if(a>=squad_recall0&&a<squad_recall0+squad_count){squad_action(a-squad_recall0+1,false);return;}
   if(a>=squad_assign0&&a<squad_assign0+squad_count){squad_action(a-squad_assign0+1,true);return;}
   if(a>=produce0&&a<produce0+int(kind_count)){production_action(a-produce0);return;}
-  switch(a){case start:new_mission(std::min(unsigned(CHAPTERS-1),career.unlocked));break;case resume:dock.close();screen=Screen::battle;placing=-1;last_tick=0;break;case missions:campaign_page=int(career.unlocked)/3;screen=Screen::campaign;break;case campaign_prev:campaign_page=0;break;case campaign_next:campaign_page=1;break;case brief_next:++brief_page;break;case brief_previous:brief_page=std::max(0,brief_page-1);break;case radio_continue:if(radio_page+1<radio_pages){++radio_page;break;}world.mission.read_events|=1u<<radio_id;screen=Screen::battle;last_tick=0;save();break;case help:help_page=0;screen=Screen::help;break;case help_next:++help_page;break;case help_previous:help_page=std::max(0,help_page-1);break;case endless:new_defense();break;case research_open:screen=Screen::research;placing=-1;break;case research_ammo:case research_armor:if(world.research_start(a==research_ammo?1:2))save();break;case research_cancel:world.research_cancel();save();break;case home:screen=Screen::home;placing=-1;break;
-   case begin:minimap_cache.release();dock.close();screen=Screen::battle;world.say("点兵营或工厂生产，点全军下达移动或攻击。",compact_ui()?5:9);world.select_all();sounds.respond(world,UnitCue::select);save();report();break;
-   case pausing:screen=Screen::pause;placing=-1;save();report();break;case restart:if(world.extra.mode)new_defense(world.extra.seed);else new_mission(world.chapter);break;case next:if(world.chapter<CHAPTERS-1)new_mission(world.chapter+1);else screen=Screen::campaign;break;
+  switch(a){case start:new_mission(std::min(unsigned(CHAPTERS-1),career.unlocked));break;case resume:dock.close();screen=Screen::battle;placing=-1;last_tick=0;break;case missions:campaign_page=int(career.unlocked)/3;screen=Screen::campaign;break;case campaign_prev:campaign_page=std::max(0,campaign_page-1);break;case campaign_next:campaign_page=std::min(campaign_acts-1,campaign_page+1);break;case brief_next:++brief_page;break;case brief_previous:brief_page=std::max(0,brief_page-1);break;case radio_continue:if(radio_page+1<radio_pages){++radio_page;break;}world.mission.read_events|=1u<<radio_id;screen=Screen::battle;last_tick=0;save();break;case help:help_page=0;screen=Screen::help;break;case help_next:++help_page;break;case help_previous:help_page=std::max(0,help_page-1);break;case endless:screen=Screen::factions;focus_action=north_defense;report();break;case north_defense:new_defense();focus_action=begin;break;case gray_defense:new_defense(0,Faction::gray_tower);focus_action=begin;break;case research_open:screen=Screen::research;placing=-1;break;case research_ammo:case research_armor:if(world.research_start(a==research_ammo?1:2))save();break;case research_cancel:world.research_cancel();save();break;case home:screen=Screen::home;placing=-1;break;
+   case begin:minimap_cache.release();dock.close();screen=Screen::battle;world.say(world.extra.mode?"守住基地。点兵营、工厂或机坪可以生产部队。":campaign_maps[world.chapter].arrival,9);world.select_all();sounds.respond(world,UnitCue::select);save();report();break;
+   case pausing:screen=Screen::pause;placing=-1;save();report();break;case restart:if(world.extra.mode)new_defense(world.extra.seed,world.faction());else new_mission(world.chapter);break;case next:if(world.chapter<CHAPTERS-1)new_mission(world.chapter+1);else {campaign_page=world.chapter/3;screen=Screen::campaign;}break;
    case box_select:if(selection.armed){selection.cancel();world.say("框选已取消");}else {selection.armed=true;placing=-1;last_selected_id=-1;world.say("拖动框选作战单位，松手后点地面移动。",6);}break;
    case stop_army:world.stop_selected();sounds.respond(world,UnitCue::stop);report();break;
    case objective_focus:{
-    auto point=world.objective_position();field.focus(point);
+    auto point=world.objective_position();
+    if(!world.extra.mode&&world.chapter==harbor_chapter&&world.mission.stage==harbor_choice){
+     Vec center=field.unproject(field.width/2,(field.top+field.bottom)/2);
+     bool beacon_live=world.relay_at(harbor_beacon_site,2)>=0;
+     bool station_live=world.relay_at(harbor_switch_site,2)>=0;
+     if(station_live&&(!beacon_live||dist(center,harbor_beacon_site)<2))point=harbor_switch_site;
+    }
+    field.focus(point);
     char focus[112];std::snprintf(focus,sizeof focus,"Iron Dawn objective focus x=%.1f y=%.1f side=%d",point.x,point.y,world.side);log(focus);
     world.say("任务目标已标记；点地面下达行军指令。",5);
    }break;case select_army:world.select_all();sounds.respond(world,UnitCue::select);placing=-1;break;case base:field.focus(world.base_position());break;case units:tab=0;placing=-1;if(compact_ui())dock.toggle(DockPanel::units);break;case buildings:tab=1;placing=-1;if(compact_ui())dock.toggle(DockPanel::buildings);break;case tactics_open:dock.toggle(DockPanel::tactics);break;case dock_close:dock.close();break;case squads_open:placing=-1;dock.toggle(DockPanel::squads);break;case repair:world.repair();break;case strike:placing=99;world.say("点亮区内目标：空袭 180 / 冷却 45 秒");break;
@@ -91,6 +114,10 @@ struct App {
  bool readable_ui()const{return !wide_ui()&&display.density_q16>=81920;}
  int page_top(const Raster& r)const{return readable_ui()?r.text_height("中",25)+r.text_height("中",12)+24:64;}
  int page_row(const Raster& r)const{return readable_ui()?std::max(compact_layout().row,r.text_height("中",15)+16):32;}
+ int small_dialog_row()const{
+  int physical_height=std::max(1,int(display.height));
+  return std::clamp((32*h+physical_height-1)/physical_height,24,h/6);
+ }
  LargeHudLayout large_layout()const{return LargeHudLayout(w,h,display_plan.units_per_dp,display_plan.font_scale);}
  bool compact_ui()const{return !wide_ui()&&CompactHudLayout::applies(display.width,display.height);}
  CompactHudLayout compact_layout()const{return CompactHudLayout(h,std::max(1,int(display.height)),w,display.density_q16/65536.f,display_plan.font_scale);}
@@ -100,9 +127,9 @@ struct App {
  }
  bool minimap_visible()const{auto m=minimap();return m.y+m.h+3<=visible_bottom();}
  bool selection_visible()const{if(wide_ui())return false;auto a=selection_button();return a.y+a.h<=visible_bottom();}
- Rect selection_button()const{return wide_ui()?large_layout().command(1):Rect{w-90,field.top+96,80,readable_ui()?compact_layout().row:28};}
+ Rect selection_button()const{return wide_ui()?large_layout().command(1):compact_ui()?compact_layout().selection():Rect{w-90,field.top+96,80,28};}
  Rect battlefield()const{return {0,field.top,field.width,visible_bottom()-field.top};}
- Rect minimap()const{return wide_ui()?large_layout().map():Rect{w-90,field.top+8,80,80};}
+ Rect minimap()const{return wide_ui()?large_layout().map():compact_ui()?compact_layout().map():Rect{w-90,field.top+8,80,80};}
  bool map_click(int x,int y){if(!minimap_visible())return false;auto m=minimap();if(!m.has(x,y))return false;field.focus({std::clamp((x-m.x)*world.side/float(m.w),1.f,float(world.side-2)),std::clamp((y-m.y)*world.side/float(m.h),1.f,float(world.side-2))});return true;}
  int hit_button(int x,int y)const{for(int i=button_count-1;i>=0;--i)if(buttons[i].r.has(x,y))return buttons[i].action;return -1;}
  void on_pointer(pxa::Context&,const pxa::input::Pointer& p){
@@ -147,7 +174,7 @@ struct App {
    if(id<0||!unit_kind(world.e[id].kind)){int building=building_at(x,y);if(building>=0)id=building;}
    if(id>=0&&world.e[id].team==0){
     if(unit_kind(world.e[id].kind)&&id==last_selected_id&&clock-last_tap<.4f){int kind=world.e[id].kind;for(auto& unit:world.e)unit.selected=deployed(unit)&&unit.team==0&&unit.kind==kind;world.say("已编组全部同型部队");}
-    else {world.select_one(id);world.say(world.e[id].kind==factory?"工厂：选车辆或点空地设集结":world.e[id].kind==barracks?"兵营：选步兵或点空地设集结":specs[world.e[id].kind].name);}
+    else {world.select_one(id);world.say(world.e[id].kind==factory?"工厂：选车辆或点空地设集结":world.e[id].kind==barracks?"兵营：选步兵或点空地设集结":world.spec(world.e[id]).name);}
     int kind=world.e[id].kind;
     if(kind==hq){tab=1;if(compact_ui())dock.panel=DockPanel::buildings;}
     else if(world.selected_producer()>=0){tab=0;if(compact_ui())dock.panel=DockPanel::units;}
@@ -167,14 +194,24 @@ struct App {
  void on_controller(pxa::Context&,const pxa::input::ControllerState& s){using namespace pxa::input;static uint32_t prior=0;uint32_t pressed=s.buttons&~prior;prior=s.buttons;if(!ready)return;if(pressed&controller_b){(void)on_back();return;}if(screen==Screen::battle){if(selection.tracking&&!(pressed&controller_start))return;if(pressed&controller_a)action(select_army);if(pressed&controller_x)action(stop_army);if(pressed&controller_start)action(pausing);if(s.buttons&controller_left)field.camx-=16;if(s.buttons&controller_right)field.camx+=16;if(s.buttons&controller_up)field.camy-=16;if(s.buttons&controller_down)field.camy+=16;clamp_camera();}else {if(pressed&controller_up)focus_action=button_count?buttons[std::max(0,button_index()-1)].action:start;if(pressed&controller_down)focus_action=button_count?buttons[std::min(button_count-1,button_index()+1)].action:start;if(pressed&controller_a)action(focus_action);}}
  int button_index()const{for(int i=0;i<button_count;++i)if(buttons[i].action==focus_action)return i;return 0;}
  pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& e){sounds.event(e);if(auto metrics=pxa::ui::decode_display_metrics(e)){update_display(*metrics);return true;}auto tick=pxa::decode_clock_tick(e);if(!tick)return false;now=tick->timestamp_us;float dt=last_tick?std::clamp(float(now-last_tick)*1e-6f,0.f,.25f):.05f;last_tick=now;if(!ready||!ctx->foreground())return true;set_clock(screen==Screen::battle||screen==Screen::research?33:100);clock+=dt;field.clock=clock;save_flash=std::max(0.f,save_flash-dt);sounds.tick(now,dt,screen==Screen::battle||screen==Screen::research,screen==Screen::pause||screen==Screen::radio);
-  if(screen==Screen::battle||screen==Screen::research){auto before=UnitVoice::roster(world);for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));for(int i=0;i<MAX;++i)if(!before[i]&&world.e[i].hp>0&&world.e[i].team==0&&world.e[i].kind<hq)sounds.unit_ready(world.e[i].kind);if(world.sound){sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode)defense_best=std::max(defense_best,world.extra.cleared);if(world.won||world.defeated)finish();else if(!world.extra.mode){unsigned pending=world.mission.events&~world.mission.read_events;for(int id=0;id<8;++id)if(pending&(1u<<id)){radio_id=id;radio_page=0;screen=Screen::radio;tactical=TacticalMode::none;selection.cancel();dock.close();save();break;}}if(world.autosave>=12){world.autosave=0;save();report();}}
+  if(screen==Screen::battle||screen==Screen::research){auto before=UnitVoice::roster(world);for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));for(int i=0;i<MAX;++i)if(!before[i]&&world.e[i].hp>0&&world.e[i].team==0&&world.e[i].kind<hq)sounds.unit_ready(world.e[i].kind,world.faction());if(world.sound){sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode)defense_best=std::max(defense_best,world.extra.cleared);if(world.won||world.defeated)finish();else if(!world.extra.mode){unsigned pending=world.mission.events&~world.mission.read_events;for(unsigned id=0;id<std::size(radio_scripts);++id)if(pending&(1u<<id)){radio_id=int(id);radio_page=0;screen=Screen::radio;tactical=TacticalMode::none;selection.cancel();dock.close();save();break;}}if(world.autosave>=12){world.autosave=0;save();report();}}
   render();if(exit_pending&&!saving&&sounds.shutdown()){exiting=true;(void)ctx->window().request_back();}return true;}
  void on_background(pxa::Context&){tactical=TacticalMode::none;dock.close();selection.cancel();pressing=false;dragging=false;if(screen==Screen::battle||screen==Screen::research)screen=Screen::pause;sounds.suspend();save();set_clock(0);last_tick=0;}
  void on_foreground(pxa::Context&){sounds.resume();(void)ctx->window().request_orientation(pxa::OrientationPreference::landscape);(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);last_tick=0;if(ready)set_clock(screen==Screen::battle||screen==Screen::research?33:100);}
  void button(Raster& r,Rect area,int a,std::string_view label,bool primary=false,bool enabled=true){
   if(button_count<int(buttons.size())&&enabled)buttons[button_count++]={area,a};bool held=pressing&&!dragging&&area.has(downx,downy);Skin::button(r,area,primary,held,enabled);
   UiIcon icon=UiIcon::none;if(display.width>=480)switch(a){case pausing:icon=UiIcon::pause;break;case stop_army:icon=UiIcon::stop;break;case repair:icon=UiIcon::repair;break;case strike:icon=UiIcon::air;break;case zooming:icon=UiIcon::zoom;break;case cancel:icon=UiIcon::cancel;break;case units:icon=UiIcon::units;break;case buildings:icon=UiIcon::buildings;break;case select_army:icon=UiIcon::all;break;case base:icon=UiIcon::base;break;case box_select:icon=UiIcon::box;break;default:break;}
-  auto color=enabled?(primary?cyan:cream):muted;int icon_size=readable_ui()?std::min(24,r.text_height("中",12)):12;if(icon!=UiIcon::none&&area.w>=r.measure(label,15)+icon_size+12){Skin::icon(r,icon,area.x+5,area.y+(area.h-icon_size)/2,!enabled?muted:icon==UiIcon::stop?red:icon==UiIcon::air?gold:cyan,icon_size);area.x+=icon_size+5;area.w-=icon_size+5;}if(held)++area.y;r.label(area,label,color,15);
+  auto color=enabled?(primary?cyan:cream):muted;
+  Rect content{area.x+4,area.y+2+int(held),area.w-8,area.h-4};
+  int icon_size=readable_ui()?std::min(24,r.text_height("中",12)):12;
+  int label_width=r.ink_width(label,15),group=icon_size+5+label_width;
+  if(icon!=UiIcon::none&&group<=content.w&&icon_size<=content.h){
+   int x=content.x+(content.w-group)/2;
+   Skin::icon(r,icon,x,content.y+(content.h-icon_size)/2,
+    !enabled?muted:icon==UiIcon::stop?red:icon==UiIcon::air?gold:cyan,icon_size);
+   content.x=x+icon_size+5;content.w=label_width;
+  }
+  r.label(content,label,color,15);
  }
  void paragraph(Raster& r,int x,int y,std::initializer_list<const char*> lines,int size=17,uint16_t color=cream,int step=26){for(auto s:lines){r.text(x,y,s,color,size);y+=step;}}
  void insignia(Raster& r,int x,int y,int size,uint16_t c){r.poly({Pt{float(x),float(y-size)},Pt{float(x+size),float(y)},Pt{float(x),float(y+size)},Pt{float(x-size),float(y)}},c);r.line(x-size/2,y,x,y-size/2,navy,3);r.line(x,y-size/2,x+size/2,y,navy,3);r.rect(x-2,y,4,size/2,navy);}
@@ -187,9 +224,9 @@ struct App {
    button(r,{w-pause-6,4,pause,top-10},pausing,"暂停");return;
   }
   r.rect(0,0,w,50,navy);r.rect(0,48,w,2,edge);int available=w-102,ore_width=available*36/100,power_width=available*29/100,power_x=14+ore_width,time_x=power_x+power_width+6,time_width=w-82-time_x;char b[80];
-  Skin::panel_frame(r,{8,3,ore_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::ore,14,14,gold);if(world.credits>=10000)std::snprintf(b,sizeof b,"%dk",world.credits/1000);else std::snprintf(b,sizeof b,"%04d",world.credits);r.text(31,5,b,gold,20);r.text(31,28,"矿石",muted,10);
-  Skin::panel_frame(r,{power_x,3,power_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::power,power_x+6,14,world.power_net<0?red:cyan);std::snprintf(b,sizeof b,"%+d",world.power_net);r.text(power_x+23,6,b,world.power_net<0?red:cyan,18);r.text(power_x+23,28,world.power_net<0?"缺电":"电力",muted,10);
-  Skin::panel_frame(r,{time_x,3,time_width,42},rgb(22,35,38));std::snprintf(b,sizeof b,"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({time_x,save_flash>0?4:9,time_width,save_flash>0?23:30},b,cream,16);if(save_flash>0)r.label({time_x,28,time_width,15},"已保存",cyan,10);button(r,{w-76,4,68,42},pausing,"暂停");
+  Skin::panel_frame(r,{8,3,ore_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::ore,14,14,gold);if(world.credits>=10000)std::snprintf(b,sizeof b,"%dk",world.credits/1000);else std::snprintf(b,sizeof b,"%04d",world.credits);r.label({31,5,ore_width-28,22},b,gold,20,0);r.label({31,27,ore_width-28,15},"矿石",muted,10,0);
+  Skin::panel_frame(r,{power_x,3,power_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::power,power_x+6,14,world.power_net<0?red:cyan);std::snprintf(b,sizeof b,"%+d",world.power_net);r.label({power_x+23,5,power_width-28,22},b,world.power_net<0?red:cyan,18,0);r.label({power_x+23,27,power_width-28,15},world.power_net<0?"缺电":"电力",muted,10,0);
+  Skin::panel_frame(r,{time_x,3,time_width,42},rgb(22,35,38));std::snprintf(b,sizeof b,"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({time_x+4,5,time_width-8,save_flash>0?22:38},b,cream,16);if(save_flash>0)r.label({time_x+4,27,time_width-8,15},"已保存",cyan,10);button(r,{w-76,4,68,42},pausing,"暂停");
  }
  void draw_minimap(Raster& r){
   auto m=minimap();
@@ -201,6 +238,10 @@ struct App {
   for(auto& a:world.e)if(deployed(a)&&(a.team==0||world.fog[cell(a.p)]||(!world.extra.mode&&a.kind==relay))){
    auto p=point(a.p);
    int size=a.kind==supply||a.kind==relay?4:3;
+   if(world.harbor_landmark(a)>=0&&a.team==2){
+    if(world.mission.stage==harbor_choice)r.ring(p.x,p.y,5,5,gold);
+    else continue;
+   }
    r.rect(p.x-size/2,p.y-size/2,size,size,a.team==0?cyan:a.team==1?red:a.kind==supply?cyan:gold);
   }
   if(world.authored_map()){
@@ -208,8 +249,11 @@ struct App {
    r.ring(p.x,p.y,4,4,gold);
   }
   if((world.extra.mode||world.count(hq,1))&&world.next_wave>world.time&&world.next_wave-world.time<=10&&(!world.extra.mode||world.wave==int(world.extra.cleared))){
-   auto p=point(world.wave_entry(world.wave+1));
-   r.ring(p.x,p.y,3+int(world.time*3)%3,3+int(world.time*3)%3,red);
+   int wave=world.wave+1,entries=world.dual_raid_entry(wave)?2:1;
+   for(int i=0;i<entries;++i){
+    auto p=point(world.wave_entry(wave+i));
+    r.ring(p.x,p.y,3+int(world.time*3)%3,3+int(world.time*3)%3,red);
+   }
   }
   if(world.chapter==4&&!world.extra.mode){
    auto p=point(world.convoy_stop(3));
@@ -218,12 +262,32 @@ struct App {
     auto p=point(world.e[truck].p);r.rect(p.x-1,p.y-1,3,3,cream);
    }
   }
+  if(world.chapter==lighthouse_chapter&&!world.extra.mode){
+   for(int id:world.mission.convoy)if(id>=0&&deployed(world.e[id])&&world.e[id].kind==landing_craft&&world.e[id].team==2){
+    auto p=point(world.e[id].p);r.rect(p.x-1,p.y-1,3,3,cream);
+   }
+  }
   const Pt corners[]={point(field.unproject(0,field.top)),point(field.unproject(field.width,field.top)),
                       point(field.unproject(field.width,field.bottom)),point(field.unproject(0,field.bottom))};
   for(int i=0;i<4;++i){auto a=corners[i],b=corners[(i+1)%4];r.line(a.x,a.y,b.x,b.y,cream);}
   r.clip=clip;
  }
- void battle_overlays(Raster& r,bool compact){int bottom=visible_bottom(),battle_width=field.width;char b[160];std::snprintf(b,sizeof b,"%s",world.active_objective());if(world.extra.mode)std::snprintf(b,sizeof b,"守备 %u 波 · 纪录 %u",world.extra.cleared,defense_best);else if(world.chapter==3)std::snprintf(b,sizeof b,"电台 %d / 2 · 军工厂 %s",world.captured_nodes(),world.count(factory,1)?"待摧毁":"已摧毁");else if(world.chapter==4)std::snprintf(b,sizeof b,"电台 %d / 2 · 车队 %u / 2",world.captured_nodes(),unsigned(__builtin_popcount(world.mission.delivered)));else if(world.chapter==5)std::snprintf(b,sizeof b,"节点 %d / 3 · %s",world.captured_nodes(),world.mission.stage<2?"核心屏障开启":"核心屏障解除");else if(world.chapter==1)std::snprintf(b,sizeof b,"中继站 %s · 撤离 %02u / 90",world.count(relay,0)?"已占领":"待占领",std::min(90u,unsigned(world.radio_time)));
+ void battle_overlays(Raster& r,bool compact){
+  int bottom=visible_bottom(),battle_width=field.width;
+  char b[160];
+  std::snprintf(b,sizeof b,"%s",world.active_objective());
+  if(world.extra.mode)std::snprintf(b,sizeof b,"守备 %u 波 · 纪录 %u",world.extra.cleared,defense_best);
+  else if(world.chapter==3&&!world.mission.stage)std::snprintf(b,sizeof b,"占领电台 %d / 2",world.captured_nodes());
+  else if(world.chapter==4&&world.mission.stage==2)std::snprintf(b,sizeof b,"补给车到达 %u / 2",unsigned(__builtin_popcount(world.mission.delivered)));
+  else if(world.chapter==5&&!world.mission.stage)std::snprintf(b,sizeof b,"占领调度站 %d / 3",world.captured_nodes());
+  else if(world.chapter==1&&world.count(relay,0))std::snprintf(b,sizeof b,"守住中继站 · 撤离 %02u / 90 秒",std::min(90u,unsigned(world.radio_time)));
+  if(world.chapter==harbor_chapter&&world.mission.stage==harbor_beacon)
+   std::snprintf(b,sizeof b,"撤离信标 %02u / 45 秒 · %s",unsigned(world.radio_time),
+    world.harbor_signal_active()?"亮着":"暂停引航");
+  if(world.chapter==lighthouse_chapter&&world.mission.stage==guide_ferries){
+   const char* paused=world.lighthouse_pause_reason();
+   std::snprintf(b,sizeof b,"灯塔 %02u / 35 秒 · %s",unsigned(world.radio_time),paused?paused:"正在引航");
+  }
   if(readable_ui()){
    int line=compact_layout().line,right=minimap_visible()?minimap().x-10:battle_width-8;StoryText goal(r,{b,"",""},right-24);Rect objective{8,field.top+6,right-8,int(std::min(2u,goal.count))*goal.row(r)+8};MissionSkin::draw(r,objective,0);if(button_count<int(buttons.size()))buttons[button_count++]={objective,objective_focus};
    goal.draw(r,{objective.x+8,objective.y+4,objective.w-16,objective.h-8},0);
@@ -234,7 +298,7 @@ struct App {
    show_build_grid(r);return;
   }
   MissionSkin::draw(r,{7,field.top+5,battle_width-104,26},0);if(button_count<int(buttons.size()))buttons[button_count++]={{7,field.top+5,battle_width-104,26},objective_focus};r.label({17,field.top+6,battle_width-125,24},b,cream,12,0);
-  if(world.count(hq,1)||world.extra.mode){int left=std::max(0,int(std::ceil(world.next_wave-world.time)));if(world.extra.mode&&world.army(1))std::snprintf(b,sizeof b,"第%d波 / 敌军%d",world.wave,world.army(1));else std::snprintf(b,sizeof b,"%s %02d秒",world.wave_direction(world.wave+1),left);r.shade({10,field.top+31,111,18},navy,12);r.text(15,field.top+32,b,left<=12?red:gold,11);}
+  if(world.count(hq,1)||world.extra.mode){int left=std::max(0,int(std::ceil(world.next_wave-world.time)));if(world.extra.mode&&world.army(1))std::snprintf(b,sizeof b,"第%d波·%d敌",world.wave,world.army(1));else std::snprintf(b,sizeof b,"%s %02d秒",world.wave_direction(world.wave+1),left);int width=std::clamp(r.ink_width(b,11)+10,102,compact?200:116);r.shade({10,field.top+32,width,22},navy,12);r.label({15,field.top+32,width-10,22},b,left<=12?red:gold,11,0);}
   if(!compact){
    tactical_buttons(r,{129,field.top+32,72,24},{207,field.top+32,72,24});
    support_button(r,{285,field.top+32,75,24});
@@ -253,7 +317,7 @@ struct App {
    auto panel_area=layout.overlay(dock.panel);r.box(panel_area,navy,edge);r.rect(8,panel_area.y,88,2,cyan);
    if(dock.panel==DockPanel::tactics){
     int selected=world.selected();std::snprintf(b,sizeof b,"已选 %d / 部队 %d",selected,world.army());
-    if(selected==1)for(auto& a:world.e)if(a.hp>0&&a.selected)std::snprintf(b,sizeof b,"%s · 耐久 %u · %s",specs[a.kind].name,unsigned(std::ceil(a.hp)),world.in_cover(a)?"掩护":world.paved(a.p)?"公路":"野地");
+    if(selected==1)for(auto& a:world.e)if(a.hp>0&&a.selected)std::snprintf(b,sizeof b,"%s · 耐久 %u · %s",world.spec(a).name,unsigned(std::ceil(a.hp)),a.kind==rotorcraft?"空中":world.in_cover(a)?"掩护":world.paved(a.p)?"公路":"野地");
    }else if(dock.panel==DockPanel::squads)std::snprintf(b,sizeof b,"点队号召回，再点定位");
    else if(dock.panel==DockPanel::units)std::snprintf(b,sizeof b,"%s · 队列 %d / 6",production_label(),world.job_count);
    else std::snprintf(b,sizeof b,"%s · 电力 %+d",construction_label(),world.power_net);
@@ -286,8 +350,8 @@ struct App {
      r.label(layout.name(j,dock.panel),short_title(k),state.enabled?cream:muted,12);
      if(state.queued){std::snprintf(b,sizeof b,"%d",state.queued);r.label({card.x+card.w-18,card.y+4,14,layout.line},b,cyan,12);}
      if(state.active)Skin::progress(r,layout.progress(j,dock.panel),state.progress,world.build_ready()&&building?gold:cyan);
-     std::snprintf(b,sizeof b,"%d",specs[k].cost);
-     r.label(layout.price(j,dock.panel),state.text?state.text:b,state.enabled?(state.active||world.credits>=specs[k].cost?gold:red):muted,12);
+     std::snprintf(b,sizeof b,"%d",world.spec(k).cost);
+     r.label(layout.price(j,dock.panel),state.text?state.text:b,state.enabled?(state.active||world.credits>=world.spec(k).cost?gold:red):muted,12);
     }
    }
   }
@@ -303,7 +367,7 @@ struct App {
  void hud(Raster& r){
   r.clip={0,0,w,h};
   // World labels are drawn in the native text pass. Keep them off the HUD.
-  int top=compact_ui()?field.top:field.top+57,bottom_clip=visible_bottom();
+  int top=field.top+57,bottom_clip=visible_bottom();
   for(unsigned i=0;i<native_text.count;++i){
    auto& clip=native_text.commands[i].clip;
    int end=std::min(clip.y+clip.h,bottom_clip);
@@ -322,15 +386,15 @@ struct App {
    Skin::card_frame(r,card,state.active);
    auto picture=layout.image(j);Skin::well(r,picture);
    production_picture(r,k,{picture.x+2,picture.y+2,picture.w-4,picture.h-4},state);
-   r.label(layout.name(j),compact?short_title(k):specs[k].name,state.enabled?cream:muted,11);
+   r.label(layout.name(j),compact?short_title(k):world.spec(k).name,state.enabled?cream:muted,11);
    if(state.active)Skin::progress(r,layout.progress(j),state.progress,cyan);
-   std::snprintf(b,sizeof b,"%d",specs[k].cost);
+   std::snprintf(b,sizeof b,"%d",world.spec(k).cost);
    r.label(layout.price(j),state.text?state.text:b,state.enabled?gold:muted,10);
   }
   button(r,{w-76,bottom+8,68,25},select_army,"全军",true);button(r,{w-76,bottom+38,68,25},placing>=0?cancel:base,placing>=0?"取消":compact?"归位":"回基地");
   button(r,{8,bottom+68,56,25},research_open,"科研");button(r,{w-76,bottom+68,68,25},squads_open,"编队",dock.open());if(tab)button(r,{w-76,bottom+94,68,24},construction_page,combined_page?"基础":"海空");if(layout.card_height>90){std::snprintf(b,sizeof b,"火%d 甲%d",world.extra.damage,world.extra.armor);r.label({8,bottom+97,56,18},b,gold,10);}
   int command_y=layout.commands;
-  if(world.job_count){auto& j=world.jobs[0];std::snprintf(b,sizeof b,"生产 %s",compact?short_title(j.kind):specs[j.kind].name);r.text(9,command_y+2,b,cream,11);Skin::progress(r,{158,command_y+11,38,4},1-j.left/j.total,cyan);}else {std::snprintf(b,sizeof b,compact?"选%d / 军%d":"已选 %d / 部队 %d",world.selected(),world.army());if(world.selected()==1)for(auto& a:world.e)if(a.hp>0&&a.selected){if(production_building(a.kind))std::snprintf(b,sizeof b,compact?"点地面设集结":"点空地设置集结点");else if(combat_kind(a.kind)){if(compact)std::snprintf(b,sizeof b,"%s %u星",short_title(a.kind),veteran_rank(a));else std::snprintf(b,sizeof b,"%s · %u星 · %u击毁",specs[a.kind].name,veteran_rank(a),unsigned(a.kills));}}r.text(9,command_y+3,b,muted,11);}
+  if(world.job_count){auto& j=world.jobs[0];std::snprintf(b,sizeof b,"生产 %s",compact?short_title(j.kind):world.spec(j.kind).name);r.label({9,command_y,145,24},b,cream,11,0);Skin::progress(r,{158,command_y+10,38,4},1-j.left/j.total,cyan);}else {std::snprintf(b,sizeof b,compact?"选%d / 军%d":"已选 %d / 部队 %d",world.selected(),world.army());if(world.selected()==1)for(auto& a:world.e)if(a.hp>0&&a.selected){if(production_building(a.kind))std::snprintf(b,sizeof b,compact?"点地面设集结":"点空地设置集结点");else if(combat_kind(a.kind)){if(compact)std::snprintf(b,sizeof b,"%s %u星",short_title(a.kind),veteran_rank(a));else std::snprintf(b,sizeof b,"%s · %u星 · %u击毁",world.spec(a).name,veteran_rank(a),unsigned(a.kills));}}r.label({9,command_y,187,24},b,muted,11,0);}
   button(r,{202,command_y,52,24},stop_army,"停止");button(r,{264,command_y,48,24},tab&&placing<0?cancel_build:cancel,tab&&placing<0?"撤建":"撤单");button(r,{317,command_y,48,24},repair,"维修");if(world.strike_cd>0){std::snprintf(b,sizeof b,"%02u秒",unsigned(std::ceil(world.strike_cd)));button(r,{370,command_y,50,24},strike,b,false,false);}else button(r,{370,command_y,50,24},strike,"空袭");button(r,{425,command_y,47,24},zooming,"缩放");
   battle_overlays(r,false);
   if(dock.panel==DockPanel::squads){
@@ -340,74 +404,239 @@ struct App {
    for(int i=0;i<squad_count;++i)squad_cards(r,i,{10+i*column,y+29,column-6,28},{10+i*column,y+62,column-6,28});
   }
   r.rect(8,h-20,w-16,1,edge);int selected=world.selected();const Entity* single=nullptr;if(selected==1)for(auto& a:world.e)if(a.hp>0&&a.selected)single=&a;
-  if(single){if(single->kind==harvester)std::snprintf(b,sizeof b,"矿车 · 载矿 %u",unsigned(single->cargo));else std::snprintf(b,sizeof b,"%s · 耐久 %u",specs[single->kind].name,unsigned(std::ceil(single->hp)));}else if(selected>1){int soldiers=0,tanks=0,guns=0;for(auto& a:world.e)if(a.hp>0&&a.selected){soldiers+=a.kind<=rocket;tanks+=a.kind==tank;guns+=a.kind==artillery;}std::snprintf(b,sizeof b,"%d 步兵   %d 坦克   %d 火炮",soldiers,tanks,guns);}else std::snprintf(b,sizeof b,"守住蓝色补给站五秒可获得矿石与维修");r.label({10,h-18,w-20,18},b,muted,10,0);
+  if(single){if(single->kind==harvester)std::snprintf(b,sizeof b,"矿车 · 载矿 %u",unsigned(single->cargo));else std::snprintf(b,sizeof b,"%s · 耐久 %u",world.spec(*single).name,unsigned(std::ceil(single->hp)));}else if(selected>1){int soldiers=0,tanks=0,guns=0;for(auto& a:world.e)if(a.hp>0&&a.selected){soldiers+=a.kind<=rocket;tanks+=a.kind==tank;guns+=a.kind==artillery;}std::snprintf(b,sizeof b,"%d 步兵   %d 坦克   %d 火炮",soldiers,tanks,guns);}else std::snprintf(b,sizeof b,"守住蓝色补给站五秒可获得矿石与维修");r.label({10,h-18,w-20,18},b,muted,10,0);
  }
  void title_background(Raster& r){field.ground.release();bool cached=field.cache_ground;field.cache_ground=false;int oldtop=field.top,oldbottom=field.bottom,oldwidth=field.width;field.width=w;float cx=field.camx,cy=field.camy,oldzoom=field.zoom;field.zoom=std::clamp(w/420.f,1.25f,1.8f);field.top=0;field.bottom=h;field.focus(world.deployment_view());field.camx+=30;field.draw(r,world);field.top=oldtop;field.bottom=oldbottom;field.width=oldwidth;field.camx=cx;field.camy=cy;field.zoom=oldzoom;field.cache_ground=cached;
   for(int y=0;y<h;++y){int opacity=y<h/2?10-y*4/(h/2):6+(y-h/2)*6/(h/2);r.shade({0,y,w,1},navy,std::clamp(opacity,0,16));}
  }
- void page_header(Raster& r,const char* title,const char* subtitle){r.rect(0,0,w,h,navy);int title_height=readable_ui()?r.text_height(title,25):30;r.rect(15,13,3,title_height,cyan);r.label({28,7,w-56,title_height},title,cream,25,0);r.label({29,readable_ui()?title_height+16:41,w-58,readable_ui()?r.text_height(subtitle,12):16},subtitle,muted,12,0);}
- void home_screen(Raster& r){title_background(r);r.native_text=&native_text;int row=readable_ui()?page_row(r):39,small_row=readable_ui()?row:31,gap=10,y=readable_ui()?h-row-small_row-gap-16:std::max(214,h-128),logo_width=std::min(w-64,640),x=(w-480)/2;
-  Sprites::fit(r,art::wordmark_first,{(w-logo_width)/2,20,logo_width,std::min(152,y-58)});Skin::panel_frame(r,{x+12,y-12,456,row+small_row+gap+24},navy,edge);
-  button(r,{x+24,y,246,row},start,career.unlocked?"继续战役  >":"开启战役  >",true);button(r,{x+280,y,176,row},resume,"返回战场",false,has_run);button(r,{x+24,y+row+gap,102,small_row},missions,"战役档案");button(r,{x+134,y+row+gap,102,small_row},endless,"无尽守备");button(r,{x+244,y+row+gap,102,small_row},help,"指挥手册");button(r,{x+354,y+row+gap,102,small_row},difficulty,career.easy?"休闲":"标准");
-  if(!readable_ui())r.text(w-18,h-17,"1.7.2",muted,10,2);
+ void page_header(Raster& r,const char* title,const char* subtitle){
+  r.rect(0,0,w,h,navy);
+  auto column=page_column(w,h,28,752);
+  int title_height=readable_ui()?r.text_height(title,25):30;
+  r.rect(column.x-13,7,3,title_height,cyan);
+  r.label({column.x,7,column.w,title_height},title,cream,25,0);
+  r.label({column.x+1,readable_ui()?title_height+16:41,column.w-2,std::max(16,r.text_height(subtitle,12))},subtitle,muted,12,0);
  }
- void campaign_screen(Raster& r){page_header(r,"战役档案",campaign_page?"第二幕 / 把城市还给居民":"第一幕 / 重建求救的信号");int row=readable_ui()?page_row(r):30,top=readable_ui()?page_top(r)+8:74,footer=readable_ui()?h-2*row-28:h-91,step=std::min(112,(footer-top)/3);char b[80];
-  for(int k=0;k<3;++k){int j=campaign_page*3+k,y=top+k*step;auto& c=chapters[j];bool locked=unsigned(j)>career.unlocked;Skin::panel_frame(r,{20,y,w-40,step-8},panel,locked?edge:cyan);int name_y=y+5+(readable_ui()?r.text_height(c.place,12)+4:18);r.label({34,y+5,w-160,readable_ui()?r.text_height(c.place,12):16},c.place,locked?muted:gold,12,0);r.label({34,name_y,w-160,readable_ui()?r.text_height(c.name,12):24},c.name,locked?muted:cream,18,0);if(!readable_ui()&&step>=76)r.text(34,y+49,c.map,muted,12);std::snprintf(b,sizeof b,"%s",locked?"待解锁":career.wins&(1u<<j)?"重温":"出发");button(r,{w-113,y+8,77,readable_ui()?std::min(row,step-20):30},mission0+j,b,!locked,!locked);}
-  int tab_y=readable_ui()?footer+4:h-83;button(r,{24,tab_y,126,readable_ui()?row:29},campaign_prev,"第一幕",campaign_page==0);button(r,{w-150,tab_y,126,readable_ui()?row:29},campaign_next,"第二幕",campaign_page==1);button(r,{20,readable_ui()?h-row-12:h-43,w-40,row},home,"返回指挥部");
+ void home_screen(Raster& r){
+  title_background(r);r.native_text=&native_text;
+  int row=readable_ui()?page_row(r):39,small_row=readable_ui()?row:31,gap=10;
+  int y=readable_ui()?h-row-small_row-gap-16:std::max(214,h-128),logo_width=std::min(w-56,760);
+  int width=std::clamp(w*5/8,480,720),x=(w-width)/2;
+  Sprites::fit(r,art::wordmark_first,{(w-logo_width)/2,20,logo_width,std::min(190,y-58)});
+  Skin::panel_frame(r,{x+12,y-12,width-24,row+small_row+gap+24},navy,edge);
+  int first=width*246/480;
+  button(r,{x+24,y,first,row},start,career.unlocked?"继续战役  >":"开启战役  >",true);
+  button(r,{x+34+first,y,width-first-58,row},resume,"返回战场",false,has_run);
+  const char* labels[]={"战役档案","无尽守备","指挥手册",career.easy?"休闲":"标准"};
+  const int actions[]={missions,endless,help,difficulty};
+  int buttons=width-48+8;
+  for(int i=0;i<4;++i){
+   int left=x+24+buttons*i/4,right=x+24+buttons*(i+1)/4-8;
+   button(r,{left,y+row+gap,right-left,small_row},actions[i],labels[i]);
+  }
+  if(!readable_ui())r.text(w-18,h-17,"1.10.0",muted,10,2);
  }
- void briefing_screen(Raster& r){auto& c=chapters[world.chapter];page_header(r,world.extra.mode?"最后一班补给车":c.name,world.extra.mode?"无尽守备 / 北境临时前哨":c.place);unsigned person=world.extra.mode?1:c.speaker;bool standing=w>=720&&h>=400&&person<2,small=display.width<400;int row=page_row(r),portrait_y=readable_ui()?page_top(r)+8:76,tx=standing?224:small?24:94,ty=readable_ui()?portrait_y+r.text_height("中",14)+10:small?130:104,yy=readable_ui()?h-row-136:h-143,mx=standing?224:24;
-  if(standing){Skin::well(r,{24,72,176,h-165});Sprites::fit(r,art::story_standing_first+(person==1?1:0),{28,76,168,h-173});}else portrait(r,24,portrait_y,small?44:56,person);r.text(standing?224:small?84:94,readable_ui()?portrait_y:78,cast_names[person],cyan,14);
-  auto paragraphs=world.extra.mode?std::array<const char*,3>{"补给车还在风雪里，前哨就是他们的路标。","守住指挥中心，击退每一波灰塔袭击。","利用科研和战地补给，把防线坚持得更久。"}:c.briefing;Rect area{tx,ty,w-tx-24,yy-ty-8};StoryText text(r,paragraphs,area.w);brief_pages=text.pages(r,area);brief_page=std::clamp(brief_page,0,brief_pages-1);text.draw(r,area,brief_page);
-  if(w>=720&&h>=440){int used=std::min(int(text.capacity(r,area)),int(text.count)-brief_page*int(text.capacity(r,area)));int my=ty+used*text.row(r)+28,ms=std::min(128,yy-my-8);if(ms>=64){Rect map{w-ms-28,my,ms,ms};Skin::well(r,{map.x-4,map.y-4,ms+8,ms+8});minimap_cache.draw(r,world,map,true);for(auto& a:world.e)if(a.hp>0&&(a.kind==hq||a.kind==relay))r.rect(map.x+a.p.x*ms/world.side-2,map.y+a.p.y*ms/world.side-2,4,4,a.kind==relay?gold:a.team?red:cyan);char size[32];std::snprintf(size,sizeof size,"%d×%d",world.side,world.side);r.text(map.x,map.y-20,size,muted,12);}}
-  Skin::panel_frame(r,{mx,yy,w-mx-24,readable_ui()?104:65});char label[64];std::snprintf(label,sizeof label,"作战目标 · 简报 %d/%d",brief_page+1,brief_pages);r.text(mx+14,yy+8,label,gold,12);const char* goal=world.extra.mode?"守住指挥中心；每五波迎战重装突袭":world.active_objective();if(readable_ui()){StoryText objective(r,{goal,"",""},w-mx-52);objective.draw(r,{mx+14,yy+40,w-mx-52,60},0);}else r.label({mx+14,yy+28,w-mx-52,27},goal,cream,14,0);button(r,{24,readable_ui()?h-row-16:h-64,w-(readable_ui()?145:121),readable_ui()?row:40},brief_page+1<brief_pages?brief_next:begin,brief_page+1<brief_pages?"继续简报  >":"部署部队 / 开始行动",true);button(r,{w-(readable_ui()?109:85),readable_ui()?h-row-16:h-64,readable_ui()?85:61,readable_ui()?row:40},brief_page?brief_previous:home,brief_page?"上页":"返回");}
- void radio_screen(Raster& r){field.draw(r,world);r.clip={0,0,w,h};r.shade({0,0,w,h},navy,12);int yy=15;Skin::panel_frame(r,{20,yy,w-40,h-30});r.native_text=&native_text;auto& script=world.authored_map()&&radio_id<3?new_route_radio[radio_id]:radio_scripts[radio_id];portrait(r,36,yy+18,72,script.speaker);r.text(124,yy+22,cast_names[script.speaker],cyan,14);int subtitle=readable_ui()?yy+26+r.text_height("中",14):yy+48;r.label({124,subtitle,w-160,r.text_height("中",12)},"战地通信 / 战局已暂停",muted,12,0);int row=page_row(r),button_y=readable_ui()?h-row-20:h-65,top=std::max(yy+106,subtitle+r.text_height("中",12)+12);Rect area{38,top,w-76,button_y-top-12};StoryText text(r,script.lines,area.w);radio_pages=text.pages(r,area);radio_page=std::clamp(radio_page,0,radio_pages-1);text.draw(r,area,radio_page);button(r,{38,button_y,w-76,row},radio_continue,radio_page+1<radio_pages?"继续收听  >":"收到 / 继续行动",true);}
- void pause_screen(Raster& r){field.draw(r,world);r.clip={0,0,w,h};r.shade({0,0,w,h},navy,12);r.native_text=&native_text;int row=page_row(r),title=r.text_height("中",26),caption=r.text_height("中",13),height=readable_ui()?title+caption+4*row+80:248,yy=(h-height)/2,x=readable_ui()?32:70,inner=x+22,iw=w-2*inner,first=readable_ui()?yy+title+caption+36:yy+80;
-  Skin::panel_frame(r,{x,yy,w-2*x,height},navy,edge);r.text(w/2,yy+15,"战术暂停",cream,26,1);r.text(w/2,readable_ui()?yy+title+22:yy+51,"战局已保存 · 时间已停止",muted,13,1);
-  button(r,{inner,first,iw,readable_ui()?row:34},resume,"继续行动",true);button(r,{inner,readable_ui()?first+row+8:yy+123,iw,readable_ui()?row:30},help,"指挥手册");int third=readable_ui()?first+2*(row+8):yy+161;button(r,{inner,third,(iw-10)/2,readable_ui()?row:30},restart,"重新部署");button(r,{inner+(iw+10)/2,third,(iw-10)/2,readable_ui()?row:30},sound_toggle,sounds.enabled?"声音：开":"声音：关");button(r,{inner,readable_ui()?first+3*(row+8):yy+201,iw,readable_ui()?row:30},save_return,"保存并返回指挥部");}
+ void faction_screen(Raster& r){
+  r.native_text=&native_text;
+  page_header(r,"无尽守备","选择一支部队");
+  const auto column=page_column(w,h);
+  bool side_by_side=w>=720;
+  int top=readable_ui()?page_top(r)+8:74;
+  int row=display.width<400?small_dialog_row():page_row(r),footer=h-row-12;
+  int card_width=side_by_side?(column.w-14)/2:column.w;
+  int card_height=side_by_side?footer-top-12:(footer-top-24)/2;
+  int line=r.text_height("中",12)+4;
+  for(int i=0;i<2;++i){
+   Rect card{column.x+(side_by_side?i*(card_width+14):0),top+(side_by_side?0:i*(card_height+12)),card_width,card_height};
+   Faction faction=i?Faction::gray_tower:Faction::northern;
+   int action_id=i?gray_defense:north_defense;
+   bool highlighted=focus_action==action_id||(pressing&&card.has(downx,downy));
+   Skin::panel_frame(r,card,navy,highlighted?cyan:edge);
+   buttons[button_count++]={card,action_id};
+   auto color=i?gold:cyan;
+   if(side_by_side){
+    int art_height=std::max(0,card.h-3*line-30);
+    Skin::picture(r,tank,{card.x+16,card.y+12,card.w/2-24,art_height},0,faction);
+    Skin::picture(r,rotorcraft,{card.x+card.w/2+8,card.y+12,card.w/2-24,art_height},0,faction);
+    int y=card.y+art_height+17;
+    r.label({card.x+10,y,card.w-20,line},i?"灰塔守备军":"北境联军",color,16);
+    r.label({card.x+10,y+line,card.w-20,line},i?"厚甲重坦 · 空优截击":"机动装甲 · 旋翼支援",cream,12);
+   }else{
+    int art_width=std::min(136,card.w/3);
+    Skin::picture(r,rotorcraft,{card.x+10,card.y+8,art_width-14,card.h-16},0,faction);
+    int x=card.x+art_width+5,y=card.y+(card.h-3*line)/2;
+    Rect text{x,y,card.x+card.w-x-10,line};
+    r.label(text,i?"灰塔守备军":"北境联军",color,16,0);
+    text.y+=line;
+    r.label(text,i?"厚甲重坦":"机动装甲",cream,12,0);
+    text.y+=line;
+    r.label(text,i?"空优截击":"旋翼支援",cream,12,0);
+   }
+  }
+  button(r,{column.x,footer,column.w,row},home,"返回指挥部");
+ }
+ void campaign_screen(Raster& r){
+  constexpr const char* acts[]={"第一幕 / 矿区与河谷","第二幕 / 车队与城区","第三幕 / 雾港与白石岛"};
+  page_header(r,"战役档案",acts[campaign_page]);auto column=page_column(w,h,20);int row=readable_ui()?page_row(r):30,top=readable_ui()?page_top(r)+8:74,footer=readable_ui()?h-2*row-28:h-91,step=std::min(112,(footer-top)/3);char b[80];
+  for(int k=0;k<3;++k){
+   int j=campaign_page*3+k;
+   if(j>=CHAPTERS)break;
+   const auto& c=chapters[j];
+   bool locked=unsigned(j)>career.unlocked;
+   Rect card{column.x,top+k*step,column.w,step-8};
+   Skin::panel_frame(r,card,panel,locked?edge:cyan);
+   int width=std::clamp(r.ink_width("待解锁",15)+14,77,column.w/3);
+   int button_height=std::min(row,std::max(0,card.h-12));
+   Rect action_area{card.x+card.w-width-14,card.y+(card.h-button_height)/2,width,button_height};
+   bool details=!readable_ui()&&step>=76;
+   int place_height=r.text_height(c.place,12)+3,name_height=r.text_height(c.name,18)+3;
+   int detail_height=details?r.text_height(c.map,12)+3:0;
+   if(place_height+name_height+detail_height>card.h-8){
+    place_height=name_height=std::max(0,(card.h-8)/2);detail_height=0;
+   }
+   int y=card.y+(card.h-place_height-name_height-detail_height)/2;
+   int text_x=card.x+14,label_width=action_area.x-text_x-12;
+   r.label({text_x,y,label_width,place_height},c.place,locked?muted:gold,12,0);
+   r.label({text_x,y+place_height,label_width,name_height},c.name,locked?muted:cream,18,0);
+   if(detail_height)r.label({text_x,y+place_height+name_height,label_width,detail_height},c.map,muted,12,0);
+   std::snprintf(b,sizeof b,"%s",locked?"待解锁":career.wins&(1u<<j)?"重温":"出发");
+   button(r,action_area,mission0+j,b,!locked,!locked);
+  }
+  int tab_y=readable_ui()?footer+4:h-83;button(r,{column.x+4,tab_y,126,readable_ui()?row:29},campaign_prev,"上一页",false,campaign_page>0);button(r,{column.x+column.w-130,tab_y,126,readable_ui()?row:29},campaign_next,"下一页",false,campaign_page<campaign_acts-1);button(r,{column.x,readable_ui()?h-row-12:h-43,column.w,row},home,"返回指挥部");
+ }
+ void briefing_screen(Raster& r){auto& c=chapters[world.chapter];bool gray=world.faction()==Faction::gray_tower;page_header(r,world.extra.mode?(gray?"灰塔前哨":"最后一班补给车"):c.name,world.extra.mode?(gray?"无尽守备 / 灰塔守备军":"无尽守备 / 北境联军"):c.place);Rect column=page_column(w,h);int left=column.x,right=column.x+column.w;unsigned person=world.extra.mode?1:c.speaker;bool standing=w>=720&&h>=400&&person<2,small=display.width<400;int row=page_row(r),portrait_y=readable_ui()?page_top(r)+8:76,tx=left+(standing?200:small?0:70),ty=readable_ui()?portrait_y+r.text_height("中",14)+10:small?130:104,yy=readable_ui()?h-row-136:h-143,mx=standing?left+200:left;
+  if(gray){
+   Rect picture{left,portrait_y,standing?176:small?44:56,standing?h-165:small?44:56};
+   Skin::well(r,picture);
+   Skin::picture(r,standing?rotorcraft:commander,{picture.x+4,picture.y+4,picture.w-8,picture.h-8},0,Faction::gray_tower);
+  }else if(standing){Skin::well(r,{left,72,176,h-165});Sprites::fit(r,art::story_standing_first+(person==1?1:0),{left+4,76,168,h-173});}
+  else portrait(r,left,portrait_y,small?44:56,person);
+  int speaker_x=left+(standing?200:small?60:70);
+  r.label({speaker_x,readable_ui()?portrait_y:78,right-speaker_x,r.text_height("中",14)},gray?"灰塔守备网":cast_names[person],gray?gold:cyan,14,0);
+  auto paragraphs=gray?std::array<const char*,3>{"边境电网失去联络，指挥堡必须撑到信号恢复。","北境联军会分路抵达。守住矿线和发电站。","重坦守住正面，截击机优先拦截敌方飞机。"}:world.extra.mode?std::array<const char*,3>{"补给车还在风雪里，前哨就是他们的路标。","守住指挥中心，击退每一波灰塔袭击。","利用科研和战地补给，把防线坚持得更久。"}:c.briefing;
+  if(!world.extra.mode&&world.chapter==lighthouse_chapter){
+   if(world.mission.harbor_plan==harbor_beacon)paragraphs[1]=island_landing_brief;
+   if(world.mission.harbor_plan==harbor_shutdown)paragraphs[1]=island_bridge_brief;
+  }
+  Rect area{tx,ty,right-tx,yy-ty-8};StoryText text(r,paragraphs,area.w);brief_pages=text.pages(r,area);brief_page=std::clamp(brief_page,0,brief_pages-1);text.draw(r,area,brief_page);
+  if(focus_action==begin||focus_action==brief_next)focus_action=brief_page+1<brief_pages?brief_next:begin;
+  if(w>=720&&h>=440){int used=std::min(int(text.capacity(r,area)),int(text.count)-brief_page*int(text.capacity(r,area)));int my=ty+used*text.row(r)+28,ms=std::min(128,yy-my-8);if(ms>=64){Rect map{right-ms-4,my,ms,ms};Skin::well(r,{map.x-4,map.y-4,ms+8,ms+8});minimap_cache.draw(r,world,map,true);for(auto& a:world.e)if(a.hp>0&&(a.kind==hq||a.kind==relay))r.rect(map.x+a.p.x*ms/world.side-2,map.y+a.p.y*ms/world.side-2,4,4,a.kind==relay?gold:a.team?red:cyan);char size[32];std::snprintf(size,sizeof size,"%d×%d",world.side,world.side);r.text(map.x,map.y-20,size,muted,12);}}
+  Skin::panel_frame(r,{mx,yy,right-mx,readable_ui()?104:65});char label[64];std::snprintf(label,sizeof label,"作战目标 · 简报 %d/%d",brief_page+1,brief_pages);r.text(mx+14,yy+8,label,gold,12);const char* goal=world.extra.mode?(gray?"守住灰塔指挥堡，应对重装突袭":"守住指挥中心，应对重装突袭"):world.active_objective();if(readable_ui()){StoryText objective(r,{goal,"",""},right-mx-28);objective.draw(r,{mx+14,yy+40,right-mx-28,60},0);}else r.label({mx+14,yy+28,right-mx-28,27},goal,cream,14,0);button(r,{left,readable_ui()?h-row-16:h-64,column.w-(readable_ui()?97:73),readable_ui()?row:40},brief_page+1<brief_pages?brief_next:begin,brief_page+1<brief_pages?"继续简报  >":"开始任务",true);button(r,{right-(readable_ui()?85:61),readable_ui()?h-row-16:h-64,readable_ui()?85:61,readable_ui()?row:40},brief_page?brief_previous:home,brief_page?"上页":"返回");}
+ void radio_screen(Raster& r){
+  field.draw(r,world);r.clip={0,0,w,h};r.shade({0,0,w,h},navy,12);
+  Rect modal=page_column(w,h,20);modal.h=std::min(h-30,460);modal.y=(h-modal.h)/2;
+  Skin::panel_frame(r,modal);r.native_text=&native_text;
+  const auto& script=world.authored_map()&&radio_id<3?new_route_radio[radio_id]:radio_scripts[radio_id];
+  portrait(r,modal.x+16,modal.y+18,72,script.speaker);
+  int name_x=modal.x+104,name_width=modal.w-120;
+  r.label({name_x,modal.y+22,name_width,r.text_height("中",14)},cast_names[script.speaker],cyan,14,0);
+  int subtitle=readable_ui()?modal.y+26+r.text_height("中",14):modal.y+48;
+  r.label({name_x,subtitle,name_width,r.text_height("中",12)},"战地通信 / 战局已暂停",muted,12,0);
+  int row=!readable_ui()&&display.width<400?small_dialog_row():page_row(r),button_y=modal.y+modal.h-row-18;
+  int top=std::max(modal.y+106,subtitle+r.text_height("中",12)+12);
+  Rect area{modal.x+18,top,modal.w-36,button_y-top-12};
+  StoryText text(r,script.lines,area.w);radio_pages=text.pages(r,area);
+  radio_page=std::clamp(radio_page,0,radio_pages-1);text.draw(r,area,radio_page);
+  button(r,{area.x,button_y,area.w,row},radio_continue,radio_page+1<radio_pages?"继续收听  >":"返回战场",true);
+ }
+ void pause_screen(Raster& r){
+  field.draw(r,world);r.clip={0,0,w,h};r.shade({0,0,w,h},navy,12);r.native_text=&native_text;
+  bool small=display.width<400,readable=readable_ui(),expanded=small||readable;
+  int row=small&&!readable?small_dialog_row():page_row(r);
+  int title=r.text_height("中",26),caption=r.text_height("中",13),height=248;
+  if(expanded){
+   title=std::min(title,h/6);caption=std::min(caption,h/9);
+   row=std::min(row,std::max(24,(h-title-caption-96)/4));
+   height=title+caption+4*row+80;
+  }
+  int yy=(h-height)/2,x=std::max(expanded?32:70,(w-680)/2),inner=x+22,iw=w-2*inner;
+  int first=expanded?yy+title+caption+36:yy+80;
+  int third=expanded?first+2*(row+8):yy+161;
+  int button_height=expanded?row:30;
+  Skin::panel_frame(r,{x,yy,w-2*x,height},navy,edge);
+  r.label({inner,yy+12,iw,title+6},"战术暂停",cream,26);
+  r.label({inner,expanded?yy+title+20:yy+49,iw,caption+6},"战局已保存 · 时间已停止",muted,13);
+  button(r,{inner,first,iw,expanded?row:34},resume,"继续行动",true);
+  button(r,{inner,expanded?first+row+8:yy+123,iw,button_height},help,"指挥手册");
+  button(r,{inner,third,(iw-10)/2,button_height},restart,"重新部署");
+  button(r,{inner+(iw+10)/2,third,(iw-10)/2,button_height},sound_toggle,sounds.enabled?"声音：开":"声音：关");
+  button(r,{inner,expanded?first+3*(row+8):yy+201,iw,button_height},save_return,"保存并返回指挥部");
+ }
 
- void help_screen(Raster& r){page_header(r,"指挥手册","每一条指令，都通向黎明");bool compact=h<390;int top=64,step=std::min(55,(h-118)/5);
+ void help_screen(Raster& r){page_header(r,"指挥手册","每一条指令，都通向黎明");auto column=page_column(w,h);bool compact=h<390;int top=64,step=std::min(55,(h-118)/5);
   const char* titles[]={"01 / 编队指挥","02 / 经济与建设","03 / 道路与补给","04 / 掩护与老兵","05 / 火力与支援"};
   const char* body[]={"选兵后可编队、护卫车辆或指定撤退。","矿车自动采集；建筑就绪后再选地部署。","公路加速车辆；守补给五秒获矿石维修。","步兵借林地掩护，击毁敌军晋星。","破甲反装甲，火炮溅射；空袭破防。"};
   if(readable_ui()){
    int row=page_row(r),y=page_top(r)+8,bottom=h-row-22;std::array<int,5> starts{},ends{};int pages=0;
-   for(int j=0;j<5;){starts[pages]=j;int used=y;while(j<5){StoryText paragraph(r,{body[j],"",""},w-48);int needed=r.text_height(titles[j],15)+8+int(paragraph.count)*paragraph.row(r)+12;if(used+needed>bottom&&j>starts[pages])break;used+=needed;++j;}ends[pages++]=j;}
-   help_page=std::clamp(help_page,0,pages-1);for(int j=starts[help_page];j<ends[help_page];++j){r.text(24,y,titles[j],cyan,15);y+=r.text_height(titles[j],15)+8;StoryText paragraph(r,{body[j],"",""},w-48);paragraph.draw(r,{24,y,w-48,int(paragraph.count)*paragraph.row(r)},0);y+=int(paragraph.count)*paragraph.row(r)+12;}
-   int bw=(w-64)/3;button(r,{24,h-row-12,bw,row},help_previous,"上页",false,help_page>0);button(r,{32+bw,h-row-12,bw,row},has_run?resume:home,"返回");button(r,{40+2*bw,h-row-12,bw,row},help_next,"下页",true,help_page+1<pages);return;
+   for(int j=0;j<5;){starts[pages]=j;int used=y;while(j<5){StoryText paragraph(r,{body[j],"",""},column.w);int needed=r.text_height(titles[j],15)+8+int(paragraph.count)*paragraph.row(r)+12;if(used+needed>bottom&&j>starts[pages])break;used+=needed;++j;}ends[pages++]=j;}
+   help_page=std::clamp(help_page,0,pages-1);for(int j=starts[help_page];j<ends[help_page];++j){r.text(column.x,y,titles[j],cyan,15);y+=r.text_height(titles[j],15)+8;StoryText paragraph(r,{body[j],"",""},column.w);paragraph.draw(r,{column.x,y,column.w,int(paragraph.count)*paragraph.row(r)},0);y+=int(paragraph.count)*paragraph.row(r)+12;}
+   int bw=(column.w-16)/3;button(r,{column.x,h-row-12,bw,row},help_previous,"上页",false,help_page>0);button(r,{column.x+8+bw,h-row-12,bw,row},has_run?resume:home,"返回");button(r,{column.x+16+2*bw,h-row-12,bw,row},help_next,"下页",true,help_page+1<pages);return;
   }
-  for(int j=0;j<5;++j){r.text(24,top+j*step,titles[j],cyan,compact?13:15);r.label({24,top+j*step+21,w-48,20},body[j],cream,compact?12:14,0);}button(r,{24,h-43,w-48,30},has_run?resume:home,has_run?"返回战场":"返回指挥部");}
- void research_screen(Raster& r){page_header(r,"战地科研","本战局科技 / 战局继续进行");char text[120];
-  if(readable_ui()){
-   int row=page_row(r),line=r.text_height("中",12),top=page_top(r)+8;r.label({24,top,w-48,line},"工厂建成后可研发两级科技",muted,12,0);top+=line+12;int step=(h-top-row-66)/2;
-   for(int k=1;k<=2;++k){int y=top+(k-1)*step;Skin::panel_frame(r,{24,y,w-48,step-8});std::snprintf(text,sizeof text,"%s %u/2",k==1?"弹药":"装甲",world.tech_level(k));r.label({38,y+8,w-220,line},text,cyan,12,0);
-    if(world.extra.research==k)std::snprintf(text,sizeof text,"%s %us",world.ready_count(factory)?world.power_net<0?"缺电":"剩余":"待工厂",unsigned(std::ceil(world.extra.research_left)));else std::snprintf(text,sizeof text,"%s",k==1?"火力 +12%":"减伤 10%");r.label({38,y+line+14,w-220,line},text,cream,12,0);
-    if(world.tech_level(k)==2)std::snprintf(text,sizeof text,"已完成");else std::snprintf(text,sizeof text,"%d 矿石",world.research_cost(k));bool enabled=!world.research_blocked(k);button(r,{w-170,y+8,132,std::min(row,step-24)},k==1?research_ammo:research_armor,text,enabled,enabled);
-    if(world.extra.research==k)Skin::progress(r,{38,y+step-14,w-76,4},1-world.extra.research_left/world.research_duration(k),cyan);
-   }
-   if(world.extra.research)button(r,{24,h-row-58,w-48,40},research_cancel,"取消研发 / 退还矿石");else{std::snprintf(text,sizeof text,"矿石 %d · 火力%u 装甲%u",world.credits,world.extra.damage,world.extra.armor);r.label({24,h-row-54,w-48,line},text,gold,12);}
-   button(r,{24,h-row-12,w-48,row},resume,"返回战场",true);return;
+  for(int j=0;j<5;++j){r.text(column.x,top+j*step,titles[j],cyan,compact?13:15);r.label({column.x,top+j*step+21,column.w,20},body[j],cream,compact?12:14,0);}button(r,{column.x,h-43,column.w,30},has_run?resume:home,has_run?"返回战场":"返回指挥部");}
+ void research_screen(Raster& r){
+  page_header(r,"战地科研","本战局科技 / 战局继续进行");
+  bool readable=readable_ui();
+  auto column=page_column(w,h);
+  int row=page_row(r),line=r.text_height("中",12)+4;
+  int intro_y=readable?page_top(r)+8:64;
+  r.label({column.x,intro_y,column.w,line},"工厂建成后，可研发两级作战科技。",muted,12,0);
+  int top=readable?intro_y+line+8:94;
+  int step=readable?(h-top-row-66)/2:std::min(100,(h-175)/2);
+  char text[120];
+  for(int k=1;k<=2;++k){
+   Rect card{column.x,top+(k-1)*step,column.w,step-(readable?8:10)};
+   Skin::panel_frame(r,card);
+   bool active=world.extra.research==k;
+   auto level=world.tech_level(k);
+   int button_width=readable?132:95,button_height=std::min(readable?row:30,std::max(0,card.h-12));
+   Rect purchase{card.x+card.w-button_width-14,card.y+(card.h-button_height)/2,button_width,button_height};
+   int progress_height=active?12:0;
+   int label_height=std::min(line,(card.h-8-progress_height)/2);
+   Rect label{card.x+14,card.y+(card.h-progress_height-2*label_height)/2,
+    purchase.x-card.x-24,label_height};
+   std::snprintf(text,sizeof text,"%s %u/2",k==1?"弹药改良":"复合装甲",level);
+   r.label(label,text,cyan,readable?12:15,0);
+   label.y+=label_height;
+   if(active){
+    if(!world.ready_count(factory))std::snprintf(text,sizeof text,"等待工厂重建");
+    else std::snprintf(text,sizeof text,world.power_net<0?"缺电 · 剩余 %u 秒":"研发中 · 剩余 %u 秒",unsigned(std::ceil(world.extra.research_left)));
+    Skin::progress(r,{label.x,card.y+card.h-10,label.w,4},1-world.extra.research_left/world.research_duration(k),cyan);
+   }else std::snprintf(text,sizeof text,"%s",k==1?"火力 +12% / 级":"减伤 10% / 级");
+   r.label(label,text,cream,12,0);
+   if(level==2)std::snprintf(text,sizeof text,"已完成");else std::snprintf(text,sizeof text,"%d 矿石",world.research_cost(k));
+   bool enabled=!world.research_blocked(k);
+   button(r,purchase,k==1?research_ammo:research_armor,text,enabled,enabled);
   }
-  r.text(24,66,"建成装甲工厂后，可研发两级作战科技。",muted,12);
-  int step=std::min(100,(h-175)/2);for(int k=1;k<=2;++k){int y=94+(k-1)*step;Skin::panel_frame(r,{24,y,w-48,step-10});auto level=world.tech_level(k);r.text(38,y+7,k==1?"弹药改良":"复合装甲",cyan,18);std::snprintf(text,sizeof text,"%u / 2",level);r.text(w-145,y+9,text,gold,12);
-   if(world.extra.research==k){if(!world.ready_count(factory))std::snprintf(text,sizeof text,"等待工厂重建");else std::snprintf(text,sizeof text,world.power_net<0?"缺电 · 剩余 %u 秒":"研发中 · 剩余 %u 秒",unsigned(std::ceil(world.extra.research_left)));r.text(38,y+34,text,gold,12);Skin::progress(r,{38,y+56,w-210,5},1-world.extra.research_left/world.research_duration(k),cyan);}else r.text(38,y+34,k==1?(display.width<400?"火力 +12% / 级":"每级增加作战火力 12%"):(display.width<400?"减伤 10% / 级":"每级减少所受伤害 10%"),cream,12);
-   bool enabled=!world.research_blocked(k);if(level==2)std::snprintf(text,sizeof text,"已完成");else std::snprintf(text,sizeof text,"%d 矿石",world.research_cost(k));button(r,{w-133,y+30,95,30},k==1?research_ammo:research_armor,text,enabled,enabled);
-  }
-  if(world.extra.research)button(r,{24,h-89,w-48,30},research_cancel,"取消研发 / 全额退回");else {std::snprintf(text,sizeof text,"可用矿石 %d · 火力 %u级 / 装甲 %u级",world.credits,world.extra.damage,world.extra.armor);r.label({24,h-90,w-48,30},text,gold,12);}
-  button(r,{24,h-48,w-48,32},resume,"返回战场",true);
+  int info_y=readable?h-row-58:h-89,info_h=readable?40:30;
+  if(world.extra.research)button(r,{column.x,info_y,column.w,info_h},research_cancel,"取消研发 / 退还矿石");
+  else {std::snprintf(text,sizeof text,"矿石 %d · 火力%u 装甲%u",world.credits,world.extra.damage,world.extra.armor);r.label({column.x,info_y,column.w,info_h},text,gold,12);}
+  button(r,{column.x,readable?h-row-12:h-48,column.w,row},resume,"返回战场",true);
  }
- void result_screen(Raster& r){title_background(r);r.native_text=&native_text;bool won=world.won;
+ void result_screen(Raster& r){title_background(r);r.native_text=&native_text;auto column=page_column(w,h);bool won=world.won;
+  const char* defense_ending=world.faction()==Faction::gray_tower?
+   "前哨仍在呼叫，边境电网正在恢复。":"补给信号仍在。下一班车会记得这条路。";
+  const char* ending_line=world.chapter==harbor_chapter&&world.mission.stage==harbor_shutdown?
+   harbor_shutdown_ending:chapters[world.chapter].ending;
+  const char* defeat_line=!world.count(hq)?"指挥中心被摧毁了。":
+   world.chapter==lighthouse_chapter?"岛上的配电站或灯塔被摧毁了。":
+   world.chapter==4?"抵达避难所的补给车不足两辆。":"任务没有完成。";
+  if(!won)ending_line=defeat_line;
   if(readable_ui()){
-   int row=page_row(r),title=r.text_height("中",28),line=r.text_height("中",12);r.label({24,24,w-48,title},world.extra.mode?"前哨守备结束":won?"作战成功":"战线失守",won?cyan:gold,28);int y=title+40;if(!world.extra.mode){r.label({24,y,w-48,line},chapters[world.chapter].name,cream,12);y+=line+16;int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,y+12,12,j<stars?gold:edge);y+=32;}
-   StoryText ending(r,{world.extra.mode?"补给信号仍在。下一班车会记得这条路。":won?chapters[world.chapter].ending:"守住矿线，补足电力。北境仍在等待你。","",""},w-48);ending.draw(r,{24,y,w-48,int(ending.count)*ending.row(r)},0);y+=int(ending.count)*ending.row(r)+16;char text[120];if(world.extra.mode)std::snprintf(text,sizeof text,"击退 %u 波 · 纪录 %u 波",world.extra.cleared,defense_best);else std::snprintf(text,sizeof text,"作战 %02u:%02u · 击毁 %d · 损失 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost);r.label({24,y,w-48,line},text,gold,12);if(!world.extra.mode){std::snprintf(text,sizeof text,"采矿 %d",world.earned);r.label({24,y+line+8,w-48,line},text,gold,12);}button(r,{24,h-2*row-22,w-48,row},world.extra.mode?restart:won?next:restart,world.extra.mode?"再次守备":won?"继续前进":"重新部署",true);button(r,{24,h-row-12,w-48,row},home,"返回指挥部");return;
+   int row=page_row(r),title=r.text_height("中",28),line=r.text_height("中",12);r.label({column.x,24,column.w,title},world.extra.mode?"前哨守备结束":won?"作战成功":"战线失守",won?cyan:gold,28);int y=title+40;if(!world.extra.mode){r.label({column.x,y,column.w,line},chapters[world.chapter].name,cream,12);y+=line+16;int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,y+12,12,j<stars?gold:edge);y+=32;}
+   StoryText ending(r,{world.extra.mode?defense_ending:ending_line,"",""},column.w);ending.draw(r,{column.x,y,column.w,int(ending.count)*ending.row(r)},0);y+=int(ending.count)*ending.row(r)+16;char text[120];if(world.extra.mode)std::snprintf(text,sizeof text,"击退 %u 波 · 纪录 %u 波",world.extra.cleared,defense_best);else std::snprintf(text,sizeof text,"作战 %02u:%02u · 击毁 %d · 损失 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost);r.label({column.x,y,column.w,line},text,gold,12);if(!world.extra.mode){std::snprintf(text,sizeof text,"采矿 %d",world.earned);r.label({column.x,y+line+8,column.w,line},text,gold,12);}button(r,{column.x,h-2*row-22,column.w,row},world.extra.mode?restart:won?next:restart,world.extra.mode?"再次守备":won?(world.chapter==CHAPTERS-1?"战役档案":"继续前进"):"重新部署",true);button(r,{column.x,h-row-12,column.w,row},home,"返回指挥部");return;
   }
-  if(world.extra.mode){r.text(w/2,35,"前哨守备结束",gold,28,1);r.text(w/2,88,"补给信号仍在。下一班车会记得这条路。",cream,14,1);char text[100];std::snprintf(text,sizeof text,"击退 %u 波 · 历史纪录 %u 波",world.extra.cleared,defense_best);r.label({24,144,w-48,40},text,cyan,20);button(r,{24,h-87,w-48,36},restart,"再次守备",true);button(r,{24,h-41,w-48,28},home,"返回指挥部");return;}r.text(w/2,29,won?"作战成功":"战线失守",won?cyan:red,34,1);r.text(w/2,82,chapters[world.chapter].name,cream,20,1);int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,130,12,j<stars?gold:edge);
-  r.label({24,153,w-48,32},won?chapters[world.chapter].ending:"守住矿线，补足电力。北境仍在等待你。",cream,14);
-  char b[120];std::snprintf(b,sizeof b,"作战 %02u:%02u    击毁 %d    损失 %d    采矿 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost,world.earned);r.label({24,194,w-48,27},b,gold,14);button(r,{24,h-87,w-48,36},won?next:restart,won?(world.chapter==CHAPTERS-1?"战役档案":"下一章 / 继续前进"):"重新部署",true);button(r,{24,h-41,w-48,28},home,"返回指挥部");}
+  if(world.extra.mode){r.text(w/2,35,"前哨守备结束",gold,28,1);r.text(w/2,88,defense_ending,cream,14,1);char text[100];std::snprintf(text,sizeof text,"击退 %u 波 · 历史纪录 %u 波",world.extra.cleared,defense_best);r.label({column.x,144,column.w,40},text,cyan,20);button(r,{column.x,h-87,column.w,36},restart,"再次守备",true);button(r,{column.x,h-41,column.w,28},home,"返回指挥部");return;}r.text(w/2,29,won?"作战成功":"战线失守",won?cyan:red,34,1);r.text(w/2,82,chapters[world.chapter].name,cream,20,1);int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,130,12,j<stars?gold:edge);
+  StoryText ending(r,{ending_line,"",""},column.w);
+  int ending_height=int(ending.count)*ending.row(r);
+  ending.draw(r,{column.x,153,column.w,ending_height},0);
+  int stats_y=std::max(194,153+ending_height+4);
+  char b[120];std::snprintf(b,sizeof b,"作战 %02u:%02u    击毁 %d    损失 %d    采矿 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost,world.earned);r.label({column.x,stats_y,column.w,std::min(27,h-87-stats_y)},b,gold,14);button(r,{column.x,h-87,column.w,36},won?next:restart,won?(world.chapter==CHAPTERS-1?"战役档案":"下一章 / 继续前进"):"重新部署",true);button(r,{column.x,h-41,column.w,28},home,"返回指挥部");}
  void render(){if(!ready||!surface||!ctx->foreground())return;
 #ifdef IRON_PROFILE
   auto perf_begin=RenderProfile::now();
 #endif
 auto lease=surface->acquire();if(!lease)return;auto dest=lease->pixels();int stride=lease->stride_bytes()/2;auto output=reinterpret_cast<uint16_t*>(dest.data());bool direct=display_plan.width==w&&display_plan.height==h;
-field.clock=(screen==Screen::battle||screen==Screen::pause||screen==Screen::radio)?world.time:clock;native_text.reset(display_plan.width,display_plan.height,w,h,display_plan.text_scale(w),readable_ui()?display_plan.minimum_text_scale():1);Raster r(direct?output:pixels.data(),w,h,direct?stride:w);if(screen==Screen::battle||screen==Screen::campaign||screen==Screen::briefing||screen==Screen::help||screen==Screen::research)r.native_text=&native_text;if(screen!=Screen::battle)r.rect(0,0,w,h,navy);button_count=0;switch(screen){case Screen::radio:radio_screen(r);break;case Screen::research:research_screen(r);break;case Screen::home:home_screen(r);break;case Screen::campaign:campaign_screen(r);break;case Screen::briefing:briefing_screen(r);break;case Screen::battle:field.draw(r,world);selection.draw(r,world,field);hud(r);break;case Screen::pause:pause_screen(r);break;case Screen::help:help_screen(r);break;case Screen::result:result_screen(r);break;}
+field.clock=(screen==Screen::battle||screen==Screen::pause||screen==Screen::radio)?world.time:clock;native_text.reset(display_plan.width,display_plan.height,w,h,display_plan.text_scale(w),readable_ui()?display_plan.minimum_text_scale():1);Raster r(direct?output:pixels.data(),w,h,direct?stride:w);if(screen==Screen::battle||screen==Screen::campaign||screen==Screen::briefing||screen==Screen::help||screen==Screen::research)r.native_text=&native_text;if(screen!=Screen::battle)r.rect(0,0,w,h,navy);button_count=0;switch(screen){case Screen::radio:radio_screen(r);break;case Screen::research:research_screen(r);break;case Screen::home:home_screen(r);break;case Screen::campaign:campaign_screen(r);break;case Screen::briefing:briefing_screen(r);break;case Screen::battle:field.draw(r,world);selection.draw(r,world,field);hud(r);break;case Screen::pause:pause_screen(r);break;case Screen::help:help_screen(r);break;case Screen::result:result_screen(r);break;case Screen::factions:faction_screen(r);break;}
 #ifdef IRON_PROFILE
   auto perf_drawn=RenderProfile::now();
 #endif

@@ -178,7 +178,31 @@
                {tank,{44,30}}, {tank,{18,27}}, {rocket,{39,34}}, {artillery,{25,14}}});
     deploy(2, {{relay,{46,43}}, {relay,{37,28}}, {relay,{24,32}}, {supply,{49,37}}, {supply,{23,37}}});
     deploy(0, {{commander,{51,50}}});
-    deploy(1, {{aa_tower,{15,14}}, {rotorcraft,{30,17}}});
+    deploy(1, {{aa_tower,{15,14}}, {rotorcraft,{30,17}}, {helipad,{34,14}}});
+    break;
+   case harbor_chapter:
+    landform(woodland, 9, 25, 8, 11);landform(ridge, 12, 18, 6, 5);
+    landform(ruins, 12, 49, 8, 7);landform(water, 51, 59, 11, 6);
+    landform(woodland, 53, 29, 7, 8);
+    patch(water, 22, 1, 17, side-2);
+    landform(ground, 30, 25, 5, 6);
+    patch(road, 29, 24, 4, 3);
+    route({{44,13},{43,13},{43,40},{18,40},{18,52},{10,52}}, true);
+    route({{17,37},{17,40}});route({{40,17},{45,17}});
+    deposit(48,5);deposit(43,31);deposit(8,34);
+    deploy(0, {{hq,{44,9}}, {power,{41,8}}, {refinery,{46,6}}, {barracks,{48,10}},
+               {harvester,{48,5}}, {tank,{42,13}}, {tank,{44,14}}, {rifle,{41,17}},
+               {rocket,{42,18}}, {factory,{51,11}}, {power,{50,3}}, {artillery,{45,13}},
+               {shipyard,{40,18}}, {landing_craft,{38.5f,18.5f}}, {patrol_boat,{37.5f,17.5f}},
+               {patrol_boat,{37.5f,20.5f}}, {helipad,{47,16}}, {rotorcraft,{47,16}},
+               {commander,{41,15}}, {turret,{45,19}}, {power,{54,7}}});
+    deploy(1, {{hq,{12,52}}, {power,{8,53}}, {factory,{15,50}},
+               {turret,{18,44}}, {aa_tower,{14,47}}, {tank,{13,34}}, {rocket,{17,48}},
+               {artillery,{10,49}}, {patrol_boat,{26.5f,34.5f}}});
+    deploy(2, {{relay,harbor_beacon_site}, {relay,harbor_switch_site}, {supply,{45,34}}, {supply,{9,40}}});
+    break;
+   case lighthouse_chapter:
+    init_lighthouse();
     break;
   }
   say(map.arrival, 9);
@@ -256,6 +280,11 @@
     if (mission.stage == 0) id = nearest(home, relay, 2);
     if (mission.stage == 1) id = nearest(home, power, 1);
     break;
+   case harbor_chapter:
+    if (mission.stage!=harbor_shutdown) return harbor_beacon_site;
+    break;
+   case lighthouse_chapter:
+    return mission.stage==restore_grid?island_grid_site:lighthouse_site;
   }
   if (id < 0) id = nearest(home, hq, 1);
   return id < 0 ? home : e[id].p;

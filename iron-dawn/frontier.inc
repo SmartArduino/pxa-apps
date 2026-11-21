@@ -1,11 +1,35 @@
 // SPDX-License-Identifier: MIT
 // World members for the second act’s persistent mission objectives.
+ int relay_at(Vec site,int team)const{
+  int id=nearest(site,relay,team);
+  return id>=0&&distance_squared(site,e[id].p)<.01f?id:-1;
+ }
+
  int captured_nodes()const{return count(relay,0);}
+ struct NodePresence {bool friendly=false,enemy=false;};
+ NodePresence node_presence(Vec p)const{
+  NodePresence present;
+  for(const auto& a:e)if(deployed(a)&&land_combat(a.kind)&&distance_squared(a.p,p)<2.7f*2.7f){
+   present.friendly|=a.team==0;
+   present.enemy|=a.team==1;
+  }
+  return present;
+ }
+ bool capture_node(Entity& node,float dt){
+  auto present=node_presence(node.p);
+  if(!present.friendly)node.stuck=std::max(0.f,node.stuck-dt*.4f);
+  if(!present.friendly||present.enemy)return false;
+  node.stuck+=dt;
+  if(node.stuck<12.f)return false;
+  node.team=0;node.stuck=0;credits+=180;blast(node.p,6);power_update();emit_sound(5);
+  return true;
+ }
  void frontier_tick(float dt){
-  for(auto& node:e)if(node.hp>0&&node.kind==relay&&node.team==2){bool friendly=false,enemy=false;for(auto& a:e)if(deployed(a)&&land_combat(a.kind)&&dist(a.p,node.p)<2.7f){friendly|=a.team==0;enemy|=a.team==1;}if(friendly&&!enemy){node.stuck+=dt;if(node.stuck>=12){node.team=0;node.stuck=0;credits+=180;blast(node.p,6);power_update();say(chapter==4?"苏弥：中继站已接通，车队可以继续前进。":"苏弥：节点已接通。收到居民区的回传信号。",8);emit_sound(5);}}else if(!friendly)node.stuck=std::max(0.f,node.stuck-dt*.4f);}
-  if(chapter==3){if(captured_nodes()>=2&&!mission.stage){mission.stage=1;mission.events|=1;say("林岚：已取得行车记录。摧毁军工厂，切断山区追兵。",9);}won=mission.stage&&!count(factory,1);if(count(relay,0)+count(relay,2)<2)defeated=true;}
+  for(auto& node:e)if(node.hp>0&&node.kind==relay&&node.team==2&&capture_node(node,dt))
+   say(chapter==4?"苏弥：电台接通了，卡车可以继续走。":"苏弥：收到信号，这一座已经接通。",8);
+  if(chapter==3){if(captured_nodes()>=2&&!mission.stage){mission.stage=1;mission.events|=1;say("林岚：找到车队的位置了。先打东边的军工厂。",9);}won=mission.stage&&!count(factory,1);if(count(relay,0)+count(relay,2)<2)defeated=true;}
   if(chapter==4) convoy_tick(dt);
-  if(chapter==5){if(!mission.stage&&captured_nodes()>=3){mission.stage=1;mission.events|=1u<<3;say("墨沉：恢复城市供电，就会暴露所有人。你承担得起吗？",10);}if(mission.stage==1&&!count(power,1)){mission.stage=2;mission.events|=1u<<4;say("苏弥：居民电网已隔离！核心屏障解除，城市不会再停电。",10);}won=mission.stage==2&&!count(hq,1);if(count(relay,0)+count(relay,2)<3)defeated=true;}
+  if(chapter==5){if(!mission.stage&&captured_nodes()>=3){mission.stage=1;mission.events|=1u<<3;say("墨沉：居民线路已经分开。现在可以去关军用电站了。",10);}if(mission.stage==1&&!count(power,1)){mission.stage=2;mission.events|=1u<<4;say("苏弥：医院还有电，核心没了屏障。可以进攻了。",10);}won=mission.stage==2&&!count(hq,1);if(count(relay,0)+count(relay,2)<3)defeated=true;}
  }
  void convoy_tick(float dt) {
   int alive=0, delivered=0;
@@ -33,15 +57,25 @@
   if (stage>mission.stage) {
    for (unsigned i=mission.stage;i<stage;++i)mission.events|=1u<<(i+1);
    mission.stage=uint8_t(stage);
-   say("何舟：道路畅通。补给车跟上，装甲部队守住侧翼。",8);
+   say("何舟：收到。车队继续走，请派装甲跟着我们。",8);
   }
  }
 
  const char* active_objective()const{
-  if(chapter==0)return "摧毁灰塔指挥中心";
-  if(chapter==1)return "占领中继站，保护撤离 90 秒";
-  if(chapter==2)return "击毁敌方电站，摧毁灰塔指挥中心";
-  if(chapter==3)return mission.stage?"摧毁灰塔军工厂":"夺回两座黑松山通信节点";
-  if(chapter==4){if(convoy_gate(1)&&convoy_gate(2))return "护送至少两辆补给车抵达出口";return "接通沿途电台，为补给车开路";}
-  return mission.stage==0?"夺回三个节点，隔离居民电网":mission.stage==1?"摧毁两座军用电站":"屏障已解除，摧毁灰塔核心";
+  if(chapter==0)return "摧毁东北的灰塔指挥堡";
+  if(chapter==1)return "占领西岸中继站，守住 90 秒";
+  if(chapter==2)return "摧毁两座电站，再打南边的指挥堡";
+  if(chapter==3)return mission.stage?"摧毁东边的军工厂":"占领山口和矿场的两座电台";
+  if(chapter==4){if(convoy_gate(1)&&convoy_gate(2))return "护送至少两辆补给车到避难所";return convoy_gate(1)?"占领西岸引导台，让卡车过桥":"占领货场电台，让卡车出发";}
+  if(chapter==harbor_chapter){
+   if(mission.stage==harbor_beacon)return "守住信标并维持供电 45 秒";
+   if(mission.stage==harbor_shutdown)return "守住停机站，摧毁西南控制中心";
+   return "占领岛上信标或南边的停机站";
+  }
+  if(chapter==lighthouse_chapter){
+   if(mission.stage==restore_grid)return "占领岛上的配电站";
+   if(mission.stage==capture_lighthouse)return "占领岛北的灯塔";
+   return "守住灯塔并维持供电 35 秒";
+  }
+  return mission.stage==0?"占领三座调度站，保住居民用电":mission.stage==1?"摧毁两座军用电站":"摧毁西北的灰塔核心";
  }
