@@ -156,6 +156,13 @@ struct TradeQuote {
 };
 inline constexpr int TradeLot=5;
 inline constexpr int BargainUsed=GoodsCount+1;
+inline constexpr int HagglePatience=3, MaxHaggleRate=18;
+enum HaggleReply { InvalidOffer, DealAgreed, CounterOffer, TalksEnded };
+struct HaggleResult {
+    HaggleReply reply=InvalidOffer;
+    int counter=0;
+};
+enum TimberTrail : std::uint8_t { TrailUnknown, TrailFound, TimberReturned, TimberPaid };
 
 Passage passage(int from, int to);
 Point vessel_at(const Passage& route, int leg, float fraction);
@@ -198,6 +205,7 @@ struct State {
     int interpreter_port=-1;
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
+    std::uint8_t bargain_warnings=0, timber_trail=TrailUnknown;
     std::uint8_t drift_stage=DriftUnheard;
     std::uint8_t port_stories=0;
     DispatchRecord dispatch;
@@ -228,8 +236,11 @@ struct Game {
     Point merchant_position(int company) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
     int negotiation_rate() const;
-    bool can_negotiate(int good) const;
-    bool negotiate(int good);
+    Text bargain_block(int good, bool sell) const;
+    TradeQuote bargain_quote(int good, bool sell, int rate) const;
+    HaggleResult bargain_offer(int good, bool sell, int rate);
+    bool inspect_timber_trail();
+    bool resolve_timber_trail(bool return_cargo);
     int stock(int good) const;
     int market_stock(int port, int good) const;
     int wind(int leg) const;
@@ -369,6 +380,8 @@ private:
     void log_encounter(int choice);
     Point provisions_order(int food, int water) const;
     int market_price(int port, int good, bool sell, int supply, int day, bool player=true) const;
+    TradeQuote quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const;
+    void apply_trade(int good, bool sell, TradeQuote offer);
     void merchant_day(int company);
     void plan_merchant(int company);
 

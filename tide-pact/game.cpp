@@ -273,35 +273,37 @@ int Game::price_at(int port, int good, bool sell) const {
 
 int Game::quote(int good, bool sell) const { return price_at(s.origin,good,sell); }
 
-TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
+TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const {
     if (!port() || good<0 || good>=GoodsCount || quantity<=0) return {};
     const int limit=std::min(quantity,sell ? s.cargo[good] : capacity()-load());
     const int budget=sell ? 999999-s.gold : s.gold;
     const int port=s.origin, base_stock=stock_base(port,good,s.day);
     const int stock_cap=stock_limit(port,good,s.day);
-    const auto quote_order=[&](int rate) {
-        TradeQuote offer{.stock_change=s.stock_delta[port*GoodsCount+good]};
-        int supply=market_stock(port,good);
-        int normal_total=0, resale=0;
-        for (;offer.units<limit;++offer.units) {
-            if (sell?supply>=stock_cap:supply==0) break;
-            const int total=normal_total+market_price(port,good,sell,supply,s.day);
-            if (rate) resale+=market_price(port,good,true,supply-1,s.day);
-            const int discount=std::min(total*rate/100,std::max(0,total-resale));
-            if (total-discount>budget) break;
-            normal_total=total;
-            offer.gold=total-discount;
-            offer.saved=discount;
-            supply+=sell?1:-1;
-            offer.stock_change=supply-base_stock;
-        }
-        return offer;
-    };
-    if (!sell && quantity==TradeLot && limit==TradeLot && s.bargain_good==good+1) {
-        const auto discounted=quote_order(s.bargain_rate);
+    TradeQuote offer{.stock_change=s.stock_delta[port*GoodsCount+good]};
+    int supply=market_stock(port,good);
+    int normal=0, reverse=0;
+    const int shift=sell?1:-1;
+    for (;offer.units<limit;++offer.units) {
+        if (sell?supply>=stock_cap:supply==0) break;
+        const int total=normal+market_price(port,good,sell,supply,s.day);
+        if (rate) reverse+=market_price(port,good,!sell,supply+shift,s.day);
+        const int gain=std::min(total*rate/100,std::max(0,(reverse-total)*shift));
+        if (limit_gold && total+shift*gain>budget) break;
+        normal=total;
+        offer.gold=total+shift*gain;
+        offer.saved=gain;
+        supply+=shift;
+        offer.stock_change=supply-base_stock;
+    }
+    return offer;
+}
+
+TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
+    if (!sell && quantity==TradeLot && s.bargain_good==good+1) {
+        const auto discounted=quote_order(good,false,quantity,s.bargain_rate,true);
         if (discounted.units==TradeLot) return discounted;
     }
-    return quote_order(0);
+    return quote_order(good,sell,quantity,0,true);
 }
 
 int Game::negotiation_rate() const {
@@ -310,17 +312,66 @@ int Game::negotiation_rate() const {
     return understands(language)?8:fluency(language)==Phrases?4:0;
 }
 
-bool Game::can_negotiate(int good) const {
-    return good>=0 && good<GoodsCount && !s.bargain_good && negotiation_rate()>0 &&
-           stock(good)>=TradeLot && capacity()-load()>=TradeLot;
+Text Game::bargain_block(int good, bool sell) const {
+    if (!port()) return "靠港后才能议价";
+    if (s.bargain_good) return "本次停泊的议价已结束";
+    if (!negotiation_rate()) return "需本地短语、随船口译或码头口译";
+    if (bargain_quote(good,sell,0).units!=TradeLot)
+        return sell?"需有五件货，港口也得收得下":"需港口库存和舱位各有五件";
+    return {};
 }
 
-bool Game::negotiate(int good) {
-    if (!can_negotiate(good)) return false;
-    s.bargain_good=good+1;
-    s.bargain_rate=negotiation_rate();
-    spend_day(1);
-    notice="五件整批的价钱已经谈妥";
+TradeQuote Game::bargain_quote(int good, bool sell, int rate) const {
+    return quote_order(good,sell,TradeLot,std::clamp(rate,0,MaxHaggleRate),false);
+}
+
+HaggleResult Game::bargain_offer(int good, bool sell, int rate) {
+    if (rate<0 || rate>MaxHaggleRate || !bargain_block(good,sell).empty()) return {};
+    const auto offer=bargain_quote(good,sell,rate);
+    if (rate && !offer.saved) { notice="这批货没有让价空间"; return {}; }
+    if (offer.gold>(sell?999999-s.gold:s.gold)) {
+        notice=sell?"金币已接近上限":"金币不够付这批货";
+        return {};
+    }
+    const int supply=stock(good);
+    const int stock_room=supply<=10?-4:supply>=24?4:0;
+    const auto* news=market_notice(s.origin,good,s.day);
+    const int news_room=news?(news->price_percent>0?-2:2):0;
+    const int timber_room=!sell && s.origin==lisbon && good==Timber && s.timber_trail==TimberReturned?4:0;
+    const int room=std::clamp(negotiation_rate()+std::min(s.trust/3,3)+
+                              (sell?-1:1)*(stock_room+news_room)+timber_room,2,MaxHaggleRate);
+    const auto limit=bargain_quote(good,sell,room);
+    if (sell?offer.gold<=limit.gold:offer.gold>=limit.gold) {
+        apply_trade(good,sell,offer);
+        if (rate || s.bargain_warnings) s.bargain_good=BargainUsed;
+        notice="整批成交";
+        return {DealAgreed,0};
+    }
+    const int lost=1+(rate-room-1)/4;
+    s.bargain_warnings=std::min(HagglePatience,int(s.bargain_warnings)+lost);
+    if (s.bargain_warnings==HagglePatience) {
+        s.bargain_good=BargainUsed;
+        s.trust=std::max(0,s.trust-1);
+        notice="商人收起账簿，本次停泊不再议价";
+        return {TalksEnded,0};
+    }
+    notice="商人给了还价";
+    return {CounterOffer,std::max(1,room-(HagglePatience-s.bargain_warnings))};
+}
+
+bool Game::inspect_timber_trail() {
+    if (!port() || s.origin!=lisbon || s.timber_trail!=TrailUnknown) return false;
+    s.timber_trail=TrailFound;
+    notice="拾到盖着货主印记的货签";
+    return true;
+}
+
+bool Game::resolve_timber_trail(bool return_cargo) {
+    if (!port() || s.origin!=lisbon || s.timber_trail!=TrailFound) return false;
+    s.timber_trail=return_cargo?TimberReturned:TimberPaid;
+    if (return_cargo) ++s.trust;
+    else earn(55);
+    notice=return_cargo?"货主记下了人情，木料议价更宽松":"拿到55金谢礼";
     return true;
 }
 
@@ -776,7 +827,7 @@ bool Game::depart(int to) {
     if (s.stores<daily_rations() || s.water<daily_water(Fair)) { notice="水粮不足一日"; return false; }
     route = path;
     s.interpreter_port=-1;
-    s.bargain_good=s.bargain_rate=0;
+    s.bargain_good=s.bargain_rate=s.bargain_warnings=0;
     s.destination = to;
     s.leg = s.progress = s.weather = s.enemy = s.range = s.aim = 0;
     s.event_mask = 0;
@@ -860,7 +911,7 @@ bool Game::start_helm(int destination) {
     }
     const auto here=Anchor[s.origin];
     s.interpreter_port=-1;
-    s.bargain_good=s.bargain_rate=0;
+    s.bargain_good=s.bargain_rate=s.bargain_warnings=0;
     s.helm=1;
     s.helm_x=here.x*16;
     s.helm_y=here.y*16;
@@ -1233,15 +1284,19 @@ TradeQuote Game::trade(int good, bool sell, int quantity) {
         notice=sell ? "没有可出售的货物" : "金币、舱位或库存不足";
         return offer;
     }
-    s.cargo[good]+=sell ? -offer.units : offer.units;
-    s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
-    earn(sell ? offer.gold : -offer.gold);
+    apply_trade(good,sell,offer);
     if (offer.saved) {
         s.bargain_good=BargainUsed;
         s.bargain_rate=0;
     }
     notice=sell ? "已出售货物" : "已装货入舱";
     return offer;
+}
+
+void Game::apply_trade(int good, bool sell, TradeQuote offer) {
+    s.cargo[good]+=sell?-offer.units:offer.units;
+    s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
+    earn(sell?offer.gold:-offer.gold);
 }
 
 void Game::service(int action) {
@@ -2090,7 +2145,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Cha
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+2+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -2147,6 +2202,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.dispatch.due);
     bytes[offset++]=std::byte(SailingTimeRevision);
     bytes[offset++]=std::byte(s.ration_flags);
+    bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2312,6 +2368,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         // The old writer left this byte zero, representing standard rations.
         s.ration_flags=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.ration_flags & ~(SaveFood|SaveWater)) return false;
+        const auto shore=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (shore>15) return false;
+        s.bargain_warnings=shore&3;
+        s.timber_trail=shore>>2;
+        if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
+            (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

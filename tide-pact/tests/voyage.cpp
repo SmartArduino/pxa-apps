@@ -776,36 +776,64 @@ void port_languages() {
 void dockside_bargaining() {
     Game ship;
     ship.s.origin=cadiz;
-    assert(!ship.can_negotiate(Wine) && !ship.negotiate(Wine));
+    assert(!ship.bargain_block(Wine,false).empty() && ship.bargain_offer(Wine,false,8).reply==InvalidOffer);
     assert(ship.take_lesson(Castilian) && ship.negotiation_rate()==4);
     const int day=ship.s.day;
-    assert(ship.negotiate(Wine) && ship.s.day==day+1);
-    assert(!ship.negotiate(Sugar));
+    const int before=ship.s.gold;
+    auto old_save=ship;
+    old_save.s.bargain_good=Wine+1;
+    old_save.s.bargain_rate=4;
     State restored;
-    assert(decode(restored,encode(ship.s)));
-    ship.s=restored;
-    Game usual=ship;
-    usual.s.bargain_good=usual.s.bargain_rate=0;
-    const auto regular=usual.trade_quote(Wine,false,TradeLot);
-    const auto lot=ship.trade_quote(Wine,false,TradeLot);
-    assert(lot.units==TradeLot && lot.saved==regular.gold*4/100 &&
-           lot.gold==regular.gold-lot.saved && lot.stock_change==regular.stock_change);
-    assert(!ship.trade_quote(Wine,true,TradeLot).saved && !ship.trade_quote(Wine,false,1).saved &&
-           !ship.trade_quote(Sugar,false,TradeLot).saved);
-    auto short_order=ship;
-    short_order.s.gold=ship.quote(Wine,false)*2;
-    const auto partial=short_order.trade(Wine,false,TradeLot);
-    assert(partial.units>0 && partial.units<TradeLot && !partial.saved && short_order.s.bargain_good==Wine+1);
-    ship.s.gold=lot.gold;
-    assert(ship.trade(Wine,false,TradeLot).gold==lot.gold && ship.s.gold==0 &&
-           ship.s.bargain_good==BargainUsed && !ship.negotiate(Wine));
-    assert(ship.depart(lisbon) && !ship.s.bargain_good && !ship.s.bargain_rate);
+    assert(decode(restored,encode(old_save.s)));
+    assert(old_save.trade_quote(Wine,false,TradeLot).saved>0 && old_save.trade_quote(Wine,false,1).saved==0);
+    const auto reply=ship.bargain_offer(Wine,false,8);
+    assert(reply.reply==CounterOffer && reply.counter>0 && ship.s.bargain_warnings==1 && ship.s.gold==before);
+    assert(decode(restored,encode(ship.s)) && restored.bargain_warnings==1);
+    const auto counter=ship.bargain_quote(Wine,false,reply.counter);
+    assert(counter.saved>0);
+    assert(ship.bargain_offer(Wine,false,reply.counter).reply==DealAgreed && ship.s.day==day);
+    assert(ship.s.gold==before-counter.gold && ship.s.cargo[Wine]==TradeLot && ship.s.bargain_good==BargainUsed);
+    assert(ship.depart(lisbon) && !ship.s.bargain_good && !ship.s.bargain_warnings);
 
-    Game interpreter;
-    interpreter.s.origin=cadiz;
-    assert(interpreter.hire_interpreter() && interpreter.negotiation_rate()==8);
-    assert(interpreter.negotiate(Wine) && interpreter.s.bargain_rate==8);
-    assert(interpreter.start_helm(-1) && !interpreter.s.bargain_good);
+    Game refusing;
+    refusing.s.origin=cadiz;
+    refusing.s.trust=1;
+    assert(refusing.hire_interpreter() && refusing.negotiation_rate()==8);
+    refusing.s.bargain_warnings=2;
+    assert(refusing.bargain_offer(Wine,false,18).reply==TalksEnded);
+    assert(!refusing.s.trust && refusing.s.bargain_good==BargainUsed);
+    assert(refusing.bargain_offer(Wine,false,2).reply==InvalidOffer && refusing.trade(Wine,false,1).units);
+    assert(refusing.start_helm(-1) && !refusing.s.bargain_warnings);
+
+    Game seller;
+    seller.s.day=4;
+    seller.s.cargo[Timber]=TradeLot;
+    const int stock=seller.stock(Timber);
+    const auto price=seller.bargain_quote(Timber,true,8);
+    assert(price.units==TradeLot && price.saved>0);
+    assert(seller.bargain_offer(Timber,true,8).reply==DealAgreed);
+    assert(!seller.s.cargo[Timber] && seller.stock(Timber)==stock+TradeLot);
+    assert(seller.s.gold==520+price.gold && seller.trade_quote(Timber,false,TradeLot).gold>=price.gold);
+    Game poor;
+    poor.s.gold=0;
+    assert(poor.bargain_offer(Wine,false,2).reply==InvalidOffer && !poor.s.bargain_warnings);
+}
+
+void riverside_timber() {
+    Game ship;
+    assert(!ship.resolve_timber_trail(true) && ship.inspect_timber_trail() && !ship.inspect_timber_trail());
+    auto reward=ship;
+    assert(reward.resolve_timber_trail(false) && reward.s.gold==575 && !reward.resolve_timber_trail(true));
+    assert(ship.resolve_timber_trail(true) && ship.s.gold==520 && ship.s.trust==1);
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.timber_trail==TimberReturned);
+    assert(reward.bargain_offer(Timber,false,6).reply==CounterOffer);
+    assert(ship.bargain_offer(Timber,false,6).reply==DealAgreed);
+    const auto spot=town_street(OutskirtsQuay,OutskirtsSites,OutskirtsSites[1]);
+    assert(spot && same_town_point(*spot,OutskirtsSites[1]));
+    TownWalk walk{.at=OutskirtsSites[0]};
+    walk.go(OutskirtsSites[2],OutskirtsQuay,TimberShedTarget,100);
+    assert(walk.moving() && walk.update(1500)==TimberShedTarget && same_town_point(walk.at,OutskirtsSites[2]));
 }
 
 void search_for_driftwood() {
@@ -1212,6 +1240,7 @@ int main() {
     expeditions();
     port_languages();
     dockside_bargaining();
+    riverside_timber();
     search_for_driftwood();
     ship_officers();
     unknown_waters();

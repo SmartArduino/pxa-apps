@@ -33,4 +33,5 @@ extern const unsigned char port_ui[];
 extern const unsigned char dispatch_icons[];
 extern const unsigned char weather_icons[];
 extern const unsigned char sea_stories[];
+extern const unsigned char outskirts[];
 }

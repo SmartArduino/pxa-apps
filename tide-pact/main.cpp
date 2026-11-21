@@ -28,7 +28,7 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage, RationsPage, MarketNews
+    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -55,12 +55,14 @@ enum Action {
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
-    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate,
+    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain,
+    HaggleBuy, HaggleSell, HaggleLess, HaggleMore, HaggleMakeOffer, HaggleAccept,
     ShowDriftStory, TakeDriftLead, MarkDriftGround, OpenDriftRecovery, BoatForDrift,
     HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont,
     ShowMerchants, MarkMerchantFirst, MarkMerchantSecond, OpenTown, ReturnTown,
     WalkToTownFacility, ReadPortStory=WalkToTownFacility+int(TownFacilityCount),
     FindPortStory=ReadPortStory+int(PortStoryCount), PortStoryChooseFirst, PortStoryChooseSecond, PortStoryGuide,
+    WalkToCityGate, WalkToOutsideGate, WalkToRiver, WalkToShed, ReturnTimber, TakeTimberReward,
     OpenDispatch, ViewDispatchReceipt, AcceptDispatch, FileDispatch, MarkDispatch, AskCancelDispatch,
     CancelDispatch, DispatchEntry
 };
@@ -117,9 +119,12 @@ struct VoyageApp {
     int dispatch_page=DispatchList;
     unsigned town_frame=0, town_hint_until=0;
     bool inside_town_facility=false;
+    bool outside=false, at_timber_river=false;
     Overlay town_facility=None;
     int scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
+    bool bargain_sell=false;
+    int bargain_rate=8, bargain_counter=0;
     int expedition_item=0;
     int officer_item=Pilot;
     int rumor_item=0, pinned_rumor=-1;
@@ -1063,23 +1068,55 @@ struct VoyageApp {
         page_title(d,"码头议价",SpeechIcon);
         const auto& s=game.s;
         const int x=body.x+7, w=body.w-14, y=body.y;
-        const int rate=game.negotiation_rate();
         const bool pending=s.bargain_good>0 && s.bargain_good<=GoodsCount;
         const int commodity=pending?s.bargain_good-1:good;
         goods_icon(d,commodity,{x,y+27,20,20});
-        d.label(x+24,y+30,format("%s · 五件整批",GoodsNames[commodity].data()),gold,w-24);
-        const auto fixed=format("这批货已谈好，买足五件省%d%%。离港后报价失效。",s.bargain_rate);
-        const auto offer=format("花一日商议，首批买足五件省%d%%。每次停泊可谈一种货。",rate);
-        Text detail=offer;
-        if (pending) detail=fixed;
-        else if (s.bargain_good==BargainUsed) detail="本次停泊的折扣已用完。";
-        else if (!rate) detail="先学会本地短语，或请随船副官、码头口译帮忙。";
-        else if (!game.can_negotiate(good)) detail="库存和舱位各需至少五件。";
-        d.wrap({x,y+50,w,body.h-82},detail,ivory,15);
-        if (!rate && !s.bargain_good)
-            button(d,{x,body.bottom()-28,w,24},"请口译或学话",OpenLanguages,true,false,{},PhrasebookIcon);
-        else if (game.can_negotiate(good))
-            button(d,{x,body.bottom()-28,w,24},"谈五件整批 · 一日",Negotiate,true);
+        d.label(x+24,y+30,format("%s ×5",GoodsNames[commodity].data()),gold,w-119);
+        if (!s.bargain_good) {
+            button(d,{x+w-90,y+26,43,21},"买入",HaggleBuy,!bargain_sell);
+            button(d,{x+w-43,y+26,43,21},"卖出",HaggleSell,bargain_sell);
+        }
+        const auto blocked=game.bargain_block(good,bargain_sell);
+        if (!blocked.empty()) {
+            const auto fixed=format("这批货已谈好，回市场买足五件可省%d%%。",s.bargain_rate);
+            d.wrap({x,y+53,w,body.h-83},pending?Text(fixed):blocked,ivory,15);
+            if (!game.negotiation_rate() && !s.bargain_good)
+                button(d,{x,body.bottom()-28,w,24},"口译与学话",OpenLanguages,true,false,{},PhrasebookIcon);
+            return;
+        }
+        const auto usual=game.bargain_quote(good,bargain_sell,0);
+        const auto offer=game.bargain_quote(good,bargain_sell,bargain_rate);
+        const auto counter=game.bargain_quote(good,bargain_sell,bargain_counter);
+        const int purse=bargain_sell?999999-s.gold:s.gold;
+        d.label(x,y+51,format("市价 %d金  出价 %d金",usual.gold,offer.gold),ivory,w);
+        const int patience=HagglePatience-s.bargain_warnings;
+        const int supply=game.stock(good);
+        const bool favor=s.origin==lisbon && good==Timber && !bargain_sell && s.timber_trail==TimberReturned;
+        const auto mood=format("%s · 耐心%d",favor?"货主愿多让价":supply<=10?"货紧":supply>=24?"货足":"库存平稳",patience);
+        const auto reply=format("商人还价%d金 · 耐心%d",counter.gold,patience);
+        d.label(x,y+68,bargain_counter?Text(reply):Text(mood),bargain_counter?gold:mist,w);
+        const int controls=body.bottom()-53;
+        button(d,{x,controls,39,23},"−",HaggleLess,false,
+               bargain_sell?bargain_rate<=2:bargain_rate>=MaxHaggleRate);
+        button(d,{x+43,controls,39,23},"+",HaggleMore,false,
+               bargain_sell?bargain_rate>=MaxHaggleRate:bargain_rate<=2);
+        button(d,{x+86,controls,w-86,23},"出价",HaggleMakeOffer,true,
+               !offer.saved || offer.gold>purse);
+        const auto accept=format("接受还价 %d金",counter.gold);
+        button(d,{x,body.bottom()-27,w,23},bargain_counter?Text(accept):Text("按市价成交"),
+               HaggleAccept,false,counter.gold>purse);
+    }
+
+    void submit_bargain(int rate) {
+        if (modal!=BargainPage) return;
+        const auto result=game.bargain_offer(good,bargain_sell,rate);
+        if (result.reply==InvalidOffer) { notify(); return; }
+        bargain_counter=result.counter;
+        if (result.reply==DealAgreed) {
+            set_modal(None);
+            audio.cue(Sound::Page);
+        }
+        changed();
     }
 
     void no_port(Draw& d, Text reason) {
@@ -1317,12 +1354,13 @@ struct VoyageApp {
         const int h=std::min(inside.h,inside.w*5/8);
         const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
         constexpr int scene_w=288, scene_h=136;
-        d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
+        d.image({outside?art::outskirts:art::towns},{0,outside?0:city*scene_h,scene_w,scene_h},view);
         d.frame(view,rgb(0x342921));
         return view;
     }
 
     void town_screen(Draw& d) {
+        if (outside) { outskirts_screen(d); return; }
         const auto& layout=Towns[town_id];
         const int story=port_story_at(layout.port);
         const bool can_talk=story>=0 && game.port_story_stage(story)<PortStoryFirst;
@@ -1344,15 +1382,7 @@ struct VoyageApp {
             harbor_button(d,{talk_left,y,talk_width,25},PortStories[story].invitation,FindPortStory,
                           true,false,{},roomy?LetterIcon:-1);
 
-        const auto position=town_on_screen(town.position(now));
-        constexpr int stride[]{0,1,2,1};
-        const int frame=town.moving()?stride[(now/108)%4]:1;
-        const bool mirror=town.facing==3;
-        constexpr int sprite_w=24, sprite_h=32;
-        const Rect sprite{frame*sprite_w,std::min(2,town.facing)*sprite_h,sprite_w,sprite_h};
-        const int feet=roomy?31:25;
-        d.image({art::town_walk},sprite,
-                {position.x-feet*3/8,position.y-feet*7/8,feet*3/4,feet},true,mirror);
+        draw_town_walker(d,roomy);
 
         for (int i=0;i<TownFacilityCount;++i) {
             if (i==TownArchive && game.archive_here()<0) continue;
@@ -1363,7 +1393,7 @@ struct VoyageApp {
             const Rect label{left,point.y+offset,width,21};
             const bool focus=pad_focus && focused==button_count;
             const bool target=town.moving() && (town.entrance==i ||
-                              (town.entrance==TownFacilityCount && talk_door==i));
+                              (town.entrance==TownStoryTarget && talk_door==i));
             if (i==TownArchive) d.line({point.x,label.bottom()},point,gold,true);
             d.diamond(point,2,rgb(0x342419));
             d.dot(point.x,point.y,gold);
@@ -1373,8 +1403,14 @@ struct VoyageApp {
                                {art::town_icons},{i%3*32,i/3*32,32,32},12);
             buttons[button_count++]={label,WalkToTownFacility+i};
         }
+        if (layout.port==lisbon) {
+            const auto gate=town_on_screen(LisbonGate);
+            harbor_button(d,{town_area.right()-47,gate.y+4,45,21},"出城",WalkToCityGate,
+                          town.entrance==CityGateTarget);
+        }
 
-        if (town.moving() && town.entrance==TownFacilityCount && can_talk) {
+        if (town.moving() && town.entrance==CityGateTarget) harbor_hint(d,"前往城门");
+        else if (town.moving() && town.entrance==TownStoryTarget && can_talk) {
             const auto caption=format("前往%s",TownNames[talk_door].data());
             harbor_hint(d,caption);
         } else if (town.moving() && town.entrance>=0 && town.entrance<TownFacilityCount) {
@@ -1383,6 +1419,57 @@ struct VoyageApp {
         } else if (pad_focus || town_hint_until) {
             harbor_hint(d,pad_focus?"按A前往":"点路面走动");
         }
+    }
+
+    void draw_town_walker(Draw& d, bool roomy) {
+        const auto position=town_on_screen(town.position(now));
+        constexpr int stride[]{0,1,2,1};
+        const int frame=town.moving()?stride[(now/108)%4]:1;
+        constexpr int sprite_w=24, sprite_h=32;
+        const Rect sprite{frame*sprite_w,std::min(2,town.facing)*sprite_h,sprite_w,sprite_h};
+        const int feet=roomy?31:25;
+        d.image({art::town_walk},sprite,
+                {position.x-feet*3/8,position.y-feet*7/8,feet*3/4,feet},true,town.facing==3);
+    }
+
+    void outskirts_screen(Draw& d) {
+        town_area=harbor_view(d,town_id);
+        harbor_panel(d,d.clip.inset(2),HarborTrim);
+        const Rect plaque{safe.x,safe.y+1,d.measure("里斯本河堤")+20,25};
+        harbor_panel(d,plaque,HarborPlaque);
+        d.center(plaque.inset(3),"里斯本河堤",ivory);
+        draw_town_walker(d,safe.w>=345);
+        constexpr Text names[]{"回城","察看河堤","木料棚"};
+        for (int i=0;i<int(OutskirtsSites.size());++i) {
+            const auto point=town_on_screen(OutskirtsSites[i]);
+            const int w=std::max(48,d.measure(names[i])+16);
+            const Rect sign{std::clamp(point.x-w/2,town_area.x+2,town_area.right()-w-2),
+                            point.y+(i==1?7:-23),w,21};
+            d.dot(point.x,point.y,gold);
+            harbor_button(d,sign,names[i],WalkToOutsideGate+i,town.entrance==OutsideGateTarget+i);
+        }
+        if (town.moving() && town.entrance>=OutsideGateTarget) harbor_hint(d,"沿河堤走动");
+    }
+
+    void timber_trail_page(Draw& d) {
+        page_title(d,at_timber_river?"河堤的货签":"丢失的木料",at_timber_river?LetterIcon:CargoIcon);
+        const auto stage=game.s.timber_trail;
+        Text story;
+        if (at_timber_river) story="车轮在泥里陷过。你从一道车辙里捡起货签，上面还留着货主的印。带给木料棚的亚丰索看看。";
+        else if (stage==TrailUnknown) story="亚丰索翻遍账簿也没找到账上那批木料。运货的车沿河堤回来过，他请你去看看泥地上还有什么。";
+        else if (stage==TrailFound) story="亚丰索认出货签。邻棚卸错了木料，沿印记就能找回来。他愿付你五十五金，也愿往后在里斯本买木料时多让一点。";
+        else if (stage==TimberReturned) story="木料已经搬回原棚。亚丰索记下你的人情，里斯本买木料时可以多还一点价。";
+        else story="找回的木料堆在棚里。亚丰索已经把五十五金谢礼付给你。";
+        const int x=body.x+7,w=body.w-14;
+        d.wrap({x,body.y+34,w,body.h-68},story,ivory,16);
+        if (!at_timber_river && stage==TrailFound)
+            pair(d,{x,body.bottom()-28,w,24},"请留个好价",ReturnTimber,"收55金",TakeTimberReward,true);
+    }
+
+    void change_outskirts(bool enter) {
+        outside=enter;
+        town={.at=enter?OutskirtsSites[0]:LisbonGate};
+        set_modal(HarborTown);
     }
 
     void harbor_hint(Draw& d, Text caption) {
@@ -1402,6 +1489,8 @@ struct VoyageApp {
             town={.at=Towns[city].doors[TownDock]};
             town_id=city;
         }
+        if (outside) town={.at=Towns[city].doors[TownDock]};
+        outside=false;
         inside_town_facility=false;
         screen=Office;
         town_hint_until=now+3300;
@@ -1430,7 +1519,14 @@ struct VoyageApp {
     }
 
     void arrive_in_town(int id) {
-        if (id!=TownFacilityCount) {
+        if (id==CityGateTarget || id==OutsideGateTarget) { change_outskirts(id==CityGateTarget); return; }
+        if (id==RiverTarget || id==TimberShedTarget) {
+            at_timber_river=id==RiverTarget;
+            if (at_timber_river && game.inspect_timber_trail()) changed();
+            set_modal(TimberTrailPage);
+            return;
+        }
+        if (id!=TownStoryTarget) {
             enter_town_facility(id);
             return;
         }
@@ -1445,7 +1541,7 @@ struct VoyageApp {
     void town_go(Point point, int facility=-1) {
         if (modal!=HarborTown) return;
         town.at=town.position(now);
-        town.go(point,Towns[town_id].quay,facility,now);
+        town.go(point,outside?OutskirtsQuay:Towns[town_id].quay,facility,now);
         if (const int entered=town.update(now); entered>=0) arrive_in_town(entered);
         dirty=true;
     }
@@ -2592,6 +2688,7 @@ struct VoyageApp {
         case LanguageDesk: language_desk(d); break;
         case TideLedger: tide_ledger_page(d); break;
         case BargainPage: bargain_page(d); break;
+        case TimberTrailPage: timber_trail_page(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -2666,10 +2763,27 @@ struct VoyageApp {
             case PublishLedger: case ReturnLedger:
                 if (game.decide_tide_ledger(action==PublishLedger)) { audio.cue(Sound::Page); changed(); }
                 break;
-            case ShowBargain: if (game.port()) set_modal(BargainPage); break;
-            case Negotiate:
-                if (game.negotiate(good)) { set_modal(None); audio.cue(Sound::Page); changed(); }
+            case ShowBargain:
+                if (game.port()) {
+                    bargain_sell=false;
+                    bargain_rate=8;
+                    bargain_counter=0;
+                    set_modal(BargainPage);
+                }
                 break;
+            case HaggleBuy: case HaggleSell:
+                if (bargain_sell!=(action==HaggleSell)) {
+                    bargain_sell=action==HaggleSell;
+                    bargain_counter=0;
+                }
+                break;
+            case HaggleLess: case HaggleMore: {
+                const int direction=action==HaggleMore?2:-2;
+                bargain_rate=std::clamp(bargain_rate+(bargain_sell?direction:-direction),2,MaxHaggleRate);
+                break;
+            }
+            case HaggleMakeOffer: submit_bargain(bargain_rate); break;
+            case HaggleAccept: submit_bargain(bargain_counter); break;
             case ShowDriftStory: activity_back=modal; set_modal(DriftStory); break;
             case TakeDriftLead: if (game.take_drift_lead()) changed(); break;
             case MarkDriftGround:
@@ -2715,10 +2829,26 @@ struct VoyageApp {
                 break;
             }
             case OpenTown: case ReturnTown: show_town(); break;
+            case WalkToCityGate:
+                if (modal==HarborTown && !outside && game.s.origin==lisbon)
+                    town_go(LisbonGate,CityGateTarget);
+                break;
+            case WalkToOutsideGate: case WalkToRiver: case WalkToShed:
+                if (modal==HarborTown && outside) {
+                    const int id=action-WalkToOutsideGate;
+                    town_go(OutskirtsSites[id],OutsideGateTarget+id);
+                }
+                break;
+            case ReturnTimber: case TakeTimberReward:
+                if (modal==TimberTrailPage && !at_timber_river && game.resolve_timber_trail(action==ReturnTimber)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
             case FindPortStory: {
                 const int id=port_story_at(game.s.origin);
                 if (modal==HarborTown && id>=0 && game.port_story_stage(id)<PortStoryFirst)
-                    town_go(Towns[town_id].doors[PortStoryDoors[id]],TownFacilityCount);
+                    town_go(Towns[town_id].doors[PortStoryDoors[id]],TownStoryTarget);
                 break;
             }
             case PortStoryChooseFirst: case PortStoryChooseSecond:
@@ -3157,6 +3287,8 @@ struct VoyageApp {
         }
         if (modal!=None) {
             if (modal==PortStoryPage) set_modal(port_story_back);
+            else if (modal==TimberTrailPage) set_modal(HarborTown);
+            else if (modal==HarborTown && outside) change_outskirts(false);
             else if (modal==DispatchBoard) {
                 if (dispatch_page!=DispatchList) {
                     dispatch_page=DispatchList;
@@ -3234,7 +3366,9 @@ struct VoyageApp {
         if (modal==HarborTown && town_area.contains(p)) {
             const Point world{(p.x-town_area.x)*TownExtent/town_area.w,
                               (p.y-town_area.y)*TownExtent/town_area.h};
-            if (const auto at=town_street(Towns[town_id],world)) town_go(*at);
+            const auto at=outside?town_street(OutskirtsQuay,OutskirtsSites,world):
+                                  town_street(Towns[town_id],world);
+            if (at) town_go(*at);
             return;
         }
         if (title || modal!=None || screen!=Chart || game.encounter() || !map.contains(p)) return;

@@ -13,6 +13,11 @@ inline constexpr TownFacility PortStoryDoors[]{TownShipyard,TownMarket,TownTaver
 static_assert(std::size(PortStoryDoors)==PortStoryCount);
 inline constexpr Text TownNames[]{"市场","船坞","商会","档案室","酒馆","码头"};
 inline constexpr int TownExtent=1000;
+enum TownWalkTarget { TownStoryTarget=TownFacilityCount, CityGateTarget, OutsideGateTarget,
+                      RiverTarget, TimberShedTarget };
+inline constexpr Point LisbonGate{934,620};
+inline constexpr int OutskirtsQuay=606;
+inline constexpr std::array<Point,3> OutskirtsSites{{{82,546},{495,755},{802,527}}};
 
 struct TownLayout {
     int port, quay;
@@ -34,7 +39,7 @@ inline int town_index(int port) {
 
 inline bool same_town_point(Point a, Point b) { return a.x==b.x && a.y==b.y; }
 
-inline std::optional<Point> town_street(const TownLayout& town, Point p) {
+inline std::optional<Point> town_street(int quay, std::span<const Point> doors, Point p) {
     Point chosen{};
     int distance=65*65;
     const auto consider=[&](Point road) {
@@ -42,11 +47,14 @@ inline std::optional<Point> town_street(const TownLayout& town, Point p) {
         const int score=dx*dx+dy*dy;
         if (score<distance) { distance=score; chosen=road; }
     };
-    consider({std::clamp(p.x,65,935),town.quay});
-    for (const auto door : town.doors)
-        consider({door.x,std::clamp(p.y,std::min(door.y,town.quay),std::max(door.y,town.quay))});
+    consider({std::clamp(p.x,65,935),quay});
+    for (const auto door : doors)
+        consider({door.x,std::clamp(p.y,std::min(door.y,quay),std::max(door.y,quay))});
     if (distance==65*65) return std::nullopt;
     return chosen;
+}
+inline std::optional<Point> town_street(const TownLayout& town, Point p) {
+    return town_street(town.quay,town.doors,p);
 }
 
 struct TownWalk {
