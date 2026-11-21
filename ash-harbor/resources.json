@@ -1,0 +1,529 @@
+{
+  "assets": [
+    {
+      "path": "assets/atlas-0.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-0.index8",
+      "width": 256,
+      "height": 254
+    },
+    {
+      "path": "assets/atlas-1.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-1.index8",
+      "width": 255,
+      "height": 255
+    },
+    {
+      "path": "assets/atlas-2.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-2.index8",
+      "width": 256,
+      "height": 254
+    },
+    {
+      "path": "assets/atlas-3.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-3.index8",
+      "width": 256,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-4.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-4.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-5.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-5.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-6.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-6.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-7.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-7.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-8.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-8.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-9.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-9.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-10.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-10.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-11.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-11.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-12.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-12.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-13.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-13.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-14.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-14.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-15.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-15.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-16.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-16.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-17.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-17.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-18.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-18.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-19.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-19.index8",
+      "width": 256,
+      "height": 48
+    },
+    {
+      "path": "assets/atlas-20.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-20.index8",
+      "width": 152,
+      "height": 232
+    },
+    {
+      "path": "assets/atlas-21.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-21.index8",
+      "width": 142,
+      "height": 212
+    },
+    {
+      "path": "assets/atlas-22.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-22.index8",
+      "width": 190,
+      "height": 210
+    },
+    {
+      "path": "assets/atlas-23.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-23.index8",
+      "width": 204,
+      "height": 230
+    },
+    {
+      "path": "assets/atlas-24.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-24.index8",
+      "width": 178,
+      "height": 230
+    },
+    {
+      "path": "assets/atlas-25.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-25.index8",
+      "width": 190,
+      "height": 230
+    },
+    {
+      "path": "assets/atlas-26.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-26.index8",
+      "width": 180,
+      "height": 248
+    },
+    {
+      "path": "assets/atlas-27.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-27.index8",
+      "width": 212,
+      "height": 246
+    },
+    {
+      "path": "assets/atlas-28.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-28.index8",
+      "width": 142,
+      "height": 234
+    },
+    {
+      "path": "assets/atlas-29.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-29.index8",
+      "width": 124,
+      "height": 226
+    },
+    {
+      "path": "assets/atlas-30.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-30.index8",
+      "width": 186,
+      "height": 218
+    },
+    {
+      "path": "assets/atlas-31.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-31.index8",
+      "width": 186,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-32.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-32.index8",
+      "width": 178,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-33.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-33.index8",
+      "width": 188,
+      "height": 226
+    },
+    {
+      "path": "assets/atlas-34.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-34.index8",
+      "width": 174,
+      "height": 244
+    },
+    {
+      "path": "assets/atlas-35.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-35.index8",
+      "width": 220,
+      "height": 244
+    },
+    {
+      "path": "assets/atlas-36.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-36.index8",
+      "width": 152,
+      "height": 230
+    },
+    {
+      "path": "assets/atlas-37.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-37.index8",
+      "width": 152,
+      "height": 220
+    },
+    {
+      "path": "assets/atlas-38.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-38.index8",
+      "width": 210,
+      "height": 212
+    },
+    {
+      "path": "assets/atlas-39.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-39.index8",
+      "width": 202,
+      "height": 226
+    },
+    {
+      "path": "assets/atlas-40.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-40.index8",
+      "width": 174,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-41.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-41.index8",
+      "width": 198,
+      "height": 236
+    },
+    {
+      "path": "assets/atlas-42.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-42.index8",
+      "width": 188,
+      "height": 250
+    },
+    {
+      "path": "assets/atlas-43.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-43.index8",
+      "width": 224,
+      "height": 246
+    },
+    {
+      "path": "assets/atlas-44.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-44.index8",
+      "width": 142,
+      "height": 236
+    },
+    {
+      "path": "assets/atlas-45.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-45.index8",
+      "width": 150,
+      "height": 230
+    },
+    {
+      "path": "assets/atlas-46.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-46.index8",
+      "width": 186,
+      "height": 216
+    },
+    {
+      "path": "assets/atlas-47.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-47.index8",
+      "width": 202,
+      "height": 232
+    },
+    {
+      "path": "assets/atlas-48.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-48.index8",
+      "width": 184,
+      "height": 232
+    },
+    {
+      "path": "assets/atlas-49.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-49.index8",
+      "width": 192,
+      "height": 236
+    },
+    {
+      "path": "assets/atlas-50.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-50.index8",
+      "width": 174,
+      "height": 248
+    },
+    {
+      "path": "assets/atlas-51.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-51.index8",
+      "width": 218,
+      "height": 244
+    },
+    {
+      "path": "assets/atlas-52.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-52.index8",
+      "width": 128,
+      "height": 128
+    },
+    {
+      "path": "assets/atlas-53.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-53.index8",
+      "width": 231,
+      "height": 150
+    },
+    {
+      "path": "assets/atlas-54.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-54.index8",
+      "width": 236,
+      "height": 171
+    },
+    {
+      "path": "assets/atlas-55.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-55.index8",
+      "width": 255,
+      "height": 172
+    },
+    {
+      "path": "assets/atlas-56.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-56.index8",
+      "width": 253,
+      "height": 179
+    },
+    {
+      "path": "assets/atlas-57.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-57.index8",
+      "width": 200,
+      "height": 169
+    },
+    {
+      "path": "assets/atlas-58.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-58.index8",
+      "width": 229,
+      "height": 177
+    },
+    {
+      "path": "assets/atlas-59.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-59.index8",
+      "width": 198,
+      "height": 189
+    },
+    {
+      "path": "assets/atlas-60.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-60.index8",
+      "width": 236,
+      "height": 193
+    },
+    {
+      "path": "assets/atlas-61.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-61.index8",
+      "width": 150,
+      "height": 212
+    },
+    {
+      "path": "assets/atlas-62.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-62.index8",
+      "width": 150,
+      "height": 214
+    },
+    {
+      "path": "assets/atlas-63.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-63.index8",
+      "width": 134,
+      "height": 224
+    },
+    {
+      "path": "assets/atlas-64.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-64.index8",
+      "width": 122,
+      "height": 224
+    },
+    {
+      "path": "assets/atlas-65.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-65.index8",
+      "width": 184,
+      "height": 220
+    },
+    {
+      "path": "assets/atlas-66.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-66.index8",
+      "width": 190,
+      "height": 222
+    },
+    {
+      "path": "assets/atlas-67.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-67.index8",
+      "width": 182,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-68.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-68.index8",
+      "width": 192,
+      "height": 228
+    },
+    {
+      "path": "assets/atlas-69.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-69.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-70.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-70.index8",
+      "width": 175,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-71.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-71.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-72.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-72.index8",
+      "width": 199,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-73.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-73.index8",
+      "width": 256,
+      "height": 256
+    },
+    {
+      "path": "assets/atlas-74.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-74.index8",
+      "width": 199,
+      "height": 256
+    }
+  ]
+}

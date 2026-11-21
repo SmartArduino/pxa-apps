@@ -1,0 +1,32 @@
+{
+  "dpad-eight-clean.png": {
+    "tool": "built-in imagegen",
+    "sha256": "d54e103ce790c42babf3c24e0dcc1bd29b42e9258c5748d196990573f02077c6",
+    "source": "exec-633edd70-d247-46f4-8150-082d8616311a.png"
+  },
+  "stage-harbor-traditional.png": {
+    "tool": "built-in imagegen",
+    "sha256": "bc368a3d7f2b3ea11c6950e8e2e4ca53e15b57d80f09334dea73a73e64348504",
+    "source": "exec-b9cf69d6-7511-4499-9bae-9cb077896cf2.png"
+  },
+  "stage-bamboo.png": {
+    "tool": "built-in imagegen",
+    "sha256": "47acaa75e4ab0b74efbb759ed5ea5077bd69a64e769ee8345601082702247f24",
+    "source": "exec-7acb5bd8-867c-4d2e-a9d8-f25aeb5bbf4d.png"
+  },
+  "stage-snow.png": {
+    "tool": "built-in imagegen",
+    "sha256": "b6e378ce888bc3fe2c87e73e4a0c8f5190dfbff83c90fef939ac6fc6e5dcdf0b",
+    "source": "exec-d8019b2d-cc9b-4d56-94e1-ba071f6e4e63.png"
+  },
+  "stage-lantern.png": {
+    "tool": "built-in imagegen",
+    "sha256": "83d847550f088fddc09a5b9ab7caa8e902e78d25371d3394cc89475e8b96bc0c",
+    "source": "exec-23cec4f4-29cd-488e-9daf-76765622662f.png"
+  },
+  "story-tournament.png": {
+    "tool": "built-in imagegen",
+    "sha256": "86e6863a1dc2cb4a2c1d28bbf476196b576abe2650e810b660e7d2ef00f7c578",
+    "source": "exec-3e28b36a-b58f-4c29-868a-a7db8b34cf9d.png"
+  }
+}

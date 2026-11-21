@@ -1,0 +1,9 @@
+{
+  "project": "Fusion Pixel Font",
+  "release": "2026.11.10",
+  "license": "OFL-1.1 with preserved upstream notices",
+  "source": "https://github.com/TakWolf/fusion-pixel-font/releases/tag/2026.11.10",
+  "file": "fusion-pixel-12px-monospaced-zh_hans.ttf",
+  "sha256": "31fc0fc4c7dd0250934e9e000d0c3d64958153d0308737adaf4bae09ac493537",
+  "rasterization": "unmodified original font, 12px, monochrome, baseline 10"
+}

@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.20)
+project(ash_harbor LANGUAGES CXX)
+set(PXA_COROUTINE_SLOT_BYTES 4096)
+find_package(Pxa CONFIG REQUIRED)
+pxa_add_app(main SOURCES main.cpp)
+target_include_directories(main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_options(main PRIVATE -Oz)
+target_link_options(main PRIVATE -Wl,-z,stack-size=32768)

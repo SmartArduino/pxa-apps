@@ -1,0 +1,26 @@
+{
+  "logical_grid": 1,
+  "sampling": "nearest neighbor; native sprites; nine-slice borders; separate left/right brackets",
+  "assets": {
+    "ui-kit.png": {
+      "sha256": "df19c89ebfdd2921eb5c75a4136357f840393b0ca646c6e09987a9a15bf62c0d",
+      "tool": "built-in image_gen",
+      "prompt": "tools/ui-prompts.json#kit"
+    },
+    "ui-digits.png": {
+      "sha256": "5d150d1761a10eacc019ffe2b92866a4aebe4439a571e6484743a7df993214ec",
+      "tool": "built-in image_gen",
+      "prompt": "tools/ui-prompts.json#digits"
+    },
+    "ui-signals.png": {
+      "sha256": "278866baf81b532e5d18a68864c3ac7d4958dee863ed62de5ccf1589a3f5e611",
+      "tool": "built-in image_gen",
+      "prompt": "tools/ui-prompts.json#signals"
+    },
+    "ui-meters.png": {
+      "sha256": "01e2be164c8e2cac364648bcfdf6cae7d04d865ea773e69cb4d2f32d0f1ebe39",
+      "tool": "built-in image_gen",
+      "prompt": "tools/ui-prompts.json#meters"
+    }
+  }
+}

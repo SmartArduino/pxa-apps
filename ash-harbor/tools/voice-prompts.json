@@ -1,0 +1,1188 @@
+{
+  "format": "ash-harbor-four-fighter-voices-v5",
+  "language": "Chinese",
+  "models": {
+    "base": "Qwen3-TTS-12Hz-1.7B-Base",
+    "design": "Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+    "license": "Apache-2.0",
+    "source": "https://github.com/QwenLM/Qwen3-TTS"
+  },
+  "sampling": {
+    "do_sample": true,
+    "temperature": 0.7,
+    "top_p": 0.9,
+    "top_k": 50,
+    "repetition_penalty": 1.08,
+    "max_new_tokens": 192
+  },
+  "cast": [
+    {
+      "id": "yan",
+      "kind": 0,
+      "name": "陆炎",
+      "seed": 111850,
+      "instruct": "二十五岁中国男性格斗游戏角色。年轻有血性的男中音，中低音区，音色微沙，明亮结实，字头锋利。标准普通话。",
+      "reference_text": "别眨眼！这一拳，接好了！",
+      "lines": {
+        "intro": "来，过两招！",
+        "fire": "看招！",
+        "rise": "破空！",
+        "rush": "让开！",
+        "super": "燎原！",
+        "attack_0": "喝！",
+        "attack_1": "哈！",
+        "attack_2": "嘿！",
+        "hurt_0": "呃！",
+        "hurt_1": "呃啊！",
+        "throw": "下去！",
+        "dodge": "哼！",
+        "ko": "呃啊——！",
+        "win": "这才过瘾！",
+        "lose": "还没……完呢。"
+      },
+      "performance": {
+        "intro": "动作电影中的年轻拳手，近距离自信挑衅，先压低声线说别眨眼，出拳时猛然提高音量喊出接好了，急促而有力。",
+        "fire": "爆发式大声喊出招式！从腹部发力，胸腔打开，猛然出掌时喊出，字头硬朗，末字有力收断。",
+        "rise": "正在使出全力升龙上勾拳，向上爆发，大声吼出招式，声音有冲劲和张力，末字斩断。",
+        "rush": "突进冲锋中的强力喊招，迅猛有压迫感，短句急促发力，绝对不是平静说话。",
+        "super": "正在全力释放终极绝招，最高昂的战斗吼声，怒吼中带清楚的字音，逐字发力，最后一字猛烈爆发。",
+        "throw": "近身摔投时的爆发喊声，气息短而猛，带发力的压迫感。",
+        "win": "刚赢下激烈战斗，兴奋而昂扬，带着喘息和骄傲，大声宣告胜利。",
+        "lose": "刚被重击打倒，痛苦、疲惫、气息不稳，咬牙不甘，声音有明显受伤后的虚弱沙哑。",
+        "attack_0": "一记重拳出手时的爆发发力短喝！腹部绷紧，猛地喷气，短促粗粝有冲击力，武打演员真正在出拳，不能平静念字，声音干脆斩断。",
+        "attack_1": "全力踢腿瞬间爆发的大声短吼！丹田发力，气流猛然冲出，强烈攻击性，音头有力，绝不温柔，绝不拖长成说话。",
+        "attack_2": "用尽全力打出组合重击，爆发式喝喊，嗓音有野性和粗粝，急促有力的武术发力叫喊，声尾立刻收断。",
+        "hurt_0": "腹部突然挨到重拳的痛哼，气被打出，先是喉头被挤住的呃，再短促痛呼，痛苦、沙哑、喘不过气，不是进攻喊声，不是舒服的呻吟。",
+        "hurt_1": "刚被猛烈踢中肋骨的剧痛叫声，无法控制地痛叫，气息破碎，喉头挤压、颤抖和喘息，明显疼痛和虚弱，绝不是平静说话或攻击喊声。",
+        "dodge": "闪身躲过一拳时从鼻腔发出的极短促用力闷哼，紧绷，利落收声。",
+        "ko": "被重击击飞倒地时失控的痛苦惨叫，刚开始猛然喊出，随后痛到气息逐渐失控衰减，痛苦、沙哑、疲惫，绝不昂扬欢呼。"
+      },
+      "nonverbal_limits": {
+        "attack_0": 0.8,
+        "attack_1": 0.8,
+        "attack_2": 1.0,
+        "hurt_0": 1.0,
+        "hurt_1": 1.2,
+        "dodge": 0.65,
+        "ko": 1.7
+      },
+      "nonverbal_model": "Qwen3-TTS Base",
+      "selection": {
+        "take": "B",
+        "seed": 111802,
+        "sha256": "96b5e1082508ae2024a5152a289e6fd36fc357bd5513f1c1994ed1c3f65b88e0",
+        "design": "二十五岁中国男性格斗游戏角色。年轻有血性的男中音，中低音区，音色微沙，明亮结实，字头锋利。标准普通话。动作电影中的年轻拳手，近距离自信挑衅，先压低声线说别眨眼，出拳时猛然提高音量喊出接好了，急促而有力。录音棚干声。"
+      },
+      "seeds": {
+        "fire": 114550,
+        "rush": 112751
+      }
+    },
+    {
+      "id": "lan",
+      "kind": 1,
+      "name": "霁岚",
+      "seed": 111950,
+      "instruct": "二十八岁中国女性格斗游戏角色。清冷坚毅的低女中音，音质清透而有金属锋芒，成熟有力量。标准普通话。",
+      "reference_text": "退后！这一掌，你接不住！",
+      "lines": {
+        "intro": "出招吧。",
+        "fire": "潮刃掌！",
+        "rise": "鹤升拳！",
+        "rush": "退开！",
+        "super": "月满潮！",
+        "attack_0": "喝！",
+        "attack_1": "哈！",
+        "attack_2": "嘿！",
+        "hurt_0": "呃！",
+        "hurt_1": "啊！",
+        "throw": "倒下！",
+        "dodge": "哼！",
+        "ko": "啊——！",
+        "win": "到此为止。",
+        "lose": "是我……轻敌了。"
+      },
+      "performance": {
+        "intro": "冷面女侠出招前厉声警告对手，带着愤怒和压迫感，大声喝斥，退后二字突然爆发，接不住三字坚定锐利，收声干脆。",
+        "fire": "爆发式大声喊出招式！从腹部发力，胸腔打开，猛然出掌时喊出，字头硬朗，末字有力收断。",
+        "rise": "正在使出全力升龙上勾拳，向上爆发，大声吼出招式，声音有冲劲和张力，末字斩断。",
+        "rush": "突进冲锋中的强力喊招，迅猛有压迫感，短句急促发力，绝对不是平静说话。",
+        "super": "正在全力释放终极绝招，最高昂的战斗吼声，怒吼中带清楚的字音，逐字发力，最后一字猛烈爆发。",
+        "throw": "近身摔投时的爆发喊声，气息短而猛，带发力的压迫感。",
+        "win": "冷静收声，胜负已分后的简短告诫。",
+        "lose": "强忍疼痛，低声承认自己轻敌，气息不稳。",
+        "attack_0": "全力出拳的一声短促猛烈的爆发喊声，像武打演员的喝喊，快速发力收声，只有一声。",
+        "attack_1": "全力踢腿瞬间爆发的大声短吼！丹田发力，气流猛然冲出，强烈攻击性，音头有力，绝不温柔，绝不拖长成说话。",
+        "attack_2": "用尽全力打出组合重击，爆发式喝喊，嗓音有野性和粗粝，急促有力的武术发力叫喊，声尾立刻收断。",
+        "hurt_0": "被突然打中腹部的一声短促痛叫，喉头挤住，气息被打断，疼痛和沙哑，只有一声。",
+        "hurt_1": "刚被猛烈踢中肋骨的剧痛叫声，无法控制地痛叫，气息破碎，喉头挤压、颤抖和喘息，明显疼痛和虚弱，绝不是平静说话或攻击喊声。",
+        "dodge": "闪身躲过一拳时从鼻腔发出的极短促用力闷哼，紧绷，利落收声。",
+        "ko": "被重击击飞倒地时失控的痛苦惨叫，刚开始猛然喊出，随后痛到气息逐渐失控衰减，痛苦、沙哑、疲惫，绝不昂扬欢呼。"
+      },
+      "nonverbal_limits": {
+        "attack_0": 0.8,
+        "attack_1": 0.8,
+        "attack_2": 1.0,
+        "hurt_0": 1.0,
+        "hurt_1": 1.2,
+        "dodge": 0.65,
+        "ko": 1.7
+      },
+      "nonverbal_model": "Qwen3-TTS Base",
+      "selection": {
+        "take": "A",
+        "seed": 111811,
+        "sha256": "a4d5ca86031367e421ad2dec58af1290f8726575912694a19756fa646f92d806",
+        "design": "二十八岁中国女性格斗游戏角色。清冷坚毅的低女中音，音质清透而有金属锋芒，成熟有力量。标准普通话。冷面女侠出招前厉声警告对手，带着愤怒和压迫感，大声喝斥，退后二字突然爆发，接不住三字坚定锐利，收声干脆。录音棚干声。"
+      },
+      "seeds": {
+        "fire": 112850,
+        "rise": 112851,
+        "hurt_1": 113750
+      }
+    },
+    {
+      "id": "zhen",
+      "kind": 2,
+      "name": "韩震",
+      "seed": 112050,
+      "instruct": "四十二岁中国男性格斗游戏角色，壮硕的码头拳师。浑厚低沉的男低音，胸腔共鸣沉重，音色粗粝沙哑，有中年壮汉的力量。标准普通话。",
+      "reference_text": "站稳了！接我这一拳！",
+      "lines": {
+        "intro": "站稳了！",
+        "fire": "震潮掌！",
+        "rise": "撼山！",
+        "rush": "闪开！",
+        "super": "吃我一拳！",
+        "attack_0": "喝！",
+        "attack_1": "哈！",
+        "attack_2": "嘿呀！",
+        "hurt_0": "呃！",
+        "hurt_1": "呃啊！",
+        "throw": "给我趴下！",
+        "dodge": "哼！",
+        "ko": "呃啊——！",
+        "win": "回去练练吧。",
+        "lose": "还撑得住……"
+      },
+      "performance": {
+        "intro": "壮汉抡出沉重一拳时的怒吼，咬牙切齿，腹部绷紧，一口气猛然吼出接我这一拳，每个字有重量，拳字重重收断。",
+        "fire": "爆发式大声喊出招式！从腹部发力，胸腔打开，猛然出掌时喊出，字头硬朗，末字有力收断。",
+        "rise": "正在使出全力升龙上勾拳，向上爆发，大声吼出招式，声音有冲劲和张力，末字斩断。",
+        "rush": "突进冲锋中的强力喊招，迅猛有压迫感，短句急促发力，绝对不是平静说话。",
+        "super": "正在全力释放终极绝招，最高昂的战斗吼声，怒吼中带清楚的字音，逐字发力，最后一字猛烈爆发。",
+        "throw": "近身摔投时的爆发喊声，气息短而猛，带发力的压迫感。",
+        "win": "长辈般粗声劝对手再练，略带笑意。",
+        "lose": "受伤后咬牙撑住，低沉疲惫。",
+        "attack_0": "一记重拳出手时的爆发发力短喝！腹部绷紧，猛地喷气，短促粗粝有冲击力，武打演员真正在出拳，不能平静念字，声音干脆斩断。",
+        "attack_1": "全力踢腿瞬间爆发的大声短吼！丹田发力，气流猛然冲出，强烈攻击性，音头有力，绝不温柔，绝不拖长成说话。",
+        "attack_2": "用尽全力打出组合重击，爆发式喝喊，嗓音有野性和粗粝，急促有力的武术发力叫喊，声尾立刻收断。",
+        "hurt_0": "腹部突然挨到重拳的痛哼，气被打出，先是喉头被挤住的呃，再短促痛呼，痛苦、沙哑、喘不过气，不是进攻喊声，不是舒服的呻吟。",
+        "hurt_1": "刚被猛烈踢中肋骨的剧痛叫声，无法控制地痛叫，气息破碎，喉头挤压、颤抖和喘息，明显疼痛和虚弱，绝不是平静说话或攻击喊声。",
+        "dodge": "闪身躲过一拳时从鼻腔发出的极短促用力闷哼，紧绷，利落收声。",
+        "ko": "被重击击飞倒地时失控的痛苦惨叫，刚开始猛然喊出，随后痛到气息逐渐失控衰减，痛苦、沙哑、疲惫，绝不昂扬欢呼。"
+      },
+      "nonverbal_limits": {
+        "attack_0": 0.8,
+        "attack_1": 0.8,
+        "attack_2": 1.0,
+        "hurt_0": 1.0,
+        "hurt_1": 1.2,
+        "dodge": 0.65,
+        "ko": 1.7
+      },
+      "nonverbal_model": "Qwen3-TTS Base",
+      "selection": {
+        "take": "A",
+        "seed": 111821,
+        "sha256": "4ec605811fb7beff672f2bc36723b23b1a5fb66c4dbf06790025b934f0587b1d",
+        "design": "四十二岁中国男性格斗游戏角色，壮硕的码头拳师。浑厚低沉的男低音，胸腔共鸣沉重，音色粗粝沙哑，有中年壮汉的力量。标准普通话。壮汉抡出沉重一拳时的怒吼，咬牙切齿，腹部绷紧，一口气猛然吼出接我这一拳，每个字有重量，拳字重重收断。录音棚干声。"
+      },
+      "seeds": {
+        "fire": 112950,
+        "super": 114750,
+        "ko": 112952
+      }
+    },
+    {
+      "id": "ling",
+      "kind": 3,
+      "name": "唐绫",
+      "seed": 112150,
+      "instruct": "二十二岁中国女性格斗游戏角色。清亮有劲的中高女声，利落灵活，略带沙质，自信张扬。标准普通话。",
+      "reference_text": "太慢了！跟得上我吗？",
+      "lines": {
+        "intro": "来呀，别磨蹭！",
+        "fire": "惊雷！",
+        "rise": "掠云！",
+        "rush": "追上我再说！",
+        "super": "躲得开吗！",
+        "attack_0": "喝！",
+        "attack_1": "哈！",
+        "attack_2": "嘿！",
+        "hurt_0": "呃！",
+        "hurt_1": "啊！",
+        "throw": "让你挡路！",
+        "dodge": "哼！",
+        "ko": "啊——！",
+        "win": "怎么，这就累啦？",
+        "lose": "下回再找你算账。"
+      },
+      "performance": {
+        "intro": "动作电影中的年轻女拳手，轻蔑而俏皮地笑着说太慢了，跟得上我吗是一句尖锐的反问，尾音利落，表情非常自信。",
+        "fire": "爆发式大声喊出招式！从腹部发力，胸腔打开，猛然出掌时喊出，字头硬朗，末字有力收断。",
+        "rise": "正在使出全力升龙上勾拳，向上爆发，大声吼出招式，声音有冲劲和张力，末字斩断。",
+        "rush": "突进冲锋中的强力喊招，迅猛有压迫感，短句急促发力，绝对不是平静说话。",
+        "super": "正在全力释放终极绝招，最高昂的战斗吼声，怒吼中带清楚的字音，逐字发力，最后一字猛烈爆发。",
+        "throw": "近身摔投时的爆发喊声，气息短而猛，带发力的压迫感。",
+        "win": "笑着打趣对手，促狭轻快。",
+        "lose": "不服输地撂下一句话，受伤后略微喘息。",
+        "attack_0": "全力出拳的一声短促猛烈的爆发喊声，像武打演员的喝喊，快速发力收声，只有一声。",
+        "attack_1": "全力踢腿瞬间爆发的大声短吼！丹田发力，气流猛然冲出，强烈攻击性，音头有力，绝不温柔，绝不拖长成说话。",
+        "attack_2": "用尽全力打出组合重击，爆发式喝喊，嗓音有野性和粗粝，急促有力的武术发力叫喊，声尾立刻收断。",
+        "hurt_0": "被突然打中腹部的一声短促痛叫，喉头挤住，气息被打断，疼痛和沙哑，只有一声。",
+        "hurt_1": "刚被猛烈踢中肋骨的剧痛叫声，无法控制地痛叫，气息破碎，喉头挤压、颤抖和喘息，明显疼痛和虚弱，绝不是平静说话或攻击喊声。",
+        "dodge": "闪身躲过一拳时从鼻腔发出的极短促用力闷哼，紧绷，利落收声。",
+        "ko": "被重击击飞倒地时失控的痛苦惨叫，刚开始猛然喊出，随后痛到气息逐渐失控衰减，痛苦、沙哑、疲惫，绝不昂扬欢呼。"
+      },
+      "nonverbal_limits": {
+        "attack_0": 0.8,
+        "attack_1": 0.8,
+        "attack_2": 1.0,
+        "hurt_0": 1.0,
+        "hurt_1": 1.2,
+        "dodge": 0.65,
+        "ko": 1.7
+      },
+      "nonverbal_model": "Qwen3-TTS Base",
+      "selection": {
+        "take": "B",
+        "seed": 111832,
+        "sha256": "264ce8447a3561ff2e32dc04ac2cc74bb4f72dd6325e1dffe3ac13efa0b1566a",
+        "design": "二十二岁中国女性格斗游戏角色。清亮有劲的中高女声，利落灵活，略带沙质，自信张扬。标准普通话。动作电影中的年轻女拳手，轻蔑而俏皮地笑着说太慢了，跟得上我吗是一句尖锐的反问，尾音利落，表情非常自信。录音棚干声。"
+      },
+      "seeds": {
+        "hurt_0": 113050,
+        "super": 114850
+      }
+    }
+  ],
+  "runtime_encoding": "s16le",
+  "complete_nonverbal_takes": true,
+  "processed": {
+    "yan-intro": {
+      "text": "来，过两招！",
+      "seconds": 1.435,
+      "bytes": 45920,
+      "runtime_file": "yan-intro.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "f6a32a81c45ec7a8de6e28b3c5172d291510a980d1d1292d1f4ace70172cc579",
+      "source_sha256": "ff447865bef8cad587a0fc2d98504d2e6f50da5a3b7d2b3094b310bcd8d5b998",
+      "master_sha256": "313d0bd70e98d3bf3cea4556a73585b5418d631a820648967b931d5c66039f85",
+      "trim": [
+        0.235,
+        1.67
+      ]
+    },
+    "yan-fire": {
+      "text": "看招！",
+      "seconds": 0.535,
+      "bytes": 17120,
+      "runtime_file": "yan-fire.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "80b7aec51a4b2bc48d5c2e71068e37bf396ccb7a7161693d9ecc25840f073e23",
+      "source_sha256": "85d2bfd939b8ddf3d9609f27fe692fc2383ec37d57d3874b884cb43f1650c3e0",
+      "master_sha256": "1fdacafda9bf13f2ae3078e024f244ba156466e76267f09ffc8f8fbf99e28c80",
+      "trim": [
+        0.265,
+        0.8
+      ]
+    },
+    "yan-rise": {
+      "text": "破空！",
+      "seconds": 0.615,
+      "bytes": 19680,
+      "runtime_file": "yan-rise.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "6495a322672d987e0403038281d96b38a50007179394405850f44d06e39d7910",
+      "source_sha256": "8e9254f37b310dcc95ccac73124074606e2b5b7d3070d739554179c07d600584",
+      "master_sha256": "7194d1e1c8cd895f3709f3581c631795f4ecb0af7058bf72f333ec203b7a9544",
+      "trim": [
+        0.255,
+        0.87
+      ]
+    },
+    "yan-rush": {
+      "text": "让开！",
+      "seconds": 0.495,
+      "bytes": 15840,
+      "runtime_file": "yan-rush.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "15e66e96cc06da80e414b7377d7fa18b74231bffbcf61651901dfae7a1d236fd",
+      "source_sha256": "1461cdc9cffac34b118de073b01631d5fc26b95d4e625b38f71b39f14450300f",
+      "master_sha256": "c497a6a330f2691a015d4f9c85a4e33f3b676bcd2475c76c84a90555ba806bee",
+      "trim": [
+        0.245,
+        0.74
+      ]
+    },
+    "yan-super": {
+      "text": "燎原！",
+      "seconds": 0.555,
+      "bytes": 17760,
+      "runtime_file": "yan-super.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "4df011e7db0eb9d770f8bf478e057a85cc83b67b970a56ce8c166cae34f193bd",
+      "source_sha256": "c9e0aad0c4d58c0ea81889c02769d5ac42be096408f7caee6da34f270896e1be",
+      "master_sha256": "ff02fff49fbf181f2ba41e1514148d166cf08a0f597f7cdd149b72dc831ea4d8",
+      "trim": [
+        0.405,
+        0.96
+      ]
+    },
+    "yan-attack_0": {
+      "text": "喝！",
+      "seconds": 0.315,
+      "bytes": 10080,
+      "runtime_file": "yan-attack_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "c480de153572acb43a91a109c9e7b68dd7feb830bd1eb51421c93d50291f1d61",
+      "source_sha256": "c56529caf5d8e4e0c144d4e2f5fb3a8ace29e51a9aec3854b669ada585afedb8",
+      "master_sha256": "e027d2441cecb854d3007ba76f0198c5c6b9caeef4d62b198317ad8f164dac1b",
+      "trim": [
+        0.255,
+        0.57
+      ]
+    },
+    "yan-attack_1": {
+      "text": "哈！",
+      "seconds": 0.235,
+      "bytes": 7520,
+      "runtime_file": "yan-attack_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "038034065ff9904aa3677608ef0075dc1d60197fb3f64699e14a994976d0bf47",
+      "source_sha256": "459beaf322d1cbe3f6908fc5ac5c0b1b30481bddbb0766c40c8f249b8718859e",
+      "master_sha256": "d7a2ef1ff2966b1fed0fae3e3c532046f9e3570789e4bd49103fd6eae6536b00",
+      "trim": [
+        0.305,
+        0.54
+      ]
+    },
+    "yan-attack_2": {
+      "text": "嘿！",
+      "seconds": 0.305,
+      "bytes": 9760,
+      "runtime_file": "yan-attack_2.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "daeb429e427ae4f1525c88260b142ccb7038b7df5173a3f04c6385b25363a5cc",
+      "source_sha256": "f416ef6cb21b6dd7850ffe7cda5cc487ed4caa96038b1793cce16e7eadc227d8",
+      "master_sha256": "425119664a0ca63bb2e3b6aba397831d2a27a07a26d6d7190e3e03acda2a81b9",
+      "trim": [
+        0.255,
+        0.56
+      ]
+    },
+    "yan-hurt_0": {
+      "text": "呃！",
+      "seconds": 0.325,
+      "bytes": 10400,
+      "runtime_file": "yan-hurt_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "589bf57a531f87a7e4250623e26549289ead28db3be94e1b4c828b232e56640d",
+      "source_sha256": "545ae5a2c90491418177e08da10fed49e341642c58e190a56e1a2bccccf1422f",
+      "master_sha256": "26e99da87ae6c0b31088bcf6a3830179d8a781f0e2805d78d24cc1aff3f373aa",
+      "trim": [
+        0.245,
+        0.57
+      ]
+    },
+    "yan-hurt_1": {
+      "text": "呃啊！",
+      "seconds": 0.915,
+      "bytes": 29280,
+      "runtime_file": "yan-hurt_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "e0828bedc0a58a902db781a457641291a46d80d6f48eac2fdf03d209719acf5e",
+      "source_sha256": "7ae5f5c2ba1e40bcc54f506e2c67cda720a042e450dcfba400a378fe34347614",
+      "master_sha256": "ae42a4bc83ccb336e4472582fa2a8cd6f9786d74e463d0e0ddf4dc6f894e1d06",
+      "trim": [
+        0.285,
+        1.2
+      ]
+    },
+    "yan-throw": {
+      "text": "下去！",
+      "seconds": 0.575,
+      "bytes": 18400,
+      "runtime_file": "yan-throw.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "a6c9b8df7bbc7f31f77dda746e5993c44632f556bb04fbe0e6341a1728b53976",
+      "source_sha256": "e6bbba2ab07e427a19b4c97624569eed0a06ae9c7fcc9f0a2494c90dbc73df25",
+      "master_sha256": "4776826856489437b419784e36941e75692baf4dafa01d8af1fba28bd324ab55",
+      "trim": [
+        0.275,
+        0.85
+      ]
+    },
+    "yan-dodge": {
+      "text": "哼！",
+      "seconds": 0.265,
+      "bytes": 8480,
+      "runtime_file": "yan-dodge.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "6b3726601f892cee3804684b39d1ee49f650253acfb79b86fdc29e0e90ae33bc",
+      "source_sha256": "c56b772f76b8f7d41c7acddb2d5e363d5c6d5b8cf785e873818a509d5cc614a2",
+      "master_sha256": "f84056e3f3b442e4547da32d71b6f210450e5c68ede71b38e286da22c93a0156",
+      "trim": [
+        0.195,
+        0.46
+      ]
+    },
+    "yan-ko": {
+      "text": "呃啊——！",
+      "seconds": 0.855,
+      "bytes": 27360,
+      "runtime_file": "yan-ko.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "3ed0c08d9651ea92915ceb039046b5154f0abb1e3755285db82a899d6e03a599",
+      "source_sha256": "3c10062b956a119fe6cacadd0a9feb10473d69a582de90077c044cff5d51b535",
+      "master_sha256": "1372f18d73ab38e57875e1b7a3d3494238d4015652e067bc999cc56b2f7fcf9a",
+      "trim": [
+        0.245,
+        1.1
+      ]
+    },
+    "yan-win": {
+      "text": "这才过瘾！",
+      "seconds": 0.835,
+      "bytes": 26720,
+      "runtime_file": "yan-win.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "c56fa0ceac7b6cc51f55c48286de70c2bf5fa08210d52c34fac094218ac343bc",
+      "source_sha256": "5e5666d46d1b95204eb4d67803344b606bbf338a829468ba1bd0c4747909d0bc",
+      "master_sha256": "1f1d18757b4bd717cc93d151280b377ad6b654ffe53f0b2b458aea0d097c543b",
+      "trim": [
+        0.265,
+        1.1
+      ]
+    },
+    "yan-lose": {
+      "text": "还没……完呢。",
+      "seconds": 0.675,
+      "bytes": 21600,
+      "runtime_file": "yan-lose.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "b8023dab4032187ce78916449e1f31cee809be3ef928bcc1e3a47ebd982dcee3",
+      "source_sha256": "bfaf60e96ffd4625f229fdfa49020d89582a2515fb07ebbd47341320dcf95a71",
+      "master_sha256": "64dfcb9c937bcf1578980100e82b7e51409bf95e3dc66443b4f112ece83943b0",
+      "trim": [
+        0.585,
+        1.26
+      ]
+    },
+    "lan-intro": {
+      "text": "出招吧。",
+      "seconds": 0.685,
+      "bytes": 21920,
+      "runtime_file": "lan-intro.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "11aeb30f82a120d2335bd293db9e2ac5c3629b1a813447cc5273955fa9589aac",
+      "source_sha256": "e98f679a75b209c7872ab045f503d6b696ad730d0d01681385301c82cfe83b11",
+      "master_sha256": "a5d6ea1a597897e73a06f474559fb7b427e6c8d12fe68fe5e9ea794810b37130",
+      "trim": [
+        0.435,
+        1.12
+      ]
+    },
+    "lan-fire": {
+      "text": "潮刃掌！",
+      "seconds": 0.925,
+      "bytes": 29600,
+      "runtime_file": "lan-fire.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "99e31a024281603dc4ace603bd823341ca44954a57622306ffa1364d36ff3b1c",
+      "source_sha256": "8e970f67a21f6f0076127ac71c0d62062256fa24da3c7e1df8eb6421ce64801f",
+      "master_sha256": "77d3042c1e0f13b1a1a4e03830341ad6067538487c24a5e8b6dd815d36b694ef",
+      "trim": [
+        0.515,
+        1.44
+      ]
+    },
+    "lan-rise": {
+      "text": "鹤升拳！",
+      "seconds": 0.905,
+      "bytes": 28960,
+      "runtime_file": "lan-rise.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "a921bb4379fc55af3e278e08ae49d5a491c674dadbb9a253054cb70b6ecc1400",
+      "source_sha256": "95c728bc186316d3d88c5491f32cfb9029e0bf0fcba413064d3a893b1ed22a4e",
+      "master_sha256": "0ab9fd9f9288495b1285ff73bba41aad4ab02e69ec200ed54c8ada2c43022f4f",
+      "trim": [
+        0.485,
+        1.39
+      ]
+    },
+    "lan-rush": {
+      "text": "退开！",
+      "seconds": 0.565,
+      "bytes": 18080,
+      "runtime_file": "lan-rush.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "7f03456af6d3b09b9e8e380386df4a7ecf790201a36bf4e88a065fcefa31c8f9",
+      "source_sha256": "92329d74a4ce0f5e1e85eab7debb42e6adbcc093f25772082f86bc66e342e637",
+      "master_sha256": "7af13e80950418fed4067ab85a74c6f13ee43e10a3d06cf3b00c606f0e8d1f62",
+      "trim": [
+        0.315,
+        0.88
+      ]
+    },
+    "lan-super": {
+      "text": "月满潮！",
+      "seconds": 0.905,
+      "bytes": 28960,
+      "runtime_file": "lan-super.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "e6c07ada548b29d24fa5bc20ea72221e9b36b73f0e250f9cb6283951dc20a34a",
+      "source_sha256": "be3837b7e9a9d8f0b71f8df862639c660def94f3a28fcb7876019f1a6e148a6e",
+      "master_sha256": "3e4f4223786530425f2ac36782ee263b601b78828789a73deddf3ed71d74529e",
+      "trim": [
+        0.285,
+        1.19
+      ]
+    },
+    "lan-attack_0": {
+      "text": "喝！",
+      "seconds": 0.425,
+      "bytes": 13600,
+      "runtime_file": "lan-attack_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "2c843b8948ea4d873ce5b9a14aca2659bbed05a8e886244525d781071d8ee43c",
+      "source_sha256": "a14d9fa2c0baa0ad8f90f2ed14ce54aedc3f58ea24858bf0d9289788c82bce3b",
+      "master_sha256": "748ee707330da19eb24a41a0a56495aa51a963bf92d746251dc0aadb275e5083",
+      "trim": [
+        0.325,
+        0.75
+      ]
+    },
+    "lan-attack_1": {
+      "text": "哈！",
+      "seconds": 0.335,
+      "bytes": 10720,
+      "runtime_file": "lan-attack_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "fe4f771dce28fd285e9d7c6fe78721901fd8f496504a5d03b8d898ce0b72eae2",
+      "source_sha256": "121fd478c8a4d54a9ef38298f668eb27940232a610efefc467d126ccb820bb87",
+      "master_sha256": "56329da93fd2e36a435eaa14b3a9031fd98158df59321c49fadea1fe657a7717",
+      "trim": [
+        0.205,
+        0.54
+      ]
+    },
+    "lan-attack_2": {
+      "text": "嘿！",
+      "seconds": 0.325,
+      "bytes": 10400,
+      "runtime_file": "lan-attack_2.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "b92d89c5a539c3cfd92ee94e4148144240d369f716e2c95c49d93310600b660c",
+      "source_sha256": "ea3c195107f9e2de62fa12c22548a2d84a642dd39232b7bcb61f06524aac0f09",
+      "master_sha256": "3b25c4267f8aca7c9b8aa1954f53124a2ec7e383c47983d11c1ba832ed7cbe82",
+      "trim": [
+        0.195,
+        0.52
+      ]
+    },
+    "lan-hurt_0": {
+      "text": "呃！",
+      "seconds": 0.285,
+      "bytes": 9120,
+      "runtime_file": "lan-hurt_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "9aeefebef48a5af556265c80b3a31977463699393c460088c94547a0fb7c04fe",
+      "source_sha256": "1bca77f92d442d5004a94885c324d57bce714f7469fa0051a3696b07243b99e0",
+      "master_sha256": "3c9aaa56f12bd9714579630d89c3ada8161bf0d70927c8b4887e08ccc2a40c6e",
+      "trim": [
+        0.275,
+        0.56
+      ]
+    },
+    "lan-hurt_1": {
+      "text": "啊！",
+      "seconds": 0.395,
+      "bytes": 12640,
+      "runtime_file": "lan-hurt_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "e209d8b310cb3f0d1212d3daa647c25d23a9653ecfd8532a29e8136c2e02742f",
+      "source_sha256": "9dccbc9a3ac82af534e4e3e8f789f3d37c79df0baf28b547073e59c4548fb62f",
+      "master_sha256": "a81bf1710136f3f25f23b487750669d26b9f0ad2bebb03d43ed20acc894661bf",
+      "trim": [
+        0.175,
+        0.57
+      ]
+    },
+    "lan-throw": {
+      "text": "倒下！",
+      "seconds": 0.575,
+      "bytes": 18400,
+      "runtime_file": "lan-throw.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "dfdb76a6ee197ad3aa96a6b368ed7794d0c08a9d415c93e35e7f035a7794396d",
+      "source_sha256": "13e48659da0ccc2435056dc85b048d0f45b531b0dd42243e9fc9e71c8cda101b",
+      "master_sha256": "eda753b40a451827e8b90b2e4b0a6c52ab7fc0199c3e751db55f71805635217f",
+      "trim": [
+        0.305,
+        0.88
+      ]
+    },
+    "lan-dodge": {
+      "text": "哼！",
+      "seconds": 0.295,
+      "bytes": 9440,
+      "runtime_file": "lan-dodge.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "be285c624cf2bb9717893c2aa64886ba6f410d4a60586b25bbe8485a4a93d640",
+      "source_sha256": "2a7d06e4da3aef0fa1349c52c2fb6ede0f0fd880eae02b5de3e2184d62a48cc1",
+      "master_sha256": "c4007fa7f1201755202993162374877a66f5a0fd31b54b16b4d23e1cbf8c51d4",
+      "trim": [
+        0.345,
+        0.64
+      ]
+    },
+    "lan-ko": {
+      "text": "啊——！",
+      "seconds": 0.335,
+      "bytes": 10720,
+      "runtime_file": "lan-ko.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "cdefa926aa52f1820535ca5b02060ddb1ddd7ae7957fdf7f010f68bfa18fdc38",
+      "source_sha256": "071891b1ab57363be91a27ec8c8f318eed78799052c2009a9ed744dc897f8ef9",
+      "master_sha256": "97ed679e1a47139381cb793036a57f8a87ff5028fb8cfa469ef42ea9b4cab213",
+      "trim": [
+        0.365,
+        0.7
+      ]
+    },
+    "lan-win": {
+      "text": "到此为止。",
+      "seconds": 0.915,
+      "bytes": 29280,
+      "runtime_file": "lan-win.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "2739aaf68a7930a2fd032d77d9f60edfd5df57ffdfaf62684559424d03e3bbab",
+      "source_sha256": "96a1234c32ff084fe294c9ad6a3f2c682a534627f8aa9bf0ee8911278b1fd004",
+      "master_sha256": "331ca8d0e26c4908be484bb7f0f1f3525c9ee48ee3a5af3874927ebf31f75571",
+      "trim": [
+        0.285,
+        1.2
+      ]
+    },
+    "lan-lose": {
+      "text": "是我……轻敌了。",
+      "seconds": 1.675,
+      "bytes": 53600,
+      "runtime_file": "lan-lose.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "c6c650747835c61a95dd8f4545c9c8a4423011bcd7da5760d5024a8932baf2d7",
+      "source_sha256": "b0b2a6cc3ea297bfd09898318ac83770c41fa2d2474f0f42b23efd2723dfc323",
+      "master_sha256": "89ec4bc6cf18f13a3a1f795e43dcac42894aca8ad055cdc516b9403f3cb21d1b",
+      "trim": [
+        0.355,
+        2.03
+      ]
+    },
+    "zhen-intro": {
+      "text": "站稳了！",
+      "seconds": 0.625,
+      "bytes": 20000,
+      "runtime_file": "zhen-intro.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "ec65945466b701c2b65de2f1ba3c5616bc8f00ba822060a7c000d774919220fe",
+      "source_sha256": "16a5d2fa50d29b5eaf2d56bda6fc2d1fd4cfac626f11255b8c707ea3bede841d",
+      "master_sha256": "2895f90744595cfa7ad1a799862f93407571ce40cd25eccf0a019384d7fc95b9",
+      "trim": [
+        0.335,
+        0.96
+      ]
+    },
+    "zhen-fire": {
+      "text": "震潮掌！",
+      "seconds": 0.875,
+      "bytes": 28000,
+      "runtime_file": "zhen-fire.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "915baabe6b10cf04066c928e2e5820b03dd7c78edb2f9006d725a230759118fc",
+      "source_sha256": "77e22d0b63052a772732675525fcab48b4207452facc8b0f9544e57965bff70c",
+      "master_sha256": "1cbf6a2e0c53e47ee93c6d349d946411ae76dea998fad9dde5e359b1d2a29944",
+      "trim": [
+        0.245,
+        1.12
+      ]
+    },
+    "zhen-rise": {
+      "text": "撼山！",
+      "seconds": 0.635,
+      "bytes": 20320,
+      "runtime_file": "zhen-rise.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "3cc5de103c332f442a7fc568ce9c330ca656e79a0f2086ab86c8020fe497b83a",
+      "source_sha256": "736e3ce5aeb388feb2e2c7531d91654299abdff3bd6130a4dd7e1b70d75eb099",
+      "master_sha256": "4e85e47b48380455a60f27fbb436486a037d86fc9b57e06d687da556a9ecd45f",
+      "trim": [
+        0.405,
+        1.04
+      ]
+    },
+    "zhen-rush": {
+      "text": "闪开！",
+      "seconds": 0.635,
+      "bytes": 20320,
+      "runtime_file": "zhen-rush.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "0f4731655ffcbe7cb13433c4970470e2d3f244bd2681481599ab94c9a86f0e81",
+      "source_sha256": "215bac0f0064f1bf1cf86b6d47b9758e789a95557cf4b3b11156170076378fb3",
+      "master_sha256": "5f222817367e95d9c457e2a7088faf60453837fe140be4f1d04e445ae6e2a59b",
+      "trim": [
+        0.165,
+        0.8
+      ]
+    },
+    "zhen-super": {
+      "text": "吃我一拳！",
+      "seconds": 0.865,
+      "bytes": 27680,
+      "runtime_file": "zhen-super.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "98857c6497bca61fe7cb8cae64dce22eb2d19cc4fdf0fdaf6642f36f8385c854",
+      "source_sha256": "7c58e6d297ef045cfa3010d0132d058de8bab7d78810bc5b18f4a216bfa15cfd",
+      "master_sha256": "bc969eff0e8668fc055de1dc73145ea3685113b3a46e225c279f7fb858ba5a9e",
+      "trim": [
+        0.335,
+        1.2
+      ]
+    },
+    "zhen-attack_0": {
+      "text": "喝！",
+      "seconds": 0.325,
+      "bytes": 10400,
+      "runtime_file": "zhen-attack_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "08660b0da6374dad22ffd2c363b5c2dfb22b517daf25e8482b2f4cd821da73a7",
+      "source_sha256": "3d95fca4d9ce421e237b3285832363ba29d505241793189fcb73eebceae98292",
+      "master_sha256": "f348e0f6e1ef9fa2ae31f9a399333a44415ff46ed5923832b28a4455c69d173b",
+      "trim": [
+        0.355,
+        0.68
+      ]
+    },
+    "zhen-attack_1": {
+      "text": "哈！",
+      "seconds": 0.325,
+      "bytes": 10400,
+      "runtime_file": "zhen-attack_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "91fc2c52a3ef39ceee156e413236b1b79658bf2e443d4cf53012a15ae81fc81a",
+      "source_sha256": "bc5f71cf157b1951bc968a0a39887a31e382ea21f6e469430b3a79755feda41a",
+      "master_sha256": "1c6ede2b402a439707f73f5e1b31fa84775bebce0d9ccd4f1b940d9262a53f2c",
+      "trim": [
+        0.085,
+        0.41
+      ]
+    },
+    "zhen-attack_2": {
+      "text": "嘿呀！",
+      "seconds": 0.465,
+      "bytes": 14880,
+      "runtime_file": "zhen-attack_2.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "6260a49fa9158bd314293f5f3727101721e2883d7defe06fea81d864b951f4a0",
+      "source_sha256": "108445c54a118e09ad6df81aad20d25c2c6abd4a808f3176a9a5f7cc6aeb55c3",
+      "master_sha256": "76f374e006874d9de18d36414c59698509d672788081d0c88fba2b718557e247",
+      "trim": [
+        0.255,
+        0.72
+      ]
+    },
+    "zhen-hurt_0": {
+      "text": "呃！",
+      "seconds": 0.315,
+      "bytes": 10080,
+      "runtime_file": "zhen-hurt_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "76505b7b2477da332580c3599b8309dc12d1fd5701bdf80c0959938f840f8f08",
+      "source_sha256": "b6056a947c05f2e151a02f4481074dee9a2da6d220cceb11eaf679953d46b1e6",
+      "master_sha256": "7fda46cc4bb6fa33f06ca2ce3b623200db7fb5c7a0bbf897e58facdc8898bb17",
+      "trim": [
+        0.555,
+        0.87
+      ]
+    },
+    "zhen-hurt_1": {
+      "text": "呃啊！",
+      "seconds": 0.785,
+      "bytes": 25120,
+      "runtime_file": "zhen-hurt_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "1b9c302183e56b4a3cc8432f9fe357910b907964596ea8c0596797e6c23c0fd7",
+      "source_sha256": "222e4aa862844840f98534c424d9ec9688e483bd28b5d0bcf8c2fb6b92e085db",
+      "master_sha256": "41f10a4ed0a8b82fc28ca10fdbce0ff58f59d857fa1d2e178c84e431c238ad93",
+      "trim": [
+        0.355,
+        1.14
+      ]
+    },
+    "zhen-throw": {
+      "text": "给我趴下！",
+      "seconds": 0.765,
+      "bytes": 24480,
+      "runtime_file": "zhen-throw.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "8bba2f5dcf3ffabdca9f33f49af50c5c291fcf2f71fa0ae0c77a622edec8d4b6",
+      "source_sha256": "86fc7d564634f647f18423ab1fb433c0255ce3a196ff448e9068697ab2fba138",
+      "master_sha256": "acdf085f3e1e6f1aeaa22616d424e695518b3e79ebea2b0c0d7fce86f5b71a89",
+      "trim": [
+        0.165,
+        0.93
+      ]
+    },
+    "zhen-dodge": {
+      "text": "哼！",
+      "seconds": 0.265,
+      "bytes": 8480,
+      "runtime_file": "zhen-dodge.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "643f73e45e7c454a2362a1aa6e66ddd98fe0ca25eb3b385d6eb9f9bc380ada36",
+      "source_sha256": "cb7e7f67cfdf9fa9cc7494a9a336533d23b5b4a7ed88075699980944be201a91",
+      "master_sha256": "95a2b385274c8426d0c257ff48d1e8f025a42c9c18acd2a99ae5bf984eb16e1e",
+      "trim": [
+        0.095,
+        0.36
+      ]
+    },
+    "zhen-ko": {
+      "text": "呃啊——！",
+      "seconds": 0.695,
+      "bytes": 22240,
+      "runtime_file": "zhen-ko.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "fd8dbecd9e2332dd03b3d8046dbfe3dd13e190a791b7db4f04d1a33d7614b830",
+      "source_sha256": "63600ca12482cf233c53385720b0a96542bdc13b29f8248a5d93668751581748",
+      "master_sha256": "4d6089c77355b3fc6f2d6718fc1f461e810bd9800547f2b04529dd586d321efb",
+      "trim": [
+        0.595,
+        1.29
+      ]
+    },
+    "zhen-win": {
+      "text": "回去练练吧。",
+      "seconds": 0.755,
+      "bytes": 24160,
+      "runtime_file": "zhen-win.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "e2a6df4a776d5d8a95e92ebb0de9eab6a7daa48d48e83d172a6f61f6bbd6d509",
+      "source_sha256": "c3a065d64d658c87ff2a6b83e9b29b05e44d1a5f2f8b7408a095e99db236af0c",
+      "master_sha256": "5d3f325d8f00eed6fef5c762c9df99bfbfe0ad85ceb28c118090a3e97642044a",
+      "trim": [
+        0.485,
+        1.24
+      ]
+    },
+    "zhen-lose": {
+      "text": "还撑得住……",
+      "seconds": 0.765,
+      "bytes": 24480,
+      "runtime_file": "zhen-lose.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "efc66d542dbfd97a754d27b51c1e24ebb162e737b2b777cf5aacf6fbeb68447c",
+      "source_sha256": "d7acfe8b6083e3e29308b1725795474a60f597093708f19186886f873f512561",
+      "master_sha256": "4c0d535245f12e79035e464da33122b6e101998922e68505ae51f1ae099a698b",
+      "trim": [
+        0.365,
+        1.13
+      ]
+    },
+    "ling-intro": {
+      "text": "来呀，别磨蹭！",
+      "seconds": 1.435,
+      "bytes": 45920,
+      "runtime_file": "ling-intro.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "b30ddaf40085023482e58ca29b473c99a24a6657b6bdc48e4d70156cbc655266",
+      "source_sha256": "0de6414064f1bb57671e32f156ea15a1cda64ad72b933138d8918066e7c8b6a8",
+      "master_sha256": "35c509cbcbe653081953aa1bc37e6a9d2eed9f3aa665b60fa06bf80ca45ad15b",
+      "trim": [
+        0.485,
+        1.92
+      ]
+    },
+    "ling-fire": {
+      "text": "惊雷！",
+      "seconds": 0.695,
+      "bytes": 22240,
+      "runtime_file": "ling-fire.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "e8cb789c407adb62dff8d4a086cc0e3b7762dfde7302631df69348ddd021b475",
+      "source_sha256": "68fa8117d0a79b5cad7283e732e22f3e3656dbc7d3b19a3686c25662a117005e",
+      "master_sha256": "c69cd3d3c282472d5b251dd9759ecc3e164caf401de34e126f61c344ff2b39b6",
+      "trim": [
+        0.395,
+        1.09
+      ]
+    },
+    "ling-rise": {
+      "text": "掠云！",
+      "seconds": 0.525,
+      "bytes": 16800,
+      "runtime_file": "ling-rise.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "8f046ffa2249f1c3ce7701b8339f463a45915c8aec62957e1f2ccad120f68a0b",
+      "source_sha256": "7fd2f5e2d9c5ef8d801b714c9c7714a5152667e03ff4040db296c68088f77c26",
+      "master_sha256": "a744bdcc85246350ff011fd972fc946d83b30e09c089e450f606682405076510",
+      "trim": [
+        0.435,
+        0.96
+      ]
+    },
+    "ling-rush": {
+      "text": "追上我再说！",
+      "seconds": 0.845,
+      "bytes": 27040,
+      "runtime_file": "ling-rush.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "bf7b2a069c89cee90848bb02b5d8fb14317455e3151750ac09df9c0a061b8e27",
+      "source_sha256": "6fc52002aee4287a4885b9dae658b5b73f17e06a1ac5ba70bee1cf58070083c4",
+      "master_sha256": "5e36d352e28f02bc1c5b0291234b53eddc2f7985ca0d48b1a14335d0cda72f7d",
+      "trim": [
+        0.505,
+        1.35
+      ]
+    },
+    "ling-super": {
+      "text": "躲得开吗！",
+      "seconds": 0.665,
+      "bytes": 21280,
+      "runtime_file": "ling-super.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "1e79df3a2d66fbb57628b294e41e7615737350ec40b7c84be0c7a455a2f3e229",
+      "source_sha256": "f9ef850014e1a6410f03b01d5a822aa22acaf85e980846da808d92fd11d437f2",
+      "master_sha256": "868130f873b6fe406a9ec15019c5a552d4c53d0a134c2e31056d6aa80abf7c0a",
+      "trim": [
+        0.345,
+        1.01
+      ]
+    },
+    "ling-attack_0": {
+      "text": "喝！",
+      "seconds": 0.325,
+      "bytes": 10400,
+      "runtime_file": "ling-attack_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "46fc128346c9287f879474bb4431fbd7cd29fc3f8a02b1aa7d1b576b0fca401e",
+      "source_sha256": "00840a61eb06dd9f4846d750989ccff3285b31dcb93b1e6609c97a4654150209",
+      "master_sha256": "89c980883afab93e634db45acf2193485c7a8358683e5a37743f245ce7064d6f",
+      "trim": [
+        0.355,
+        0.68
+      ]
+    },
+    "ling-attack_1": {
+      "text": "哈！",
+      "seconds": 0.315,
+      "bytes": 10080,
+      "runtime_file": "ling-attack_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "684757c9dbd9508443de392240a6497e9922f55c0dd916c6ea8e1bde2f2b8099",
+      "source_sha256": "1d0ea693b319a4f0ab925f70226e08eddf52c8a4b4fd5ad001e155aafdeef785",
+      "master_sha256": "08b0a2d109d8421c4d3792ddd78102ca601b3973dfb2421c3e3c0117843636cb",
+      "trim": [
+        0.325,
+        0.64
+      ]
+    },
+    "ling-attack_2": {
+      "text": "嘿！",
+      "seconds": 0.275,
+      "bytes": 8800,
+      "runtime_file": "ling-attack_2.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "bd6d7957ea1b5ab0257aa54b6b4a15869eb13ca446810d725bcc9ff741858fcf",
+      "source_sha256": "d8c08f51b34632bf5797ef598fb5a0b4fc3ad883aa266b6cf16ad8e96b2225c9",
+      "master_sha256": "74fdac94aacf36e8ff81a60932a04871e55d5d4c227208d13c162d0aaf299f4b",
+      "trim": [
+        0.405,
+        0.68
+      ]
+    },
+    "ling-hurt_0": {
+      "text": "呃！",
+      "seconds": 0.545,
+      "bytes": 17440,
+      "runtime_file": "ling-hurt_0.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "031ad5385cb8d1aaf388655766a1e2e2339dc5d6f4e4eae1701b480f128c88d0",
+      "source_sha256": "2b3dfa567032b3f1c78b8668ac729f47d64e73f5048b4b0c32952638ed4be2eb",
+      "master_sha256": "d0032a7b0471527917d65199ba84b958800b43b68954f6ed6b3689eeccd095f1",
+      "trim": [
+        0.435,
+        0.98
+      ]
+    },
+    "ling-hurt_1": {
+      "text": "啊！",
+      "seconds": 0.675,
+      "bytes": 21600,
+      "runtime_file": "ling-hurt_1.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "1f710b4f1cf8bcece4cf9053e47b9e090c36d7d59b15d3682be0f47d102eff86",
+      "source_sha256": "f18bc795a605abadc48cbe822aeb8f11dd2079fbe2548a7712237ecf3314fb48",
+      "master_sha256": "819d9891cd74a27aafa30b52d99ca38ee593ad1e2e5c2be5432972ef65e12505",
+      "trim": [
+        0.605,
+        1.28
+      ]
+    },
+    "ling-throw": {
+      "text": "让你挡路！",
+      "seconds": 0.695,
+      "bytes": 22240,
+      "runtime_file": "ling-throw.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "eb6bf70ee576f898b493c08da35eaae81f70747afb5185ab97d2f947687365ce",
+      "source_sha256": "4f89f08df0a2a5d6ab6a0d98fbfd52599d440989080733f5565de48b3527bc69",
+      "master_sha256": "4d2b79c90fca8a8df4ebeaf53f393dac0eca9ce4f13a9c59efc9e33a50e3599e",
+      "trim": [
+        0.315,
+        1.01
+      ]
+    },
+    "ling-dodge": {
+      "text": "哼！",
+      "seconds": 0.275,
+      "bytes": 8800,
+      "runtime_file": "ling-dodge.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "b3c1bfa2ceda6464dd96c7417517b7736aaf083f872fbbcd1d8f72db85989d27",
+      "source_sha256": "2efda28271e5c452bbbb754c0b528b1ca41ddce828d5d388423f68112c8ed038",
+      "master_sha256": "eea97ecf80a2ecf1e4deebe4a6a97052b6ce79e0b4b81924570a7958204c023d",
+      "trim": [
+        0.315,
+        0.59
+      ]
+    },
+    "ling-ko": {
+      "text": "啊——！",
+      "seconds": 0.335,
+      "bytes": 10720,
+      "runtime_file": "ling-ko.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "49d57673b2c2320ffb7f75cc083fae4ae2ac0d95232324c5638b368b4ca7607a",
+      "source_sha256": "8d985be7bf99c2fc40771ac5c9a083d5bdec40a7b04c43f3d937a90c22293c73",
+      "master_sha256": "e3870340b3dc988fd05228ae9edb5720c3eba6914cf82fbf19d2c476dd3fb3b8",
+      "trim": [
+        0.405,
+        0.74
+      ]
+    },
+    "ling-win": {
+      "text": "怎么，这就累啦？",
+      "seconds": 1.495,
+      "bytes": 47840,
+      "runtime_file": "ling-win.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "9ce9408232b4877114e92fe5f8818bd7bd506c9517c1679180c80097059a6c3a",
+      "source_sha256": "baa1c0977f3ed57eaadb8c97c077e35688f58f9c5f5f4ad091a927cfa4429a77",
+      "master_sha256": "cfc4d6d949c8b10b8de28d0ae08ffd804884e0c4981f2be855837670d53e0971",
+      "trim": [
+        0.405,
+        1.9
+      ]
+    },
+    "ling-lose": {
+      "text": "下回再找你算账。",
+      "seconds": 1.315,
+      "bytes": 42080,
+      "runtime_file": "ling-lose.s16",
+      "encoding": "s16le",
+      "source_model": "Qwen3-TTS Base",
+      "sha256": "d6be67196186b17ca1ee315bd416a0c4090d65efde407938119070204abf3436",
+      "source_sha256": "aa2897342a607426fbed52e76e55e4c549ac909b9f1652210ec15444050f74ad",
+      "master_sha256": "11ac7bcedd3dc59c8022fecdb85c0de92269a08cf518b96d0fc401a3d7ca4392",
+      "trim": [
+        0.335,
+        1.65
+      ]
+    }
+  },
+  "model_sha256": {
+    "base": {
+      "model.safetensors": "38fc7fc51c5e776e840414b6fd443962e9411b9654888fd7913e4da643cb857c",
+      "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+      "config.json": "b4f01752d15a488abde3e1ab44723ae4f4b9e68a4037257b098b3737893cc1f9",
+      "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa"
+    },
+    "design": {
+      "model.safetensors": "391e8db219f292c515297cdceeb43e4eae67cdde35fa57e79a6a8a532fca0522",
+      "speech_tokenizer/model.safetensors": "836b7b357f5ea43e889936a3709af68dfe3751881acefe4ecf0dbd30ba571258",
+      "config.json": "aecd2cc4c1fe9edef1cb7ca7c401685a43879ad43f3f9e883f1c6760b61731e0",
+      "generation_config.json": "f1b90b4513f3b34c62851049e2492d7b4c5940daf1276f89c82b8ef04127f3aa"
+    }
+  }
+}

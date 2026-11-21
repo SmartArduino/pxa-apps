@@ -1,0 +1,21 @@
+{
+  "name": "烬港斗魂",
+  "kind": "game",
+  "category": "action",
+  "language": "zh-CN",
+  "summary": "选择四位拳师，用连段和搓招必杀挑战街机擂台，或在局域网与好友对战。",
+  "description": "港灯夜擂将开，陆炎、霁岚、韩震和唐绫各有所求，胜者可入听潮阁追查旧事。四位拳师各有招式和中文语音，在雨港、竹院、雪关和灯河四处擂台交手，以跳攻、防御、闪避、投技和连段取消寻找破绽。\n\n街机模式可挑战三战巡回，也可指定对手自由对战。训练模式可选择陪练拳师和防御方式，查看输入记录、连击及伤害。普通投可按时机挣脱，电脑对手会根据距离、攻防和招式收招选择行动。\n\n同一局域网内可创建、搜索房间或输入地址进行双人对战，支持暂停、继续和双方确认再战。联机需要两端运行相同版本，且运行环境支持本地网络通信；不提供互联网匹配。\n\n支持多点触摸和手柄。虚拟按键触摸后显示，切换手柄后隐藏。画面等比取景，配有三幕开幕剧情、四处擂台配乐、角色语音及胜负音乐。",
+  "changelog": "新增局域网双人对战：房间搜索、地址加入、双端暂停与再战。完善电脑对手的距离判断、对空、防御与连段确认，加入普通投挣脱和停帧期间的方向指令缓冲。修正按钮文字偏移、垂直居中、窄屏排版及方屏字体丢笔画，调整剧情字幕与安全边距。联机双方请更新至同一版本。\n\nAdds LAN duels with discovery, direct joining, synchronized pause and mutual rematch. Improves AI spacing, anti-air, defense and combo confirms; adds throw escapes and direction-aware hitstop buffering. Fixes visible-glyph centering, narrow-screen spacing, square-screen font sampling and story safe-area layout. Update both peers to the same version.",
+  "icon": "assets/icon.png",
+  "cover": "art/store/cover.png",
+  "tags": [
+    "格斗",
+    "像素",
+    "街机",
+    "武侠",
+    "触屏",
+    "手柄",
+    "联机"
+  ],
+  "screenshots": []
+}

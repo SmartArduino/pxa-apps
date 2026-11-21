@@ -1,0 +1,5 @@
+*.index8 binary
+*.bin binary
+*.pcm binary
+*.s16 binary
+*.flac binary

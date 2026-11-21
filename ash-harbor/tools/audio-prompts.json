@@ -1,0 +1,3198 @@
+{
+  "format": "ash-harbor-audio-v1",
+  "tool": "Remote ComfyUI API; existing installed models only",
+  "models": {
+    "music": "acestep_v1.5_turbo.safetensors",
+    "sfx": "stable_audio_3_small_sfx.safetensors"
+  },
+  "music": {
+    "title": {
+      "bpm": 100,
+      "seconds": 50,
+      "loop": true
+    },
+    "battle": {
+      "bpm": 138,
+      "seconds": 60,
+      "loop": true
+    },
+    "victory": {
+      "bpm": 150,
+      "seconds": 8,
+      "loop": false
+    },
+    "defeat": {
+      "bpm": 72,
+      "seconds": 8,
+      "loop": false
+    },
+    "battle-bamboo": {
+      "bpm": 124,
+      "seconds": 60,
+      "loop": true
+    },
+    "battle-snow": {
+      "bpm": 132,
+      "seconds": 60,
+      "loop": true
+    },
+    "battle-lantern": {
+      "bpm": 140,
+      "seconds": 60,
+      "loop": true
+    }
+  },
+  "effects": {
+    "ui_select": {
+      "maximum_seconds": 0.12
+    },
+    "hit_light": {
+      "maximum_seconds": 0.22
+    },
+    "hit_heavy": {
+      "maximum_seconds": 0.4
+    },
+    "block": {
+      "maximum_seconds": 0.22
+    },
+    "throw": {
+      "maximum_seconds": 0.52
+    },
+    "whoosh_punch": {
+      "maximum_seconds": 0.18
+    },
+    "whoosh_kick": {
+      "maximum_seconds": 0.3
+    },
+    "step_0": {
+      "maximum_seconds": 0.14
+    },
+    "step_1": {
+      "maximum_seconds": 0.14
+    },
+    "jump": {
+      "maximum_seconds": 0.27
+    },
+    "land": {
+      "maximum_seconds": 0.32
+    },
+    "evade": {
+      "maximum_seconds": 0.32
+    },
+    "fire": {
+      "maximum_seconds": 0.65
+    },
+    "wave": {
+      "maximum_seconds": 0.65
+    },
+    "rise": {
+      "maximum_seconds": 0.55
+    },
+    "rush": {
+      "maximum_seconds": 0.52
+    },
+    "super_fire": {
+      "maximum_seconds": 1.25
+    },
+    "super_wave": {
+      "maximum_seconds": 1.25
+    },
+    "super_hit": {
+      "maximum_seconds": 0.8
+    },
+    "ko": {
+      "maximum_seconds": 0.85
+    },
+    "charge": {
+      "maximum_seconds": 0.65
+    },
+    "round": {
+      "maximum_seconds": 0.65
+    }
+  },
+  "workflows": {
+    "title": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Original 1990s arcade martial arts fighting game title music, rainy Chinese harbor at midnight, expressive pipa plucks and bamboo flute phrases above warm FM synthesizer bass and restrained jazzy drums, elegant minor pentatonic hook, memorable short motif, steady 100 BPM 4/4, instrumental, seamless game background arrangement, no vocals, no speech, no sound effects, no long intro or ending",
+          "lyrics": "[Instrumental]",
+          "seed": 917100,
+          "bpm": 100,
+          "duration": 50.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 50.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 917100,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/title"
+        }
+      }
+    },
+    "battle": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Stormy historical Chinese harbor duel, driving pipa ostinato, tense expressive erhu, powerful tanggu drums, crisp arcade percussion and restrained FM bass, dramatic dark waves and lanterns, original 1990s fighting-game background music, rhythmic instrumental only, no singing, no voice, no spoken words, no sound effects, no slow intro, no final fade, room in the mix for character calls, 138 BPM 4/4",
+          "lyrics": "[Instrumental]",
+          "seed": 920201,
+          "bpm": 138,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 920201,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261120-scenes/battle"
+        }
+      }
+    },
+    "victory": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Short original arcade fighting game victory fanfare, triumphant bright FM brass chord melody with Chinese pentatonic pipa flourish, decisive energetic drum fill and a clean shining major chord ending, concise complete eight-second instrumental game win jingle, no vocals, no speech, no background noise",
+          "lyrics": "[Instrumental]",
+          "seed": 917102,
+          "bpm": 150,
+          "duration": 8.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D major",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 8.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 917102,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/victory"
+        }
+      }
+    },
+    "defeat": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Short original arcade fighting game defeat jingle, somber descending FM bell melody with soft low gong and wistful bamboo flute answer, gentle minor chord resolution, restrained dignified martial arts mood, concise complete eight-second instrumental game lose jingle, no vocals, no speech, no background noise",
+          "lyrics": "[Instrumental]",
+          "seed": 917103,
+          "bpm": 72,
+          "duration": 8.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 8.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 917103,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/defeat"
+        }
+      }
+    },
+    "ui_select": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One crisp antique brass arcade menu selection click with a very short bright jade chime, tactile button click, dry close isolated sound effect, immediately at the start. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918000,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/ui_select"
+        }
+      }
+    },
+    "hit_light": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One clean hard bare-fist strike to a padded opponent, snappy dry midrange smack and tiny low thump, classic martial arts arcade impact, immediate sharp attack. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918001,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/hit_light"
+        }
+      }
+    },
+    "hit_heavy": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One powerful heavy martial arts kick impact to a padded opponent, sharp dry crack over deep chesty thud, visceral punchy arcade fighting impact, immediate hard attack and short tail. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918002,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/hit_heavy"
+        }
+      }
+    },
+    "block": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One isolated solid martial arts forearm guard block impact, short dry woody leather clack with restrained metallic bracer tick, crisp defensive fighting game hit. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918003,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/block"
+        }
+      }
+    },
+    "throw": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One heavy body slam onto a wet stone fighting platform, solid bass thump with a sharp stone slap and a few tiny grit clicks, dry close martial arts game impact. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918004,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/throw"
+        }
+      }
+    },
+    "whoosh_punch": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One fast short fist punch whoosh through air, compact airy swish snapping to a stop, sharp close dry fighting-game motion sound, no impact. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918005,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/whoosh_punch"
+        }
+      }
+    },
+    "whoosh_kick": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One fast powerful high martial arts kick sweeping through air, wider descending air whip swish and a crisp cloth snap, dry isolated motion, no impact. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918006,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/whoosh_kick"
+        }
+      }
+    },
+    "step_0": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One single boot footstep on a rain-wet stone quay, close tight leather sole tap with tiny restrained water scuff, immediate dry compact attack. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918007,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/step_0"
+        }
+      }
+    },
+    "step_1": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One single different boot footstep on wet stone, short muted heel tap with a tiny water splash, close compact crisp attack. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918008,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/step_1"
+        }
+      }
+    },
+    "jump": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One short boot push-off from wet stone with a quick rising cloth whoosh, light crisp martial artist jump launch, close isolated game sound. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918009,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/jump"
+        }
+      }
+    },
+    "land": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One compact two-boot landing on wet stone, short solid thud and small gravel scuff, tight low-end punch, dry close isolated impact. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918010,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/land"
+        }
+      }
+    },
+    "evade": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One very fast martial artist evasive sidestep dash, tight airy cloth snap and brief boot skid over wet stone, compact quick swish, dry game sound. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918011,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/evade"
+        }
+      }
+    },
+    "fire": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One magical martial arts palm fireball release, quick sharp air-punch onset into a short bright ember flame burst, fiery rushing whoosh with restrained crackling tail, compact game projectile. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918012,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/fire"
+        }
+      }
+    },
+    "wave": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One magical martial arts crescent water energy palm release, sharp clean air-punch onset with crystalline jade chime and a short cutting surf whoosh, compact dry game projectile. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918013,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/wave"
+        }
+      }
+    },
+    "rise": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One forceful rising martial arts uppercut, quick ascending air whip sweep with a short bright explosive snap, powerful compact game motion, no vocal. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918014,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/rise"
+        }
+      }
+    },
+    "rush": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One swift powerful forward dash strike, low fast cloth rush into a sharp whip snap, tight punchy martial arts arcade move sound. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918015,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/rush"
+        }
+      }
+    },
+    "super_fire": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One ultimate fiery double-palm attack release in an arcade martial arts game, rising compressed energy crackle into a huge short fiery burst, deep powerful attack with hot ember hiss, clean transient and a brief tail. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918016,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/super_fire"
+        }
+      }
+    },
+    "super_wave": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One ultimate tidal energy double-palm attack release in an arcade martial arts game, rising crystalline jade shimmer into a huge short cutting ocean surge, deep powerful attack and brief sparkling tail. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918017,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/super_wave"
+        }
+      }
+    },
+    "super_hit": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One decisive ultimate martial arts hit impact, very sharp layered crack and massive tight low thump with a brief explosive sparkle tail, dramatic compact arcade finishing blow. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918018,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/super_hit"
+        }
+      }
+    },
+    "ko": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One short dramatic arcade knockout impact accent, deep dry martial arts slam with bright metallic shattered-energy sparkle, emphatic quick attack and clean short decay. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918019,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/ko"
+        }
+      }
+    },
+    "charge": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One short compact martial arts energy-charge swell, low resonant rising hum with bright shimmering particles, quick controlled buildup and decisive cutoff, no voice. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918020,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/charge"
+        }
+      }
+    },
+    "round": {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "CLIPLoader",
+        "inputs": {
+          "clip_name": "t5gemma_b_b_ul2.safetensors",
+          "type": "stable_audio"
+        }
+      },
+      "3": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": "One crisp short antique Chinese gong strike blended with a bright 1990s arcade bell accent, clean compact signal to begin a fight, immediate clear attack and short tail. Single isolated one-shot at the beginning on a silent background. No speech, no vocals, no music, no ambience, no repeated events."
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "text": ""
+        }
+      },
+      "5": {
+        "class_type": "EmptyLatentAudio",
+        "inputs": {
+          "seconds": 4.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "seed": 918021,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "lcm",
+          "scheduler": "simple",
+          "positive": [
+            "3",
+            0
+          ],
+          "negative": [
+            "4",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "7": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "6",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "8": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "7",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261117/round"
+        }
+      }
+    },
+    "battle-bamboo": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Sunrise bamboo courtyard martial duel, agile dizi bamboo flute, plucked guzheng and pipa, brisk light tanggu rhythm and clean arcade bass, fresh focused heroic energy, original 1990s fighting-game background music, rhythmic instrumental only, no singing, no voice, no spoken words, no sound effects, no slow intro, no final fade, room in the mix for character calls, 124 BPM 4/4",
+          "lyrics": "[Instrumental]",
+          "seed": 920202,
+          "bpm": 124,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "G major",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 920202,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261120-scenes/battle-bamboo"
+        }
+      }
+    },
+    "battle-snow": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Moonlit snowy ancient mountain gate duel, austere xiao flute, low bowed erhu strings, powerful deep tanggu rhythm and crisp arcade percussion, cold determined martial tension, clear memorable pentatonic melody, original 1990s fighting-game background music, rhythmic instrumental only, no singing, no voice, no spoken words, no sound effects, no slow intro, no final fade, room in the mix for character calls, 132 BPM 4/4",
+          "lyrics": "[Instrumental]",
+          "seed": 920203,
+          "bpm": 132,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "D minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 920203,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261120-scenes/battle-snow"
+        }
+      }
+    },
+    "battle-lantern": {
+      "1": {
+        "class_type": "UNETLoader",
+        "inputs": {
+          "unet_name": "acestep_v1.5_turbo.safetensors",
+          "weight_dtype": "default"
+        }
+      },
+      "2": {
+        "class_type": "DualCLIPLoader",
+        "inputs": {
+          "clip_name1": "qwen_0.6b_ace15_comfy.safetensors",
+          "clip_name2": "qwen_4b_ace15_comfy.safetensors",
+          "type": "ace"
+        }
+      },
+      "3": {
+        "class_type": "VAELoader",
+        "inputs": {
+          "vae_name": "dewfield_ace15_vae.safetensors"
+        }
+      },
+      "4": {
+        "class_type": "TextEncodeAceStepAudio1.5",
+        "inputs": {
+          "clip": [
+            "2",
+            0
+          ],
+          "tags": "Lantern-lit historical river town martial tournament, lively yangqin hammered dulcimer, pipa plucks and bright dizi, warm ceremonial tanggu drums, energetic rhythmic arcade instrumental with a memorable pentatonic hook, original 1990s fighting-game background music, rhythmic instrumental only, no singing, no voice, no spoken words, no sound effects, no slow intro, no final fade, room in the mix for character calls, 140 BPM 4/4",
+          "lyrics": "[Instrumental]",
+          "seed": 920204,
+          "bpm": 140,
+          "duration": 60.0,
+          "timesignature": "4",
+          "language": "en",
+          "keyscale": "E minor",
+          "generate_audio_codes": true,
+          "cfg_scale": 2.0,
+          "temperature": 0.85,
+          "top_p": 0.9,
+          "top_k": 0,
+          "min_p": 0.0
+        }
+      },
+      "5": {
+        "class_type": "EmptyAceStep1.5LatentAudio",
+        "inputs": {
+          "seconds": 60.0,
+          "batch_size": 1
+        }
+      },
+      "6": {
+        "class_type": "ConditioningZeroOut",
+        "inputs": {
+          "conditioning": [
+            "4",
+            0
+          ]
+        }
+      },
+      "7": {
+        "class_type": "ModelSamplingAuraFlow",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "shift": 3.0
+        }
+      },
+      "8": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "7",
+            0
+          ],
+          "seed": 920204,
+          "steps": 8,
+          "cfg": 1.0,
+          "sampler_name": "euler",
+          "scheduler": "simple",
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "6",
+            0
+          ],
+          "latent_image": [
+            "5",
+            0
+          ],
+          "denoise": 1.0
+        }
+      },
+      "9": {
+        "class_type": "VAEDecodeAudio",
+        "inputs": {
+          "samples": [
+            "8",
+            0
+          ],
+          "vae": [
+            "3",
+            0
+          ]
+        }
+      },
+      "10": {
+        "class_type": "SaveAudio",
+        "inputs": {
+          "audio": [
+            "9",
+            0
+          ],
+          "filename_prefix": "ash-harbor/20261120-scenes/battle-lantern"
+        }
+      }
+    }
+  },
+  "processed": {
+    "ui_select": {
+      "duration": 0.12,
+      "bytes": 1920,
+      "sha256": "c4f9f0cefbb1e577cfbd794bf24c9ca7e463b652aa336ae658819c04995617a3",
+      "master_sha256": "3609a5bdfd48b2b65a6e3acd62a1d1a43f0ba0ce5e474832053921848407ce23"
+    },
+    "hit_light": {
+      "duration": 0.22,
+      "bytes": 3520,
+      "sha256": "84c750ab92c49bb984fa7c1730b1784b98b8943853fe169bdb06b7dd74389c80",
+      "master_sha256": "435f6bf85812686990079cf5a09f95958a88b27db28c0b2432f8843b5d7727c4"
+    },
+    "hit_heavy": {
+      "duration": 0.4,
+      "bytes": 6400,
+      "sha256": "457f3d17bc0de2b4cd3e07ed092258150471c284778aaf6692e0bba7e528ae47",
+      "master_sha256": "2bc640dea15065e42b52470eb6b20f1effc8acec55e37c7c16f59010793df89b"
+    },
+    "block": {
+      "duration": 0.22,
+      "bytes": 3520,
+      "sha256": "b0f044d39500f4221bf4fa603b5b5ef61dda0eb407828a7f20e83e029bfc7d4a",
+      "master_sha256": "d34f451011a73eb6d779b466c4891c353575ad282039d8b6b95ac8f55d37cebb"
+    },
+    "throw": {
+      "duration": 0.52,
+      "bytes": 8320,
+      "sha256": "93b4f4993a9a1bf1a47e81c3e576840b017bbf16dabebe5b4584dafa8f9421c9",
+      "master_sha256": "10b0f7b2017e51edcf68cef680fa195cf5edba5d7556336293609c4114044f92"
+    },
+    "whoosh_punch": {
+      "duration": 0.18,
+      "bytes": 2880,
+      "sha256": "a14cf9f0d542d5adef47768927f3b0500b97eb3a2a193d09dca40dcc555b906c",
+      "master_sha256": "bfde5c5e06298953a0c1a033be46948f689c1fef88e933230689a799c241c112"
+    },
+    "whoosh_kick": {
+      "duration": 0.3,
+      "bytes": 4800,
+      "sha256": "96010635bdbeb06e6861d9b098d1b532a36ce52ebf18f098f7106a46cb8662d8",
+      "master_sha256": "09dc819c3c09fa9bb4232197d4200f27cd5fd868b47293a374d3c3b944e244bf"
+    },
+    "step_0": {
+      "duration": 0.14,
+      "bytes": 2240,
+      "sha256": "d4d4383d928f3adb4d1f2ffb4a4162ac8235a320286339c29188f9743fb36d22",
+      "master_sha256": "1d6090e42c1bf39fbd9d5e7a7b08e104c9b7b202ebdf002f8c9cb3663486c8a2"
+    },
+    "step_1": {
+      "duration": 0.14,
+      "bytes": 2240,
+      "sha256": "1e8be00c57d15a81eaec89d6e5025429058576a86b0d1a7cdd9f0730207f3960",
+      "master_sha256": "3f22c19a2944f246e01bd303fcefb8951de2e0bf2b124b86d6abb126326a5f6e"
+    },
+    "jump": {
+      "duration": 0.27,
+      "bytes": 4320,
+      "sha256": "28b2d5171262ef648472871908d77c63d96621334b32cc00561fa014dab72bd1",
+      "master_sha256": "df3314b191ef8530f518a90c1ba5298f8d8527cc035780a6cc3d13e97c324388"
+    },
+    "land": {
+      "duration": 0.32,
+      "bytes": 5120,
+      "sha256": "e491c26e2af72c303b641f38afe7dcb889fa511d51dfe192e34ff484bb2192e7",
+      "master_sha256": "6ac63c35edb3166c83cf99bbc0eb3f8ba4aab8f76370a9b4859423bf504603b0"
+    },
+    "evade": {
+      "duration": 0.32,
+      "bytes": 5120,
+      "sha256": "631a7c1b5b79d08ee08b7f672a00ab8a6fb531abe4fb26fb7cfe708936808843",
+      "master_sha256": "22a49e18237bfa5d9d56c802b6ee1de9dca2125f4d8d781563d3cf00737818d1"
+    },
+    "fire": {
+      "duration": 0.65,
+      "bytes": 10400,
+      "sha256": "88be0bbf5bbdaf48a1b1ddb60c285e0250aaeeecfe7501602f50c33aa7c8d517",
+      "master_sha256": "f943d69da79884e610f8824ff800f3238eaa6f59f23f3eae3b58352fc55ed659"
+    },
+    "wave": {
+      "duration": 0.65,
+      "bytes": 10400,
+      "sha256": "3d2aba5a1aef40c069954dcaeb5165a38c1150effd3b7f0a70f1bc56622ba876",
+      "master_sha256": "fec887e0ec7cfdae8d302492700496ac7986bd202be1e8262e233dd3f6244035"
+    },
+    "rise": {
+      "duration": 0.55,
+      "bytes": 8800,
+      "sha256": "be8c48fb35fd50acc64a54e2382a0b9fe6885c94ab308fde46b6f050426e3fc9",
+      "master_sha256": "77ef534bc051c3afb5fb0ca928b85487e971de1b21b9a9c39695c2718242ce8f"
+    },
+    "rush": {
+      "duration": 0.52,
+      "bytes": 8320,
+      "sha256": "f9dcc3fd499deb850f2c5751e8ab5bae04cf31ff9b90ea919d4fccf8e2de82a9",
+      "master_sha256": "52c187f2a9b735cd0a313fc67013cc76c88f350410bbcda13d96e6f5a1c670ee"
+    },
+    "super_fire": {
+      "duration": 0.95,
+      "bytes": 15200,
+      "sha256": "a2453618fd9ad0df23b1e9430781e56afde8f54b42f096bddbad09c80420e892",
+      "master_sha256": "18d2512b88d0f1d3daf2e798816871d9b12b40476a8c6d75353c10c4ef7d2fc3"
+    },
+    "super_wave": {
+      "duration": 0.95,
+      "bytes": 15200,
+      "sha256": "6af0e776280a56f059e2b653dae0c8304509a6bb6dd86bbedac6d6af1fe689f4",
+      "master_sha256": "e6140c1a306dbbb6b693dd4750415eaf638f93c9cb0bc91916e1abd6a0190ff7"
+    },
+    "super_hit": {
+      "duration": 0.8,
+      "bytes": 12800,
+      "sha256": "dfe2e8a56694ce1bab98322a1f24b3526ebdbda56b1aa6e124e4fb4b41fa8d2e",
+      "master_sha256": "a27d28aa556b1659d035c5c93a9c99a27ae41e4a0d856d5decaf88516d5cb960"
+    },
+    "ko": {
+      "duration": 0.85,
+      "bytes": 13600,
+      "sha256": "c7e02c32b2a6581e31604bdc880b97e9aa7f286af6327b142144b0b7db414fb0",
+      "master_sha256": "09a9f5ade56ae29939c751b6bf97aa1bb4a41baac31a0f1127493a3fd9800293"
+    },
+    "charge": {
+      "duration": 0.65,
+      "bytes": 10400,
+      "sha256": "c481d2b00daee0a206f7522b4d83549de9d65c850b714b0d9239837505f94065",
+      "master_sha256": "e9dd75190464e82fd877e5856cde026f3c69d72ecc08f5dd119122d062792b09"
+    },
+    "round": {
+      "duration": 0.65,
+      "bytes": 10400,
+      "sha256": "598d89d5acdbba5a3734129659b2a73f3ba9bc1c85cca3028a3b6a7af8c0f4ae",
+      "master_sha256": "2ce4b4dae7b1ad71c838362af1082fedb3643152bd72960f5466616cc4bef189"
+    },
+    "title": {
+      "duration": 38.4,
+      "bytes": 185139,
+      "sha256": "9e5ed5144ecf3c7bbbd21fb73a90dee31d338849be49d310faf88f6e8689d215",
+      "master_sha256": "d84eb31b2f387e29752fd6a335de1f60cbc448ae1385851edc77bcce4f938db5"
+    },
+    "battle": {
+      "duration": 27.8260625,
+      "bytes": 124398,
+      "sha256": "a4c8bc8809c2b2ace4a9dc00ce1ed80781467520f44c7eeae4246f42b8ed9c9a",
+      "master_sha256": "fd3895a9020f6ac1135dc99ca0968db66463f45eba53f17f4fbc050e4e498a8f"
+    },
+    "victory": {
+      "duration": 8.0,
+      "bytes": 35611,
+      "sha256": "2d19359b23d71f3f7e6942c4974b735fa1a09117a13ae83e87ef825b4280655e",
+      "master_sha256": "1ab901c5ef5b62875976366082486ab9e98f79e36d65e63972b2fb952c16c44c"
+    },
+    "defeat": {
+      "duration": 8.0,
+      "bytes": 30859,
+      "sha256": "89a6935536e50d913fbd894d8f94b8bf9059a0161664fd75ade56d803bab1954",
+      "master_sha256": "8ec0fa856a2d69aeac3f9d5fedfa2b2c2c5a58b7f424c1ff54e77adc4b86a62a"
+    },
+    "battle-bamboo": {
+      "duration": 30.96775,
+      "bytes": 140532,
+      "sha256": "0c49defe305a4cf0647e630b986d113544ffc1260c7f39943d3bded61dff5e5d",
+      "master_sha256": "963e63cb3dfd94ea34135004d978442ce0a0c34d1131b05783a004985caa81cb"
+    },
+    "battle-snow": {
+      "duration": 29.0909375,
+      "bytes": 117356,
+      "sha256": "5b4bf842344fb8e36947f848afbe7a693b458aabb995e69e032a7efc4c50f904",
+      "master_sha256": "6ea2465d36dddb669769ba0043461db72d6f74293990522cfe6c648d38b3fd05"
+    },
+    "battle-lantern": {
+      "duration": 27.4285625,
+      "bytes": 140151,
+      "sha256": "1ed37904250a402474a23686ffee0cba04d2f3e232253db5c451de1f0e30d8a0",
+      "master_sha256": "a72ca096c8e68b7000d910c4897bcbae493cc3fb9622a22b8d5c4c83b098fe2c"
+    }
+  },
+  "installed_model_hashes": {
+    "comfyui_commit": "46493d824fd7eac25a741e505159e4c9e0ef0ebd",
+    "models": {
+      "diffusion_models/acestep_v1.5_turbo.safetensors": {
+        "bytes": 4787825604,
+        "sha256": "3f6e0797fad420a39bd33979eb6e840e30989e34a3794e843d23b60ec6e422d7"
+      },
+      "text_encoders/qwen_0.6b_ace15_comfy.safetensors": {
+        "bytes": 1191590921,
+        "sha256": "f8fa0f5042f8c6f5e9f6b2e07b7646f669258a6d89bafabbaec9582fe8a0ba3f"
+      },
+      "text_encoders/qwen_4b_ace15_comfy.safetensors": {
+        "bytes": 3708526033,
+        "sha256": "85ef61eb9139ba0eb6d373780bed93002898da88523e79ffdeaded2147ef8bd0"
+      },
+      "vae/dewfield_ace15_vae.safetensors": {
+        "bytes": 337431732,
+        "sha256": "6de92e3a862acd287e08b024ac90f0783a8635451b728721a33ff03565bcb2bb"
+      },
+      "checkpoints/stable_audio_3_small_sfx.safetensors": {
+        "bytes": 2270384940,
+        "sha256": "ed9cf1b6172f1a8c2921a9560c21109ff3239524563ced9dce6dcdef41e2f515"
+      },
+      "text_encoders/t5gemma_b_b_ul2.safetensors": {
+        "bytes": 1187264003,
+        "sha256": "1e1eba25be8872edb0d3c6335c6658fd6388e7b14b60da6e454e404cfcd8150e"
+      }
+    }
+  }
+}

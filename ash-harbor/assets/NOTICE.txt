@@ -1,0 +1,36 @@
+ASH HARBOR / 烬港斗魂
+
+Original character art, action frames, stage, title lettering and
+combat visual effects and UI graphics were generated with the built-in ImageGen tool for this
+project. Original PNGs are preserved in art/source; prompts are recorded in
+tools/art-prompts.json, tools/ui-prompts.json, tools/walk-prompt.json, tools/walk-finish-prompts.json and tools/expansion-prompts.json and tools/stage-control-prompts.json. UI sources are hashed in
+art/ui-sources.json; expanded fighter, story and scenery sources in art/expansion-sources.json. Runtime rasters are deterministic silhouette crops and indexed
+versions produced by tools/build_art.py.
+
+Chinese labels and ordinary text use unmodified Fusion Pixel Font 12px monospaced zh_hans,
+release 2026.11.10, copyright 2022 TakWolf, licensed under SIL OFL 1.1.
+The original font and source metadata are in tools/fonts. Runtime glyphs are
+native 12px rasterizations. Timer numerals and KO/FIGHT/ROUND/WIN announcements
+use the original generated sprite artwork, separately from this font.
+The complete font license and upstream notices are in assets/licenses/fusion-pixel.
+Source: https://github.com/TakWolf/fusion-pixel-font
+
+No third-party game character graphics, game data or recorded game audio are
+included. Original music and effects were generated with the installed ACE-Step 1.5 and
+Stable Audio 3 Small SFX models through the user's remote ComfyUI. Original character voices were
+designed with Qwen3-TTS-12Hz-1.7B-VoiceDesign (Apache-2.0). The selected casting
+references are YAN take B, LAN take A, ZHEN take A and LING take B. Dialogue,
+effort, pain and KO calls are performed with Qwen3-TTS-12Hz-1.7B-Base (Apache-2.0),
+conditioned on those synthetic references. Reference hashes and transcripts are
+recorded in tools/voice-prompts.json. Complete performances are silence-trimmed
+and stored as 16-bit PCM; no third-party human voice recordings are used.
+Model source: https://github.com/QwenLM/Qwen3-TTS
+No model weights are distributed. Prompts, selected source
+hashes and conversion settings are in tools/audio-prompts.json and
+tools/voice-prompts.json and tools/scene-music-prompts.json. Selected FLAC masters are preserved in art/audio.
+The MIT-licensed common/motion-games/sound.hpp provides audio lifecycle and
+permission handling.
+
+SNK's published command list and manual were consulted only as design references
+for directional inputs, guarding and cancels. No source code or audiovisual
+assets from SNK or Capcom were imported.

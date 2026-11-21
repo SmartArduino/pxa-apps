@@ -1,0 +1,161 @@
+{
+  "format": "pxa-package-source-0.1",
+  "id": "pxa-ash-harbor",
+  "name": "烬港斗魂",
+  "version": "0.8.1",
+  "release_sequence": 26,
+  "description": "原创雨港武侠四人格斗。支持局域网双人对战、三战街机巡回和训练模式，四处擂台、三幕剧情，多点触摸与手柄操作。",
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "services": [
+        {
+          "name": "clock",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "window",
+          "min_version": [
+            0,
+            3
+          ]
+        },
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "log",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            2
+          ]
+        },
+        {
+          "name": "game-render",
+          "min_version": [
+            1,
+            5
+          ]
+        },
+        {
+          "name": "storage",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "permission",
+          "min_version": [
+            0,
+            1
+          ]
+        },
+        {
+          "name": "audio",
+          "min_version": [
+            0,
+            9
+          ]
+        },
+        {
+          "name": "net",
+          "min_version": [
+            0,
+            8
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.datagram",
+      "scope": "local-network",
+      "required": false
+    },
+    {
+      "name": "net.discovery",
+      "scope": "local-network",
+      "required": false
+    }
+  ],
+  "build": {
+    "system": "cmake",
+    "linear_memory": {
+      "maximum_bytes": 4194304,
+      "pinned": false
+    }
+  },
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "contacts": 2,
+        "requires": {
+          "tap": "tap"
+        }
+      },
+      {
+        "id": "gamepad",
+        "kind": "controller",
+        "complete": true,
+        "requires": {
+          "up": "tap",
+          "down": "tap",
+          "left": "tap",
+          "right": "tap",
+          "a": "tap",
+          "b": "tap",
+          "x": "tap",
+          "y": "tap",
+          "start": "tap"
+        }
+      }
+    ]
+  }
+}
