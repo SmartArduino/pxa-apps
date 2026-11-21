@@ -208,6 +208,57 @@ void trading_quotes() {
     assert(game.trade_quote(Salt,true,5).units==0);
 }
 
+void merchant_trade() {
+    Game game;
+    bool checked_reload=false;
+    int buys=0, sales=0, holds=0;
+    for (int day=0;day<100;++day) {
+        const auto before=game.s;
+        game.wait_at_port();
+        assert(game.s.day==before.day+1);
+        assert(game.s.gold==before.gold && game.s.cargo==before.cargo && game.s.rng==before.rng);
+        auto expected=before.stock_delta;
+        if (game.s.day%12==0)
+            for (auto& stock : expected) stock+=stock>0?-1:stock<0?1:0;
+        for (std::size_t i=0;i<game.s.merchants.size();++i) {
+            const auto& previous=before.merchants[i];
+            const auto& current=game.s.merchants[i];
+            if (current.held) {
+                assert(current.progress==previous.progress && current.destination==previous.destination);
+                ++holds;
+            }
+            if (previous.destination==NoMerchantPort && current.destination!=NoMerchantPort && current.units) {
+                auto& stock=expected[int(MerchantPorts[current.port])*GoodsCount+current.good];
+                stock-=current.units;
+                ++buys;
+            }
+            if (previous.destination!=NoMerchantPort && current.destination==NoMerchantPort && current.units) {
+                assert(current.port==previous.destination && !current.progress);
+                auto& stock=expected[int(MerchantPorts[current.port])*GoodsCount+current.good];
+                stock=std::min(48,stock+current.units);
+                ++sales;
+            }
+            if (!checked_reload && current.progress>0) {
+                Game copy;
+                assert(decode(copy.s,encode(game.s)));
+                copy.restore();
+                const auto pos=game.merchant_position(i), restored=copy.merchant_position(i);
+                assert(pos.x==restored.x && pos.y==restored.y);
+                Game next=game;
+                next.wait_at_port();
+                copy.wait_at_port();
+                assert(encode(next.s)==encode(copy.s));
+                checked_reload=true;
+            }
+        }
+        assert(expected==game.s.stock_delta);
+    }
+    assert(buys>=4 && sales>=4 && holds>0 && checked_reload);
+    game.s.merchants[0].destination=game.s.merchants[0].port;
+    State invalid;
+    assert(!decode(invalid,encode(game.s)));
+}
+
 void naval_and_duel_combat() {
     Game lead;
     assert(lead.accept_escort() && lead.depart(madeira));
@@ -756,6 +807,7 @@ int main() {
     sea_events();
     voyage_planning();
     trading_quotes();
+    merchant_trade();
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();

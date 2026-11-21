@@ -127,6 +127,15 @@ inline constexpr int BargainUsed=GoodsCount+1;
 Passage passage(int from, int to);
 Point vessel_at(const Passage& route, int leg, float fraction);
 
+inline constexpr std::array MerchantPorts{lisbon,madeira,canaries};
+inline constexpr std::array<Text,2> MerchantNames{"晨雾商行","白鹭商号"};
+inline constexpr int NoMerchantPort=MerchantPorts.size(), MerchantLot=5, MerchantReserve=6000;
+
+struct MerchantVoyage {
+    int progress=0, gold=650;
+    std::uint8_t port=0, destination=NoMerchantPort, good=Wine, units=0, held=0;
+};
+
 struct State {
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
@@ -156,10 +165,12 @@ struct State {
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
     std::uint8_t drift_stage=DriftUnheard;
+    std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
-inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216, SaveBytes=1232;
+inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
+inline constexpr std::size_t LanguageSaveBytes=1232, SaveBytes=1264;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -178,6 +189,7 @@ struct Game {
     int crew_limit() const;
     int quote(int good, bool sell) const;
     int price_at(int port, int good, bool sell) const;
+    Point merchant_position(int company) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
     int negotiation_rate() const;
     bool can_negotiate(int good) const;
@@ -295,7 +307,9 @@ private:
     void log_encounter(int choice);
     Point provisions_order(int food, int water) const;
     int stock_at(int port, int good, int stock_change) const;
-    int market_price(int port, int good, bool sell, int supply) const;
+    int market_price(int port, int good, bool sell, int supply, bool player=true) const;
+    void merchant_day(int company);
+    void plan_merchant(int company);
 
     void spend_day(int n);
     void earn(int gold);
