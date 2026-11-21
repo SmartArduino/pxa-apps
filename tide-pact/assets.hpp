@@ -28,4 +28,5 @@ extern const unsigned char driftwood[];
 extern const unsigned char towns[];
 extern const unsigned char town_icons[];
 extern const unsigned char town_walk[];
+extern const unsigned char port_people[];
 }

@@ -761,6 +761,41 @@ void harbor_navigation() {
     assert(decode(saved,encode(ship.s)) && saved.wake_count==WakeCapacity);
 }
 
+void port_stories() {
+    Game game;
+    assert(!game.meet_port_story(LastSugar) && !game.resolve_port_story(TideSkiff,1));
+    assert(game.meet_port_story(TideSkiff) && !game.meet_port_story(TideSkiff));
+    assert(!game.resolve_port_story(TideSkiff,0));
+    game.s.cargo[Timber]=1;
+    assert(game.resolve_port_story(TideSkiff,0));
+    assert(!game.s.cargo[Timber] && game.s.gold==574 && game.s.renown==2);
+    assert(!game.resolve_port_story(TideSkiff,1));
+
+    game.s.origin=madeira;
+    assert(game.meet_port_story(LastSugar));
+    game.s.cargo[Wine]=game.capacity()-game.load()-1;
+    assert(!game.resolve_port_story(LastSugar,0) && game.s.gold==574);
+    game.s.cargo[Wine]=0;
+    assert(game.resolve_port_story(LastSugar,0));
+    assert(game.s.cargo[Sugar]==2 && game.s.gold==554);
+
+    game.s.origin=canaries;
+    assert(game.meet_port_story(TornChart));
+    Game with_chart=game;
+    assert(with_chart.resolve_port_story(TornChart,0));
+    assert(with_chart.charted(ribeira) && with_chart.s.gold==526);
+    assert(game.resolve_port_story(TornChart,1));
+    assert(game.heard_rumor(RibeiraRumor) && !game.charted(ribeira) && game.s.gold==554);
+
+    game.s.origin=cadiz;
+    assert(game.meet_port_story(TwoLetters) && !game.resolve_port_story(TwoLetters,1));
+    assert(game.hire_interpreter() && game.resolve_port_story(TwoLetters,1));
+    assert(game.s.renown==6 && game.s.trust==2);
+    State restored;
+    assert(decode(restored,encode(game.s)) && restored.port_stories==game.s.port_stories);
+    assert(decode(restored,encode(State{})) && !restored.port_stories);
+}
+
 int main() {
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {
@@ -830,6 +865,7 @@ int main() {
     trading_quotes();
     merchant_trade();
     town_walks();
+    port_stories();
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();

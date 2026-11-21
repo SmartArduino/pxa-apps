@@ -408,6 +408,85 @@ bool Game::hear_rumor(int id) {
     notice="传闻已记在航海簿上";
     return true;
 }
+
+PortStoryStage Game::port_story_stage(int id) const {
+    if (id<0 || id>=PortStoryCount) return PortStoryUnknown;
+    return PortStoryStage((s.port_stories>>(2*id))&3U);
+}
+
+bool Game::meet_port_story(int id) {
+    if (id<0 || id>=PortStoryCount || !port() ||
+        s.origin!=PortStories[id].port || port_story_stage(id)!=PortStoryUnknown) return false;
+    s.port_stories|=PortStoryMet<<(2*id);
+    notice="新见闻已记在日志";
+    return true;
+}
+
+Text Game::port_story_requirement(int id, int choice) const {
+    if (id<0 || id>=PortStoryCount || choice<0 || choice>1 || !port() ||
+        s.origin!=PortStories[id].port || port_story_stage(id)!=PortStoryMet) return "在当地交谈";
+    if (id==TideSkiff) {
+        if (choice==0 && !s.cargo[Timber]) return "缺一件木料";
+        if (choice==1 && s.spirits<8) return "船员太累";
+    }
+    if (id==LastSugar && choice==0) {
+        if (s.gold<20) return "不够20金";
+        if (capacity()-load()<2) return "船舱空位不足";
+    }
+    if (id==TornChart && choice==0) {
+        if (charted(ribeira)) return "已知泊地";
+        if (s.gold<28) return "不够28金";
+    }
+    if (id==TwoLetters && !understands(Castilian)) return "需要口译";
+    return {};
+}
+
+bool Game::resolve_port_story(int id, int choice) {
+    if (!port_story_requirement(id,choice).empty()) return false;
+    int renown=0;
+    switch (id) {
+    case TideSkiff:
+        if (choice==0) {
+            --s.cargo[Timber];
+            earn(54);
+            renown=2;
+        } else {
+            s.spirits-=8;
+            earn(28);
+        }
+        break;
+    case LastSugar:
+        if (choice==0) {
+            earn(-20);
+            s.cargo[Sugar]+=2;
+        } else {
+            earn(18);
+            renown=1;
+        }
+        break;
+    case TornChart:
+        if (choice==0) {
+            earn(-28);
+            s.chart_marks|=1U<<ribeira;
+        } else {
+            s.heard_rumors|=1U<<RibeiraRumor;
+        }
+        break;
+    case TwoLetters:
+        if (choice==0) earn(84);
+        else {
+            renown=4;
+            s.trust=std::min(999999,s.trust+2);
+        }
+        break;
+    }
+    s.renown=std::min(999999,s.renown+renown);
+    const unsigned shift=2*id;
+    s.port_stories=(s.port_stories&~(3U<<shift))|((PortStoryFirst+choice)<<shift);
+    notice="见闻结果已记在日志";
+    return true;
+}
+
 int Game::water_price() const { return s.tales[Monsoon]==Shared ? 18 : 30; }
 
 int Game::tale_stop(int tale) const {
@@ -1738,7 +1817,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Cha
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1788,6 +1867,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         for (auto value : {ship.port,ship.destination,ship.good,ship.units,ship.held})
             bytes[offset++]=std::byte(value);
     }
+    // Reuse one padding byte. Existing merchant saves initialized it to zero.
+    bytes[offset++]=std::byte(s.port_stories);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1931,6 +2012,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             ship.gold=int(gold);
             ship.progress=int(progress);
         }
+        s.port_stories=std::to_integer<std::uint8_t>(bytes[offset++]);
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

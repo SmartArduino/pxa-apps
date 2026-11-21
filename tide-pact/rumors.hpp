@@ -27,6 +27,8 @@ inline constexpr Rumor Rumors[] {
 };
 inline constexpr int RumorCount=std::size(Rumors);
 static_assert(RumorCount<=32);
+inline constexpr int RibeiraRumor=11;
+static_assert(Rumors[RibeiraRumor].port==canaries && Rumors[RibeiraRumor].site==ribeira);
 
 inline constexpr Text RumorFragments[]{
     "只听懂几个词：往西、黑色石头。",

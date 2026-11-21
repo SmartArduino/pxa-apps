@@ -19,6 +19,7 @@ inline constexpr int PlaceCount = std::size(Places);
 
 #include "expeditions.hpp"
 #include "languages.hpp"
+#include "port_stories.hpp"
 #include "rumors.hpp"
 #include "stories.hpp"
 
@@ -165,6 +166,7 @@ struct State {
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
     std::uint8_t drift_stage=DriftUnheard;
+    std::uint8_t port_stories=0;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
@@ -292,6 +294,10 @@ struct Game {
     bool chart_cell(int column, int row) const;
     bool heard_rumor(int id) const;
     bool hear_rumor(int id);
+    PortStoryStage port_story_stage(int id) const;
+    bool meet_port_story(int id);
+    Text port_story_requirement(int id, int choice) const;
+    bool resolve_port_story(int id, int choice);
 private:
     unsigned roll(unsigned range);
     void arrive();

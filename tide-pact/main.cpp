@@ -26,7 +26,7 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown
+    LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -56,7 +56,8 @@ enum Action {
     ShowDriftStory, TakeDriftLead, MarkDriftGround, OpenDriftRecovery, BoatForDrift,
     HookForDrift, WaitForDrift, ReturnDriftRoll, FileDriftRoll, CycleFont,
     ShowMerchants, MarkMerchantFirst, MarkMerchantSecond, OpenTown, ReturnTown,
-    WalkToTownFacility
+    WalkToTownFacility, ReadPortStory=WalkToTownFacility+int(TownFacilityCount),
+    FindPortStory=ReadPortStory+int(PortStoryCount), PortStoryChooseFirst, PortStoryChooseSecond, PortStoryGuide
 };
 
 template<class... Args>
@@ -103,6 +104,8 @@ struct VoyageApp {
     Rect town_area{};
     TownWalk town;
     int town_id=-1;
+    int port_story_id=0;
+    Overlay port_story_back=TaleList;
     unsigned town_frame=0;
     bool inside_town_facility=false;
     Overlay town_facility=None;
@@ -307,7 +310,7 @@ struct VoyageApp {
         if (modal==HarborTown && town.moving() && now-town_frame>=30) {
             town_frame=now;
             const int door=town.update(now);
-            if (door>=0) enter_town_facility(door);
+            if (door>=0) arrive_in_town(door);
             dirty=true;
         }
 
@@ -1204,8 +1207,13 @@ struct VoyageApp {
     void town_screen(Draw& d) {
         skin_box(d,safe,0,5);
         const auto& layout=Towns[town_id];
-        d.label(safe.x+9,safe.y+9,Places[layout.port].name,gold,safe.w-94);
+        const int story=port_story_at(layout.port);
+        const bool can_talk=story>=0 && game.port_story_stage(story)<PortStoryFirst;
+        const int talk_door=can_talk?int(PortStoryDoors[story]):-1;
+        d.label(safe.x+9,safe.y+9,Places[layout.port].name,gold,safe.w-(can_talk?157:94));
         button(d,{safe.right()-74,safe.y+4,68,22},"返回港务",Close);
+        if (can_talk)
+            button(d,{safe.right()-141,safe.y+4,63,22},PortStories[story].invitation,FindPortStory,true);
         const int maximum_height=safe.h-57;
         const int w=std::min(safe.w-10,maximum_height*12/5);
         const int h=std::min(maximum_height,std::max(w/2,maximum_height*4/5));
@@ -1231,7 +1239,8 @@ struct VoyageApp {
             const int offset=i==TownShipyard || i==TownDock?2:i==TownArchive?-39:-21;
             const Rect label{left,point.y+offset,width,19};
             const bool focus=pad_focus && focused==button_count;
-            const bool target=town.moving() && town.entrance==i;
+            const bool target=town.moving() && (town.entrance==i ||
+                              (town.entrance==TownFacilityCount && talk_door==i));
             if (i==TownArchive) d.line({point.x,label.bottom()},point,gold,true);
             d.diamond(point,2,target?gold:ink);
             plate(d,label,focus || target?ActionPlate:StandardPlate);
@@ -1241,7 +1250,10 @@ struct VoyageApp {
             buttons[button_count++]={label,WalkToTownFacility+i};
         }
 
-        if (town.moving() && town.entrance>=0)
+        if (town.moving() && town.entrance==TownFacilityCount && can_talk)
+            d.center({safe.x,safe.bottom()-25,safe.w,21},format("去%s找%s",TownNames[talk_door].data(),
+                     PortStories[story].person.data()),mint);
+        else if (town.moving() && town.entrance>=0 && town.entrance<TownFacilityCount)
             d.center({safe.x,safe.bottom()-25,safe.w,21},format("去%s",TownNames[town.entrance].data()),mint);
         else
             d.center({safe.x,safe.bottom()-25,safe.w,21},
@@ -1282,11 +1294,24 @@ struct VoyageApp {
         town_facility=modal;
     }
 
+    void arrive_in_town(int id) {
+        if (id!=TownFacilityCount) {
+            enter_town_facility(id);
+            return;
+        }
+        const int story=port_story_at(game.s.origin);
+        if (!game.port() || story<0) return;
+        if (game.meet_port_story(story)) changed();
+        port_story_id=story;
+        port_story_back=HarborTown;
+        set_modal(PortStoryPage);
+    }
+
     void town_go(Point point, int facility=-1) {
         if (modal!=HarborTown) return;
         town.at=town.position(now);
         town.go(point,Towns[town_id].quay,facility,now);
-        if (const int entered=town.update(now); entered>=0) enter_town_facility(entered);
+        if (const int entered=town.update(now); entered>=0) arrive_in_town(entered);
         dirty=true;
     }
 
@@ -1751,11 +1776,23 @@ struct VoyageApp {
     }
     void tale_list(Draw& d) {
         page_title(d,"港口故事");
+        std::array<int,PortStoryCount> seen{};
+        int seen_count=0;
+        for (int i=0;i<PortStoryCount;++i)
+            if (game.port_story_stage(i)!=PortStoryUnknown) seen[seen_count++]=i;
         const int visible=list_rows();
-        const int pages=(TaleCount+3+visible-1)/visible;
+        const int count=seen_count+TaleCount+3;
+        const int pages=(count+visible-1)/visible;
         page=std::clamp(page,0,pages-1);
-        for (int j=0;j<visible && page*visible+j<TaleCount+3;++j) {
-            const int i=page*visible+j;
+        for (int j=0;j<visible && page*visible+j<count;++j) {
+            const int i=page*visible+j-seen_count;
+            if (i<0) {
+                const int id=seen[i+seen_count];
+                const auto stage=game.port_story_stage(id);
+                row(d,j,PortStories[id].title,stage==PortStoryMet?Places[PortStories[id].port].name:"已完成",
+                    ReadPortStory+id,stage==PortStoryMet,28,LetterIcon);
+                continue;
+            }
             if (i==TaleCount) {
                 const Text harbor=game.s.escort>=EscortPublished?"已完成":
                                   game.s.escort>=EscortWonGuns?"丰沙尔":"里斯本";
@@ -1778,6 +1815,43 @@ struct VoyageApp {
             row(d,j,Tales[i].title,port>=0 ? Places[port].name : "已完成",TaleEntry+i,stage==InProgress);
         }
         pager(d,pages);
+    }
+    void port_story_page(Draw& d) {
+        const auto& story=PortStories[port_story_id];
+        const auto stage=game.port_story_stage(port_story_id);
+        const bool finished=stage>=PortStoryFirst;
+        const bool local=game.port() && game.s.origin==story.port;
+        const Rect options{body.x+6,body.bottom()-38,body.w-12,34};
+        const int top=body.y+30, side=std::clamp(body.h-89,38,65);
+        const Rect portrait{body.x+7,top,side,side};
+        const int x=portrait.right()+8, width=body.right()-x-7;
+        page_title(d,story.title,LetterIcon);
+        d.image({art::port_people},{port_story_id*64,0,64,64},portrait);
+        d.frame(portrait,border);
+        d.label(x,top,story.person,gold,width);
+        Text copy=finished?story.endings[stage-PortStoryFirst]:story.opening;
+        const bool can_guide=finished && port_story_id==TornChart && !game.sea();
+        const bool translation=local && !finished && port_story_id==TwoLetters && !game.understands(Castilian);
+        if (translation) copy="两封信都用卡斯蒂利亚语写成。先请口译问清内容，再选一封签字吧。";
+        const int bottom=finished && !can_guide?body.bottom()-6:options.y-4;
+        d.wrap({x,top+17,width,bottom-top-17},copy,ivory,15);
+        if (can_guide) {
+            button(d,options,game.charted(ribeira)?"定位里贝拉格兰德":"圈出大致海域",PortStoryGuide,true);
+        } else if (!finished && !local) {
+            if (!game.sea())
+                button(d,options,format("标记%s",Places[story.port].name.data()),Destination+story.port,true);
+        } else if (translation) {
+            button(d,options,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
+                   game.s.gold<Game::InterpreterFee);
+        } else if (!finished) {
+            const int half=(options.w-5)/2;
+            for (int choice=0;choice<2;++choice) {
+                const Text requirement=game.port_story_requirement(port_story_id,choice);
+                const Rect area{options.x+choice*(half+5),options.y,half,options.h};
+                button(d,area,story.choices[choice],PortStoryChooseFirst+choice,choice==0,
+                       !requirement.empty(),requirement.empty()?story.effects[choice]:requirement);
+            }
+        }
     }
     void tale_page(Draw& d) {
         const auto& tale=Tales[tale_item];
@@ -2104,6 +2178,7 @@ struct VoyageApp {
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
+        case PortStoryPage: port_story_page(d); break;
         case HarborTown: break;
         case None:
             switch (screen) {
@@ -2134,6 +2209,15 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=ReadPortStory && action<ReadPortStory+int(PortStoryCount)) {
+            const int id=action-ReadPortStory;
+            if (modal==TaleList && game.port_story_stage(id)!=PortStoryUnknown) {
+                port_story_id=id;
+                port_story_back=TaleList;
+                set_modal(PortStoryPage);
+            }
+            return;
+        }
         if (action>=WalkToTownFacility && action<WalkToTownFacility+int(TownFacilityCount)) {
             const int id=action-WalkToTownFacility;
             if (modal==HarborTown) town_go(Towns[town_id].doors[id],id);
@@ -2206,6 +2290,25 @@ struct VoyageApp {
                 break;
             }
             case OpenTown: case ReturnTown: show_town(); break;
+            case FindPortStory: {
+                const int id=port_story_at(game.s.origin);
+                if (modal==HarborTown && id>=0 && game.port_story_stage(id)<PortStoryFirst)
+                    town_go(Towns[town_id].doors[PortStoryDoors[id]],TownFacilityCount);
+                break;
+            }
+            case PortStoryChooseFirst: case PortStoryChooseSecond:
+                if (modal==PortStoryPage && game.resolve_port_story(port_story_id,action-PortStoryChooseFirst)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case PortStoryGuide:
+                if (modal==PortStoryPage && port_story_id==TornChart &&
+                    game.port_story_stage(port_story_id)>=PortStoryFirst) {
+                    rumor_item=RibeiraRumor;
+                    activate(MarkRumor);
+                }
+                break;
             }
             return;
         }
@@ -2567,7 +2670,8 @@ struct VoyageApp {
             return true;
         }
         if (modal!=None) {
-            if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
+            if (modal==PortStoryPage) set_modal(port_story_back);
+            else if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
             else if (modal==TalePage && screen==Journal) set_modal(TaleList);
             else if (modal==SeaLog && sea_item>=0) { sea_item=-1; focused=0; dirty=true; }
             else if (modal==RouteStops || (modal==Intel && intel_from_preflight)) set_modal(Preflight);

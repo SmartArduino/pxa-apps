@@ -9,6 +9,8 @@
 namespace tide {
 
 enum TownFacility { TownMarket, TownShipyard, TownGuild, TownArchive, TownTavern, TownDock, TownFacilityCount };
+inline constexpr TownFacility PortStoryDoors[]{TownShipyard,TownMarket,TownTavern,TownGuild};
+static_assert(std::size(PortStoryDoors)==PortStoryCount);
 inline constexpr Text TownNames[]{"市场","船坞","商会","档案室","酒馆","码头"};
 inline constexpr int TownExtent=1000;
 
