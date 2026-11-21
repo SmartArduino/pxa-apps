@@ -53,7 +53,7 @@ struct FontFace {
     int stride() const { return (cell+1)/2; }
 
     const unsigned char* glyph(unsigned code) const {
-        const int record=3+cell*stride();
+        const int record=3+cell*stride()+4;
         const auto* start=atlas+2;
         const int count=u16(atlas);
         int lo=0, hi=count;
@@ -64,10 +64,19 @@ struct FontFace {
         if (lo==count || unsigned(u16(start+lo*record))!=code) lo=int('?' - ' ');
         return start+lo*record+2;
     }
+    Rect ink_bounds(const unsigned char* glyph) const {
+        const auto* bounds=glyph+1+cell*stride();
+        return {bounds[0],bounds[1],bounds[2]-bounds[0],bounds[3]-bounds[1]};
+    }
 };
 inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_compact,11};
 
 struct Draw {
+    struct TextRun {
+        Text text;
+        Rect ink;
+    };
+
     pxa::Rgb565Pixels pixels;
     Rect clip;
     const FontFace& font;
@@ -143,6 +152,18 @@ struct Draw {
             }
         }
     }
+    void nine_slice(Image img, Rect src, Rect dst, int source_edge, int edge, bool transparent = false) {
+        edge=std::min({edge,dst.w/3,dst.h/3});
+        if (edge<1) return;
+        const int x[]{dst.x,dst.x+edge,dst.right()-edge,dst.right()};
+        const int y[]{dst.y,dst.y+edge,dst.bottom()-edge,dst.bottom()};
+        const int u[]{src.x,src.x+source_edge,src.right()-source_edge,src.right()};
+        const int v[]{src.y,src.y+source_edge,src.bottom()-source_edge,src.bottom()};
+        for (int j=0; j<3; ++j)
+            for (int i=0; i<3; ++i)
+                image(img,{u[i],v[j],u[i+1]-u[i],v[j+1]-v[j]},
+                      {x[i],y[j],x[i+1]-x[i],y[j+1]-y[j]},transparent);
+    }
     void cover(Image img, Rect dst) {
         const int w = std::min(img.width(),img.height()*dst.w/std::max(1,dst.h));
         const int h = std::min(img.height(),img.width()*dst.h/std::max(1,dst.w));
@@ -188,10 +209,46 @@ struct Draw {
             x += advance;
         }
     }
+    TextRun fit(Text text, int max_width, int scale) const {
+        Text rest=text;
+        int advance=0;
+        Rect ink{};
+        while (!rest.empty()) {
+            Text next=rest;
+            const auto* glyph=font.glyph(next_char(next));
+            const int width=*glyph*scale;
+            if (advance+width>max_width) break;
+            const Rect bounds=font.ink_bounds(glyph);
+            if (bounds.w) {
+                const Rect spot{advance+bounds.x*scale,bounds.y*scale,bounds.w*scale,bounds.h*scale};
+                if (!ink.w) ink=spot;
+                else {
+                    const int left=std::min(ink.x,spot.x), top=std::min(ink.y,spot.y);
+                    ink={left,top,std::max(ink.right(),spot.right())-left,
+                                  std::max(ink.bottom(),spot.bottom())-top};
+                }
+            }
+            advance+=width;
+            rest=next;
+        }
+        return {text.substr(0,text.size()-rest.size()),ink};
+    }
     void center(Rect box, Text text, Color color, int scale = 1) {
-        const int w = measure(text)*scale;
-        label(box.x+std::max(0,(box.w-w)/2),box.y+(box.h-font.cell*scale)/2,
-              text,color,box.w,scale);
+        const auto run=fit(text,box.w,scale);
+        label(box.x+(box.w-run.ink.w)/2-run.ink.x,box.y+(box.h-run.ink.h)/2-run.ink.y,
+              run.text,color,box.w,scale);
+    }
+    void center_with_icon(Rect box, Text text, Color color, Image atlas, Rect sprite, int size) {
+        constexpr int gap=4;
+        const auto run=fit(text,box.w-size-gap,1);
+        if (run.text.size()!=text.size()) {
+            center(box,text,color);
+            return;
+        }
+        const int width=size+gap+run.ink.w;
+        const int x=box.x+(box.w-width)/2;
+        image(atlas,sprite,{x,box.y+(box.h-size)/2,size,size},true);
+        label(x+size+gap-run.ink.x,box.y+(box.h-run.ink.h)/2-run.ink.y,text,color);
     }
     int wrap(Rect r, Text text, Color color, int spacing = 17) {
         int y = r.y;

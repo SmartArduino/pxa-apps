@@ -13,6 +13,8 @@ extern const unsigned char glyphs[];
 extern const unsigned char glyphs_compact[];
 extern const unsigned char wordmark[];
 extern const unsigned char skin[];
+extern const unsigned char controls[];
+extern const unsigned char tabs[];
 extern const unsigned char goods[];
 extern const unsigned char navigation[];
 extern const unsigned char ports[];

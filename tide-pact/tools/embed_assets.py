@@ -11,7 +11,7 @@ def main():
     with args.output.open("w") as out:
         out.write('#include "assets.hpp"\nnamespace tide::art {\n')
         for name in ("chart", "harbor", "title_compact", "storm", "portraits", "caravel", "broadside", "glyphs", "glyphs_compact",
-                     "wordmark", "skin", "goods", "navigation", "ports", "boarding", "cadiz_duel",
+                     "wordmark", "skin", "controls", "tabs", "goods", "navigation", "ports", "boarding", "cadiz_duel",
                      "duel_fx", "discoveries", "officers", "voyage_icons", "driftwood"):
             data = (args.source / (name + ".pxi")).read_bytes()
             out.write(f'const unsigned char {name}[] =\n')

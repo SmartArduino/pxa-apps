@@ -19,6 +19,8 @@ def write_font(path, codes, cell, name):
         data.extend(struct.pack("<HB", code, max(3, min(cell, round(face.getlength(char))))))
         pixels = image.tobytes()
         data.extend((a & 0xf0) | (b >> 4) for a, b in zip(pixels[::2], pixels[1::2]))
+        ink = image.point(lambda alpha: alpha & 0xf0).getbbox()
+        data.extend(ink or (0, 0, 0, 0))
     (ROOT / "art" / name).write_bytes(data)
 
 

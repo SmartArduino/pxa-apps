@@ -18,6 +18,7 @@ constexpr Text ship_names[] = {"轻帆艇", "远洋卡拉维尔", "三桅商船"
 constexpr Text tabs[] = {"海图","市场","船坞","港务","日志"};
 
 enum Screen { Chart, Market, Shipyard, Office, Journal };
+enum Plate { StandardPlate, ActionPlate, TabPlate, CurrentTabPlate };
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
@@ -210,6 +211,7 @@ struct VoyageApp {
         if (!display) return std::unexpected(display.error());
         input_display=*display;
         pointer_capture.reset();
+        dirty=true;
         return true;
     }
     void on_window_changed(const pxa::WindowMetrics& value) {
@@ -366,16 +368,19 @@ struct VoyageApp {
     }
 
     void skin_box(Draw& d, Rect r, int tile, int edge) {
-        constexpr int tile_size=72, source_edge=8;
-        edge=std::min({edge, r.w/3, r.h/3});
-        if (edge<1) return;
-        const int x[]{r.x,r.x+edge,r.right()-edge,r.right()};
-        const int y[]{r.y,r.y+edge,r.bottom()-edge,r.bottom()};
-        const int uv[]{0,source_edge,tile_size-source_edge,tile_size};
-        for (int j=0; j<3; ++j)
-            for (int i=0; i<3; ++i)
-                d.image({art::skin},{tile*tile_size+uv[i],uv[j],uv[i+1]-uv[i],uv[j+1]-uv[j]},
-                        {x[i],y[j],x[i+1]-x[i],y[j+1]-y[j]});
+        d.nine_slice({art::skin},{tile*72,0,72,72},r,8,edge);
+    }
+    void plate(Draw& d, Rect r, Plate style) {
+        d.nine_slice({art::controls},{style*96,0,96,32},r,4,4,true);
+    }
+    bool pressed(Rect r) const {
+        return pointer_capture.active() && !map_press && r.contains({press_x,press_y}) &&
+               r.contains({last_x,last_y}) && std::abs(last_x-press_x)+std::abs(last_y-press_y)<14;
+    }
+    void focus_marker(Draw& d, Rect r) {
+        const Point cue{r.x+r.w/2,r.y+1};
+        d.diamond(cue,3,ink);
+        d.diamond(cue,2,ivory);
     }
     void meter(Draw& d, Rect r, int value, int maximum, bool voyage) {
         skin_box(d,r,1,3);
@@ -412,25 +417,23 @@ struct VoyageApp {
     }
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
                 Text price={}, int glyph=-1) {
-        bool chosen=pad_focus && button_count==focused && !inactive;
-        skin_box(d,r,1,3);
-        if (inactive) d.darken(r,7);
-        const bool decorated=price.empty() && glyph>=0 && r.w>=d.measure(text)+20;
-        if (chosen || accent) {
-            d.fill({r.x+3,r.bottom()-4,r.w-6,1},chosen ? mint : rgb(0x87734e));
-            const int icon=chosen ? 12 : 9;
-            if (!decorated && r.w-d.measure(text)>icon+6)
-                nav_icon(d,CursorIcon,{r.x+3,r.y+(r.h-icon)/2,icon,icon});
-        }
-        const auto color=inactive ? quiet : chosen ? mint : accent ? gold : ivory;
-        if (decorated) {
-            const int x=r.x+(r.w-d.measure(text)-17)/2;
-            voyage_icon(d,glyph,{x,r.y+(r.h-14)/2,14,14});
-            d.label(x+17,r.y+(r.h-d.font.cell)/2,text,color);
-        } else if (price.empty()) d.center(r,text,color);
-        else {
-            d.center({r.x,r.y+1,r.w,14},text,color);
-            d.center({r.x,r.y+15,r.w,14},price,inactive ? quiet : mist);
+        const bool chosen=pad_focus && button_count==focused && !inactive;
+        const bool down=!inactive && pressed(r);
+        plate(d,r,accent && !inactive ? ActionPlate : StandardPlate);
+        if (inactive || down) d.darken(r.inset(3),inactive?6:3);
+        if (chosen) focus_marker(d,r);
+        const Color color=inactive ? quiet : accent ? gold : ivory;
+        const Rect content{r.x+3,r.y,r.w-6,r.h};
+        if (!price.empty()) {
+            const int line=d.font.cell;
+            const int y=content.y+(content.h-2*line-1)/2;
+            d.center({content.x,y,content.w,line},text,color);
+            d.center({content.x,y+line+1,content.w,line},price,inactive ? quiet : mist);
+        } else if (glyph>=0) {
+            const Rect sprite{glyph%3*32,glyph/3*32,32,32};
+            d.center_with_icon(content,text,color,{art::voyage_icons},sprite,std::clamp(r.h-7,12,17));
+        } else {
+            d.center(content,text,color);
         }
         if (!inactive && button_count<int(buttons.size())) buttons[button_count++]={r,action};
     }
@@ -473,29 +476,29 @@ struct VoyageApp {
         else d.label(safe.right()-6-d.measure(compact),safe.y+18,compact,mint);
     }
     void footer(Draw& d) {
-        skin_box(d,{safe.x,safe.bottom()-30,safe.w,30},0,5);
+        skin_box(d,{safe.x,safe.bottom()-28,safe.w,28},0,5);
         for (int i=0;i<5;++i) {
             const int left=safe.x+i*safe.w/5, right=safe.x+(i+1)*safe.w/5;
-            const Rect r{left,safe.bottom()-29,right-left,29};
+            const Rect hit{left,safe.bottom()-32,right-left,32};
+            const Rect r{hit.x+1,hit.y,hit.w-2,hit.h};
             const bool focused_tab=pad_focus && button_count==focused;
             const bool active=screen==i;
-            if (active) {
-                d.fill({r.x+3,r.y+3,r.w-6,r.h-6},rgb(0x25484a));
-                d.fill({r.x+r.w/2-7,r.bottom()-3,14,1},rgb(0xcfb477));
-            }
-            if (focused_tab)
-                nav_icon(d,CursorIcon,{r.x+r.w/2-5,r.y-6,10,10});
-            const Color label=focused_tab ? mint : active ? gold : ivory;
-            if (r.w>=53) {
-                const int total=17+d.measure(tabs[i]);
-                const int x=r.x+(r.w-total)/2;
-                nav_icon(d,i,{x,r.y+5,16,16});
-                d.label(x+17,r.y+7,tabs[i],label);
+            const bool down=pressed(hit);
+            plate(d,r,active || down ? CurrentTabPlate : TabPlate);
+            if (down) d.darken(r.inset(3),3);
+            if (focused_tab) focus_marker(d,r);
+            const Color label=active ? gold : ivory;
+            const Image images{art::tabs};
+            const Rect sprite{i*32,0,32,32};
+            if (r.w>=30+d.measure(tabs[i])) {
+                d.center_with_icon({r.x+4,r.y,r.w-8,r.h},tabs[i],label,images,sprite,20);
             } else {
-                nav_icon(d,i,{r.x+r.w/2-7,r.y+1,14,14});
-                d.label(r.x+(r.w-d.measure(tabs[i]))/2,r.y+14,tabs[i],label);
+                constexpr int size=14;
+                const int y=r.y+(r.h-size-1-d.font.cell)/2;
+                d.image(images,sprite,{r.x+(r.w-size)/2,y,size,size},true);
+                d.center({r.x,y+size+1,r.w,d.font.cell},tabs[i],label);
             }
-            buttons[button_count++]={r,OpenChart+i};
+            buttons[button_count++]={hit,OpenChart+i};
         }
     }
 
@@ -2483,9 +2486,13 @@ struct VoyageApp {
                     last_x=p.x; last_y=p.y;
                     dirty=true;
                 }
+            } else if (e.action()==PointerPhase::move) {
+                last_x=p.x; last_y=p.y;
+                dirty=true;
             }
             if (e.ended()) {
                 pointer_capture.release(e);
+                dirty=true;
                 if (e.action()==PointerPhase::up && !panning &&
                     std::abs(p.x-press_x)+std::abs(p.y-press_y)<14) tap(p);
             }
