@@ -20,7 +20,8 @@ constexpr Text tabs[] = {"海图","市场","船坞","港务","日志"};
 constexpr int PricedButtonHeight=33;
 
 enum Screen { Chart, Market, Shipyard, Office, Journal };
-enum Plate { StandardPlate, ActionPlate, TabPlate, CurrentTabPlate };
+enum Plate { StandardPlate, ActionPlate };
+enum HarborPanel { HarborPlaque, HarborWood, HarborGoldWood, HarborPaper, HarborTrim };
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
@@ -106,7 +107,7 @@ struct VoyageApp {
     int town_id=-1;
     int port_story_id=0;
     Overlay port_story_back=TaleList;
-    unsigned town_frame=0;
+    unsigned town_frame=0, town_hint_until=0;
     bool inside_town_facility=false;
     Overlay town_facility=None;
     int scale=1, surface_x=0, surface_y=0;
@@ -313,6 +314,10 @@ struct VoyageApp {
             if (door>=0) arrive_in_town(door);
             dirty=true;
         }
+        if (town_hint_until && now>=town_hint_until) {
+            town_hint_until=0;
+            dirty|=modal==HarborTown;
+        }
 
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
@@ -393,6 +398,9 @@ struct VoyageApp {
     void plate(Draw& d, Rect r, Plate style, int edge=4) {
         d.nine_slice({art::controls},{style*96,0,96,32},r,edge,edge,true);
     }
+    void harbor_panel(Draw& d, Rect r, HarborPanel style, int edge=6) {
+        d.nine_slice({art::port_ui},{style*64,0,64,40},r,6,edge,true);
+    }
     bool pressed(Rect r) const {
         return pointer_capture.active() && !map_press && r.contains({press_x,press_y}) &&
                r.contains({last_x,last_y}) && std::abs(last_x-press_x)+std::abs(last_y-press_y)<14;
@@ -462,6 +470,31 @@ struct VoyageApp {
         button(d,{r.x,r.y,half,r.h},a,aa,accent);
         button(d,{r.x+half+5,r.y,r.w-half-5,r.h},b,bb);
     }
+    void harbor_button(Draw& d, Rect r, Text text, int action, bool preferred=false, bool inactive=false,
+                       Text detail={}, int glyph=-1) {
+        const bool focus=pad_focus && focused==button_count && !inactive;
+        harbor_panel(d,r,(preferred || focus) && !inactive ? HarborGoldWood : HarborWood);
+        if (inactive || pressed(r)) d.darken(r.inset(4),inactive?8:4);
+        auto content=r.inset(4);
+        const auto clip=d.clip;
+        d.clip=d.clipped(content);
+        const Color label=inactive?rgb(0xb1a38e):ivory;
+        if (detail.empty() && glyph>=0) {
+            d.center_with_icon(content,text,label,{art::voyage_icons},{glyph%3*32,glyph/3*32,32,32},13);
+        } else if (!detail.empty()) {
+            const int text_width=std::max(d.measure(text),d.measure(detail));
+            if (glyph>=0 && text_width+27<=content.w) {
+                const int x=content.x+(content.w-text_width-23)/2;
+                voyage_icon(d,glyph,{x,content.y+(content.h-18)/2,18,18});
+                content.x=x+23;
+                content.w=text_width;
+            }
+            d.center_lines(content,text,label,detail,inactive?label:rgb(0xe5c28f));
+        } else d.center(content,text,label);
+        d.clip=clip;
+        if (focus) focus_marker(d,r);
+        if (!inactive) buttons[button_count++]={r,action};
+    }
     void header(Draw& d) {
         skin_box(d,{safe.x,safe.y,safe.w,34},0,5);
         auto stat=[&](int x, int icon, int value, Color c) {
@@ -506,8 +539,8 @@ struct VoyageApp {
             const bool town_return=inside_town_facility && i==Office;
             const Text title=town_return?"回城":tabs[i];
             const bool down=pressed(hit);
-            plate(d,r,active || down ? CurrentTabPlate : TabPlate);
-            if (down) d.darken(r.inset(3),3);
+            harbor_panel(d,r,active || down ? HarborGoldWood : HarborPlaque,5);
+            if (down) d.darken(r.inset(4),3);
             if (focused_tab) focus_marker(d,r);
             const Color label=active ? gold : ivory;
             const Image images{art::tabs};
@@ -1204,60 +1237,87 @@ struct VoyageApp {
         return {town_area.x+p.x*town_area.w/TownExtent,town_area.y+p.y*town_area.h/TownExtent};
     }
 
+    Rect harbor_view(Draw& d, int city) {
+        const auto frame=d.clip.inset(2);
+        const auto inside=frame.inset(2);
+        const int h=std::min(inside.h,inside.w*5/8);
+        const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
+        constexpr int scene_w=288, scene_h=136;
+        d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
+        d.frame(view,rgb(0x342921));
+        return view;
+    }
+
     void town_screen(Draw& d) {
-        skin_box(d,safe,0,5);
         const auto& layout=Towns[town_id];
         const int story=port_story_at(layout.port);
         const bool can_talk=story>=0 && game.port_story_stage(story)<PortStoryFirst;
         const int talk_door=can_talk?int(PortStoryDoors[story]):-1;
-        d.label(safe.x+9,safe.y+9,Places[layout.port].name,gold,safe.w-(can_talk?157:94));
-        button(d,{safe.right()-74,safe.y+4,68,22},"返回港务",Close);
+        town_area=harbor_view(d,town_id);
+        harbor_panel(d,d.clip.inset(2),HarborTrim);
+        const int y=safe.y+1;
+        const bool roomy=safe.w>=345;
+        const Rect leave{safe.right()-(roomy?83:66),y,roomy?83:66,25};
+        const Text name=Places[layout.port].name;
+        const int talk_width=can_talk ? std::max(roomy?82:59,d.measure(PortStories[story].invitation)+12) : 0;
+        const int talk_left=leave.x-(can_talk?talk_width+5:0);
+        const int plaque_width=std::min(d.measure(name)+36,talk_left-safe.x-5);
+        const Rect plaque{safe.x,y,plaque_width,25};
+        harbor_panel(d,plaque,HarborPlaque);
+        d.center_with_icon(plaque.inset(4),name,ivory,{art::navigation},{0,84,42,42},16);
+        harbor_button(d,leave,"返回港务",Close,false,false,{},roomy?MooringIcon:-1);
         if (can_talk)
-            button(d,{safe.right()-141,safe.y+4,63,22},PortStories[story].invitation,FindPortStory,true);
-        const int maximum_height=safe.h-57;
-        const int w=std::min(safe.w-10,maximum_height*12/5);
-        const int h=std::min(maximum_height,std::max(w/2,maximum_height*4/5));
-        town_area={safe.x+(safe.w-w)/2,safe.y+29+(maximum_height-h)/2,w,h};
-        constexpr int scene_w=288, scene_h=136, sprite_w=24, sprite_h=32;
-        d.image({art::towns},{0,town_id*scene_h,scene_w,scene_h},town_area);
-        d.frame(town_area,border);
+            harbor_button(d,{talk_left,y,talk_width,25},PortStories[story].invitation,FindPortStory,
+                          true,false,{},roomy?LetterIcon:-1);
 
         const auto position=town_on_screen(town.position(now));
         constexpr int stride[]{0,1,2,1};
         const int frame=town.moving()?stride[(now/108)%4]:1;
         const bool mirror=town.facing==3;
+        constexpr int sprite_w=24, sprite_h=32;
         const Rect sprite{frame*sprite_w,std::min(2,town.facing)*sprite_h,sprite_w,sprite_h};
-        const int feet=town_area.w>=345?28:23;
+        const int feet=roomy?31:25;
         d.image({art::town_walk},sprite,
                 {position.x-feet*3/8,position.y-feet*7/8,feet*3/4,feet},true,mirror);
 
         for (int i=0;i<TownFacilityCount;++i) {
             if (i==TownArchive && game.archive_here()<0) continue;
             const auto point=town_on_screen(layout.doors[i]);
-            const int width=std::max(46,d.measure(TownNames[i])+22);
+            const int width=std::max(46,d.measure(TownNames[i])+25);
             const int left=std::clamp(point.x-width/2,town_area.x+2,town_area.right()-width-2);
-            const int offset=i==TownShipyard || i==TownDock?2:i==TownArchive?-39:-21;
-            const Rect label{left,point.y+offset,width,19};
+            const int offset=i==TownShipyard || i==TownDock?3:i==TownArchive?-39:-23;
+            const Rect label{left,point.y+offset,width,21};
             const bool focus=pad_focus && focused==button_count;
             const bool target=town.moving() && (town.entrance==i ||
                               (town.entrance==TownFacilityCount && talk_door==i));
             if (i==TownArchive) d.line({point.x,label.bottom()},point,gold,true);
-            d.diamond(point,2,target?gold:ink);
-            plate(d,label,focus || target?ActionPlate:StandardPlate);
+            d.diamond(point,2,rgb(0x342419));
+            d.dot(point.x,point.y,gold);
+            harbor_panel(d,label,focus || target?HarborGoldWood:HarborWood,4);
             if (focus) focus_marker(d,label);
             d.center_with_icon(label.inset(2),TownNames[i],target?gold:ivory,
                                {art::town_icons},{i%3*32,i/3*32,32,32},12);
             buttons[button_count++]={label,WalkToTownFacility+i};
         }
 
-        if (town.moving() && town.entrance==TownFacilityCount && can_talk)
-            d.center({safe.x,safe.bottom()-25,safe.w,21},format("去%s找%s",TownNames[talk_door].data(),
-                     PortStories[story].person.data()),mint);
-        else if (town.moving() && town.entrance>=0 && town.entrance<TownFacilityCount)
-            d.center({safe.x,safe.bottom()-25,safe.w,21},format("去%s",TownNames[town.entrance].data()),mint);
-        else
-            d.center({safe.x,safe.bottom()-25,safe.w,21},
-                     pad_focus?"方向键选设施，按A走过去":"点路面走动，点标牌进设施",mist);
+        if (town.moving() && town.entrance==TownFacilityCount && can_talk) {
+            const auto caption=format("前往%s",TownNames[talk_door].data());
+            harbor_hint(d,caption);
+        } else if (town.moving() && town.entrance>=0 && town.entrance<TownFacilityCount) {
+            const auto caption=format("前往%s",TownNames[town.entrance].data());
+            harbor_hint(d,caption);
+        } else if (pad_focus || town_hint_until) {
+            harbor_hint(d,pad_focus?"按A前往":"点路面走动");
+        }
+    }
+
+    void harbor_hint(Draw& d, Text caption) {
+        const int w=d.measure(caption)+26;
+        const Rect hint{safe.x+(safe.w-w)/2,safe.bottom()-21,w,19};
+        d.darken(hint,12);
+        d.diamond({hint.x+6,hint.y+9},2,gold);
+        d.diamond({hint.right()-7,hint.y+9},2,gold);
+        d.center(hint,caption,ivory);
     }
 
     void show_town() {
@@ -1270,6 +1330,7 @@ struct VoyageApp {
         }
         inside_town_facility=false;
         screen=Office;
+        town_hint_until=now+3300;
         set_modal(HarborTown);
     }
 
@@ -1821,35 +1882,71 @@ struct VoyageApp {
         const auto stage=game.port_story_stage(port_story_id);
         const bool finished=stage>=PortStoryFirst;
         const bool local=game.port() && game.s.origin==story.port;
-        const Rect options{body.x+6,body.bottom()-38,body.w-12,34};
-        const int top=body.y+30, side=std::clamp(body.h-89,38,65);
-        const Rect portrait{body.x+7,top,side,side};
-        const int x=portrait.right()+8, width=body.right()-x-7;
-        page_title(d,story.title,LetterIcon);
-        d.image({art::port_people},{port_story_id*64,0,64,64},portrait);
-        d.frame(portrait,border);
-        d.label(x,top,story.person,gold,width);
-        Text copy=finished?story.endings[stage-PortStoryFirst]:story.opening;
         const bool can_guide=finished && port_story_id==TornChart && !game.sea();
         const bool translation=local && !finished && port_story_id==TwoLetters && !game.understands(Castilian);
+        const bool has_actions=can_guide || (!finished && (local || !game.sea()));
+        Text copy=finished?story.endings[stage-PortStoryFirst]:story.opening;
         if (translation) copy="两封信都用卡斯蒂利亚语写成。先请口译问清内容，再选一封签字吧。";
-        const int bottom=finished && !can_guide?body.bottom()-6:options.y-4;
-        d.wrap({x,top+17,width,bottom-top-17},copy,ivory,15);
+
+        constexpr Color paper_ink=rgb(0x312117), note_ink=rgb(0x795022);
+        constexpr int spacing=17;
+        const int inset=safe.w>=345?12:5;
+        const int left=safe.x+inset, right=safe.right()-inset;
+        const int portrait_size=std::clamp((right-left)/5,39,82);
+        const int x=left+portrait_size+22, width=right-x-10;
+        const int dialogue_h=d.wrap({0,0,width,int(copy.size())*spacing},copy,paper_ink,spacing,false);
+        const int summary_h=finished?d.font.cell+4:0;
+        const int action_h=translation || can_guide || !local ? 28 : 35;
+        const int bottom=safe.bottom()-(has_actions?action_h-6:3);
+        const int panel_h=std::max(portrait_size+19,49+dialogue_h+summary_h+12);
+        const int top=std::max(safe.y+30,bottom-panel_h);
+        const Rect paper{left,top,right-left,bottom-top};
+        const Rect portrait{left+10,top+9,portrait_size,portrait_size};
+        const Rect options{left+9,safe.bottom()-action_h,paper.w-18,action_h};
+
+        d.darken(harbor_view(d,town_index(story.port)),5);
+        harbor_panel(d,d.clip.inset(2),HarborTrim);
+        harbor_button(d,{safe.right()-51,safe.y+1,51,24},"返回",Close);
+        harbor_panel(d,paper,HarborPaper);
+        harbor_panel(d,portrait.inset(-3),HarborTrim,4);
+        d.image({art::port_people},{port_story_id*64,0,64,64},portrait);
+        d.frame(portrait,rgb(0x594129));
+
+        voyage_icon(d,LetterIcon,{x,top+8,15,15});
+        d.label(x+19,top+8,story.title,paper_ink,width-19);
+        const int name_w=std::min(width,d.measure(story.person)+15);
+        const Rect name{x,top+25,name_w,20};
+        harbor_panel(d,name,HarborPlaque,4);
+        d.center(name.inset(3),story.person,ivory);
+        if (name.right()+10<right-13) {
+            const int y=name.y+10;
+            d.line({name.right()+7,y},{right-13,y},note_ink);
+            d.diamond({(name.right()+right-6)/2,y},2,note_ink);
+        }
+        const int text_top=top+49;
+        const int text_bottom=(has_actions?options.y-2:bottom-6)-summary_h;
+        const int written=d.wrap({x,text_top,width,text_bottom-text_top},copy,paper_ink,spacing);
+        if (finished) d.label(x,written+2,story.effects[stage-PortStoryFirst],note_ink,width);
         if (can_guide) {
-            button(d,options,game.charted(ribeira)?"定位里贝拉格兰德":"圈出大致海域",PortStoryGuide,true);
+            harbor_button(d,options,game.charted(ribeira)?"定位里贝拉格兰德":"圈出大致海域",
+                          PortStoryGuide,true,false,{},SeaChartIcon);
         } else if (!finished && !local) {
             if (!game.sea())
-                button(d,options,format("标记%s",Places[story.port].name.data()),Destination+story.port,true);
+                harbor_button(d,options,format("标记%s",Places[story.port].name.data()),
+                              Destination+story.port,true,false,{},SeaChartIcon);
         } else if (translation) {
-            button(d,options,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
-                   game.s.gold<Game::InterpreterFee);
+            harbor_button(d,options,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
+                          game.s.gold<Game::InterpreterFee,{},SpeechIcon);
         } else if (!finished) {
+            constexpr int choice_icons[PortStoryCount][2]{{RepairIcon,CrewIcon},{CargoIcon,SpeechIcon},
+                                                        {SeaChartIcon,AstrolabeIcon},{LetterIcon,PennantIcon}};
             const int half=(options.w-5)/2;
             for (int choice=0;choice<2;++choice) {
                 const Text requirement=game.port_story_requirement(port_story_id,choice);
                 const Rect area{options.x+choice*(half+5),options.y,half,options.h};
-                button(d,area,story.choices[choice],PortStoryChooseFirst+choice,choice==0,
-                       !requirement.empty(),requirement.empty()?story.effects[choice]:requirement);
+                harbor_button(d,area,story.choices[choice],PortStoryChooseFirst+choice,choice==0,
+                              !requirement.empty(),requirement.empty()?story.effects[choice]:requirement,
+                              choice_icons[port_story_id][choice]);
             }
         }
     }
@@ -2139,6 +2236,11 @@ struct VoyageApp {
             focused=std::clamp(focused,0,std::max(0,button_count-1));
             return;
         }
+        if (modal==PortStoryPage) {
+            port_story_page(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
         if (title) {
             if (modal==AudioSettings) audio_settings(d);
             else start_screen(d);
@@ -2178,8 +2280,7 @@ struct VoyageApp {
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
-        case PortStoryPage: port_story_page(d); break;
-        case HarborTown: break;
+        case HarborTown: case PortStoryPage: break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;

@@ -258,7 +258,7 @@ struct Draw {
         image(atlas,sprite,{x,box.y+(box.h-size)/2,size,size},true);
         label(x+size+gap-run.ink.x,box.y+(box.h-run.ink.h)/2-run.ink.y,text,color);
     }
-    int wrap(Rect r, Text text, Color color, int spacing = 17) {
+    int wrap(Rect r, Text text, Color color, int spacing = 17, bool paint = true) {
         int y = r.y;
         while (!text.empty() && y + font.cell <= r.bottom()) {
             Text rest = text;
@@ -280,7 +280,7 @@ struct Draw {
                     rest = before_last;
             }
             auto slice = text.substr(0,text.size()-rest.size());
-            label(r.x,y,slice,color,r.w);
+            if (paint) label(r.x,y,slice,color,r.w);
             if (rest.size() == text.size()) (void)next_char(rest);
             if (!rest.empty() && rest.front() == '\n') rest.remove_prefix(1);
             text = rest;
