@@ -369,7 +369,8 @@ struct VoyageApp {
                 if (voyage_rate>1 && game.sea() && !game.encounter() && !game.paused &&
                     ((old_food && !game.s.stores) || (old_water && !game.s.water))) {
                     game.paused=true;
-                    game.notice="水粮见底，已暂停航行";
+                    game.notice=!game.s.stores && !game.s.water ? "水粮耗尽" :
+                                !game.s.stores ? "食物耗尽" : "淡水耗尽";
                 }
                 if (!game.sea() || game.encounter() || game.paused) voyage_rate=1;
                 if ((game.s.day!=old_day && game.s.day%4==0) ||
@@ -1496,7 +1497,8 @@ struct VoyageApp {
         const int stage=game.s.land_stage;
         const int x=body.x+7, y=body.y+29, w=body.w-14;
         const int bottom=body.bottom();
-        const Rect picture{x,y,std::min(128,w/3),std::min(78,bottom-y-40)};
+        const int picture_width=std::min(128,w/3);
+        const Rect picture{x,y,picture_width,std::min(picture_width*104/160,bottom-y-44)};
         const int text_x=picture.right()+8, text_w=x+w-text_x;
         const bool filed=stage>=LandFiled;
         const bool full=stage==LandFullNotes || stage==LandFullFiled;
@@ -1539,7 +1541,7 @@ struct VoyageApp {
                        game.knows_land_pass()?"翻山抄近路":"近路未解锁",WalkLandPass);
             if (!game.land_requirement(FollowStream).empty() ||
                 (game.knows_land_pass() && !game.land_requirement(CrossPass).empty()))
-                d.center({x,row-17,w,15},"灰色路线的水粮不足",vermilion);
+                d.center({x,row-17,w,15},"水粮不足，记得留返程份额",vermilion);
         } else if (!inland_archive && stage==LandRidge) {
             const int third=(w-8)/3;
             leg_button({x,row,third,PricedButtonHeight},CopyMilestone,"拓路碑",WalkLandCopy,true);
