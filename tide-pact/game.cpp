@@ -56,8 +56,8 @@ SeaConditions route_weather(const Passage& path, int leg, int progress, int day)
     return conditions_at(vessel_at(path,leg,float(progress)/Legs[path.edge[leg]].nautical_miles),day);
 }
 
-int sailing_spirits(int spirits, int day) {
-    return day%6==0 ? std::max(0,spirits-3) : spirits;
+int sailing_spirits(int spirits, int day, SailingRation ration) {
+    return std::max(0,spirits-ration.morale_cost-(day%6==0?3:0));
 }
 
 int tenths_of_a_knot(int miles_per_day) {
@@ -297,7 +297,7 @@ int Game::wind(int leg) const {
 int Game::next_route_pace() const {
     const int day=std::min(99999,s.day+1);
     const auto weather=route_weather(route,s.leg,s.progress,day);
-    return sailing_miles_per_day(s,load(),sailing_spirits(s.spirits,day),
+    return sailing_miles_per_day(s,load(),sailing_spirits(s.spirits,day,sailing_ration(day,weather.weather)),
                                route_wind(route,s.leg,day,weather),weather.weather);
 }
 
@@ -331,7 +331,8 @@ std::array<ForecastDay, ForecastDays> Game::local_forecast() const {
     for (int i=0;i<ForecastDays;++i) {
         const int day=std::min(99999,s.day+i+1);
         const auto weather=conditions_at(here,day);
-        result[i]={day,weather,0,daily_water(weather.weather)};
+        const auto ration=sailing_ration(day,weather.weather);
+        result[i]={day,weather,0,ration.water,ration.food};
     }
     return result;
 }
@@ -344,19 +345,19 @@ PassageForecast Game::forecast_from(const Passage& path, int first_leg, int prog
         int sailed=i==first_leg?progress:0;
         while (sailed<leg.nautical_miles) {
             const int day=std::min(99999,s.day+result.days+1);
-            spirits=sailing_spirits(spirits,day);
             const auto weather=route_weather(path,i,sailed,day);
-            const int water=daily_water(weather.weather);
+            const auto ration=sailing_ration(day,weather.weather);
+            spirits=sailing_spirits(spirits,day,ration);
             const int miles=sailing_miles_per_day(s,cargo,spirits,route_wind(path,i,day,weather),weather.weather);
             if (result.days<ForecastDays)
-                result.outlook[result.days]={day,weather,tenths_of_a_knot(miles),water};
+                result.outlook[result.days]={day,weather,tenths_of_a_knot(miles),ration.water,ration.food};
             ++result.days;
             sailed+=miles;
-            result.water+=water;
+            result.water+=ration.water;
+            result.provisions+=ration.food;
         }
         result.arrival_days[i]=result.days;
     }
-    result.provisions=result.days*daily_rations();
     return result;
 }
 
@@ -423,6 +424,18 @@ int Game::repair_cost() const {
 int Game::daily_rations() const { return s.crew>=27 ? 3 : (s.crew>14 ? 2 : 1); }
 int Game::daily_water(SeaWeather weather) const {
     return std::max(1,daily_rations()+(weather==Heat)-(s.first_mate==Quartermaster));
+}
+
+SailingRation Game::sailing_ration(int day, SeaWeather weather) const {
+    // The displayed voyage day is one-based.
+    const bool lean_day=day%2==1;
+    const bool less_food=lean_day && rationing(SaveFood);
+    const bool less_water=lean_day && rationing(SaveWater) && weather!=Heat;
+    return {daily_rations()-less_food,daily_water(weather)-less_water,3*less_food+4*less_water};
+}
+
+void Game::toggle_ration(RationFlag flag) {
+    s.ration_flags^=flag;
 }
 
 Game::Game() {
@@ -783,8 +796,7 @@ void Game::restore() {
 }
 
 bool Game::consume_day(SeaConditions weather) {
-    const int food=daily_rations();
-    const int drink=daily_water(weather.weather);
+    const auto [food,drink,morale_cost]=sailing_ration(s.day,weather.weather);
     const bool hunger=s.stores<food, thirst=s.water<drink;
     s.stores=std::max(0,s.stores-food);
     s.water=static_cast<std::uint8_t>(std::max(0,int(s.water)-drink));
@@ -793,7 +805,7 @@ bool Game::consume_day(SeaConditions weather) {
         s.spirits=std::max(0,s.spirits-(thirst?12:8));
         if (s.crew>4 && s.day%2==0) --s.crew;
         notice=thirst?"缺淡水，士气与船况下降":"缺食物，士气与船况下降";
-    } else s.spirits=sailing_spirits(s.spirits,s.day);
+    } else s.spirits=sailing_spirits(s.spirits,s.day,{food,drink,morale_cost});
     if (s.hull<=0) { rescue(); return false; }
     return true;
 }
@@ -1988,7 +2000,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Cha
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+1+4);
+static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+2+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -2044,6 +2056,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         bytes[offset++]=std::byte(field);
     put(s.dispatch.due);
     bytes[offset++]=std::byte(SailingTimeRevision);
+    bytes[offset++]=std::byte(s.ration_flags);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2206,6 +2219,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         const int sailing_revision=std::to_integer<int>(bytes[offset++]);
         if (sailing_revision>SailingTimeRevision) return false;
         legacy_sailing_time=sailing_revision==0;
+        // The old writer left this byte zero, representing standard rations.
+        s.ration_flags=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (s.ration_flags & ~(SaveFood|SaveWater)) return false;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
     if (!bound(s.ship,0,2) || !bound(s.gold,0,999999) || !bound(s.day,0,99999) ||

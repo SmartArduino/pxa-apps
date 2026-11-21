@@ -28,7 +28,7 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage
+    DispatchBoard, ForecastPage, RationsPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -51,7 +51,8 @@ enum Action {
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
-    DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
+    ShowRations, ToggleFoodRation, ToggleWaterRation,
+    DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
     OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate,
@@ -64,6 +65,7 @@ enum Action {
     CancelDispatch, DispatchEntry
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
+static_assert(ToggleWaterRation<DockService);
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -143,7 +145,8 @@ struct VoyageApp {
     Screen screen=Chart;
     Overlay modal=None, activity_back=None, rumor_back=None, language_back=None;
     bool expedition_from_book=false, show_witness=false;
-    bool resume_after_forecast=false;
+    Overlay rations_back=None;
+    bool resume_after_voyage_info=false;
 
     auto view() {
         return pxa::ui::Canvas().input_only().on_pointer(
@@ -531,7 +534,8 @@ struct VoyageApp {
         const bool show_weather=screen==Chart && modal==None && game.sea() && !game.encounter();
         const int reserve=fits?0:d.measure(compact)+8;
         const int weather_x=safe.right()-58-reserve;
-        const int status_width=show_weather?weather_x-safe.x-10:safe.w-(fits?80:d.measure(compact)+15);
+        const int rations_x=weather_x-52;
+        const int status_width=show_weather?rations_x-safe.x-10:safe.w-(fits?80:d.measure(compact)+15);
         if (save_failed && !save_active)
             d.label(safe.x+6,safe.y+18,"存档失败，正在重试",vermilion,status_width);
         else if (modal!=EventReport && notice_until && !game.notice.empty())
@@ -541,7 +545,10 @@ struct VoyageApp {
             d.label(safe.x+6,safe.y+18,game.sea()?"航行中":p.name,quiet,status_width);
             if (saved_until && fits && !show_weather) d.label(safe.right()-108,safe.y+18,"已存档",quiet);
         }
-        if (show_weather) button(d,{weather_x,safe.y+16,54,18},"风况",ShowWeather);
+        if (show_weather) {
+            button(d,{rations_x,safe.y+16,48,18},"配给",ShowRations,game.s.ration_flags!=0);
+            button(d,{weather_x,safe.y+16,54,18},"风况",ShowWeather);
+        }
         else if (fits) meter(d,{safe.right()-60,safe.y+20,55,9},game.s.hull,100,false);
         if (!fits) d.label(safe.right()-6-d.measure(compact),safe.y+18,compact,mint);
     }
@@ -1471,13 +1478,19 @@ struct VoyageApp {
             town.at=town.position(now);
             town.cancel();
         }
-        if (modal==ForecastPage && layer!=ForecastPage) {
-            if (resume_after_forecast && game.sea() && !game.encounter()) {
+        const bool reading=modal==ForecastPage || modal==RationsPage;
+        const bool opens_book=layer==ForecastPage || layer==RationsPage;
+        if (!reading && opens_book && game.sea() && !game.encounter()) {
+            resume_after_voyage_info=!game.paused;
+            game.paused=true;
+        }
+        if (reading && !opens_book) {
+            if (resume_after_voyage_info && game.sea() && !game.encounter()) {
                 game.paused=false;
                 last_day=now;
                 previous_helm={game.s.helm_x,game.s.helm_y};
             }
-            resume_after_forecast=false;
+            resume_after_voyage_info=false;
         }
         modal=layer;
         focused=layer==StoryPage || layer==EndingPage || layer==Routes || layer==TalePage || layer==EventReport ? 1 : 0;
@@ -1537,6 +1550,8 @@ struct VoyageApp {
     }
     void preflight(Draw& d) {
         page_title(d,"航前计划",SeaChartIcon);
+        if (body.w>=189+d.measure("航前计划"))
+            button(d,{body.right()-161,body.y+3,52,23},"配给",ShowRations,game.s.ration_flags!=0);
         button(d,{body.right()-105,body.y+3,52,23},"风况",ShowWeather);
         const auto path=passage(game.s.origin,selected);
         const auto forecast=game.forecast(path);
@@ -1586,6 +1601,7 @@ struct VoyageApp {
         const bool manual=game.s.helm;
         const bool underway=game.sea();
         page_title(d,manual?"附近海况":"沿途风况",PennantIcon);
+        button(d,{body.right()-105,body.y+3,52,23},"配给",ShowRations,game.s.ration_flags!=0);
         const int x=body.x+7, w=body.w-14, right=x+w;
         const auto forecast=manual?PassageForecast{}:underway?game.remaining_forecast():
                             game.forecast(passage(game.s.origin,selected));
@@ -1621,7 +1637,9 @@ struct VoyageApp {
             const int details=x+date_width+13+icon;
             const auto wind=format("%s  向%s%d级",SeaWeatherNames[entry.sea.weather].data(),
                                    Bearings[entry.sea.direction].data(),entry.sea.strength);
-            const auto use=format("耗水%d",entry.water);
+            const auto water_use=format("耗水%d",entry.water);
+            const auto rations_use=format("粮%d 水%d",entry.food,entry.water);
+            const Text use=game.rationing(SaveFood)?Text(rations_use):Text(water_use);
             const auto pace=format("%d.%d节",entry.speed_tenths/10,entry.speed_tenths%10);
             const Color severity=entry.sea.weather==Squall?vermilion:entry.sea.weather==Heat?gold:mist;
             const int use_x=right-5-d.measure(use);
@@ -1685,6 +1703,7 @@ struct VoyageApp {
     }
     void provisions_page(Draw& d) {
         page_title(d,"食物与淡水");
+        button(d,{body.right()-105,body.y+3,52,23},"配给",ShowRations,game.s.ration_flags!=0);
         const int x=body.x+7, w=body.w-14, half=(w-5)/2;
         const int food=game.s.stores, water=game.s.water;
         const int food_cap=game.food_capacity(), water_cap=game.water_capacity();
@@ -1706,6 +1725,38 @@ struct VoyageApp {
                BuyFood,true,!food_cost || game.s.gold<food_cost,format("%d金",food_cost));
         button(d,{x+half+5,body.bottom()-32,w-half-5,PricedButtonHeight},format("淡水 +%d",std::min(10,water_cap-water)),
                BuyWater,true,!water_cost || game.s.gold<water_cost,format("%d金",water_cost));
+    }
+
+    void rations_page(Draw& d) {
+        page_title(d,"船员配给",RationIcon);
+        const int x=body.x+7, w=body.w-14, right=x+w;
+        const int morale=game.s.spirits;
+        const int tomorrow=std::min(99999,game.s.day+1);
+        const auto weather=conditions_at(game.position(),tomorrow).weather;
+        const auto planned=game.sailing_ration(tomorrow,weather);
+        const auto spirits=format("士气 %d/100",morale);
+        d.label(x,body.y+28,spirits,morale<40?vermilion:ivory);
+        const int meter_x=x+d.measure(spirits)+11;
+        meter(d,{meter_x,body.y+31,std::min(139,right-meter_x),9},morale,100,false);
+
+        for (int i=0;i<2;++i) {
+            const bool food=i==0;
+            const int y=body.y+47+i*32;
+            const bool reduced=game.rationing(food?SaveFood:SaveWater);
+            const int stores=food?game.s.stores:int(game.s.water);
+            const int allowance=food?planned.food:planned.water;
+            d.fill({x,y,w,29},i?rgb(0x132e32):rgb(0x193b3f));
+            voyage_icon(d,food?RationIcon:FlaskIcon,{x+3,y+3,23,23});
+            const auto name=format("%s · %s",food?"食物":"淡水",reduced?"节用":"照常");
+            const auto amount=format("余%d份  下日耗%d份",stores,allowance);
+            const int text_width=w-119;
+            d.label(x+30,y+1,name,reduced?gold:ivory,text_width);
+            d.label(x+30,y+14,amount,stores<allowance?vermilion:mist,text_width);
+            button(d,{right-84,y+3,80,23},reduced?"恢复照常":"改为节用",
+                   food?ToggleFoodRation:ToggleWaterRation,!reduced);
+        }
+        d.label(x,body.y+111,"偶数日少发一份，士气会下降",mist,w);
+        d.label(x,body.y+127,"炎热天淡水照常发放",quiet,w);
     }
 
     void event_report(Draw& d) {
@@ -2472,6 +2523,7 @@ struct VoyageApp {
         case EscortPage: escort_page(d); break;
         case DuelInvitation: duel_invitation(d); break;
         case ProvisionsPage: provisions_page(d); break;
+        case RationsPage: rations_page(d); break;
         case ExpeditionList: expedition_list(d); break;
         case ExpeditionPage: expedition_page(d); break;
         case Wardroom: officer_list(d); break;
@@ -2784,16 +2836,26 @@ struct VoyageApp {
             break;
         case ShowPreflight: set_modal(Preflight); break;
         case ShowWeather:
-            if (modal==None && game.sea() && !game.encounter()) {
-                resume_after_forecast=!game.paused;
-                game.paused=true;
+            if (modal==Preflight || (modal==None && game.sea() && !game.encounter()))
                 set_modal(ForecastPage);
-            } else if (modal==Preflight) set_modal(ForecastPage);
             break;
         case ResumeWeather:
             if (modal==ForecastPage && game.sea()) {
-                resume_after_forecast=true;
+                resume_after_voyage_info=true;
                 set_modal(None);
+            }
+            break;
+        case ShowRations:
+            if (modal==Preflight || modal==ForecastPage || modal==ProvisionsPage ||
+                (modal==None && game.sea() && !game.encounter())) {
+                rations_back=modal;
+                set_modal(RationsPage);
+            }
+            break;
+        case ToggleFoodRation: case ToggleWaterRation:
+            if (modal==RationsPage) {
+                game.toggle_ration(action==ToggleFoodRation?SaveFood:SaveWater);
+                save_needed=true;
             }
             break;
         case ShowStops: page=0; set_modal(RouteStops); break;
@@ -3046,6 +3108,7 @@ struct VoyageApp {
             else if (modal==Atlas && atlas_item) { atlas_item=0; dirty=true; }
             else if (modal==TalePage && screen==Journal) set_modal(TaleList);
             else if (modal==SeaLog && sea_item>=0) { sea_item=-1; focused=0; dirty=true; }
+            else if (modal==RationsPage) set_modal(rations_back);
             else if (modal==ForecastPage) set_modal(game.sea()?None:Preflight);
             else if (modal==RouteStops || (modal==Intel && intel_from_preflight)) set_modal(Preflight);
             else if (modal==EscortPage || modal==DuelInvitation || modal==DriftStory) set_modal(activity_back);

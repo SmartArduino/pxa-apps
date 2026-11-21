@@ -113,10 +113,15 @@ struct HarborApproach {
 };
 
 inline constexpr int ForecastDays=3;
+enum RationFlag : std::uint8_t { SaveFood=1, SaveWater=2 };
+struct SailingRation {
+    int food, water, morale_cost;
+};
+
 struct ForecastDay {
     int day=0;
     SeaConditions sea{};
-    int speed_tenths=0, water=0;
+    int speed_tenths=0, water=0, food=0;
 };
 
 struct PassageForecast {
@@ -165,6 +170,7 @@ struct State {
     std::uint32_t guild_stakes=0;
     int helm_x=0, helm_y=0;
     std::uint8_t water=74, helm=0, heading=0, sail_watch=0;
+    std::uint8_t ration_flags=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
     std::uint32_t chart_marks=StartingChart, heard_rumors=0;
@@ -216,6 +222,9 @@ struct Game {
     int sailing_target() const;
     int daily_rations() const;
     int daily_water(SeaWeather weather) const;
+    SailingRation sailing_ration(int day, SeaWeather weather) const;
+    bool rationing(RationFlag flag) const { return s.ration_flags&flag; }
+    void toggle_ration(RationFlag flag);
     bool tow_needed() const;
     bool request_tow();
     int resupply_cost(int food, int water) const;

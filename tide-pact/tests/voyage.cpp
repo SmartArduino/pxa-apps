@@ -507,6 +507,57 @@ void weather_forecasts() {
     assert(squall_loss>0 && squall_loss<fair_loss);
 }
 
+void sailing_rations() {
+    Game ship;
+    const auto path=passage(lisbon,madeira);
+    const auto normal=ship.forecast(path);
+    ship.toggle_ration(SaveFood);
+    assert(ship.rationing(SaveFood) && !ship.rationing(SaveWater));
+    auto use=ship.sailing_ration(1,Fair);
+    assert(use.food==0 && use.water==1 && use.morale_cost==3);
+    ship.toggle_ration(SaveWater);
+    use=ship.sailing_ration(1,Heat);
+    assert(use.food==0 && use.water==2 && use.morale_cost==3);
+    use=ship.sailing_ration(1,Fair);
+    assert(use.food==0 && use.water==0 && use.morale_cost==7);
+    use=ship.sailing_ration(2,Fair);
+    assert(use.food==1 && use.water==1 && use.morale_cost==0);
+
+    const auto reduced=ship.forecast(path);
+    assert(reduced.provisions<normal.provisions && reduced.water<normal.water);
+    assert(reduced.outlook[0].food==0 && reduced.outlook[0].water==0);
+    assert(reduced.outlook[0].speed_tenths<normal.outlook[0].speed_tenths);
+    assert(ship.depart(madeira));
+    ship.s.event_mask=(1U<<ship.route.count)-1;
+    for (int elapsed=0;elapsed<reduced.days;++elapsed) {
+        const auto remaining=ship.remaining_forecast();
+        const int food_before=ship.s.stores, water_before=ship.s.water;
+        assert(remaining.days==reduced.days-elapsed);
+        assert(remaining.outlook[0].speed_tenths==ship.speed_in_tenths_of_a_knot());
+        ship.advance();
+        assert(food_before-ship.s.stores==remaining.outlook[0].food);
+        assert(water_before-ship.s.water==remaining.outlook[0].water);
+    }
+    assert(ship.s.origin==madeira && !ship.sea() && ship.s.spirits<78);
+    assert(74-ship.s.stores==reduced.provisions && 74-ship.s.water==reduced.water);
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.ration_flags==(SaveFood|SaveWater));
+    assert(decode(saved,encode(Game{}.s)) && !saved.ration_flags);
+
+    Game helm;
+    helm.toggle_ration(SaveFood);
+    assert(helm.start_helm(-1));
+    helm.s.heading=6;
+    helm.s.sail_watch=SailingWatches-1;
+    helm.s.stores=0;
+    assert(helm.local_forecast()[0].food==0);
+    helm.helm_step([](Point){return true;});
+    assert(helm.s.day==1 && helm.s.stores==0 && helm.s.spirits==75);
+    assert(helm.local_forecast()[0].food==1);
+    helm.toggle_ration(SaveFood);
+    assert(!helm.rationing(SaveFood));
+}
+
 void expeditions() {
     for (int id=0;id<ExpeditionCount;++id) {
         const auto& study=Expeditions[id];
@@ -1038,6 +1089,7 @@ int main() {
     free_helm();
     sailing_units();
     weather_forecasts();
+    sailing_rations();
     expeditions();
     port_languages();
     dockside_bargaining();
