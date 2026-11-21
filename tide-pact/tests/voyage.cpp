@@ -424,6 +424,41 @@ void port_languages() {
     assert(!decode(saved,encode(ledger.s)));
 }
 
+void dockside_bargaining() {
+    Game ship;
+    ship.s.origin=cadiz;
+    assert(!ship.can_negotiate(Wine) && !ship.negotiate(Wine));
+    assert(ship.take_lesson(Castilian) && ship.negotiation_rate()==4);
+    const int day=ship.s.day;
+    assert(ship.negotiate(Wine) && ship.s.day==day+1);
+    assert(!ship.negotiate(Sugar));
+    State restored;
+    assert(decode(restored,encode(ship.s)));
+    ship.s=restored;
+    Game usual=ship;
+    usual.s.bargain_good=usual.s.bargain_rate=0;
+    const auto regular=usual.trade_quote(Wine,false,TradeLot);
+    const auto lot=ship.trade_quote(Wine,false,TradeLot);
+    assert(lot.units==TradeLot && lot.saved==regular.gold*4/100 &&
+           lot.gold==regular.gold-lot.saved && lot.stock_change==regular.stock_change);
+    assert(!ship.trade_quote(Wine,true,TradeLot).saved && !ship.trade_quote(Wine,false,1).saved &&
+           !ship.trade_quote(Sugar,false,TradeLot).saved);
+    auto short_order=ship;
+    short_order.s.gold=ship.quote(Wine,false)*2;
+    const auto partial=short_order.trade(Wine,false,TradeLot);
+    assert(partial.units>0 && partial.units<TradeLot && !partial.saved && short_order.s.bargain_good==Wine+1);
+    ship.s.gold=lot.gold;
+    assert(ship.trade(Wine,false,TradeLot).gold==lot.gold && ship.s.gold==0 &&
+           ship.s.bargain_good==BargainUsed && !ship.negotiate(Wine));
+    assert(ship.depart(lisbon) && !ship.s.bargain_good && !ship.s.bargain_rate);
+
+    Game interpreter;
+    interpreter.s.origin=cadiz;
+    assert(interpreter.hire_interpreter() && interpreter.negotiation_rate()==8);
+    assert(interpreter.negotiate(Wine) && interpreter.s.bargain_rate==8);
+    assert(interpreter.start_helm(-1) && !interpreter.s.bargain_good);
+}
+
 void ship_officers() {
     Game ship;
     assert(!ship.hire_officer(Quartermaster) && !ship.assign_officer(Quartermaster));
@@ -646,6 +681,7 @@ int main() {
     free_helm();
     expeditions();
     port_languages();
+    dockside_bargaining();
     ship_officers();
     unknown_waters();
     harbor_navigation();

@@ -22,10 +22,12 @@ enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
-    LanguageDesk, TideLedger
+    LanguageDesk, TideLedger, BargainPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
+enum VoyageIcon { SpeechIcon, PhrasebookIcon, LetterIcon, AstrolabeIcon, PennantIcon,
+                  FlaskIcon, RationIcon, MooringIcon, SeaChartIcon };
 enum Action {
     Begin=1, OpenChart, OpenMarket, OpenShipyard, OpenOffice, OpenJournal,
     RouteList, Close, ZoomIn, ZoomOut, Center, Sail, Pause, Trim, Retreat, NextStop,
@@ -45,7 +47,7 @@ enum Action {
     DockService=100, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
-    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger
+    OpenLedger, CopyLedger, MarkLedger, PublishLedger, ReturnLedger, ShowBargain, Negotiate
 };
 
 template<class... Args>
@@ -369,6 +371,9 @@ struct VoyageApp {
     void goods_icon(Draw& d, int icon, Rect r) {
         d.image({art::goods},{icon%4*48,icon/4*48,48,48},r,true);
     }
+    void voyage_icon(Draw& d, int icon, Rect r) {
+        d.image({art::voyage_icons},{icon%3*32,icon/3*32,32,32},r,true);
+    }
     void port_scene(Draw& d, Rect area, int port) {
         if (port<0 || port>=PortCount || area.w<1 || area.h<1) return;
         constexpr int tw=188, th=105;
@@ -377,18 +382,23 @@ struct VoyageApp {
         d.image({art::ports},{Zone[port]*tw+(tw-width)/2,(th-height)/2,width,height},area);
     }
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
-                Text price={}) {
+                Text price={}, int glyph=-1) {
         bool chosen=pad_focus && button_count==focused && !inactive;
         skin_box(d,r,1,3);
         if (inactive) d.darken(r,7);
+        const bool decorated=price.empty() && glyph>=0 && r.w>=measure(text)+20;
         if (chosen || accent) {
             d.fill({r.x+3,r.bottom()-4,r.w-6,1},chosen ? mint : rgb(0x87734e));
             const int icon=chosen ? 12 : 9;
-            if (r.w-measure(text)>icon+6)
+            if (!decorated && r.w-measure(text)>icon+6)
                 nav_icon(d,CursorIcon,{r.x+3,r.y+(r.h-icon)/2,icon,icon});
         }
         const auto color=inactive ? quiet : chosen ? mint : accent ? gold : ivory;
-        if (price.empty()) d.center(r,text,color);
+        if (decorated) {
+            const int x=r.x+(r.w-measure(text)-17)/2;
+            voyage_icon(d,glyph,{x,r.y+(r.h-14)/2,14,14});
+            d.label(x+17,r.y+(r.h-14)/2,text,color);
+        } else if (price.empty()) d.center(r,text,color);
         else {
             d.center({r.x,r.y+1,r.w,14},text,color);
             d.center({r.x,r.y+15,r.w,14},price,inactive ? quiet : mist);
@@ -416,7 +426,7 @@ struct VoyageApp {
         const auto compact=format("粮%d 水%d",game.s.stores,int(game.s.water));
         const bool fits=x+20+measure(stores)<=date_x;
         if (fits) {
-            nav_icon(d,FoodIcon,{x,safe.y+4,14,14});
+            voyage_icon(d,RationIcon,{x,safe.y+4,14,14});
             d.label(x+16,safe.y+4,stores,ivory);
         }
         d.label(date_x,safe.y+4,date,mist);
@@ -695,7 +705,7 @@ struct VoyageApp {
         button(d,{map.x+2*(icon_w+3)+39,y,map.w-2*(icon_w+3)-39,24},
                game.s.helm ? "靠泊" : game.sea() ? (game.s.stop_next ? "取消停靠" : "下站停靠") : "目的地",
                game.s.helm ? DockHelm : game.sea() ? NextStop : RouteList,game.s.stop_next || berth>=0,
-               game.s.helm && berth<0);
+               game.s.helm && berth<0,{},game.s.helm?MooringIcon:-1);
         if (game.s.helm) { helm_panel(d,info,wide,landmark); return; }
 
         skin_box(d,info,0,5);
@@ -773,13 +783,15 @@ struct VoyageApp {
         d.label(info.x+5,info.y+4,landmark>=0?Places[landmark].name:Text("自由掌舵"),gold,info.w-10);
         if (wide) {
             d.label(info.x+5,info.y+22,bearing,ivory,info.w-10);
-            d.label(info.x+5,info.y+41,breeze,mist,info.w-10);
+            voyage_icon(d,PennantIcon,{info.x+5,info.y+40,14,14});
+            d.label(info.x+22,info.y+41,breeze,mist,info.w-27);
             pair(d,{info.x+4,info.bottom()-78,info.w-8,21},"左舵",SteerLeft,"右舵",SteerRight);
             button(d,{info.x+4,info.bottom()-52,info.w-8,22},game.s.reefed?"张帆":"缩帆",Trim);
             button(d,{info.x+4,info.bottom()-26,info.w-8,22},game.paused?"继续":"停船",Pause,true);
         } else {
             d.label(info.x+5,info.y+24,bearing,ivory,info.w-10);
-            d.label(info.x+5,info.y+43,breeze,mist,info.w-10);
+            voyage_icon(d,PennantIcon,{info.x+5,info.y+42,14,14});
+            d.label(info.x+22,info.y+43,breeze,mist,info.w-27);
             const Text names[]{"左舵","右舵",game.s.reefed?"张帆":"缩帆",game.paused?"继续":"停船"};
             const int actions[]{SteerLeft,SteerRight,Trim,Pause};
             const int step=(info.w-7)/4;
@@ -803,7 +815,8 @@ struct VoyageApp {
         skin_box(d,body,0,6);
         d.label(x+5,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold);
         const int right=x+w-4;
-        if (w>=235) d.label(right-139,y+2,"购入 / 卖出",quiet);
+        if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
+        button(d,{right-101,y+1,53,17},"议价",ShowBargain,false,false,{},SpeechIcon);
         button(d,{right-44,y+1,42,17},"比价",ShowPortPrices);
         for (int i=0; i<rows && page*rows+i<GoodsCount; ++i) {
             const int g=page*rows+i;
@@ -818,8 +831,10 @@ struct VoyageApp {
             d.label(right-measure(price)-5,item.y+2,price,ivory);
             buttons[button_count++]={item,GoodsRow+g};
         }
-        const auto note=format("选中 %s  库存 %d",GoodsNames[good].data(),game.stock(good));
-        d.label(x+4,body.bottom()-51,note,mist,w-(pages>1?72:10));
+        const bool negotiated=s.bargain_good==good+1;
+        const auto note=format(negotiated?"%s · 五件省%d%%":"选中%s  库存%d",
+                               GoodsNames[good].data(),negotiated?s.bargain_rate:game.stock(good));
+        d.label(x+4,body.bottom()-51,note,negotiated?mint:mist,w-(pages>1?72:10));
         if (pages>1) {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
@@ -827,13 +842,36 @@ struct VoyageApp {
         const int step=w/4;
         for (int i=0;i<4;++i) {
             const bool sell=i>=2;
-            const int batch=i%2==0 ? 1 : 5;
+            const int batch=i%2==0 ? 1 : TradeLot;
             const auto offer=game.trade_quote(good,sell,batch);
             const auto label=format("%s%d",sell?"卖":"买",offer.units ? offer.units : batch);
             const auto price=format("%d%s",offer.gold,step>=48?"金":"");
-            button(d,{x+i*step,body.bottom()-31,step-3,30},label,BuyOne+i,i==0,!offer.units,
+            button(d,{x+i*step,body.bottom()-31,step-3,30},label,BuyOne+i,i==0 || offer.saved,!offer.units,
                    offer.units ? Text(price) : Text("—"));
         }
+    }
+
+    void bargain_page(Draw& d) {
+        page_title(d,"码头议价",SpeechIcon);
+        const auto& s=game.s;
+        const int x=body.x+7, w=body.w-14, y=body.y;
+        const int rate=game.negotiation_rate();
+        const bool pending=s.bargain_good>0 && s.bargain_good<=GoodsCount;
+        const int commodity=pending?s.bargain_good-1:good;
+        goods_icon(d,commodity,{x,y+27,20,20});
+        d.label(x+24,y+30,format("%s · 五件整批",GoodsNames[commodity].data()),gold,w-24);
+        const auto fixed=format("这批货已谈好，买足五件省%d%%。离港后报价失效。",s.bargain_rate);
+        const auto offer=format("花一日商议，首批买足五件省%d%%。每次停泊可谈一种货。",rate);
+        Text detail=offer;
+        if (pending) detail=fixed;
+        else if (s.bargain_good==BargainUsed) detail="本次停泊的折扣已用完。";
+        else if (!rate) detail="先学会本地短语，或请随船副官、码头口译帮忙。";
+        else if (!game.can_negotiate(good)) detail="库存和舱位各需至少五件。";
+        d.wrap({x,y+50,w,body.h-82},detail,ivory,15);
+        if (!rate && !s.bargain_good)
+            button(d,{x,body.bottom()-28,w,24},"请口译或学话",OpenLanguages,true,false,{},PhrasebookIcon);
+        else if (game.can_negotiate(good))
+            button(d,{x,body.bottom()-28,w,24},"谈五件整批 · 一日",Negotiate,true);
     }
 
     void no_port(Draw& d, Text reason) {
@@ -1076,9 +1114,11 @@ struct VoyageApp {
         combat_buttons(d,DuelOrders);
     }
 
-    void page_title(Draw& d, Text name) {
+    void page_title(Draw& d, Text name, int glyph=-1) {
         skin_box(d,body,0,6);
-        d.label(body.x+6,body.y+5,name,gold,body.w-61);
+        const int inset=glyph<0?6:24;
+        if (glyph>=0) voyage_icon(d,glyph,{body.x+6,body.y+4,16,16});
+        d.label(body.x+inset,body.y+5,name,gold,body.w-inset-55);
         button(d,{body.right()-49,body.y+3,45,23},"返回",Close);
     }
     void set_modal(Overlay layer) {
@@ -1087,13 +1127,15 @@ struct VoyageApp {
         dirty=true;
     }
     int list_rows() const { return std::clamp((body.h-55)/23,2,10); }
-    void row(Draw& d, int index, Text name, Text meta, int action, bool highlight=false, int top=28) {
+    void row(Draw& d, int index, Text name, Text meta, int action, bool highlight=false, int top=28, int glyph=-1) {
         const Rect r{body.x+4,body.y+top+index*23,body.w-8,21};
         const bool marked=pad_focus && button_count==focused;
         d.fill(r,marked?rgb(0x5b6047):(index%2?light:ink));
         if (marked) nav_icon(d,CursorIcon,{r.x+2,r.y+4,12,12});
         const auto mw=measure(meta);
-        const int left=marked?17:5;
+        const int start=marked?17:5;
+        if (glyph>=0) voyage_icon(d,glyph,{r.x+start,r.y+3,14,14});
+        const int left=start+(glyph<0?0:17);
         d.label(r.x+left,r.y+4,name,highlight ? gold : ivory,r.w-mw-left-8);
         if (mw) d.label(r.right()-mw-4,r.y+4,meta,mist);
         if (action) buttons[button_count++]={r,action};
@@ -1129,12 +1171,23 @@ struct VoyageApp {
     int supply_target(int need) const {
         return need+2*game.daily_rations();
     }
+    Text port_contact(int port) const {
+        const auto language=PortSpeech[port];
+        if (game.fluency(language)==Fluent || game.crew_interpreter(language)!=NoOfficer) return "可沟通";
+        return game.fluency(language)==Phrases?"会短语":"需口译";
+    }
     void preflight(Draw& d) {
-        page_title(d,"航前计划");
+        page_title(d,"航前计划",SeaChartIcon);
         const auto path=passage(game.s.origin,selected);
         const auto forecast=game.forecast(path);
         const int x=body.x+7, w=body.w-14;
-        d.label(x,body.y+30,Places[selected].name,gold,w);
+        if (selected<PortCount) {
+            const auto status=port_contact(selected);
+            const int start=x+w-measure(status)-16;
+            voyage_icon(d,SpeechIcon,{start,body.y+29,14,14});
+            d.label(start+16,body.y+30,status,mist);
+            d.label(x,body.y+30,Places[selected].name,gold,start-x-4);
+        } else d.label(x,body.y+30,Places[selected].name,gold,w);
         d.label(x,body.y+48,format("%d海里  预计%d日",path.miles,forecast.days),ivory,w);
         const int surplus=std::min(game.s.stores-forecast.provisions,int(game.s.water)-forecast.water);
         const int ship_ok=game.s.hull>12;
@@ -1145,8 +1198,8 @@ struct VoyageApp {
         if (body.h>=160 && game.s.first_mate!=NoOfficer)
             d.label(x,body.y+84,format("当值副官  %s",Officers[game.s.first_mate].name.data()),quiet,w);
         const int third=(w-8)/3;
-        button(d,{x,body.bottom()-54,third,23},"停靠点",ShowStops);
-        button(d,{x+third+4,body.bottom()-54,third,23},"地理",ShowIntel);
+        button(d,{x,body.bottom()-54,third,23},"停靠点",ShowStops,false,false,{},MooringIcon);
+        button(d,{x+third+4,body.bottom()-54,third,23},"地理",ShowIntel,false,false,{},AstrolabeIcon);
         button(d,{x+(third+4)*2,body.bottom()-54,third,23},"掌舵",StartHelm,false,!ready);
         const int half=(w-5)/2;
         const int cost=game.resupply_cost(supply_target(forecast.provisions),supply_target(forecast.water));
@@ -1164,7 +1217,7 @@ struct VoyageApp {
                surplus<0 ? "仍要启航" : "启航",ConfirmSail,true,!ready);
     }
     void route_stops(Draw& d) {
-        page_title(d,"航段与停靠点");
+        page_title(d,"航段与停靠点",MooringIcon);
         const auto path=passage(game.s.origin,selected);
         const auto forecast=game.forecast(path);
         const int visible=list_rows(), pages=std::max(1,(path.count+visible-1)/visible);
@@ -1174,8 +1227,10 @@ struct VoyageApp {
             const auto& leg=Legs[path.edge[i]];
             const int port=path.reverse[i]?leg.from:leg.to;
             const bool known=game.charted(port);
-            const auto eta=format("%d日  %s",forecast.arrival_days[i],!known?"待查":port<PortCount?"可补给":"测绘点");
-            row(d,j,known?Places[port].name:Text("未标记水域"),eta,known?Destination+port:0,port==selected);
+            const Text status=!known?"待查":port<PortCount?port_contact(port):"测绘点";
+            const auto eta=format("%d日 · %s",forecast.arrival_days[i],status.data());
+            row(d,j,known?Places[port].name:Text("未标记水域"),eta,known?Destination+port:0,port==selected,
+                28,known?(port<PortCount?SpeechIcon:AstrolabeIcon):-1);
         }
         pager(d,pages);
     }
@@ -1207,8 +1262,10 @@ struct VoyageApp {
         const int food=game.s.stores, water=game.s.water;
         const int food_cap=game.food_capacity(), water_cap=game.water_capacity();
         d.label(x,body.y+28,format("补给舱 %d/%d",food+water,2*game.max_stores()),mist,w);
-        d.label(x,body.y+46,format("食物 %d/%d",food,food_cap),ivory,w);
-        d.label(x,body.y+64,format("淡水 %d/%d",water,water_cap),ivory,w);
+        voyage_icon(d,RationIcon,{x,body.y+45,15,15});
+        voyage_icon(d,FlaskIcon,{x,body.y+63,15,15});
+        d.label(x+18,body.y+46,format("食物 %d/%d",food,food_cap),ivory,w-18);
+        d.label(x+18,body.y+64,format("淡水 %d/%d",water,water_cap),ivory,w-18);
         if (w>=208) {
             const int bar=w/3;
             meter(d,{x+w-bar,body.y+50,bar,8},food,food_cap,false);
@@ -1271,7 +1328,7 @@ struct VoyageApp {
     void language_desk(Draw& d) {
         const int port=game.s.origin;
         const Language primary=PortSpeech[port], second=port_second_language(port);
-        page_title(d,"口译与学话");
+        page_title(d,"口译与学话",PhrasebookIcon);
         constexpr Text levels[]{"未学","会短语","通晓"};
         row(d,0,LanguageNames[primary],levels[game.fluency(primary)],SelectPortLanguage,lesson_language==primary);
         if (second!=LanguageCount)
@@ -1281,7 +1338,7 @@ struct VoyageApp {
         const bool local=game.local_interpreter(lesson_language);
         const auto crew_help=format("%s可随船代译",Officers[crew].name.data());
         if (game.tide_ledger_here())
-            button(d,{x,bottom-56,w,24},"两岸潮簿",OpenLedger,true);
+            button(d,{x,bottom-56,w,24},"两岸潮簿",OpenLedger,true,false,{},LetterIcon);
         else
             d.label(x,bottom-53,crew!=NoOfficer?Text(crew_help):
                     local?"口译跟到离港":"码头口译仅供本次停泊",mist,w);
@@ -1296,7 +1353,7 @@ struct VoyageApp {
                rank==Fluent || game.s.gold<game.lesson_fee(lesson_language));
     }
     void tide_ledger_page(Draw& d) {
-        page_title(d,"两岸潮簿");
+        page_title(d,"两岸潮簿",LetterIcon);
         const int x=body.x+6,y=body.y,w=body.w-12,bottom=body.bottom();
         const Rect action{x,bottom-28,w,24};
         const auto stage=game.s.tide_ledger;
@@ -1520,7 +1577,7 @@ struct VoyageApp {
         pager(d,pages);
     }
     void rumor_list(Draw& d) {
-        page_title(d,"航海传闻");
+        page_title(d,"航海传闻",SpeechIcon);
         std::array<int,RumorCount> entries{};
         int count=0;
         for (int id=0;id<RumorCount;++id)
@@ -1730,6 +1787,7 @@ struct VoyageApp {
         case AudioSettings: audio_settings(d); break;
         case LanguageDesk: language_desk(d); break;
         case TideLedger: tide_ledger_page(d); break;
+        case BargainPage: bargain_page(d); break;
         case None:
             switch (screen) {
             case Chart: chart(d); break;
@@ -1775,6 +1833,10 @@ struct VoyageApp {
             case MarkLedger: select(cadiz); break;
             case PublishLedger: case ReturnLedger:
                 if (game.decide_tide_ledger(action==PublishLedger)) { audio.cue(Sound::Page); changed(); }
+                break;
+            case ShowBargain: if (game.port()) set_modal(BargainPage); break;
+            case Negotiate:
+                if (game.negotiate(good)) { set_modal(None); audio.cue(Sound::Page); changed(); }
                 break;
             }
             return;
@@ -1969,10 +2031,14 @@ struct VoyageApp {
             break;
         case BuyOne: case BuyFive: case SellOne: case SellFive: {
             const bool sell=action>=SellOne;
-            const auto trade=game.trade(good,sell,action==BuyFive || action==SellFive?5:1);
+            const auto trade=game.trade(good,sell,action==BuyFive || action==SellFive?TradeLot:1);
             if (trade.units) {
-                std::snprintf(trade_receipt.data(),trade_receipt.size(),"%s %d件  %s%d金",
-                              sell?"卖出":"买入",trade.units,sell?"+":"-",trade.gold);
+                if (trade.saved)
+                    std::snprintf(trade_receipt.data(),trade_receipt.size(),"买入%d件 %d金 · 省%d金",
+                                  trade.units,trade.gold,trade.saved);
+                else
+                    std::snprintf(trade_receipt.data(),trade_receipt.size(),"%s %d件  %s%d金",
+                                  sell?"卖出":"买入",trade.units,sell?"+":"-",trade.gold);
                 game.notice=trade_receipt.data();
                 changed();
             } else notify();
