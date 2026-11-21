@@ -28,7 +28,7 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage
+    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -51,7 +51,7 @@ enum Action {
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
-    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews,
+    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -62,12 +62,13 @@ enum Action {
     ShowMerchants, MarkMerchantFirst, MarkMerchantSecond, OpenTown, ReturnTown,
     WalkToTownFacility, ReadPortStory=WalkToTownFacility+int(TownFacilityCount),
     FindPortStory=ReadPortStory+int(PortStoryCount), PortStoryChooseFirst, PortStoryChooseSecond, PortStoryGuide,
-    WalkToCityGate, WalkToOutsideGate, WalkToRiver, WalkToShed, ReturnTimber, TakeTimberReward,
+    WalkToCityGate, WalkToOutsideGate, WalkToRiver, WalkToShed, WalkToPostRoad, ReturnTimber, TakeTimberReward,
     OpenDispatch, ViewDispatchReceipt, AcceptDispatch, FileDispatch, MarkDispatch, AskCancelDispatch,
-    CancelDispatch, DispatchEntry
+    CancelDispatch, OpenLandReport, WalkLandStream, WalkLandPass, WalkLandCopy, WalkLandLookout,
+    WalkLandBack, FileLandReport, DispatchEntry
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
-static_assert(ToggleWaterRation<DockService);
+static_assert(CycleSpeed<DockService);
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -119,7 +120,7 @@ struct VoyageApp {
     int dispatch_page=DispatchList;
     unsigned town_frame=0, town_hint_until=0;
     bool inside_town_facility=false;
-    bool outside=false, at_timber_river=false;
+    bool outside=false, at_timber_river=false, inland_archive=false;
     Overlay town_facility=None;
     int scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
@@ -145,6 +146,7 @@ struct VoyageApp {
     unsigned font_retry_at=0;
     unsigned now=0, last_day=0, last_step=0, notice_until=0, flash_until=0, saved_until=0;
     unsigned surface_retry=0, duel_flash_until=0;
+    unsigned voyage_rate=1;
     int duel_animation=0;
     unsigned long long next_frame=1;
     Screen screen=Chart;
@@ -312,6 +314,20 @@ struct VoyageApp {
         return kind!=4 && kind!=5 && kind!=7;
     }
 
+    unsigned voyage_interval() const {
+        return (game.s.helm?HelmWatchMs:SailingDayMs)/voyage_rate;
+    }
+
+    void cycle_voyage_rate() {
+        if (!game.sea() || game.encounter()) return;
+        const unsigned interval=voyage_interval();
+        const unsigned limit=game.s.helm?2:4;
+        voyage_rate=voyage_rate==limit?1:voyage_rate*2;
+        if (last_day && !game.paused)
+            last_day=now-std::min(now-last_day,interval)*voyage_interval()/interval;
+        else last_day=now;
+    }
+
     void on_frame(pxa::Context&, pxa::game::FrameTick tick) {
         if (!foreground) return;
         now=unsigned(tick.timestamp_us / 1000);
@@ -336,10 +352,11 @@ struct VoyageApp {
 
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
-            const unsigned interval=game.s.helm?HelmWatchMs:SailingDayMs;
+            const unsigned interval=voyage_interval();
             if (now-last_day>=interval) {
                 const int old_day=game.s.day;
                 const int old_hull=game.s.hull;
+                const int old_food=game.s.stores, old_water=game.s.water;
                 const auto old_marks=game.s.chart_marks;
                 const bool manual=game.s.helm;
                 if (manual) {
@@ -349,6 +366,12 @@ struct VoyageApp {
                 else game.advance();
                 last_day+=interval;
                 if (now-last_day>=interval) last_day=now;
+                if (voyage_rate>1 && game.sea() && !game.encounter() && !game.paused &&
+                    ((old_food && !game.s.stores) || (old_water && !game.s.water))) {
+                    game.paused=true;
+                    game.notice="水粮见底，已暂停航行";
+                }
+                if (!game.sea() || game.encounter() || game.paused) voyage_rate=1;
                 if ((game.s.day!=old_day && game.s.day%4==0) ||
                     !game.sea() || game.encounter() || game.paused || game.s.chart_marks!=old_marks)
                     save_needed=true;
@@ -540,7 +563,8 @@ struct VoyageApp {
         const int reserve=fits?0:d.measure(compact)+8;
         const int weather_x=safe.right()-58-reserve;
         const int rations_x=weather_x-52;
-        const int status_width=show_weather?rations_x-safe.x-10:safe.w-(fits?80:d.measure(compact)+15);
+        const int speed_x=rations_x-46;
+        const int status_width=show_weather?speed_x-safe.x-10:safe.w-(fits?80:d.measure(compact)+15);
         if (save_failed && !save_active)
             d.label(safe.x+6,safe.y+18,"存档失败，正在重试",vermilion,status_width);
         else if (modal!=EventReport && notice_until && !game.notice.empty())
@@ -551,6 +575,7 @@ struct VoyageApp {
             if (saved_until && fits && !show_weather) d.label(safe.right()-108,safe.y+18,"已存档",quiet);
         }
         if (show_weather) {
+            button(d,{speed_x,safe.y+16,42,18},format("%u倍速",voyage_rate),CycleSpeed,voyage_rate>1);
             button(d,{rations_x,safe.y+16,48,18},"配给",ShowRations,game.s.ration_flags!=0);
             button(d,{weather_x,safe.y+16,54,18},"风况",ShowWeather);
         }
@@ -710,11 +735,11 @@ struct VoyageApp {
     void draw_map(Draw& d, int landmark, int berth) {
         const auto before=d.clip;
         d.clip=map;
-        float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/SailingDayMs : 0.f;
+        float fraction=game.sea() && !game.paused && !game.encounter() ? float(now-last_day)/voyage_interval() : 0.f;
         const auto ship=game.position(std::clamp(fraction,0.f,1.f));
         float ship_x=ship.x, ship_y=ship.y;
         if (game.s.helm) {
-            const auto blend=game.paused?1.f:std::clamp(float(now-last_day)/HelmWatchMs,0.f,1.f);
+            const auto blend=game.paused?1.f:std::clamp(float(now-last_day)/voyage_interval(),0.f,1.f);
             ship_x=std::lerp(float(previous_helm.x),float(game.s.helm_x),blend)/16;
             ship_y=std::lerp(float(previous_helm.y),float(game.s.helm_y),blend)/16;
         }
@@ -876,8 +901,8 @@ struct VoyageApp {
         const bool scouting=scout_course.has_value() && !game.sea();
         const int route_info=route.count ? ShowPreflight : scouting ? ShowRumors : ShowIntel;
         const Text route_label=route.count ? "航前" : scouting ? "传闻" : "地理";
-        const Text visit=scouting ? "出海" : story_here() ? "会面" : local_study ? "考察" :
-                         p>=PortCount ? "测绘" : "探索";
+        const Text visit=scouting ? "循线出海" : story_here() ? "会面" : local_study ? "考察" :
+                         p>=PortCount ? "测绘" : "掌舵出海";
         const int visit_action=story_here() ? ReadStory : local_study ? OpenObservation :
                                p>=PortCount ? Survey : StartExplore;
         const int visit_command=scouting?StartExplore:visit_action;
@@ -1439,12 +1464,13 @@ struct VoyageApp {
         harbor_panel(d,plaque,HarborPlaque);
         d.center(plaque.inset(3),"里斯本河堤",ivory);
         draw_town_walker(d,safe.w>=345);
-        constexpr Text names[]{"回城","察看河堤","木料棚"};
+        constexpr Text names[]{"回城","察看河堤","木料棚","旧驿道"};
+        static_assert(std::size(names)==OutskirtsSites.size());
         for (int i=0;i<int(OutskirtsSites.size());++i) {
             const auto point=town_on_screen(OutskirtsSites[i]);
             const int w=std::max(48,d.measure(names[i])+16);
             const Rect sign{std::clamp(point.x-w/2,town_area.x+2,town_area.right()-w-2),
-                            point.y+(i==1?7:-23),w,21};
+                            point.y+(i==1 || i==3?7:-23),w,21};
             d.dot(point.x,point.y,gold);
             harbor_button(d,sign,names[i],WalkToOutsideGate+i,town.entrance==OutsideGateTarget+i);
         }
@@ -1464,6 +1490,64 @@ struct VoyageApp {
         d.wrap({x,body.y+34,w,body.h-68},story,ivory,16);
         if (!at_timber_river && stage==TrailFound)
             pair(d,{x,body.bottom()-28,w,24},"请留个好价",ReturnTimber,"收55金",TakeTimberReward,true);
+    }
+
+    void land_page(Draw& d) {
+        const int stage=game.s.land_stage;
+        const int x=body.x+7, y=body.y+29, w=body.w-14;
+        const int bottom=body.bottom();
+        const Rect picture{x,y,std::min(128,w/3),std::min(78,bottom-y-40)};
+        const int text_x=picture.right()+8, text_w=x+w-text_x;
+        const bool filed=stage>=LandFiled;
+        const bool full=stage==LandFullNotes || stage==LandFullFiled;
+        const int reward=full?215:150;
+        page_title(d,inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
+        d.image({art::inland},{0,0,160,104},picture);
+        d.frame(picture,border);
+        Text story;
+        if (inland_archive) {
+            story=filed?"抄图人把驿道图收进柜子。往后商队来问路，他就能拿图给他们看。":
+                full?"你画出了望台背后的岔路。抄图人认出那正是商队常走错的地方。":
+                     "抄图人对着路碑拓片核了地名，准备用你的图换下那张漏了路的旧图。";
+        } else {
+            switch (stage) {
+            case LandUnvisited:
+                story=game.knows_land_pass()?"河边好走。旧货道翻山，省一天，却要多带水。出发前得留足返程的水粮。":
+                    "沿溪能走到老路碑。想抄近路，先去河堤找货签，或者让安娜担任大副。";
+                break;
+            case LandRidge: story="路碑的字还认得。拓碑就能交图。翻上望台，还能把背坡的岔路画进去。"; break;
+            case LandInscription: story="你拓下几处地名和里程。把拓片和草图带回里斯本吧。"; break;
+            case LandLookout: story="从望台上能看见背坡的两条路。你辨出通向村子的那条，添在图上。"; break;
+            case LandNotes: case LandFullNotes: story="考察已经结束。进城去档案室，在「驿道图」里交稿。"; break;
+            default: story="这条驿道已经画进档案室的图册。"; break;
+            }
+        }
+        d.wrap({text_x,y,text_w,bottom-y-53},story,ivory,15);
+        const auto leg_button=[&](Rect rect, LandAction step, Text label, int action, bool accent=false) {
+            const auto cost=LandLegs[step];
+            const bool blocked=!game.land_requirement(step).empty();
+            const auto price=format("%d日 粮%d 水%d",cost.days,cost.food,cost.water);
+            button(d,rect,label,action,accent,blocked,price);
+        };
+        const int row=bottom-37;
+        if (inland_archive && !filed) {
+            button(d,{x,row,w,PricedButtonHeight},format("交图 · %d金",reward),FileLandReport,true);
+        } else if (!inland_archive && stage==LandUnvisited) {
+            const int half=(w-5)/2;
+            leg_button({x,row,half,PricedButtonHeight},FollowStream,"沿溪走",WalkLandStream,true);
+            leg_button({x+half+5,row,w-half-5,PricedButtonHeight},CrossPass,
+                       game.knows_land_pass()?"翻山抄近路":"近路未解锁",WalkLandPass);
+            if (!game.land_requirement(FollowStream).empty() ||
+                (game.knows_land_pass() && !game.land_requirement(CrossPass).empty()))
+                d.center({x,row-17,w,15},"灰色路线的水粮不足",vermilion);
+        } else if (!inland_archive && stage==LandRidge) {
+            const int third=(w-8)/3;
+            leg_button({x,row,third,PricedButtonHeight},CopyMilestone,"拓路碑",WalkLandCopy,true);
+            leg_button({x+third+4,row,third,PricedButtonHeight},SurveyLookout,"登望台",WalkLandLookout);
+            leg_button({x+2*third+8,row,w-2*third-8,PricedButtonHeight},ReturnToCity,"回河堤",WalkLandBack);
+        } else if (game.land_away()) {
+            leg_button({x,row,w,PricedButtonHeight},ReturnToCity,"回河堤",WalkLandBack,true);
+        }
     }
 
     void change_outskirts(bool enter) {
@@ -1524,6 +1608,11 @@ struct VoyageApp {
             at_timber_river=id==RiverTarget;
             if (at_timber_river && game.inspect_timber_trail()) changed();
             set_modal(TimberTrailPage);
+            return;
+        }
+        if (id==PostRoadTarget) {
+            inland_archive=false;
+            set_modal(LandPage);
             return;
         }
         if (id!=TownStoryTarget) {
@@ -1594,12 +1683,12 @@ struct VoyageApp {
         combat_buttons(d,DuelOrders);
     }
 
-    void page_title(Draw& d, Text name, int glyph=-1) {
+    void page_title(Draw& d, Text name, int glyph=-1, bool allow_back=true) {
         skin_box(d,body,0,6);
         const int inset=glyph<0?6:24;
         if (glyph>=0) voyage_icon(d,glyph,{body.x+6,body.y+4,16,16});
         d.label(body.x+inset,body.y+5,name,gold,body.w-inset-55);
-        button(d,{body.right()-49,body.y+3,45,23},"返回",Close);
+        if (allow_back) button(d,{body.right()-49,body.y+3,45,23},"返回",Close);
     }
     void set_modal(Overlay layer) {
         if (modal==HarborTown && layer!=HarborTown) {
@@ -1650,7 +1739,7 @@ struct VoyageApp {
     void route_list(Draw& d) {
         page_title(d,"目的地");
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
-        button(d,{body.right()-89,body.y+3,37,23},"出海",StartExplore);
+        button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
         std::array<int,PlaceCount> order{};
         int count=0;
         if (target()>=0 && target()!=game.s.origin) order[count++]=target();
@@ -2528,6 +2617,8 @@ struct VoyageApp {
         const int y=body.y;
         const Rect actions{x,bottom-28,w,24};
         page_title(d,study.title);
+        if (at_archive && game.s.origin==lisbon && game.s.land_stage>=LandNotes)
+            button(d,{body.right()-107,body.y+3,54,23},"驿道图",OpenLandReport,game.s.land_stage<LandFiled);
         if (on_site || record.stage>=HasEvidence) {
             const bool large=body.h>=174 || w>=290;
             const int art_w=large?std::min(w/3,126):46;
@@ -2610,7 +2701,9 @@ struct VoyageApp {
             "海里是航程单位。一节等于每小时航行一海里。航线按整日估算。自由掌舵每步推进六小时，靠泊后时刻会保留。",
             "金色菱形标明下一处主线。到青色测绘点后记入图鉴。交易和航行中会自动保存，重开可续航。",
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
-            "在目的地页点出海，无需先选港口。点海面或用左右舵改航向。未踏查的海图随航行展开。港口商会可打听传闻。",
+            "在目的地页点掌舵可自由出海。用左右舵或点海面改航向。航经的海域会画入海图。",
+            "航海时点顶部倍速。沿航线可用一、二或四倍，自由掌舵可用一或二倍。船速和水粮消耗按原航程计算。",
+            "从里斯本城门走到河堤，沿旧驿道进山。两条路线耗费的天数和水粮不同。把测绘图带回城内档案室。",
             "去港务的档案室抄录手记。可出资或领预支，也可询问船工。抵达水域后点考察，按线索观测，再回原港交付。错过首报仍可交复测。"
         };
         page=std::clamp(page,0,int(std::size(instructions))-1);
@@ -2689,6 +2782,7 @@ struct VoyageApp {
         case TideLedger: tide_ledger_page(d); break;
         case BargainPage: bargain_page(d); break;
         case TimberTrailPage: timber_trail_page(d); break;
+        case LandPage: land_page(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -2703,12 +2797,15 @@ struct VoyageApp {
             }
             break;
         }
-        if (!game.encounter() || modal!=None) footer(d);
+        if (game.land_away())
+            d.center({safe.x,safe.bottom()-27,safe.w,22},"已为返程预留一份粮和一份水",mist);
+        else if (!game.encounter() || modal!=None) footer(d);
         else d.center({safe.x,safe.bottom()-30,safe.w,25},"选择如何应对",mist);
         focused=std::clamp(focused,0,std::max(0,button_count-1));
     }
 
     void select(int p) {
+        if (!game.sea()) voyage_rate=1;
         if (!game.charted(p)) { game.notice="还不知道确切泊地"; notify(); return; }
         inside_town_facility=false;
         scout_course.reset();
@@ -2833,10 +2930,40 @@ struct VoyageApp {
                 if (modal==HarborTown && !outside && game.s.origin==lisbon)
                     town_go(LisbonGate,CityGateTarget);
                 break;
-            case WalkToOutsideGate: case WalkToRiver: case WalkToShed:
+            case WalkToOutsideGate: case WalkToRiver: case WalkToShed: case WalkToPostRoad:
                 if (modal==HarborTown && outside) {
                     const int id=action-WalkToOutsideGate;
                     town_go(OutskirtsSites[id],OutsideGateTarget+id);
+                }
+                break;
+            case OpenLandReport:
+                if (modal==ExpeditionPage && game.archive_here()==expedition_item &&
+                    game.s.origin==lisbon && game.s.land_stage>=LandNotes) {
+                    inland_archive=true;
+                    set_modal(LandPage);
+                }
+                break;
+            case WalkLandStream: case WalkLandPass: case WalkLandCopy: case WalkLandLookout: case WalkLandBack:
+                if (modal==LandPage && !inland_archive) {
+                    if (game.explore_land(static_cast<LandAction>(action-WalkLandStream))) {
+                        if (action==WalkLandBack) {
+                            if (!outside) {
+                                show_town();
+                                change_outskirts(true);
+                                town.at=OutskirtsSites.back();
+                            }
+                            else set_modal(HarborTown);
+                        }
+                        focused=0;
+                        audio.cue(Sound::Page);
+                        changed();
+                    } else notify();
+                }
+                break;
+            case FileLandReport:
+                if (modal==LandPage && inland_archive && game.file_land_report()) {
+                    audio.cue(Sound::Page);
+                    changed();
                 }
                 break;
             case ReturnTimber: case TakeTimberReward:
@@ -2955,6 +3082,11 @@ struct VoyageApp {
             if (!loaded) break;
             title=false;
             if (!had_save) { selected=lisbon; set_modal(StoryPage); }
+            else if (game.land_away()) {
+                screen=Office;
+                inland_archive=false;
+                set_modal(LandPage);
+            }
             break;
         case RouteList: page=0; set_modal(Routes); break;
         case ShowAudio: set_modal(AudioSettings); break;
@@ -2989,6 +3121,7 @@ struct VoyageApp {
                 }
                 scout_course.reset();
                 screen=Chart; set_modal(None); follow=true; last_day=now;
+                voyage_rate=1;
                 previous_helm={game.s.helm_x,game.s.helm_y};
                 audio.cue(Sound::CastOff);
                 changed();
@@ -3015,6 +3148,7 @@ struct VoyageApp {
         }
         case ConfirmSail:
             if (game.depart(selected)) {
+                voyage_rate=1;
                 set_modal(None);
                 follow=true;
                 last_day=now;
@@ -3077,6 +3211,7 @@ struct VoyageApp {
         case StartHelm:
             if (game.start_helm(selected)) {
                 screen=Chart; set_modal(None); follow=true; last_day=now;
+                voyage_rate=1;
                 previous_helm={game.s.helm_x,game.s.helm_y};
                 audio.cue(Sound::CastOff);
                 changed();
@@ -3107,6 +3242,7 @@ struct VoyageApp {
             game.notice=game.s.stop_next?"将在下一处靠泊":"继续前往原目的地";
             changed();
             break;
+        case CycleSpeed: cycle_voyage_rate(); break;
         case Pause:
             game.paused=!game.paused;
             previous_helm={game.s.helm_x,game.s.helm_y};
@@ -3281,6 +3417,7 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (game.land_away()) return true;
         if (inside_town_facility && modal==town_facility) {
             show_town();
             return true;
@@ -3288,6 +3425,7 @@ struct VoyageApp {
         if (modal!=None) {
             if (modal==PortStoryPage) set_modal(port_story_back);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
+            else if (modal==LandPage) set_modal(inland_archive?ExpeditionPage:HarborTown);
             else if (modal==HarborTown && outside) change_outskirts(false);
             else if (modal==DispatchBoard) {
                 if (dispatch_page!=DispatchList) {

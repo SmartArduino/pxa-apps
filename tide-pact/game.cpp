@@ -375,6 +375,62 @@ bool Game::resolve_timber_trail(bool return_cargo) {
     return true;
 }
 
+bool Game::knows_land_pass() const {
+    return s.timber_trail!=TrailUnknown || s.first_mate==Pilot;
+}
+
+Text Game::land_requirement(LandAction action) const {
+    if (action<FollowStream || action>ReturnToCity || s.origin!=lisbon || sea() || encounter())
+        return "要从里斯本出发";
+    const bool outward=action==FollowStream || action==CrossPass;
+    if (outward ? s.land_stage!=LandUnvisited : !land_away())
+        return "这段路走不了了";
+    if (action==CrossPass && !knows_land_pass()) return "需要货签背面的线索，或请安娜领路";
+    if ((action==CopyMilestone || action==SurveyLookout) && s.land_stage!=LandRidge)
+        return "已经记下这段驿道";
+    const auto leg=LandLegs[action];
+    const auto reserve=action==ReturnToCity?LandLeg{}:LandLegs[ReturnToCity];
+    if (s.stores<leg.food+reserve.food || s.water<leg.water+reserve.water) return "留足返程水粮才能走这一段";
+    return {};
+}
+
+bool Game::explore_land(LandAction action) {
+    if (const Text blocked=land_requirement(action); !blocked.empty()) { notice=blocked; return false; }
+    const auto leg=LandLegs[action];
+    s.stores-=leg.food;
+    s.water-=leg.water;
+    spend_day(leg.days);
+    switch (action) {
+    case FollowStream: case CrossPass:
+        s.land_stage=LandRidge;
+        notice="走到了山脊的老路碑";
+        break;
+    case CopyMilestone:
+        s.land_stage=LandInscription;
+        notice="拓下路碑，记下了山道";
+        break;
+    case SurveyLookout:
+        s.land_stage=LandLookout;
+        notice="登上望台，补画了背坡的岔路";
+        break;
+    case ReturnToCity:
+        s.land_stage=s.land_stage==LandRidge?LandUnvisited:s.land_stage==LandLookout?LandFullNotes:LandNotes;
+        notice=s.land_stage==LandUnvisited?"已返回河堤":"已返回河堤，可去档案室交图";
+        break;
+    }
+    return true;
+}
+
+bool Game::file_land_report() {
+    if (!port() || s.origin!=lisbon || (s.land_stage!=LandNotes && s.land_stage!=LandFullNotes)) return false;
+    const bool complete=s.land_stage==LandFullNotes;
+    earn(complete?215:150);
+    s.renown+=complete?2:1;
+    s.land_stage=complete?LandFullFiled:LandFiled;
+    notice=complete?"完整驿道图已入档，赏金215":"驿道图已入档，赏金150";
+    return true;
+}
+
 int Game::wind(int leg) const {
     if (s.helm) return wind_along(s.heading,conditions());
     return route_wind(route,leg,s.day,route_weather(route,leg,s.progress,s.day));
@@ -819,7 +875,7 @@ void Game::spend_day(int days) {
 }
 
 bool Game::depart(int to) {
-    if (sea() || encounter() || to==s.origin) return false;
+    if (sea() || encounter() || land_away() || to==s.origin) return false;
     if (!charted(to)) { notice="此处尚未定位，需掌舵探索"; return false; }
     auto path = passage(s.origin, to);
     if (!path.count) return false;
@@ -904,7 +960,7 @@ bool Game::consume_day(SeaConditions weather) {
 }
 
 bool Game::start_helm(int destination) {
-    if (sea() || encounter() || s.hull<=12 ||
+    if (sea() || encounter() || land_away() || s.hull<=12 ||
         s.stores<daily_rations() || s.water<daily_water(Fair)) {
         notice="掌舵前请备足一日水粮并修船";
         return false;
@@ -2202,7 +2258,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.dispatch.due);
     bytes[offset++]=std::byte(SailingTimeRevision);
     bytes[offset++]=std::byte(s.ration_flags);
-    bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2));
+    bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2369,9 +2425,13 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         s.ration_flags=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.ration_flags & ~(SaveFood|SaveWater)) return false;
         const auto shore=std::to_integer<std::uint8_t>(bytes[offset++]);
-        if (shore>15) return false;
         s.bargain_warnings=shore&3;
-        s.timber_trail=shore>>2;
+        s.timber_trail=(shore>>2)&3;
+        s.land_stage=shore>>4;
+        if (s.land_stage>LandFullFiled ||
+            (s.land_stage>=LandRidge && s.land_stage<=LandLookout &&
+             (s.origin!=lisbon || s.helm || s.destination>=0 || s.weather!=Calm ||
+              s.stores<LandLegs[ReturnToCity].food || s.water<LandLegs[ReturnToCity].water))) return false;
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }

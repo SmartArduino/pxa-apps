@@ -163,6 +163,12 @@ struct HaggleResult {
     int counter=0;
 };
 enum TimberTrail : std::uint8_t { TrailUnknown, TrailFound, TimberReturned, TimberPaid };
+enum LandStage : std::uint8_t {
+    LandUnvisited, LandRidge, LandInscription, LandLookout, LandNotes, LandFullNotes, LandFiled, LandFullFiled
+};
+enum LandAction { FollowStream, CrossPass, CopyMilestone, SurveyLookout, ReturnToCity };
+struct LandLeg { int days, food, water; };
+inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 
 Passage passage(int from, int to);
 Point vessel_at(const Passage& route, int leg, float fraction);
@@ -205,7 +211,7 @@ struct State {
     int interpreter_port=-1;
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
-    std::uint8_t bargain_warnings=0, timber_trail=TrailUnknown;
+    std::uint8_t bargain_warnings=0, timber_trail=TrailUnknown, land_stage=LandUnvisited;
     std::uint8_t drift_stage=DriftUnheard;
     std::uint8_t port_stories=0;
     DispatchRecord dispatch;
@@ -241,6 +247,11 @@ struct Game {
     HaggleResult bargain_offer(int good, bool sell, int rate);
     bool inspect_timber_trail();
     bool resolve_timber_trail(bool return_cargo);
+    bool land_away() const { return s.land_stage>=LandRidge && s.land_stage<=LandLookout; }
+    bool knows_land_pass() const;
+    Text land_requirement(LandAction action) const;
+    bool explore_land(LandAction action);
+    bool file_land_report();
     int stock(int good) const;
     int market_stock(int port, int good) const;
     int wind(int leg) const;
@@ -278,7 +289,7 @@ struct Game {
     bool choose_tale(int tale, bool share);
     int proposal() const;
     int proposal_good() const;
-    bool port() const { return !sea() && !encounter() && s.origin<PortCount; }
+    bool port() const { return !sea() && !encounter() && !land_away() && s.origin<PortCount; }
     bool sea() const { return s.helm || s.destination>=0; }
     bool encounter() const { return s.weather != 0; }
     Point position(float frame = 0) const;

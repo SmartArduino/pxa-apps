@@ -14,10 +14,10 @@ static_assert(std::size(PortStoryDoors)==PortStoryCount);
 inline constexpr Text TownNames[]{"市场","船坞","商会","档案室","酒馆","码头"};
 inline constexpr int TownExtent=1000;
 enum TownWalkTarget { TownStoryTarget=TownFacilityCount, CityGateTarget, OutsideGateTarget,
-                      RiverTarget, TimberShedTarget };
+                      RiverTarget, TimberShedTarget, PostRoadTarget };
 inline constexpr Point LisbonGate{934,620};
 inline constexpr int OutskirtsQuay=606;
-inline constexpr std::array<Point,3> OutskirtsSites{{{82,546},{495,755},{802,527}}};
+inline constexpr std::array<Point,4> OutskirtsSites{{{82,546},{495,755},{802,527},{650,535}}};
 
 struct TownLayout {
     int port, quay;

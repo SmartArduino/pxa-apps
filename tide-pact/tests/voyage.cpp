@@ -836,6 +836,46 @@ void riverside_timber() {
     assert(walk.moving() && walk.update(1500)==TimberShedTarget && same_town_point(walk.at,OutskirtsSites[2]));
 }
 
+void inland_survey() {
+    Game limited;
+    limited.s.stores=3;
+    limited.s.water=3;
+    assert(!limited.explore_land(FollowStream));
+    assert(limited.s.day==0 && limited.s.stores==3 && limited.s.water==3);
+    limited.s.stores=4;
+    assert(limited.explore_land(FollowStream));
+    assert(limited.land_away() && limited.s.day==2 && limited.s.stores==1 && limited.s.water==1);
+    assert(!limited.explore_land(CopyMilestone) && !limited.explore_land(SurveyLookout));
+    assert(!limited.port() && !limited.depart(madeira) && !limited.start_helm(-1));
+    assert(!limited.trade(Wine,false,1).units && !limited.file_land_report());
+    State saved;
+    assert(decode(saved,encode(limited.s)) && saved.land_stage==LandRidge);
+    limited.s=saved;
+    assert(limited.explore_land(ReturnToCity) && limited.port() && limited.s.land_stage==LandUnvisited);
+    assert(limited.s.day==3 && !limited.s.stores && !limited.s.water);
+
+    Game survey;
+    assert(!survey.explore_land(CrossPass) && survey.s.land_stage==LandUnvisited);
+    assert(survey.inspect_timber_trail() && survey.knows_land_pass());
+    const int food=survey.s.stores, water=survey.s.water;
+    assert(survey.explore_land(CrossPass) && survey.s.day==1);
+    assert(survey.s.stores==food-2 && survey.s.water==water-3);
+    Game quick=survey;
+    assert(quick.explore_land(CopyMilestone) && !quick.explore_land(SurveyLookout));
+    assert(quick.explore_land(ReturnToCity) && quick.s.land_stage==LandNotes);
+    assert(quick.file_land_report() && quick.s.gold==670 && quick.s.renown==1);
+    assert(decode(saved,encode(quick.s)) && saved.land_stage==LandFiled && saved.timber_trail==TrailFound);
+    assert(survey.explore_land(SurveyLookout) && survey.explore_land(ReturnToCity));
+    assert(decode(saved,encode(survey.s)) && saved.land_stage==LandFullNotes);
+    assert(survey.s.day==3 && survey.s.stores==food-5 && survey.s.water==water-6);
+    assert(survey.file_land_report() && survey.s.gold==735 && survey.s.renown==2);
+    assert(survey.s.land_stage==LandFullFiled && !survey.file_land_report() && !survey.explore_land(FollowStream));
+
+    Game with_pilot;
+    assert(with_pilot.hire_officer(Pilot));
+    assert(with_pilot.knows_land_pass() && with_pilot.explore_land(CrossPass));
+}
+
 void search_for_driftwood() {
     Game ship;
     assert(!ship.take_drift_lead());
@@ -1241,6 +1281,7 @@ int main() {
     port_languages();
     dockside_bargaining();
     riverside_timber();
+    inland_survey();
     search_for_driftwood();
     ship_officers();
     unknown_waters();
