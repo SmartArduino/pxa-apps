@@ -176,19 +176,49 @@ int Game::price_at(int port, int good, bool sell) const {
 int Game::quote(int good, bool sell) const { return price_at(s.origin,good,sell); }
 
 TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
-    TradeQuote offer;
-    if (!port() || good<0 || good>=GoodsCount || quantity<=0) return offer;
+    if (!port() || good<0 || good>=GoodsCount || quantity<=0) return {};
     const int limit=std::min(quantity,sell ? s.cargo[good] : capacity()-load());
     const int budget=sell ? 999999-s.gold : s.gold;
-    offer.stock_change=s.stock_delta[s.origin*GoodsCount+good];
-    for (;offer.units<limit;++offer.units) {
-        const int supply=stock_at(s.origin,good,offer.stock_change);
-        const int price=market_price(s.origin,good,sell,supply);
-        if ((!sell && supply==0) || offer.gold+price>budget) break;
-        offer.gold+=price;
-        offer.stock_change=std::clamp(offer.stock_change+(sell ? 1 : -1),-48,48);
+    const auto quote_order=[&](int rate) {
+        TradeQuote offer{.stock_change=s.stock_delta[s.origin*GoodsCount+good]};
+        int normal_total=0;
+        for (;offer.units<limit;++offer.units) {
+            const int supply=stock_at(s.origin,good,offer.stock_change);
+            const int total=normal_total+market_price(s.origin,good,sell,supply);
+            const int discount=total*rate/100;
+            if ((!sell && supply==0) || total-discount>budget) break;
+            normal_total=total;
+            offer.gold=total-discount;
+            offer.saved=discount;
+            offer.stock_change=std::clamp(offer.stock_change+(sell?1:-1),-48,48);
+        }
+        return offer;
+    };
+    if (!sell && quantity==TradeLot && limit==TradeLot && s.bargain_good==good+1) {
+        const auto discounted=quote_order(s.bargain_rate);
+        if (discounted.units==TradeLot) return discounted;
     }
-    return offer;
+    return quote_order(0);
+}
+
+int Game::negotiation_rate() const {
+    if (!port()) return 0;
+    const auto language=PortSpeech[s.origin];
+    return understands(language)?8:fluency(language)==Phrases?4:0;
+}
+
+bool Game::can_negotiate(int good) const {
+    return good>=0 && good<GoodsCount && !s.bargain_good && negotiation_rate()>0 &&
+           stock(good)>=TradeLot && capacity()-load()>=TradeLot;
+}
+
+bool Game::negotiate(int good) {
+    if (!can_negotiate(good)) return false;
+    s.bargain_good=good+1;
+    s.bargain_rate=negotiation_rate();
+    spend_day(1);
+    notice="五件整批的价钱已经谈妥";
+    return true;
 }
 
 int Game::wind(int leg) const {
@@ -433,6 +463,7 @@ bool Game::depart(int to) {
     if (s.stores<daily_rations() || s.water<daily_water(Fair)) { notice="水粮不足一日"; return false; }
     route = path;
     s.interpreter_port=-1;
+    s.bargain_good=s.bargain_rate=0;
     s.destination = to;
     s.leg = s.progress = s.weather = s.enemy = s.range = s.aim = 0;
     s.event_mask = 0;
@@ -519,6 +550,7 @@ bool Game::start_helm(int destination) {
     }
     const auto here=Anchor[s.origin];
     s.interpreter_port=-1;
+    s.bargain_good=s.bargain_rate=0;
     s.helm=1;
     s.helm_pulse=0;
     s.helm_x=here.x*16;
@@ -856,6 +888,10 @@ TradeQuote Game::trade(int good, bool sell, int quantity) {
     s.cargo[good]+=sell ? -offer.units : offer.units;
     s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
     earn(sell ? offer.gold : -offer.gold);
+    if (offer.saved) {
+        s.bargain_good=BargainUsed;
+        s.bargain_rate=0;
+    }
     notice=sell ? "已出售货物" : "已装货入舱";
     return offer;
 }
@@ -1526,7 +1562,7 @@ static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
 static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
 constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=WakeRecordBytes+4);
-static_assert(SaveBytes>=WakeRecordBytes+6+4);
+static_assert(SaveBytes>=WakeRecordBytes+8+4);
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -1566,6 +1602,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.language_skills);
     bytes[offset++]=std::byte(s.interpreter_port+1);
     bytes[offset++]=std::byte(s.tide_ledger);
+    // Earlier language saves left these reserved bytes at zero.
+    bytes[offset++]=std::byte(s.bargain_good);
+    bytes[offset++]=std::byte(s.bargain_rate);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -1679,9 +1718,16 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         s.language_skills=get();
         s.interpreter_port=std::to_integer<int>(bytes[offset++])-1;
         s.tide_ledger=std::to_integer<std::uint8_t>(bytes[offset++]);
+        s.bargain_good=std::to_integer<std::uint8_t>(bytes[offset++]);
+        s.bargain_rate=std::to_integer<std::uint8_t>(bytes[offset++]);
+        const bool pending_deal=s.bargain_good>0 && s.bargain_good<=GoodsCount;
         if (s.language_skills>>(2*LanguageCount) || (s.language_skills&3U) ||
             s.tide_ledger>LedgerReturned || s.interpreter_port>=PortCount ||
             (s.interpreter_port>=0 && (s.interpreter_port!=s.origin || s.helm || s.destination>=0)))
+            return false;
+        if (s.bargain_good>BargainUsed ||
+            (pending_deal ? s.bargain_rate!=4 && s.bargain_rate!=8 : s.bargain_rate!=0) ||
+            (s.bargain_good && (s.origin>=PortCount || s.helm || s.destination>=0)))
             return false;
         for (int language=1;language<LanguageCount;++language)
             if (((s.language_skills>>(2*language))&3U)>Fluent) return false;

@@ -115,7 +115,10 @@ struct TradeQuote {
     int units=0;
     int gold=0;
     int stock_change=0;
+    int saved=0;
 };
+inline constexpr int TradeLot=5;
+inline constexpr int BargainUsed=GoodsCount+1;
 
 Passage passage(int from, int to);
 Point vessel_at(const Passage& route, int leg, float fraction);
@@ -147,6 +150,7 @@ struct State {
     std::uint32_t language_skills=0;
     int interpreter_port=-1;
     std::uint8_t tide_ledger=LedgerUnseen;
+    std::uint8_t bargain_good=0, bargain_rate=0;
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
@@ -170,6 +174,9 @@ struct Game {
     int quote(int good, bool sell) const;
     int price_at(int port, int good, bool sell) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
+    int negotiation_rate() const;
+    bool can_negotiate(int good) const;
+    bool negotiate(int good);
     int stock(int good) const;
     int wind(int leg) const;
     PassageForecast forecast(const Passage& path) const;
