@@ -133,6 +133,7 @@ struct VoyageApp {
     LandFight land_before;
     unsigned land_frame_start=0;
     int land_selected=0, land_striker=-1;
+    bool land_enemy_turn=false;
     bool land_retreat=false;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
@@ -286,7 +287,12 @@ struct VoyageApp {
         }
     }
 
-    void on_foreground(pxa::Context&) { foreground=true; audio.foreground(true); last_day=0; dirty=true; }
+    void on_foreground(pxa::Context&) {
+        foreground=true;
+        audio.foreground(true);
+        last_day=skirmish_tick=0;
+        dirty=true;
+    }
     void on_background(pxa::Context&) {
         foreground=false;
         audio.foreground(false);
@@ -473,8 +479,10 @@ struct VoyageApp {
         }
 
         if (!title && game.s.skirmish.active) update_skirmish();
-        if (!title && game.s.land_fight.kind && land_frame_start && now-land_frame_start<220)
+        if (!title && game.s.land_fight.kind && land_frame_start) {
             dirty=true;
+            if (now-land_frame_start>=220) land_frame_start=0;
+        }
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
             const unsigned interval=voyage_interval();
@@ -1836,7 +1844,8 @@ struct VoyageApp {
             d.label(right-d.measure(price)-5,item.y+2,price,ivory);
             if (w>=220) {
                 const int stock=game.stock(g);
-                const Text supply=access==MarketAccess::Closed?"不经营":access==MarketAccess::Buyer?"仅收购":
+                const Text supply=access==MarketAccess::Closed?"不经营":access==MarketAccess::Buyer?
+                                  game.specialty_orders(s.origin,g)?"仅收购":"已收满":
                                   !stock?"售罄":access==MarketAccess::Producer?"本港出产":
                                   stock<=7?"紧缺":stock>=24?"充足":"平稳";
                 const int meta=cargo_x+27, room=right-d.measure(price)-10-item.x-meta;
@@ -1851,7 +1860,8 @@ struct VoyageApp {
         const Text stock_note=news?(news->price_percent>0?"求购中":"到货中"):road_goods?"驿道来货":"";
         const auto access=market_access(s.origin,good);
         const auto note=access==MarketAccess::Closed?format("%s 不经营",GoodsNames[good].data()):
-                        access==MarketAccess::Buyer?format("%s 仅收购",GoodsNames[good].data()):
+                        access==MarketAccess::Buyer?format("%s 还收%d件",GoodsNames[good].data(),
+                                                           game.specialty_orders(s.origin,good)):
                         format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
         const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
         if (s.whale_oil || s.whale_blubber)
@@ -2715,10 +2725,17 @@ struct VoyageApp {
     }
 
     void update_skirmish() {
-        if (game.paused) { skirmish_tick=now; return; }
+        if (game.paused || !skirmish_tick) { skirmish_tick=now; return; }
         constexpr unsigned tick_ms=55;
-        if (now-skirmish_tick<tick_ms) return;
-        skirmish_tick=now;
+        const unsigned elapsed=now-skirmish_tick;
+        if (elapsed>tick_ms*3) skirmish_tick=now-tick_ms*3;
+        while (now-skirmish_tick>=tick_ms && game.s.skirmish.active && !game.paused) {
+            skirmish_tick+=tick_ms;
+            step_skirmish();
+        }
+    }
+
+    void step_skirmish() {
         const auto before=game.s.skirmish;
         const auto effects=game.tick_skirmish(chart_water);
         if (effects&SkirmishEnemyFire) {
@@ -2797,7 +2814,9 @@ struct VoyageApp {
         const auto player=skirmish_point({s.helm_x,s.helm_y}), enemy=skirmish_point(battle.rival);
         const Text target=battle.opponent>=FirstMerchantOpponent?"商船":
                           battle.opponent==PatrolOpponent?"巡逻船":"私掠船";
-        const auto status=format("%s %d",target.data(),s.enemy);
+        const Text reaction=battle.snared?"中浮索":battle.opponent>=FirstMerchantOpponent || s.enemy<=15?
+                            "撤离":battle.enemy_reload?"装填":"瞄准";
+        const auto status=format("%s %d · %s",target.data(),s.enemy,reaction.data());
         const auto wind=game.conditions();
         const auto course=format("风向%s %d级",Bearings[wind.direction].data(),wind.strength);
         if (!game.paused && !battle.reload) {
@@ -4333,6 +4352,7 @@ struct VoyageApp {
         land_striker=-1;
         land_retreat=false;
         land_frame_start=0;
+        land_enemy_turn=false;
         set_modal(None);
         changed();
     }
@@ -4393,8 +4413,9 @@ struct VoyageApp {
                 const auto old=land_unit_point(before.cell);
                 at={old.x+(at.x-old.x)*elapsed/170,old.y+(at.y-old.y)*elapsed/170};
             }
-            const int pose=elapsed<165 && (land_striker==i ||
-                (i>=LandFriends && before.hp && !(before.orders&LandStruck) && (unit.orders&LandStruck)))?2:
+            const bool attacked=land_striker==i || (land_enemy_turn && i>=LandFriends &&
+                (unit.orders&(LandStruck|LandBraced))==LandStruck);
+            const int pose=elapsed<165 && attacked?2:
                 walking && (elapsed/45)%2?1:unit.orders&LandBraced?3:0;
             const int role=i==0?0:i<LandFriends?1:2;
             const int sprite_h=std::clamp(cell_h-1,13,24), sprite_w=sprite_h*24/27;
@@ -4412,8 +4433,10 @@ struct VoyageApp {
         d.frame(land_area,border);
         const auto unit=fight.units[land_selected];
         constexpr Text crew[]{"队长","矛手","水手"};
-        const auto status=format("%s  %d/%d  %s",crew[land_selected].data(),int(unit.hp),
-                                 land_max_hp(land_selected),unit.orders&LandStruck?"已行动":"可攻击");
+        const Text movement=unit.orders&LandMoved?"已移动":"可移动";
+        const Text attack=unit.orders&LandBraced?"已架盾":unit.orders&LandStruck?"已攻击":"可攻击";
+        const auto status=format("%s %d/%d · %s · %s",crew[land_selected].data(),int(unit.hp),
+                                 land_max_hp(land_selected),movement.data(),attack.data());
         d.label(safe.x+7,land_area.bottom()+4,status,ivory,safe.w-14);
         const int width=(safe.w-16)/3, bottom=safe.bottom()-26;
         button(d,{safe.x+5,bottom,width,23},"架盾",LandBrace,false,(unit.orders&LandStruck)!=0);
@@ -4421,10 +4444,11 @@ struct VoyageApp {
         button(d,{safe.x+11+2*width,bottom,width,23},land_retreat?"确认撤退":"撤退",LandRetreat,land_retreat);
     }
 
-    void land_result(LandFight before,int striker=-1) {
+    void land_result(LandFight before,int striker=-1,bool enemy_turn=false) {
         land_before=before;
         land_striker=striker;
         land_frame_start=now;
+        land_enemy_turn=enemy_turn;
         land_retreat=false;
         if (!game.s.land_fight.kind) {
             screen=Office;
@@ -4449,7 +4473,7 @@ struct VoyageApp {
         if (action==LandBrace) {
             if (game.brace_land_unit(land_selected)) land_result(before);
         } else if (action==LandEndRound) {
-            if (game.end_land_round()) land_result(before);
+            if (game.end_land_round()) land_result(before,-1,true);
         } else if (action>=LandCellAction && action<LandCellAction+LandCells) {
             const int cell=action-LandCellAction, unit=land_occupant(before,cell);
             if (unit>=0 && unit<LandFriends) land_selected=unit;

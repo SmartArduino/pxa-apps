@@ -28,12 +28,93 @@ void land_hit(LandFight& fight,int attacker,int defender) {
 }
 
 int opponent_at_range(const LandFight& fight,int attacker) {
-    int best=-1, health=100;
-    for (int i=0;i<LandFriends;++i)
-        if (land_can_strike(fight,attacker,i) && fight.units[i].hp<health) {
-            health=fight.units[i].hp;
-            best=i;
+    int best=-1, best_score=0;
+    for (int i=0;i<LandFriends;++i) {
+        if (!land_can_strike(fight,attacker,i)) continue;
+        const int damage=land_damage(fight,attacker,i);
+        const int hp=fight.units[i].hp;
+        const int score=damage*4+int(damage>=hp)*12+int(i==0)*3-hp;
+        if (score>best_score || best<0) { best=i; best_score=score; }
+    }
+    return best;
+}
+
+using LandDistances=std::array<std::uint8_t,LandCells>;
+constexpr std::uint8_t Unreachable=255;
+constexpr Point Neighbours[]{{-1,0},{1,0},{0,-1},{0,1}};
+
+LandDistances land_paths(std::uint64_t passable,std::uint64_t starts,int mobility=LandCells) {
+    std::array<std::uint8_t,LandCells> steps;
+    steps.fill(Unreachable);
+    std::array<std::uint8_t,LandCells> queue{};
+    int count=0;
+    for (int cell=0;cell<LandCells;++cell) {
+        if (!(starts&(std::uint64_t{1}<<cell))) continue;
+        steps[cell]=0;
+        queue[count++]=cell;
+    }
+    for (int i=0;i<count;++i) {
+        const int cell=queue[i];
+        if (steps[cell]>=mobility) continue;
+        const auto p=land_point(cell);
+        for (const auto delta : Neighbours) {
+            const Point next{p.x+delta.x,p.y+delta.y};
+            if (!inside_land(next)) continue;
+            const int index=land_cell(next);
+            if (steps[index]!=Unreachable || !(passable&(std::uint64_t{1}<<index))) continue;
+            steps[index]=steps[cell]+1;
+            queue[count++]=index;
         }
+    }
+    return steps;
+}
+
+constexpr std::uint64_t land_bit(int cell) { return std::uint64_t{1}<<cell; }
+
+std::uint64_t land_open(const LandFight& fight,int unit) {
+    std::uint64_t open=0;
+    for (int cell=0;cell<LandCells;++cell)
+        if (land_ground(fight,cell)!=LandBarrier) open|=land_bit(cell);
+    for (int i=0;i<LandUnits;++i)
+        if (i!=unit && fight.units[i].hp) open&=~land_bit(fight.units[i].cell);
+    return open;
+}
+
+int enemy_destination(const LandFight& fight,int unit,int objective) {
+    const auto& enemy=fight.units[unit];
+    const auto open=land_open(fight,unit);
+    const auto moves=land_paths(open,land_bit(enemy.cell),2);
+    std::uint64_t engagement=0;
+    for (int rival=0;rival<LandFriends;++rival) {
+        if (!fight.units[rival].hp) continue;
+        const auto p=land_point(fight.units[rival].cell);
+        for (const auto delta : Neighbours) {
+            const Point cell{p.x+delta.x,p.y+delta.y};
+            if (inside_land(cell)) engagement|=land_bit(land_cell(cell));
+        }
+    }
+    const auto approach=land_paths(open,engagement&open);
+    const bool attack_flag=fight.kind==WharfDefense;
+    const bool guard_flag=!attack_flag && unit==LandUnits-1;
+    const auto flag_path=land_paths(open,(attack_flag || guard_flag)?open&land_bit(objective):0);
+    auto candidate=fight;
+    int best=enemy.cell, best_score=-10000;
+    for (int cell=0;cell<LandCells;++cell) {
+        if (moves[cell]==Unreachable) continue;
+        candidate.units[unit].cell=cell;
+        const int target=opponent_at_range(candidate,unit);
+        const bool cover=land_ground(fight,cell)==LandCover;
+        int distance=approach[cell];
+        if (flag_path[cell]!=Unreachable)
+            distance=attack_flag?std::min(distance,int(flag_path[cell])):std::min(distance+2,int(flag_path[cell]));
+        int score=-distance*7-moves[cell]+int(cover)*3;
+        if (target>=0) {
+            const int damage=land_damage(candidate,unit,target);
+            score+=23+damage*3+int(damage>=fight.units[target].hp)*12+int(target==0)*2;
+        }
+        if (cell==objective && (guard_flag || attack_flag)) score+=attack_flag?70:12;
+        if (score>best_score) { best=cell; best_score=score; }
+    }
     return best;
 }
 
@@ -46,28 +127,8 @@ int land_occupant(const LandFight& fight,int cell) {
 }
 
 std::array<std::uint8_t,LandCells> land_steps(const LandFight& fight,int unit) {
-    std::array<std::uint8_t,LandCells> steps;
-    steps.fill(255);
-    if (!can_choose(fight,unit,LandMoved)) return steps;
-    const int mobility=unit==0?3:2;
-    std::array<std::uint8_t,LandCells> queue{};
-    int count=1;
-    queue[0]=fight.units[unit].cell;
-    steps[queue[0]]=0;
-    for (int i=0;i<count;++i) {
-        const int cell=queue[i];
-        if (steps[cell]>=mobility) continue;
-        const auto p=land_point(cell);
-        for (const auto delta : {Point{-1,0},Point{1,0},Point{0,-1},Point{0,1}}) {
-            const Point next{p.x+delta.x,p.y+delta.y};
-            if (!inside_land(next)) continue;
-            const int index=land_cell(next);
-            if (steps[index]!=255 || land_occupant(fight,index)>=0 || land_ground(fight,index)==LandBarrier) continue;
-            steps[index]=steps[cell]+1;
-            queue[count++]=index;
-        }
-    }
-    return steps;
+    if (!can_choose(fight,unit,LandMoved)) return land_paths(0,0);
+    return land_paths(land_open(fight,unit),land_bit(fight.units[unit].cell),unit==0?3:2);
 }
 
 bool land_can_strike(const LandFight& fight,int unit,int target) {
@@ -181,27 +242,14 @@ bool Game::end_land_round() {
         auto& enemy=fight.units[i];
         if (!enemy.hp) continue;
         enemy.orders=0;
-        if (opponent_at_range(fight,i)<0) {
-            const auto steps=land_steps(fight,i);
-            int target=enemy.cell, best=1000;
-            for (int cell=0;cell<LandCells;++cell) {
-                if (steps[cell]==255) continue;
-                int distance=100;
-                for (int rival=0;rival<LandFriends;++rival)
-                    if (fight.units[rival].hp) distance=std::min(distance,land_distance(cell,fight.units[rival].cell));
-                if (fight.kind==WharfDefense && land_occupant(fight,objective)<0)
-                    distance=std::min(distance,land_distance(cell,objective));
-                const int score=distance*8+2*steps[cell]-int(land_ground(fight,cell)==LandCover);
-                if (score<best) { best=score; target=cell; }
-            }
-            enemy.cell=target;
-        }
+        const int next=enemy_destination(fight,i,objective);
+        if (next!=enemy.cell) { enemy.cell=next; enemy.orders|=LandMoved; }
         const int target=opponent_at_range(fight,i);
         if (target>=0) land_hit(fight,i,target);
-        else enemy.orders=LandBraced|LandStruck;
-        if (!fight.units[0].hp) break;
+        else enemy.orders|=LandBraced|LandStruck;
+        if (!fight.units[0].hp || (fight.kind==WharfDefense && enemy.cell==objective)) break;
     }
-    if (settle_land_battle()) return true;
+    if (settle_land_battle(false,true)) return true;
     ++fight.round;
     fight.holding=0;
     for (int i=0;i<LandFriends;++i) fight.units[i].orders=0;
@@ -209,19 +257,19 @@ bool Game::end_land_round() {
     return true;
 }
 
-bool Game::settle_land_battle(bool retreat) {
+bool Game::settle_land_battle(bool retreat,bool after_enemy_turn) {
     const auto& fight=s.land_fight;
     if (!fight.kind) return false;
     const int kind=fight.kind, site=fight.site;
     const int objective=land_cell(land_field(kind,site).objective);
     const int flag=land_occupant(fight,objective);
-    const bool losses=retreat || !fight.units[0].hp || fight.round>=30 ||
+    const bool losses=retreat || !fight.units[0].hp ||
                       (kind==WharfDefense && flag>=LandFriends);
     const bool clear=std::none_of(fight.units.begin()+LandFriends,fight.units.end(),[](LandUnit u){return u.hp;});
     const bool victory=!losses && (clear || (kind==RoadEscort && fight.units[0].cell==objective) ||
         (kind==WharfAssault && fight.holding && flag>=0 && flag<LandFriends) ||
         (kind==WharfDefense && fight.round>=5 && fight.holding));
-    if (!losses && !victory) return false;
+    if (!losses && !victory && !(after_enemy_turn && fight.round>=30)) return false;
     s.land_fight={};
     if (kind==WharfAssault) {
         resolve_enclave_siege(site,victory);
@@ -237,7 +285,7 @@ bool Game::settle_land_battle(bool retreat) {
         auto& holding=s.enclaves[site];
         if (victory) {
             s.shore_campaign|=2U<<site;
-            holding.exports=std::min(30,int(holding.exports)+4);
+            holding.exports=std::min(EnclaveExportCap,int(holding.exports)+4);
             ++s.trust;
         } else holding.food=std::max(0,int(holding.food)-8);
         notice=victory?"仓房守住了，居民送来四份货物":"队伍撤回仓房，损失八份存粮";

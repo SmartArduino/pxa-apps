@@ -28,8 +28,8 @@ bool in_water(Point fixed,WaterTest water) {
 int near_broadside(Point from,Point target,int heading) {
     const int bearing=direction_to({target.x-from.x,target.y-from.y});
     const int relative=(bearing-heading+8)%8;
-    if (relative<1 || relative>3) return relative>=5 && relative<=7?1:0;
-    return -1;
+    if (relative>=1 && relative<=3) return 1;
+    return relative>=5 && relative<=7?-1:0;
 }
 
 bool fire(SeaShot& shot,Point at,int heading,int side,int distance) {
@@ -57,6 +57,48 @@ ShotResult fly(SeaShot& shot,Point target,WaterTest water) {
         }
     }
     return --shot.steps?InFlight:InWater;
+}
+
+int turn_distance(int a,int b) {
+    const int shift=(a-b+8)%8;
+    return std::min(shift,8-shift);
+}
+
+int rival_course(const SeaSkirmish& battle,Point player,int speed,int preferred_range,
+                 bool fleeing,WaterTest water) {
+    int best=battle.heading, best_score=-1000000;
+    for (int heading=0;heading<8;++heading) {
+        const auto first=step_toward(battle.rival,heading,speed);
+        const auto ahead=step_toward(battle.rival,heading,speed*4);
+        const auto middle=step_toward(battle.rival,heading,speed*2);
+        if (!in_water(first,water)) continue;
+        const bool clear=in_water(middle,water) && in_water(ahead,water);
+        const auto position=clear?ahead:first;
+        const int gap=distance_squared(player,position);
+        int score=fleeing?gap:-std::abs(gap-preferred_range*preferred_range);
+        if (!fleeing && gap<EnemyReach*EnemyReach && near_broadside(position,player,heading)) score+=380;
+        if (fleeing && battle.opponent>=FirstMerchantOpponent && !clear) score-=350;
+        if (!clear) score-=450;
+        if (battle.rope_ticks && distance_squared(position,battle.rope)<=15*15) score-=280;
+        score-=turn_distance(heading,battle.heading)*17;
+        if (score>best_score) { best=heading; best_score=score; }
+    }
+    return best;
+}
+
+int predicted_broadside(Point origin,int heading,Point player,int player_heading,int speed,WaterTest water) {
+    const int side=near_broadside(origin,player,heading);
+    if (!side) return 0;
+    SeaShot trial;
+    fire(trial,origin,heading,side,EnemyReach);
+    while (trial.steps) {
+        const auto result=fly(trial,player,water);
+        if (result==Struck) return side;
+        if (result==InWater) break;
+        const auto next=step_toward(player,player_heading,speed);
+        if (in_water(next,water)) player=next;
+    }
+    return 0;
 }
 
 } // namespace
@@ -156,29 +198,31 @@ unsigned Game::tick_skirmish(WaterTest water) {
     }
     if (battle.reload) --battle.reload;
     if (battle.enemy_reload) --battle.enemy_reload;
-    const int toward=direction_to({player.x-battle.rival.x,player.y-battle.rival.y});
-    const bool fleeing=s.enemy<=15 || battle.opponent>=FirstMerchantOpponent;
-    int desired=fleeing?(toward+4)%8:toward;
-    const bool broadside=separation<52*52 && separation>20*20;
-    if (!fleeing && broadside) desired=(toward+2)%8;
-    if (!fleeing && separation<=20*20) desired=(toward+4)%8;
+    const bool merchant=battle.opponent>=FirstMerchantOpponent;
+    const bool patrol=battle.opponent==PatrolOpponent;
+    const bool fleeing=merchant || s.enemy<=15;
+    const int rival_speed=merchant?2:fleeing || patrol?3:2;
     if (battle.turn_delay) --battle.turn_delay;
-    if (!battle.turn_delay && desired!=battle.heading) {
-        const int shift=(desired-battle.heading+8)%8;
-        battle.heading=(battle.heading+(shift<=4?1:7))%8;
-        battle.turn_delay=3;
+    if (!battle.turn_delay) {
+        const int desired=rival_course(battle,player,rival_speed,patrol?52:37,fleeing,water);
+        if (desired!=battle.heading) {
+            const int shift=(desired-battle.heading+8)%8;
+            battle.heading=(battle.heading+(shift<=4?1:7))%8;
+            battle.turn_delay=3;
+        }
     }
     if (battle.snared) --battle.snared;
     else {
-        const auto away=step_toward(battle.rival,battle.heading,battle.opponent>=FirstMerchantOpponent?2:fleeing?3:2);
+        const auto away=step_toward(battle.rival,battle.heading,rival_speed);
         if (in_water(away,water)) battle.rival=away;
-        else battle.heading=(battle.heading+2)%8;
+        else battle.turn_delay=0;
     }
 
-    if (separation<=EnemyReach*EnemyReach && !battle.enemy_reload && !fleeing) {
-        const int side=near_broadside(battle.rival,player,battle.heading);
+    if (distance_squared(player,battle.rival)<=EnemyReach*EnemyReach && !battle.enemy_reload &&
+        !battle.shots[1].steps && !fleeing) {
+        const int side=predicted_broadside(battle.rival,battle.heading,player,s.heading,speed,water);
         if (side && fire(battle.shots[1],battle.rival,battle.heading,side,EnemyReach)) {
-            battle.enemy_reload=40;
+            battle.enemy_reload=patrol?34:40;
             effects|=SkirmishEnemyFire;
         }
     }

@@ -41,6 +41,7 @@ namespace tide {
 enum Goods { Wine, Sugar, Cloth, Wool, Timber, Salt, Pepper, Porcelain, GoodsCount };
 enum SpecialtyGoods { MadeiraSugar=GoodsCount, DriedCod, MuranoGlass, GoldDust, MalabarGinger, MarketGoodsCount };
 inline constexpr int SpecialtyCount=int(MarketGoodsCount)-int(GoodsCount);
+inline constexpr int SpecialtyBuyerSlots=5, SpecialtyOrderLimit=14;
 inline constexpr std::array<Text, MarketGoodsCount> GoodsNames{
     "葡萄酒", "蔗糖", "织锦", "羊毛", "木料", "海盐", "胡椒", "瓷器",
     "马德拉糖", "鳕鱼干", "穆拉诺玻璃", "黄金砂", "马拉巴尔姜"
@@ -257,7 +258,7 @@ struct State {
     std::array<int, MarketGoodsCount> cargo{0, 0, 0, 0, 0, 2, 0, 0};
     std::array<std::int8_t, PortCount * GoodsCount> stock_delta{};
     std::array<std::int8_t,SpecialtyCount> specialty_stock{};
-    std::array<std::uint8_t,SpecialtyCount> specialty_demand{};
+    std::array<std::array<std::uint8_t,SpecialtyBuyerSlots>,SpecialtyCount> specialty_demand{};
     LandFight land_fight;
     std::uint8_t shore_campaign=0;
     std::array<std::uint8_t, TaleCount> tales{};
@@ -308,7 +309,8 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912, SaveBytes=1960;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912;
+inline constexpr std::size_t ShoreSaveBytes=1960, SaveBytes=1984;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -327,6 +329,7 @@ struct Game {
     int crew_limit() const;
     int quote(int good, bool sell) const;
     int price_at(int port, int good, bool sell) const;
+    int specialty_orders(int port, int good) const;
     Point merchant_position(int company) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
     int trade_limit(int good, bool sell) const;
@@ -577,7 +580,7 @@ struct Game {
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:
-    bool settle_land_battle(bool retreat=false);
+    bool settle_land_battle(bool retreat=false, bool after_enemy_turn=false);
     void resolve_enclave_siege(int site,bool victory);
     Point pilot_exit{-1,-1};
     Point pilot_remainder{}, pilot_dock_from{};

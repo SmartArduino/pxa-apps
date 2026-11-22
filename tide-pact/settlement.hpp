@@ -26,6 +26,7 @@ inline constexpr EnclaveSite EnclaveSites[]{
      115,4,1},
 };
 inline constexpr int EnclaveCount=std::size(EnclaveSites);
+inline constexpr int EnclaveWorkshopLimit=24, EnclaveExportCap=30;
 
 struct BuildingOrder {
     Text name;

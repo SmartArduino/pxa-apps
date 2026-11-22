@@ -269,7 +269,8 @@ void Game::tick_enclaves() {
         if (has_building(holding,EnclaveWorkshop) && holding.residents>=3 && holding.term) {
             const auto timber=EnclaveSites[i].timber_yield+int(holding.carpenter);
             holding.timber=std::min(cap,holding.timber+timber);
-            if (s.day%2==0) holding.exports=std::min(24,int(holding.exports)+timber);
+            if (s.day%2==0 && holding.exports<EnclaveWorkshopLimit)
+                holding.exports=std::min(EnclaveWorkshopLimit,int(holding.exports)+timber);
         }
     }
 }

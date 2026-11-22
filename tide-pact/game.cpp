@@ -1,6 +1,7 @@
 #include "game.hpp"
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <limits>
 
@@ -205,7 +206,17 @@ int merchant_leg(const Passage& lane, int& miles) {
     return leg;
 }
 
-int merchant_days(const Passage& lane) { return (lane.miles+MerchantMilesPerDay-1)/MerchantMilesPerDay; }
+int merchant_pace(const Passage& lane,int miles,int day) {
+    const int leg=merchant_leg(lane,miles);
+    return MerchantMilesPerDay+sailing_wind(Legs[lane.edge[leg]],lane.reverse[leg],day/30%12);
+}
+
+int merchant_days(const Passage& lane,int day) {
+    int days=0, miles=0;
+    while (miles<lane.miles)
+        miles+=merchant_pace(lane,miles,std::min(99999,day+ ++days));
+    return std::max(1,days);
+}
 }
 
 Point Game::merchant_position(int company) const {
@@ -259,6 +270,15 @@ constexpr Specialty specialties[]{
      "卡利卡特有晒干的姜，亚丁和霍尔木兹的商人会收货。"},
 };
 static_assert(std::size(specialties)==SpecialtyCount);
+static_assert(std::all_of(std::begin(specialties),std::end(specialties),[](const auto& item) {
+    return std::popcount(item.buyers)<=SpecialtyBuyerSlots && !(item.buyers&place_bit(item.source));
+}));
+
+int specialty_buyer_slot(int port,int index) {
+    if (port<0 || port>=PortCount) return -1;
+    const auto bit=place_bit(port), buyers=specialties[index].buyers;
+    return (buyers&bit)?std::popcount(buyers&(bit-1)):-1;
+}
 
 int specialty_stock_base(int index,int day) {
     constexpr int season[]{0,3,1,-2};
@@ -340,12 +360,22 @@ int Game::market_price(int port, int good, bool sell, int supply, int day, bool 
 int Game::price_at(int port, int good, bool sell) const {
     const auto access=market_access(port,good);
     if (access==MarketAccess::Closed || (!sell && access==MarketAccess::Buyer)) return 0;
-    if (good>=GoodsCount)
-        return specialty_price(port,good,sell,market_stock(port,good),s.specialty_demand[good-GoodsCount],s.day);
+    if (good>=GoodsCount) {
+        const int orders=specialty_orders(port,good);
+        if (access==MarketAccess::Buyer && !orders) return 0;
+        return specialty_price(port,good,sell,market_stock(port,good),
+                               access==MarketAccess::Buyer?SpecialtyOrderLimit-orders:0,s.day);
+    }
     return market_price(port,good,sell,market_stock(port,good),s.day);
 }
 
 int Game::quote(int good, bool sell) const { return price_at(s.origin,good,sell); }
+
+int Game::specialty_orders(int port,int good) const {
+    if (good<GoodsCount || good>=MarketGoodsCount) return 0;
+    const int index=good-GoodsCount, slot=specialty_buyer_slot(port,index);
+    return slot<0?0:SpecialtyOrderLimit-s.specialty_demand[index][slot];
+}
 
 TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const {
     if (!port() || market_held() || good<0 || good>=MarketGoodsCount || quantity<=0) return {};
@@ -357,9 +387,10 @@ TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool l
     if (good>=GoodsCount) {
         const int index=good-GoodsCount;
         const bool buyer=access==MarketAccess::Buyer;
-        int supply=market_stock(port,good), demand=s.specialty_demand[index];
+        int supply=market_stock(port,good);
+        int demand=buyer?SpecialtyOrderLimit-specialty_orders(port,good):0;
         TradeQuote offer{};
-        while (offer.units<limit && (buyer?demand<14:sell?supply<24:supply>0)) {
+        while (offer.units<limit && (buyer?demand<SpecialtyOrderLimit:sell?supply<24:supply>0)) {
             const int gold=specialty_price(port,good,sell,supply,demand,s.day);
             if (limit_gold && offer.gold+gold>budget) break;
             ++offer.units;
@@ -1022,14 +1053,18 @@ void Game::plan_merchant(int company) {
     const int origin=MerchantPorts[ship.port];
     int best_good=Wine, best_units=0, best_score=0;
     int best_port=(ship.port+1+company)%MerchantPorts.size();
-    int best_cost=4+2*merchant_days(merchant_lane(ship.port,best_port));
+    int best_cost=4+2*merchant_days(merchant_lane(ship.port,best_port),s.day);
     for (std::size_t hub=0;hub<MerchantPorts.size();++hub) {
         if (hub==ship.port) continue;
         const auto& lane=merchant_lane(ship.port,hub);
-        const int days=merchant_days(lane);
+        const int days=merchant_days(lane,s.day);
         const int arrival=std::min(99999,s.day+days);
         const int provisions=4+2*days;
         const int port=MerchantPorts[hub];
+        if (!best_score && provisions<best_cost) {
+            best_port=hub;
+            best_cost=provisions;
+        }
         for (int good=0;good<GoodsCount;++good) {
             if (market_access(port,good)==MarketAccess::Closed) continue;
             const int local=market_stock(origin,good);
@@ -1071,10 +1106,7 @@ void Game::merchant_day(int company) {
         return;
     }
     const auto& lane=merchant_lane(ship.port,ship.destination);
-    int miles=ship.progress;
-    const int leg=merchant_leg(lane,miles);
-    const int wind=sailing_wind(Legs[lane.edge[leg]],lane.reverse[leg],s.day/30%12);
-    ship.progress+=MerchantMilesPerDay+wind;
+    ship.progress+=merchant_pace(lane,ship.progress,s.day);
     if (ship.progress<lane.miles) return;
 
     ship.port=ship.destination;
@@ -1107,7 +1139,8 @@ void Game::spend_day(int days) {
         ++s.day;
         if (s.day%2==0) {
             for (auto& reserve : s.specialty_stock) reserve+=int(reserve<0)-int(reserve>0);
-            for (auto& demand : s.specialty_demand) demand=std::max(0,int(demand)-2);
+            for (auto& buyers : s.specialty_demand)
+                for (auto& demand : buyers) demand=std::max(0,int(demand)-2);
         }
         for (int port=0;port<PortCount;++port)
             for (int good=0;good<GoodsCount;++good) {
@@ -1660,7 +1693,8 @@ TradeQuote Game::trade(int good, bool sell, int quantity) {
 void Game::apply_trade(int good, bool sell, TradeQuote offer) {
     s.cargo[good]+=sell?-offer.units:offer.units;
     if (good<GoodsCount) s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
-    else if (market_access(s.origin,good)==MarketAccess::Buyer) s.specialty_demand[good-GoodsCount]=offer.stock_change;
+    else if (const int slot=specialty_buyer_slot(s.origin,good-GoodsCount);slot>=0)
+        s.specialty_demand[good-GoodsCount][slot]=offer.stock_change;
     else s.specialty_stock[good-GoodsCount]=offer.stock_change;
     earn(sell?offer.gold:-offer.gold);
 }
@@ -2769,7 +2803,7 @@ constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+3*SpecialtyCount+5+3*LandUnits);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+(2+SpecialtyBuyerSlots)*SpecialtyCount+5+3*LandUnits);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2804,7 +2838,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x4d445054);
+    put(0x4e445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2910,7 +2944,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (int i=0;i<SpecialtyCount;++i) {
         bytes[offset++]=std::byte(s.cargo[GoodsCount+i]);
         bytes[offset++]=std::byte(s.specialty_stock[i]+24);
-        bytes[offset++]=std::byte(s.specialty_demand[i]);
+        for (const auto demand : s.specialty_demand[i]) bytes[offset++]=std::byte(demand);
     }
     const auto& fight=s.land_fight;
     for (auto value : {s.shore_campaign,fight.kind,fight.site,fight.round,fight.holding})
@@ -2931,7 +2965,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
         bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
         bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
-        bytes.size()!=CoastalSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2941,7 +2975,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool shore_campaign=version==0x4d445054 && bytes.size()==SaveBytes;
+    const bool local_orders=version==0x4e445054 && bytes.size()==SaveBytes;
+    const bool shore_campaign=local_orders || (version==0x4d445054 && bytes.size()==ShoreSaveBytes);
     const bool coast_ports=shore_campaign || (version==0x4c445054 && bytes.size()==CoastalSaveBytes);
     const bool parcels=coast_ports || (version==0x4b445054 && bytes.size()==WorldPilotSaveBytes);
     const bool pilotage=parcels || (version==0x4a445054 && bytes.size()==PilotSaveBytes);
@@ -3260,7 +3295,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                     holding.buildings>>EnclaveBuildingCount || holding.under_construction>EnclaveBuildingCount ||
                     bool(holding.under_construction)!=bool(holding.building_day) ||
                     holding.residents>((holding.buildings&building_flag(EnclaveHouses))?18:6) ||
-                    holding.food>70 || holding.timber>70 || holding.exports>24 ||
+                    holding.food>70 || holding.timber>70 || holding.exports>EnclaveExportCap ||
                     holding.term>6 || holding.prisoners>3 ||
                     (!holding.status && (holding.residents || holding.buildings || carpenter)) ||
                     (holding.prisoners && holding.status!=EnclaveOccupied))
@@ -3332,8 +3367,19 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 const int stock=std::to_integer<int>(bytes[offset++])-24;
                 if (stock<-24 || stock>24) return false;
                 s.specialty_stock[i]=stock;
-                s.specialty_demand[i]=std::to_integer<unsigned>(bytes[offset++]);
-                if (s.specialty_demand[i]>14) return false;
+                if (local_orders) {
+                    const int buyers=std::popcount(specialties[i].buyers);
+                    for (int slot=0;slot<SpecialtyBuyerSlots;++slot) {
+                        const auto demand=std::to_integer<std::uint8_t>(bytes[offset++]);
+                        if (demand>SpecialtyOrderLimit || (slot>=buyers && demand)) return false;
+                        s.specialty_demand[i][slot]=demand;
+                    }
+                } else {
+                    const auto demand=std::to_integer<std::uint8_t>(bytes[offset++]);
+                    if (demand>SpecialtyOrderLimit) return false;
+                    const int slot=specialty_buyer_slot(s.origin,i);
+                    if (slot>=0) s.specialty_demand[i][slot]=demand;
+                }
             }
             auto& fight=s.land_fight;
             for (auto* field : {&s.shore_campaign,&fight.kind,&fight.site,&fight.round,&fight.holding})

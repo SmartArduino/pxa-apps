@@ -569,6 +569,37 @@ void chart_skirmish() {
     assert(escape.tick_skirmish(ocean)&SkirmishEnded);
     assert(!escape.encounter() && escape.s.gold==gold &&
            read_sea(escape.s.sea_log[0]).choice==1);
+
+    Game aim;
+    assert(aim.start_helm(-1));
+    aim.s.weather=Privateer;
+    aim.s.range=3;
+    aim.s.enemy=50;
+    assert(aim.begin_skirmish(ocean));
+    const auto center=chart_point(-11,39);
+    aim.s.helm_x=center.x*16+8;
+    aim.s.helm_y=center.y*16+8;
+    aim.s.heading=2;
+    aim.s.skirmish.rival={aim.s.helm_x-36,aim.s.helm_y};
+    aim.s.skirmish.heading=0;
+    aim.s.skirmish.turn_delay=3;
+    aim.s.skirmish.enemy_reload=0;
+    aim.s.skirmish.snared=12;
+    aim.paused=false;
+    Game coast=aim;
+    const auto shoal=[](Point p){return p.x!=chart_point(-11,39).x-1;};
+    assert(!(coast.tick_skirmish(shoal)&SkirmishEnemyFire));
+    Game patrol=aim;
+    patrol.s.skirmish.opponent=PatrolOpponent;
+    patrol.s.skirmish.court=1;
+    assert((patrol.tick_skirmish(ocean)&SkirmishEnemyFire) && patrol.s.skirmish.enemy_reload==34);
+    Game trader=aim;
+    trader.s.skirmish.opponent=FirstMerchantOpponent;
+    assert(!(trader.tick_skirmish(ocean)&SkirmishEnemyFire));
+    assert(aim.tick_skirmish(ocean)&SkirmishEnemyFire);
+    effects=0;
+    for (int tick=0;tick<9;++tick) effects|=aim.tick_skirmish(ocean);
+    assert(effects&SkirmishDamaged);
 }
 
 void coastal_fishery() {
@@ -647,10 +678,18 @@ void regional_specialties_and_land_combat() {
     trader.s.origin=bruges;
     assert(market_access(trader.s.origin,MadeiraSugar)==MarketAccess::Buyer && !trader.quote(MadeiraSugar,false));
     const auto sold=trader.trade(MadeiraSugar,true,4);
-    assert(sold.units==4 && sold.gold>bought.gold && trader.s.specialty_demand[0]==4);
+    assert(sold.units==4 && sold.gold>bought.gold && trader.specialty_orders(bruges,MadeiraSugar)==10);
+    assert(trader.specialty_orders(lisbon,MadeiraSugar)==SpecialtyOrderLimit);
+    trader.s.cargo[MadeiraSugar]=16;
+    assert(trader.trade(MadeiraSugar,true,16).units==10 && !trader.price_at(bruges,MadeiraSugar,true));
+    trader.s.origin=lisbon;
+    assert(trader.trade(MadeiraSugar,true,2).units==2 && trader.specialty_orders(lisbon,MadeiraSugar)==12);
     State saved;
-    assert(decode(saved,encode(trader.s)) && saved.specialty_demand[0]==4 &&
-           saved.specialty_stock[0]==trader.s.specialty_stock[0]);
+    assert(decode(saved,encode(trader.s)) && saved.specialty_demand==trader.s.specialty_demand &&
+           saved.specialty_stock==trader.s.specialty_stock);
+    trader.wait_at_port();
+    trader.wait_at_port();
+    assert(trader.specialty_orders(lisbon,MadeiraSugar)==14 && trader.specialty_orders(bruges,MadeiraSugar)==2);
 
     Game escort;
     assert(escort.begin_land_battle(RoadEscort) && !escort.begin_land_battle(RoadEscort));
@@ -661,10 +700,18 @@ void regional_specialties_and_land_combat() {
            !(escort.s.land_fight.units[0].orders&LandMoved));
     auto& fight=escort.s.land_fight;
     fight.units[0].cell=land_cell({7,3});
+    fight.round=30;
     for (int i=LandFriends;i<LandUnits;++i) fight.units[i].cell=land_cell({i-2,5});
     const int gold=escort.s.gold;
     assert(escort.move_land_unit(0,land_cell({8,3})) && escort.s.gold==gold+90 &&
            (escort.s.shore_campaign&1) && !escort.begin_land_battle(RoadEscort));
+
+    Game guards;
+    assert(guards.begin_land_battle(RoadEscort));
+    const int road_flag=land_cell({8,3});
+    const int last=LandUnits-1;
+    for (int round=0;round<2;++round) assert(guards.end_land_round());
+    assert(guards.s.land_fight.units[last].cell==road_flag);
 }
 
 void island_settlements() {
@@ -718,6 +765,20 @@ void island_settlements() {
     assert(siege.end_land_round() && siege.s.enclaves[1].status==EnclaveOccupied &&
            !siege.s.land_fight.kind);
     assert(siege.s.enclaves[1].prisoners==3 && siege.s.court_hold_until[Portugal]>siege.s.day);
+
+    Game warehouse;
+    warehouse.s.origin=madeira;
+    auto& supplies=warehouse.s.enclaves[0];
+    supplies={.status=EnclaveLease,.buildings=building_flag(EnclaveWorkshop),.residents=4,
+              .food=24,.timber=9,.exports=EnclaveWorkshopLimit,.term=4};
+    assert(warehouse.begin_land_battle(WharfDefense,0));
+    warehouse.s.land_fight.round=5;
+    assert(warehouse.end_land_round() && !warehouse.s.land_fight.kind);
+    assert(supplies.exports==EnclaveWorkshopLimit+4 && decode(saved,encode(warehouse.s)) &&
+           saved.enclaves[0].exports==supplies.exports);
+    warehouse.wait_enclave_day();
+    warehouse.wait_enclave_day();
+    assert(supplies.exports==EnclaveWorkshopLimit+4);
     const int before=siege.s.court_hold_until[Portugal];
     assert(decode(saved,encode(siege.s)) && saved.enclaves[1].prisoners==3);
     assert(siege.decide_enclave_prisoners(1,ReleaseEnclavePrisoners));
