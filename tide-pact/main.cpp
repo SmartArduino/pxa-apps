@@ -52,7 +52,7 @@ enum Action {
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
-    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart,
+    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart, ToggleHelmView,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -77,7 +77,7 @@ enum Action {
     OpenShoreTask, AdvanceShoreTask, OpenShoreJournal, FlagEntry, ShoreEntry=FlagEntry+int(ColorsCount)
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
-static_assert(WorldChart<DockService);
+static_assert(ToggleHelmView<DockService);
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -103,6 +103,7 @@ struct VoyageApp {
     static constexpr pxa::game::LoopOptions loop_options{
         .simulation_step_us=50000, .frame_period_ms=48, .maximum_updates=1};
     static constexpr unsigned SailingDayMs=1200, HelmWatchMs=SailingDayMs/SailingWatches;
+    static constexpr unsigned HelmPulseMs=HelmWatchMs/HelmPulsesPerWatch;
 
     Game game;
     GameAudio audio;
@@ -159,6 +160,8 @@ struct VoyageApp {
     Point previous_helm{};
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
+    bool open_helm_view=false;
+    unsigned trim_ms=0;
     bool title=true, loaded=false, had_save=false, opening=false, reconfigure=true, landscape_requested=false;
     bool foreground=false, dirty=true, save_needed=false, save_active=false, save_failed=false;
     FontChoice font_choice=AutomaticFont;
@@ -333,7 +336,11 @@ struct VoyageApp {
     }
 
     unsigned voyage_interval() const {
-        return (game.s.helm?HelmWatchMs:SailingDayMs)/voyage_rate;
+        return game.s.helm?HelmPulseMs:SailingDayMs/voyage_rate;
+    }
+
+    bool full_helm_chart() const {
+        return open_helm_view && !title && game.s.helm && !game.encounter() && screen==Chart && modal==None;
     }
 
     void cycle_voyage_rate() {
@@ -379,7 +386,7 @@ struct VoyageApp {
                 const bool manual=game.s.helm;
                 if (manual) {
                     previous_helm={game.s.helm_x,game.s.helm_y};
-                    game.helm_step(chart_water);
+                    game.helm_pulses(chart_water,voyage_rate);
                 }
                 else game.advance();
                 last_day+=interval;
@@ -407,6 +414,7 @@ struct VoyageApp {
                 if (!game.sea()) {
                     audio.cue(Sound::Anchor);
                     modal=None; screen=Chart; selected=game.s.origin;
+                    open_helm_view=false;
                     notify();
                 } else if (game.encounter()) {
                     modal=None; screen=Chart; focused=0; notify();
@@ -416,6 +424,7 @@ struct VoyageApp {
         } else last_day=now;
         if (notice_until && now >= notice_until) { notice_until=0; dirty=true; }
         if (saved_until && now >= saved_until) { saved_until=0; dirty=true; }
+        if (trim_ms && now-trim_ms<540 && full_helm_chart()) dirty=true;
         if (!title && screen==Chart && modal==None && game.sea()) {
             const unsigned frame=now/VesselFrameMs;
             if (frame!=presented_vessel_frame) {
@@ -455,7 +464,7 @@ struct VoyageApp {
         int rx=std::max(8,(int(inset.right)-surface_x+scale-1)/scale+3);
         int by=std::max(8,(int(inset.bottom)-surface_y+scale-1)/scale+3);
         safe={sx,sy,d.clip.w-sx-rx,d.clip.h-sy-by};
-        body={safe.x,safe.y+39,safe.w,safe.h-39-36};
+        body={safe.x,safe.y+39,safe.w,safe.h-39-(full_helm_chart()?5:36)};
     }
 
     void skin_box(Draw& d, Rect r, int tile, int edge) {
@@ -574,7 +583,7 @@ struct VoyageApp {
         };
         int x=stat(safe.x+5,CoinsIcon,game.s.gold,gold);
         x=stat(x,HullIcon,game.s.hull,ivory);
-        const auto hour=format(" %02d时",game.s.sail_watch*HoursPerWatch);
+        const auto hour=format(" %02d时",game.s.sail_watch*HoursPerWatch+game.s.helm_pulse);
         const auto date=format("第%d日%s",game.s.day+1,game.s.helm || game.s.sail_watch?hour.contents:"");
         const int date_x=safe.right()-6-d.measure(date);
         const auto stores=format("%d/%d",game.s.stores,int(game.s.water));
@@ -669,8 +678,8 @@ struct VoyageApp {
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
         const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
         d.fill(map,ocean);
-        if (!zoom) {
-            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
+        if (!zoom || full_helm_chart()) {
+            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area,false,false,full_helm_chart());
             return;
         }
         constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
@@ -771,7 +780,12 @@ struct VoyageApp {
 
     void map_vessel(Draw& d, Point at, int hull, bool west, bool following) {
         const int frame=(vessel_frame()+(following?2:0))%VesselFrames;
-        const int w=following?27:VesselFrameWidth, h=following?20:VesselFrameHeight;
+        const bool close=!following && full_helm_chart() && zoom>=4;
+        const auto* detail=close && hull==1?sea_picture.pixels(CaravelDetail):nullptr;
+        const int w=detail?std::clamp(map.w/4,60,88):
+                    following?27:close?48:VesselFrameWidth;
+        const int h=detail?w*CaravelFrameHeight/CaravelFrameWidth:
+                    following?20:close?36:VesselFrameHeight;
         if (!game.paused) {
             const int stern=west?1:-1;
             const Color outer=rgb(0x689b95), inner=rgb(0xb4c5ac);
@@ -780,7 +794,27 @@ struct VoyageApp {
             d.line({edge+stern*3,at.y+5},{edge+stern*(length+3),at.y+7},outer);
             if (frame<5) d.line({edge-2*stern,at.y+2},{edge+6*stern,at.y+3},inner);
         }
-        vessel_sprite(d,hull,frame,{at.x-w/2,at.y-h+6,w,h},west);
+        const Rect body{at.x-w/2,at.y-h+6,w,h};
+        Point mast=VesselMast[hull];
+        int source_w=VesselFrameWidth, source_h=VesselFrameHeight;
+        if (detail) {
+            const int step=trim_ms?std::min(2,int((now-trim_ms)/180)):2;
+            const int pose=game.s.reefed?step:2-step;
+            auto raised=body;
+            raised.y+=VesselHeave[frame];
+            d.image({detail},{pose%2*CaravelFrameWidth,pose/2*CaravelFrameHeight,
+                              CaravelFrameWidth,CaravelFrameHeight},raised,true,west);
+            mast={33,7};
+            source_w=CaravelFrameWidth;
+            source_h=CaravelFrameHeight;
+        } else {
+            vessel_sprite(d,hull,frame,body,west);
+        }
+        if (following || game.s.colors==FurledColors) return;
+        const int x=body.x+(west?source_w-1-mast.x:mast.x)*w/source_w;
+        const int y=body.y+mast.y*h/source_h+VesselHeave[frame];
+        const int width=frame%3==0?11:13;
+        flag_art(d,game.s.colors,{x-(west?0:width-1),y-6,width,8});
     }
 
     void draw_map(Draw& d, int landmark, int berth) {
@@ -796,6 +830,7 @@ struct VoyageApp {
         }
         if (game.sea() && follow && zoom) { chart_x=ship_x; chart_y=ship_y; }
         atlas_background(d);
+        if (full_helm_chart()) helm_rain(d);
         auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         const bool voyage=game.sea() && !game.s.helm;
         const int marked=voyage?game.sailing_target():selected;
@@ -831,13 +866,20 @@ struct VoyageApp {
         int labels=0;
         const Rect compass{map.right()-32,map.y+4,26,26};
         placed[labels++]=compass;
+        const auto ship_mark=map_point(ship_x,ship_y);
+        if (full_helm_chart()) {
+            const int w=zoom>=4 && game.s.ship==1?std::clamp(map.w/4,60,88):48;
+            const int h=std::max(36,w*CaravelFrameHeight/CaravelFrameWidth);
+            placed[labels++]={ship_mark.x-w/2-2,ship_mark.y-h, w+4,h+8};
+            placed[labels++]={map.x+3,map.y+3,92,22};
+        }
         auto draw_label=[&](Point p, Text text, Color color, bool coast, bool force) {
             Rect r{p.x,p.y,d.measure(text)+4,d.font.cell+2};
-            if (r.x<map.x+1 || r.y<map.y+1 || r.right()>map.right()-1 || r.bottom()>map.bottom()-1) return;
+            if (r.x<map.x+1 || r.y<map.y+1 || r.right()>map.right()-1 || r.bottom()>map.bottom()-1) return false;
             if (!force) {
                 for (int i=0;i<labels;++i)
                     if (r.x<placed[i].right() && r.right()>placed[i].x &&
-                        r.y<placed[i].bottom() && r.bottom()>placed[i].y) return;
+                        r.y<placed[i].bottom() && r.bottom()>placed[i].y) return false;
             }
             if (labels<int(placed.size())) placed[labels++]=r;
             if (coast) {
@@ -848,6 +890,21 @@ struct VoyageApp {
                 d.label(p.x+2,p.y,text,shadow);
             }
             d.label(p.x+2,p.y+1,text,color);
+            return true;
+        };
+        auto port_label=[&](Point p,Text label,Color color,int gap) {
+            const int width=d.measure(label)+4;
+            int left=p.x+gap;
+            if (left+width>map.right()) left=p.x-gap-width;
+            const int top=std::clamp(p.y-17,map.y+2,map.bottom()-17);
+            if (draw_label({left,top},label,color,true,false) || !full_helm_chart()) return;
+            if (draw_label({p.x+gap,p.y+5},label,color,true,false) ||
+                draw_label({p.x-gap-width,p.y+5},label,color,true,false)) return;
+            const auto ship_box=placed[1];
+            if (!ship_box.contains(p)) return;
+            const Point offset{ship_box.right()+5,top};
+            if (draw_label(offset,label,color,true,false))
+                d.line({ship_box.right(),p.y},{offset.x-1,top+d.font.cell/2},quiet);
         };
         if (landmark>=0 && berth<0 && approach.count>1) {
             const auto a=approach.points[0], b=approach.points[1];
@@ -867,12 +924,8 @@ struct VoyageApp {
         for (const int i : {marked,target(),game.s.origin}) {
             if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
-            const auto label=Places[i].name;
-            int left=p.x+7;
-            if (left+d.measure(label)+4>map.right()) left=p.x-7-d.measure(label)-4;
-            const int top=std::clamp(p.y-17,map.y+2,map.bottom()-17);
             if (p.y<map.y || p.y>=map.bottom()) continue;
-            draw_label({left,top},label,i==marked ? gold : ivory,true,false);
+            port_label(p,Places[i].name,i==marked?gold:ivory,7);
         }
         for (auto& n:names) {
             const Point source=chart_point(n.lon,n.lat);
@@ -885,22 +938,17 @@ struct VoyageApp {
         if (zoom>=3) for (int i=0;i<PlaceCount;++i) {
             if (!game.charted(i) || i==marked || i==target() || i==game.s.origin) continue;
             const auto p=map_point(Places[i].map);
-            if (map.contains(p)) draw_label({p.x+4,p.y-14},Places[i].name,ivory,true,false);
+            if (!map.contains(p)) continue;
+            if (full_helm_chart()) port_label(p,Places[i].name,ivory,4);
+            else draw_label({p.x+4,p.y-14},Places[i].name,ivory,true,false);
         }
         if (game.sea()) {
-            auto p=map_point(ship_x,ship_y);
+            auto p=ship_mark;
             const auto heading=game.position(.9f);
             const bool west=game.s.helm?Directions[game.s.heading].x<0:heading.x<ship.x;
             if (game.s.in_company)
                 map_vessel(d,{p.x+(west?27:-27),p.y+8},game.s.berth.vessel-1,west,true);
             map_vessel(d,p,game.s.ship,west,false);
-            if (game.s.colors!=FurledColors) {
-                const auto mast=VesselMast[game.s.ship];
-                const int x=p.x-VesselFrameWidth/2+(west?VesselFrameWidth-1-mast.x:mast.x);
-                const int y=p.y-VesselFrameHeight+6+mast.y+VesselHeave[vessel_frame()];
-                const int width=vessel_frame()%3==0?11:13;
-                flag_art(d,game.s.colors,{x-(west?0:width-1),y-6,width,8});
-            }
             if (game.s.helm) {
                 const auto bearing=Directions[game.s.heading];
                 const Point end{p.x+bearing.x,p.y+bearing.y};
@@ -922,8 +970,58 @@ struct VoyageApp {
         d.frame(map,border);
     }
 
+    void helm_rain(Draw& d) {
+        const auto state=game.conditions();
+        if (map.w<=0 || map.h<=0 || (state.weather!=Rain && state.weather!=Squall)) return;
+        const bool strong=state.weather==Squall;
+        const int count=std::clamp(map.w*map.h/(strong?710:1350),10,strong?94:54);
+        const int phase=int((now/36)%4096);
+        const int lean=Directions[state.direction].x>=0?1:-1;
+        for (int i=0;i<count;++i) {
+            const unsigned seed=std::uint32_t(i+1)*2654435761U;
+            const int x=map.x+(int(seed>>16)+phase*2)%map.w;
+            const int y=map.y+(int(seed&65535)+phase*4)%map.h;
+            const int length=3+int((seed>>3)&3);
+            d.line({x,y},{x+lean*length/2,y+length},
+                   strong?rgb(0x658e90):rgb(0x527c80));
+        }
+    }
+
+    void chart_full_helm(Draw& d) {
+        map={body.x,body.y,body.w,body.h-47};
+        const int berth=game.nearby_anchorage(chart_water);
+        const int landmark=berth>=0?berth:game.visible_landmark();
+        const bool salvage=berth<0 && game.near_drift();
+        draw_map(d,landmark,berth);
+        const auto state=game.conditions();
+        const int speed=game.speed_in_tenths_of_a_knot();
+        const auto course=format("%s %d.%d节",Bearings[game.s.heading].data(),speed/10,speed%10);
+        const Rect badge{map.x+4,map.y+4,d.measure(course)+31,19};
+        skin_box(d,badge,0,4);
+        weather_icon(d,state.weather,{badge.x+4,badge.y+2,15,15});
+        d.label(badge.x+22,badge.y+3,course,ivory,badge.w-24);
+
+        const auto bar=[&](int index,int count,int row) {
+            const int left=body.x+index*(body.w+3)/count;
+            return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
+        };
+        constexpr Text labels[]{"+","-","定位","海图"};
+        constexpr int actions[]{ZoomIn,ZoomOut,Center,ToggleHelmView};
+        const bool lookout=game.nature_site()!=NoNatureSite && !salvage;
+        const int count=lookout?6:5;
+        for (int i=0;i<4;++i) button(d,bar(i,count,0),labels[i],actions[i]);
+        if (lookout) button(d,bar(4,count,0),"观察",OpenNatureWatch,true);
+        button(d,bar(count-1,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
+               berth>=0 || salvage,berth<0 && !salvage);
+        button(d,bar(0,4,1),"左舵",SteerLeft);
+        button(d,bar(1,4,1),"右舵",SteerRight);
+        button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},game.s.reefed?SailIcon:ReefIcon);
+        button(d,bar(3,4,1),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
+    }
+
     void chart(Draw& d) {
         if (game.encounter()) { encounter_screen(d); return; }
+        if (full_helm_chart()) { chart_full_helm(d); return; }
         const bool wide=body.w>=body.h+70;
         const int pane=dense_layout()?std::clamp(body.w/3-22,104,148):std::clamp(body.w/3,95,170);
         Rect info{};
@@ -959,7 +1057,11 @@ struct VoyageApp {
                salvage?OpenDriftRecovery:game.s.helm?DockHelm:game.sea()?NextStop:RouteList,
                salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},
                salvage?LetterIcon:game.s.helm && action_w-dock_offset>=55?MooringIcon:-1);
-        if (game.s.helm) { helm_panel(d,info,wide,landmark); return; }
+        if (game.s.helm) {
+            button(d,{map.right()-43,map.bottom()-23,40,20},"航区",ToggleHelmView);
+            helm_panel(d,info,wide,landmark);
+            return;
+        }
 
         skin_box(d,info,0,5);
         const int p=game.sea()?game.sailing_target():selected;
@@ -1748,6 +1850,7 @@ struct VoyageApp {
         if (title) return Calm;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
         if (modal==NatureWatch && game.s.helm) return Doldrums;
+        if (full_helm_chart() && !game.encounter() && game.s.ship==1 && zoom>=4) return CaravelDetail;
         if (screen==Chart && modal==None) return game.s.weather;
         return Calm;
     }
@@ -3328,8 +3431,10 @@ struct VoyageApp {
         }
         if (game.land_away())
             d.center({safe.x,safe.bottom()-27,safe.w,22},"已为返程预留一份粮和一份水",mist);
-        else if (!game.encounter() || modal!=None) footer(d);
-        else d.center({safe.x,safe.bottom()-30,safe.w,25},"选择如何应对",mist);
+        else if (!full_helm_chart()) {
+            if (!game.encounter() || modal!=None) footer(d);
+            else d.center({safe.x,safe.bottom()-30,safe.w,25},"选择如何应对",mist);
+        }
         focused=std::clamp(focused,0,std::max(0,button_count-1));
     }
 
@@ -3927,12 +4032,28 @@ struct VoyageApp {
             changed();
             break;
         case CycleSpeed: cycle_voyage_rate(); break;
+        case ToggleHelmView:
+            if (game.s.helm && !game.encounter()) {
+                open_helm_view=!open_helm_view;
+                if (open_helm_view) {
+                    follow=true;
+                    set_zoom(std::max(zoom,4));
+                    center_at(game.position());
+                }
+            }
+            break;
         case Pause:
             game.paused=!game.paused;
+            if (game.paused) save_needed=true;
             previous_helm={game.s.helm_x,game.s.helm_y};
             last_day=now;
             break;
-        case Trim: game.s.reefed=1-game.s.reefed; audio.cue(Sound::Trim); save_needed=true; break;
+        case Trim:
+            game.s.reefed=1-game.s.reefed;
+            trim_ms=now;
+            audio.cue(Sound::Trim);
+            save_needed=true;
+            break;
         case Retreat:
             game.turn_back(); selected=game.sea()?game.s.destination:game.s.origin;
             last_day=now;
@@ -4089,6 +4210,7 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (full_helm_chart()) { open_helm_view=false; dirty=true; return true; }
         if (modal==NaturePage) { set_modal(nature_page_back); return true; }
         if (modal==NatureWatch) { set_modal(game.land_away()?LandPage:None); return true; }
         if (game.land_away()) return true;

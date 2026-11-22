@@ -23,8 +23,8 @@
 - 「航前」显示预计天数、各航段停靠点和分别需要的食物、淡水。港内可按计划补给并多备两日份，所选航路缺粮时会在离港前提示。在测绘点缺粮或船体破损时可请求拖带回港。遭遇结束后可查看实际变化，再决定何时继续航行。战斗中能接近瞄准、齐射或尝试脱离。
 - 从「航前计划」或海上抬头栏打开「风况」，可查最多三日的天气、风向和预计航速。港内可以候风一天，也可以切换帆势比较航程。海上打开预报时会停船，航线中途可改为下一站靠泊。自由掌舵只预报眼下海域，驶入另一片海域后风况会变。雨和骤风会减速，炎热会多耗淡水，缩帆可减轻骤风影响。
 - 「港务 → 港口商会 → 港际运单」可接急信、货运或载客，部分载客单需要在指定中途港实际靠泊。每次接一份，押金和占舱会在接单前列出。到站交付退回押金，迟到的运费减半，退单或遇难中断会扣除押金。「日志 → 运单」可查下一港、交期和最近一次交付结果。运单和行会采购委托可同时进行。
-- 从「海图 → 航前 → 掌舵」进入自由航行。点海面设航向，也可用左右舵转向，手柄支持 X 和 Y 转舵。风箭头指风吹去的方向，顺风会提速，骤风时可缩帆护船。近岸会触礁，接近图上锚地后可靠泊。
-- 海图上的节数表示每游戏小时航行的海里。在一倍速下约每 1.2 秒推进一游戏日。海图上方可切换倍速，自动航线支持一、二、四倍，自由掌舵支持一、二倍。倍速只改变现实等待时间。自动航线按整日结算，自由掌舵每步推进六小时，靠泊再启航会接着当前时刻走。手动位移按纬度换算经度方向的海里数。首次读取旧版存档时，会补一份尚未到期的运单和采购委托的剩余时间。
+- 从「海图 → 航前 → 掌舵」进入自由航行。点海面设航向，也可用左右舵转向，手柄支持 X 和 Y 转舵。风箭头指风吹去的方向，顺风会提速，骤风时可缩帆护船。近岸会触礁，接近图上锚地后可靠泊。掌舵时点海图角落的「航区」，可展开俯视海图，缩放、拖动或定位回船只。近距离下，卡拉维尔船会显示船桅和收放帆动画。
+- 海图上的节数表示每游戏小时航行的海里。在一倍速下约每 1.2 秒推进一游戏日。海图上方可切换倍速，自动航线支持一、二、四倍，自由掌舵支持一、二倍。倍速只改变现实等待时间。自动航线按整日结算，自由掌舵每次推进一小时，靠泊再启航会接着当前时刻走。手动位移按纬度换算经度方向的海里数。首次读取旧版存档时，会补一份尚未到期的运单和采购委托的剩余时间。
 - 船坞「食物淡水」可在共享容量内分别装卸口粮与淡水，顶部图标旁按粮、水顺序显示库存。炎热天多耗淡水，自由掌舵时下雨能接到一些淡水。老存档中的水粮数量会初始化为等量食物和淡水。
 - 航前计划、海图抬头栏、风况和「食物淡水」都能打开「配给」。食物与淡水可分别节用。航行中的偶数日少发一份，每项节用分别扣三点或四点士气，炎热天仍按常量发水。航前估算和途中预报会按配给计算补给和航速。配给命令随存档保留。
 - 「船坞 → 副官」可以在里斯本招募安娜、在丰沙尔招募贝阿特丽丝、在加的斯招募杜阿尔特。每次出航由一位副官当值，靠港可让其他随船同伴接任。安娜让航行更快并减轻触礁损伤，贝阿特丽丝节省淡水，杜阿尔特减轻敌炮伤害并提高接舷体力。赢得加的斯比试后，杜阿尔特会降低招募费。
@@ -76,6 +76,7 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 加那利至加勒比海的西行参考帆船借东北信风跨洋的走向，马林迪至卡利卡特参考达·伽马在 1498 年从东非横渡阿拉伯海的航行，挪威北岸航线绕过北角。游戏以设计的经过点连接航路，并沿同一陆地掩膜验证。季风改变航速，返航沿相同海域反向行驶。[哥伦布首航日志](https://ems.kcl.ac.uk/content/pub/b001.html) · [达·伽马首航日志](https://www.cambridge.org/core/books/abs/journal-of-the-first-voyage-of-vasco-da-gama-14971499/journal-of-the-voyage-of-vasco-da-gama-in-149799/B47DC1671D3BD096377C4ACEA8DB083D)
 - 丰沙尔灌渠和加的斯盐田的年代与用途参考[联合国教科文组织的灌渠资料](https://whc.unesco.org/en/tentativelists/6230/)和[加的斯湾十五世纪盐业研究](https://revistas.usal.es/uno/index.php/Studia_H_Historia_Medieval/es/article/view/32260)。卡利卡特沿用十五世纪港名，今称科泽科德。[科泽科德地区历史](https://kozhikode.gov.in/about-district/history/)
 - 海岸数据来自公有领域的 Natural Earth 1:10m Land 5.1.1。可用 `python tools/make_chart.py ne_10m_land.zip` 重建海图和航路，需要 Pillow 和 PyShp。[数据](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/) · [许可](https://www.naturalearthdata.com/about/terms-of-use/)
+- 航区的地形明暗取自 Natural Earth 公有领域的 1:50m Gray Earth，并沿用海图陆地掩膜。可用 `python tools/make_relief.py GRAY_50M_SR.zip` 重建地形层。[地形数据](https://www.naturalearthdata.com/downloads/50m-raster-data/50m-gray-earth/)
 - 航速以适航时约四到五节为基础，按风向、载货量、船型和船员调整。历史量级参考达·伽马船队 1497 年从里斯本到加那利水域的航行日志。 [航行日志](https://www.cambridge.org/core/books/journal-of-the-first-voyage-of-vasco-da-gama-14971499/B37176D56DC08C06585EAE631D23BA6F/listing) · [节与海里](https://oceanservice.noaa.gov/facts/nautical-mile-knot.html)
 - 语言按游戏中的说话人和文书设定。瓦伦西亚档案、基尔瓦贸易和刚果王国的口译记载提供了背景。 [瓦伦西亚大学历史图书馆](https://www.uv.es/uvweb/libraries-documentation-service/en/news/new-discovery-historical-library-1285923456427/Novetat.html?id=1286451015046) · [联合国教科文组织](https://whc.unesco.org/en/list/144/) · [刚果口译史研究](https://www.academia.edu/29773271/ARTICLE_Kongo_interpreters_travelling_priests_and_political_leaders_in_the_Kongo_Kingdom_15th_19th_century_International_Journal_of_African_Historical_Studies_49_2_2016_255_276)
 - 佛得角里贝拉格兰德、埃尔米纳和基尔瓦的港口注记参考 UNESCO。开普航路时代背景参考英国国家海事博物馆。[里贝拉格兰德](https://whc.unesco.org/en/list/1310/) · [埃尔米纳](https://whc.unesco.org/en/list/34/) · [基尔瓦](https://whc.unesco.org/en/list/144/) · [开普航路](https://www.rmg.co.uk/collections/objects/rmgc-object-14176)

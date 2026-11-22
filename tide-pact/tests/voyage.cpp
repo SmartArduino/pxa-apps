@@ -488,6 +488,38 @@ void free_helm() {
     assert(decode(save,encode(grounded.s)));
 }
 
+void continuous_helm() {
+    const auto ocean=[](Point) { return true; };
+    Game ship;
+    assert(ship.start_helm(-1));
+    const int start=ship.s.helm_x;
+    ship.helm_pulses(ocean,1);
+    assert(ship.s.helm_x<start && ship.s.sail_watch==0 && ship.s.helm_pulse==1);
+
+    const int first=ship.s.helm_x, y=ship.s.helm_y;
+    ship.s.heading=0;
+    ship.helm_pulses(ocean,1);
+    assert(ship.s.helm_x==first && ship.s.helm_y<y && ship.s.helm_pulse==2);
+
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.helm_pulse==2);
+    ship.s=saved;
+    ship.restore();
+    assert(ship.paused);
+    ship.paused=false;
+    ship.helm_pulses(ocean,HelmPulsesPerWatch-2);
+    assert(ship.s.helm_pulse==0 && ship.s.sail_watch==1 && ship.s.day==0);
+
+    Game docking;
+    assert(docking.start_helm(-1));
+    docking.helm_pulses(ocean,1);
+    assert(docking.dock_helm(ocean) && decode(saved,encode(docking.s)));
+    assert(!saved.helm && saved.helm_pulse==1);
+    assert(docking.start_helm(-1));
+    docking.helm_pulses(ocean,HelmPulsesPerWatch-1);
+    assert(docking.s.sail_watch==1 && docking.s.helm_pulse==0);
+}
+
 void sailing_units() {
     const Game at_port;
     assert(at_port.forecast(passage(lisbon,cadiz)).days==2);
@@ -1591,6 +1623,7 @@ int main() {
     naval_and_duel_combat();
     new_events_and_investment();
     free_helm();
+    continuous_helm();
     sailing_units();
     weather_forecasts();
     sailing_rations();

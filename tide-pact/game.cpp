@@ -412,7 +412,7 @@ LandLeg Game::land_cost(LandAction action) const {
 
 bool Game::cadiz_low_tide() const {
     // A lunar semidiurnal cycle is approximately 12 h 25 min.
-    const int phase=((s.day*HoursPerDay+s.sail_watch*HoursPerWatch)*60+35)%745;
+    const int phase=((s.day*HoursPerDay+s.sail_watch*HoursPerWatch+s.helm_pulse)*60+35)%745;
     return phase<185 || phase>=560;
 }
 
@@ -1265,16 +1265,31 @@ bool Game::dock_helm(WaterTest water_at) {
 }
 
 void Game::helm_step(WaterTest water_at) {
+    helm_move(water_at,HelmPulsesPerWatch-s.helm_pulse);
+}
+
+void Game::helm_pulses(WaterTest water_at, int count) {
+    for (int i=0;i<count && s.helm && !paused && !encounter();++i)
+        helm_move(water_at,1);
+}
+
+void Game::helm_move(WaterTest water_at, int pulses) {
     if (!s.helm || paused || encounter()) return;
     const bool started_near_drift=near_drift();
     const auto weather=conditions();
     const bool has_pilot=s.first_mate==Pilot;
-    const auto [dx,dy]=helm_displacement(Directions[s.heading],s.helm_y,
-                                       sailing_miles_per_day(s,load(),s.spirits,
-                                                            wind_along(s.heading,weather),weather.weather));
+    const auto watch=helm_displacement(Directions[s.heading],s.helm_y,
+                                      sailing_miles_per_day(s,load(),s.spirits,
+                                                           wind_along(s.heading,weather),weather.weather));
+    const int through=s.helm_pulse+pulses;
+    const auto part=[before=s.helm_pulse,through](int displacement) {
+        return displacement*through/HelmPulsesPerWatch-displacement*before/HelmPulsesPerWatch;
+    };
+    const int dx=part(watch.x), dy=part(watch.y);
     const int steps=std::max(1,(std::max(std::abs(dx),std::abs(dy))+3)/4);
     const int start_x=s.helm_x, start_y=s.helm_y;
-    auto last_cell=position();
+    const auto first_cell=position();
+    auto last_cell=first_cell;
     const int starting_berth=anchorage_at(last_cell,water_at);
     bool reached_berth=false;
     Text interruption;
@@ -1301,7 +1316,8 @@ void Game::helm_step(WaterTest water_at) {
         }
     }
     record_wake();
-    const int found=sighting(position());
+    const bool changed_cell=last_cell.x!=first_cell.x || last_cell.y!=first_cell.y;
+    const int found=changed_cell || through==HelmPulsesPerWatch?sighting(last_cell):-1;
     if (found>=0) {
         notice=found<PortCount?"发现新港":"发现测绘点";
         paused=true;
@@ -1310,7 +1326,8 @@ void Game::helm_step(WaterTest water_at) {
         if (found<0) notice="已到锚地，可以靠泊";
         paused=true;
     }
-    const bool new_day=advance_watch();
+    s.helm_pulse=through%HelmPulsesPerWatch;
+    const bool new_day=through==HelmPulsesPerWatch && advance_watch();
     if (s.hull<=0) { rescue(); return; }
     if (new_day) {
         if (!consume_day(conditions())) return;
@@ -2613,7 +2630,7 @@ static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
 constexpr int AddedPorts=PortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2648,7 +2665,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x44445054);
+    put(0x45445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2710,6 +2727,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         bytes[offset++]=std::byte(value);
     for (auto until : s.court_hold_until) put(until);
     for (auto step : s.shore_tasks) bytes[offset++]=std::byte(step);
+    bytes[offset++]=std::byte(s.helm_pulse);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2730,7 +2748,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool with_colors=version==0x44445054 && bytes.size()==SaveBytes;
+    const bool continuous=version==0x45445054 && bytes.size()==SaveBytes;
+    const bool with_colors=continuous || (version==0x44445054 && bytes.size()==SaveBytes);
     const bool with_berth=with_colors || (version==0x43445054 && bytes.size()==BerthSaveBytes);
     const bool expanded=with_berth || (version==0x42445054 && bytes.size()==NatureSaveBytes);
     const bool with_merchants=expanded || (version==0x41445054 && bytes.size()==MerchantSaveBytes);
@@ -2974,6 +2993,10 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 step=std::to_integer<std::uint8_t>(bytes[offset++]);
                 if (step>3) return false;
             }
+        }
+        if (continuous) {
+            s.helm_pulse=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (s.helm_pulse>=HelmPulsesPerWatch) return false;
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

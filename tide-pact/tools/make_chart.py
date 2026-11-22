@@ -8,7 +8,6 @@ import struct
 import zipfile
 from pathlib import Path
 
-import shapefile
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -23,6 +22,8 @@ def project(lon, lat):
 
 
 def mask_from_land(path):
+    import shapefile
+
     mask = Image.new("L", (W, H))
     draw = ImageDraw.Draw(mask)
     with zipfile.ZipFile(path) as archive:

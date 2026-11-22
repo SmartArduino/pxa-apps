@@ -3,6 +3,7 @@
 
 namespace tide::art {
 extern const unsigned char chart[];
+extern const unsigned char relief[];
 extern const unsigned char harbor[];
 extern const unsigned char title_compact[];
 extern const unsigned char storm[];

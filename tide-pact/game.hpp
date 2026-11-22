@@ -122,6 +122,7 @@ inline constexpr Point Directions[]{{0,-16},{11,-11},{16,0},{11,11},{0,16},{-11,
 inline constexpr Text Bearings[]{"北","东北","东","东南","南","西南","西","西北"};
 inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风"};
 inline constexpr int HoursPerDay=24, SailingWatches=4, HoursPerWatch=HoursPerDay/SailingWatches;
+inline constexpr int HelmPulsesPerWatch=6;
 enum DriftStage : std::uint8_t { DriftUnheard, DriftSearching, DriftRecovered, DriftReturned, DriftFiled };
 enum DriftMethod { LaunchBoat, RigHook };
 inline constexpr Point DriftGround{174+LegacyMapX,335+LegacyMapY};
@@ -218,7 +219,7 @@ struct State {
     std::uint8_t escort=EscortOpen, cadiz_victory=0;
     std::uint32_t guild_stakes=0;
     int helm_x=0, helm_y=0;
-    std::uint8_t water=74, helm=0, heading=0, sail_watch=0;
+    std::uint8_t water=74, helm=0, heading=0, sail_watch=0, helm_pulse=0;
     std::uint8_t ration_flags=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
@@ -319,6 +320,7 @@ struct Game {
     SeaConditions conditions() const { return conditions_at(position(),s.day); }
     bool start_helm(int destination);
     void helm_step(WaterTest water_at);
+    void helm_pulses(WaterTest water_at, int count);
     int visible_landmark() const;
     HarborApproach harbor_approach(int port, WaterTest water_at) const;
     int nearby_anchorage(WaterTest water_at=nullptr) const;
@@ -476,6 +478,7 @@ private:
     void check_ship();
     bool consume_day(SeaConditions weather);
     void clear_helm();
+    void helm_move(WaterTest water_at, int pulses);
     bool observation_day();
     void reveal_chart(Point center, int radius);
     int lookout_radius() const { return s.first_mate==Pilot?19:14; }
