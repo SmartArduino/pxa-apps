@@ -4,17 +4,18 @@ namespace tide {
 
 enum Language : std::uint8_t {
     Portuguese, English, Flemish, French, Castilian, Arabic, Valencian,
-    Ligurian, Venetian, Akan, Kikongo, Swahili, LanguageCount
+    Ligurian, Venetian, Akan, Kikongo, Swahili, Norwegian, Persian, Malayalam, LanguageCount
 };
 enum Fluency : std::uint8_t { Unfamiliar, Phrases, Fluent };
 
 inline constexpr Text LanguageNames[]{
     "葡萄牙语","英语","佛兰德语","法语","卡斯蒂利亚语","阿拉伯语","瓦伦西亚语",
-    "利古里亚语","威尼斯语","阿坎语","刚果语","斯瓦希里语"
+    "利古里亚语","威尼斯语","阿坎语","刚果语","斯瓦希里语","挪威语","波斯语","马拉雅拉姆语"
 };
 inline constexpr Language PortSpeech[]{
     Portuguese,English,Flemish,French,Castilian,Arabic,Valencian,Ligurian,Arabic,Venetian,
-    Arabic,Portuguese,Castilian,Portuguese,Akan,Kikongo,Swahili,Swahili,Swahili,Arabic
+    Arabic,Portuguese,Castilian,Portuguese,Akan,Kikongo,Swahili,Swahili,Swahili,Arabic,
+    Norwegian,Norwegian,Arabic,Persian,Malayalam,Castilian
 };
 inline constexpr Language BookLanguage[]{Portuguese,Portuguese,Arabic,Portuguese};
 inline constexpr Language WitnessLanguage[]{Portuguese,Portuguese,Castilian,Akan};
@@ -24,7 +25,7 @@ static_assert(std::size(BookLanguage)==ExpeditionCount && std::size(WitnessLangu
 
 inline constexpr Language port_second_language(int port) {
     switch (port) {
-    case cadiz: case kilwa: return Arabic;
+    case cadiz: case kilwa: case hormuz: case calicut: return Arabic;
     case tangier: case valencia: return Castilian;
     case elmina: return Portuguese;
     default: return LanguageCount;

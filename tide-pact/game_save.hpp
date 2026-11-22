@@ -11,7 +11,7 @@ struct VoyageSave {
     static constexpr std::size_t HeadBytes=960;
     static constexpr const char* HeadKey="voyage-v2";
     static constexpr const char* TailKeys[]{"voyage-v2-tail-a","voyage-v2-tail-b"};
-    static_assert(SaveBytes+1>HeadBytes);
+    static_assert(SaveBytes+1>HeadBytes && SaveBytes+1-HeadBytes<=HeadBytes);
 
     std::array<std::byte,SaveBytes+1> bytes{};
     std::array<std::byte,HeadBytes+72> packet{};

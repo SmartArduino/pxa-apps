@@ -51,7 +51,7 @@ enum Action {
     ShowOfficers, OfficerTalk, OfficerDuty, OfficerHire, OfficerMark,
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
-    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed,
+    ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -66,11 +66,11 @@ enum Action {
     OpenDispatch, ViewDispatchReceipt, AcceptDispatch, FileDispatch, MarkDispatch, AskCancelDispatch,
     CancelDispatch, OpenLandReport, WalkLandStream, WalkLandPass, WalkLandCopy, WalkLandLookout,
     WalkLandBack, FileLandReport, OpenTradeQuantity, QuantityBuy, QuantitySell,
-    QuantityBackspace, QuantityMaximum, QuantityConfirm, QuantityDigit,
+    QuantityBackspace, QuantityMaximum, QuantityConfirm, WalkRegionalTrail, WaitLandTide, QuantityDigit,
     DispatchEntry=QuantityDigit+10
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
-static_assert(CycleSpeed<DockService);
+static_assert(WorldChart<DockService);
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -315,9 +315,7 @@ struct VoyageApp {
 
     static bool chart_water(Point p) {
         if (p.x<0 || p.y<0 || p.x>=ChartWidth || p.y>=ChartHeight) return false;
-        // make_chart packs each terrain class as four palette shades.
-        const auto kind=Image{art::chart}.index(p.x,p.y)/4;
-        return kind!=4 && kind!=5 && kind!=7;
+        return Image{art::chart}.index(p.x,p.y)<2;
     }
 
     unsigned voyage_interval() const {
@@ -643,13 +641,17 @@ struct VoyageApp {
     }
     Point map_point(Point p) const { return map_point(p.x,p.y); }
     void atlas_background(Draw& d) {
-        factor=std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight)*
-               (zoom==0 ? 1.0f : std::pow(1.52f,float(zoom)));
+        factor=zoom==0?std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight):
+            std::min(float(map.w)/LegacyChartWidth,float(map.h)/LegacyChartHeight)*std::pow(1.52f,float(zoom));
         chart_x=std::clamp(chart_x,0.f,float(ChartWidth));
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
         const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
         d.fill(map,ocean);
+        if (!zoom) {
+            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
+            return;
+        }
         constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
         d.fill(chart_area,uncharted);
         const int left=std::max(0,int((chart_x-map.w/(2*factor))/ChartCell)-1);
@@ -750,7 +752,7 @@ struct VoyageApp {
             ship_x=std::lerp(float(previous_helm.x),float(game.s.helm_x),blend)/16;
             ship_y=std::lerp(float(previous_helm.y),float(game.s.helm_y),blend)/16;
         }
-        if (game.sea() && follow) { chart_x=ship_x; chart_y=ship_y; }
+        if (game.sea() && follow && zoom) { chart_x=ship_x; chart_y=ship_y; }
         atlas_background(d);
         auto path=game.sea() ? game.route : passage(game.s.origin,selected);
         const bool voyage=game.sea() && !game.s.helm;
@@ -772,13 +774,16 @@ struct VoyageApp {
                 d.line(map_point(approach.points[i-1]),map_point(approach.points[i]),gold,true);
         }
 
-        struct Geo { int lon,lat; Text label; bool land; };
+        struct Geo { float lon,lat; Text label; bool land; int associated_port=-1; };
         constexpr Geo names[] = {
-            {-25,15,"大西洋",false}, {-5,24,"撒哈拉",true},
-            {14,39,"地中海",false}, {3,-2,"几内亚湾",false},
-            {46,5,"印度洋",false}, {16,-10,"非洲",true},
-            {20,51,"欧洲",true}, {42,-21,"莫桑比克海峡",false},
-            {-23,0,"赤道",false}, {-19,65,"冰岛",true}, {18,63,"斯堪的纳维亚",true}
+            {-25,79,"北冰洋",false}, {-89,43,"北美洲",true}, {-57,-16,"南美洲",true},
+            {17,34,"地中海",false}, {-26,15,"佛得角",false,ribeira}, {64,-7,"印度洋",false},
+            {-43,35,"大西洋",false}, {-47,71,"格陵兰",true}, {20,51,"欧洲",true},
+            {16,-10,"非洲",true}, {77,21,"印度半岛",true}, {-74,13,"加勒比海",false},
+            {45,16,"阿拉伯半岛",true}, {64,16,"阿拉伯海",false}, {51,27,"波斯湾",false},
+            {39,20,"红海",false}, {35,75,"巴伦支海",false}, {-19,65,"冰岛",true},
+            {18,63,"斯堪的纳维亚",true}, {-5,24,"撒哈拉",true}, {3,-2,"几内亚湾",false},
+            {42,-21,"莫桑比克海峡",false}, {-23,0,"赤道",false}, {89,14,"孟加拉湾",false}
         };
         std::array<Rect,64> placed{};
         int labels=0;
@@ -812,7 +817,7 @@ struct VoyageApp {
             if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
             if (!map.contains(p)) continue;
-            const bool landed=game.s.visited&(1U<<i);
+            const bool landed=game.s.visited&place_bit(i);
             auto c=i==target()?gold:i>=PortCount?mint:landed?ivory:quiet;
             d.diamond(p,i==marked ? 6 : i==target() ? 4 : 3,ink);
             d.diamond(p,i==marked ? 4 : 2,c);
@@ -828,10 +833,12 @@ struct VoyageApp {
             draw_label({left,top},label,i==marked ? gold : ivory,true,false);
         }
         for (auto& n:names) {
-            const Point source{(n.lon+45)*7,(ChartNorth-n.lat)*8};
-            if (!game.chart_cell(source.x/ChartCell,source.y/ChartCell)) continue;
+            const Point source=chart_point(n.lon,n.lat);
+            if (zoom && !game.chart_cell(source.x/ChartCell,source.y/ChartCell) &&
+                (n.associated_port<0 || !game.charted(n.associated_port))) continue;
             auto p=map_point(source);
-            draw_label({p.x-d.measure(n.label)/2,p.y},n.label,n.land ? rgb(0x293e37) : mist,false,false);
+            draw_label({p.x-d.measure(n.label)/2,p.y},n.label,zoom && n.land?rgb(0x293e37):ivory,
+                       !zoom || !n.land,false);
         }
         if (zoom>=3) for (int i=0;i<PlaceCount;++i) {
             if (!game.charted(i) || i==marked || i==target() || i==game.s.origin) continue;
@@ -1458,7 +1465,9 @@ struct VoyageApp {
         const int h=std::min(inside.h,inside.w*5/8);
         const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
         constexpr int scene_w=288, scene_h=136;
-        d.image({outside?art::outskirts:art::towns},{0,outside?0:city*scene_h,scene_w,scene_h},view);
+        if (outside) d.image({art::outskirts},{0,0,scene_w,scene_h},view);
+        else if (Towns[city].port==calicut) d.image({art::calicut},{0,0,scene_w,scene_h},view);
+        else d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
         d.frame(view,rgb(0x342921));
         return view;
     }
@@ -1511,9 +1520,15 @@ struct VoyageApp {
             const auto gate=town_on_screen(LisbonGate);
             harbor_button(d,{town_area.right()-47,gate.y+4,45,21},"出城",WalkToCityGate,
                           town.entrance==CityGateTarget);
+        } else if (regional_survey_at(layout.port)>=0) {
+            const auto gate=town_on_screen(layout.field_gate);
+            const Text field=layout.port==madeira?"去水渠":"去盐田";
+            harbor_button(d,{town_area.right()-62,gate.y+4,60,21},field,WalkRegionalTrail,
+                          town.entrance==RegionalTrailTarget);
         }
 
-        if (town.moving() && town.entrance==CityGateTarget) harbor_hint(d,"前往城门");
+        if (town.moving() && town.entrance==RegionalTrailTarget) harbor_hint(d,"沿城边小路走");
+        else if (town.moving() && town.entrance==CityGateTarget) harbor_hint(d,"前往城门");
         else if (town.moving() && town.entrance==TownStoryTarget && can_talk) {
             const auto caption=format("前往%s",TownNames[talk_door].data());
             harbor_hint(d,caption);
@@ -1572,21 +1587,27 @@ struct VoyageApp {
     }
 
     void land_page(Draw& d) {
-        const int stage=game.s.land_stage;
+        const int stage=game.land_stage(), region=regional_survey_at(game.s.origin);
+        const auto* survey=region>=0?&RegionalSurveys[region]:nullptr;
         const int x=body.x+7, y=body.y+29, w=body.w-14;
-        const int bottom=body.bottom();
+        const int bottom=body.bottom(), row=bottom-37;
+        const bool tidal=!inland_archive && stage==LandUnvisited && game.s.origin==cadiz;
+        const bool low_tide=tidal && game.cadiz_low_tide();
         const int picture_width=std::min(128,w/3);
-        const Rect picture{x,y,picture_width,std::min(picture_width*104/160,bottom-y-44)};
+        const Rect picture{x,y,picture_width,std::min(picture_width*104/160,bottom-y-(tidal?65:44))};
         const int text_x=picture.right()+8, text_w=x+w-text_x;
         const bool filed=stage>=LandFiled;
         const bool full=stage==LandFullNotes || stage==LandFullFiled;
-        const int reward=full?215:150;
-        page_title(d,inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
-        d.image({art::inland},{0,0,160,104},picture);
+        const int reward=survey?(full?survey->full_reward:survey->sketch_reward):(full?215:150);
+        page_title(d,survey?(inland_archive?survey->report:survey->site):
+                   inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
+        const auto* scene=game.s.origin==madeira?art::levada:game.s.origin==cadiz?art::marsh:art::inland;
+        d.image({scene},{0,0,160,104},picture);
         d.frame(picture,border);
         Text story;
         if (inland_archive) {
-            if (filed)
+            if (survey) story=full?survey->archive_full:survey->archive_sketch;
+            else if (filed)
                 story=game.s.road_delivery?"丰沙尔的船匠收到了木料。往后商队还会沿这条路给里斯本供货。":
                       "抄图人把图抄给商队。山里的木料正运进市场，商会想找船送一批去丰沙尔。";
             else story=full?"你画出了望台背后的岔路。抄图人认出那正是商队常走错的地方。":
@@ -1594,43 +1615,50 @@ struct VoyageApp {
         } else {
             switch (stage) {
             case LandUnvisited:
-                story=game.knows_land_pass()?"河边好走。旧货道翻山，省一天，却要多带水。出发前得留足返程的水粮。":
+                story=survey?survey->approach:
+                    game.knows_land_pass()?"河边好走。旧货道翻山，省一天，却要多带水。出发前得留足返程的水粮。":
                     "沿溪能走到老路碑。想抄近路，先去河堤找货签，或者让安娜担任大副。";
                 break;
-            case LandRidge: story="路碑的字还认得。拓碑就能交图。翻上望台，还能把背坡的岔路画进去。"; break;
-            case LandInscription: story="你拓下几处地名和里程。把拓片和草图带回里斯本吧。"; break;
-            case LandLookout: story="从望台上能看见背坡的两条路。你辨出通向村子的那条，添在图上。"; break;
-            case LandNotes: case LandFullNotes: story="考察已经结束。进城去档案室，在「驿道图」里交稿。"; break;
-            default: story="这条驿道已经画进档案室的图册。"; break;
+            case LandRidge: story=survey?survey->junction:"路碑的字还认得。拓碑就能交图。翻上望台，还能把背坡的岔路画进去。"; break;
+            case LandInscription: story=survey?survey->sketch:"你拓下几处地名和里程。把拓片和草图带回里斯本吧。"; break;
+            case LandLookout: story=survey?survey->full:"从望台上能看见背坡的两条路。你辨出通向村子的那条，添在图上。"; break;
+            case LandNotes: case LandFullNotes: story="考察已经结束。进城去档案室交稿吧。"; break;
+            default: story="这处地形已经画进档案室的图册。"; break;
             }
         }
-        d.wrap({text_x,y,text_w,bottom-y-53},story,ivory,15);
+        d.wrap({text_x,y,text_w,bottom-y-(tidal?67:53)},story,ivory,15);
         const auto leg_button=[&](Rect rect, LandAction step, Text label, int action, bool accent=false) {
-            const auto cost=LandLegs[step];
+            const auto cost=game.land_cost(step);
             const bool blocked=!game.land_requirement(step).empty();
             const auto price=format("%d日 粮%d 水%d",cost.days,cost.food,cost.water);
             button(d,rect,label,action,accent,blocked,price);
         };
-        const int row=bottom-37;
         if (inland_archive && !filed) {
             button(d,{x,row,w,PricedButtonHeight},format("交图 · %d金",reward),FileLandReport,true);
-        } else if (inland_archive && !game.s.road_delivery) {
+        } else if (inland_archive && !survey && !game.s.road_delivery) {
             button(d,{x,row,w,PricedButtonHeight},"查看港际运单",OpenDispatch,true);
+        } else if (filed) {
+            d.label(x,row+8,"已入档",mint,w);
         } else if (!inland_archive && stage==LandUnvisited) {
             const int half=(w-5)/2;
-            leg_button({x,row,half,PricedButtonHeight},FollowStream,"沿溪走",WalkLandStream,true);
+            const bool short_path=game.knows_land_pass();
+            leg_button({x,row,half,PricedButtonHeight},FollowStream,survey?survey->routes[0]:"沿溪走",WalkLandStream,true);
             leg_button({x+half+5,row,w-half-5,PricedButtonHeight},CrossPass,
-                       game.knows_land_pass()?"翻山抄近路":"近路未解锁",WalkLandPass);
-            if (!game.land_requirement(FollowStream).empty() ||
-                (game.knows_land_pass() && !game.land_requirement(CrossPass).empty()))
+                       survey?survey->routes[1]:short_path?"翻山抄近路":"近路未解锁",WalkLandPass);
+            if (tidal) {
+                d.label(x,row-21,low_tide?"低潮，可走潮滩":"涨潮，潮滩不通",low_tide?mint:gold,w-61);
+                if (!low_tide) button(d,{x+w-58,row-24,58,21},"候潮",WaitLandTide);
+            } else if (!game.land_requirement(FollowStream).empty() ||
+                       (short_path && !game.land_requirement(CrossPass).empty())) {
                 d.center({x,row-17,w,15},"水粮不足，记得留返程份额",vermilion);
+            }
         } else if (!inland_archive && stage==LandRidge) {
             const int third=(w-8)/3;
-            leg_button({x,row,third,PricedButtonHeight},CopyMilestone,"拓路碑",WalkLandCopy,true);
-            leg_button({x+third+4,row,third,PricedButtonHeight},SurveyLookout,"登望台",WalkLandLookout);
-            leg_button({x+2*third+8,row,w-2*third-8,PricedButtonHeight},ReturnToCity,"回河堤",WalkLandBack);
+            leg_button({x,row,third,PricedButtonHeight},CopyMilestone,survey?survey->observations[0]:"拓路碑",WalkLandCopy,true);
+            leg_button({x+third+4,row,third,PricedButtonHeight},SurveyLookout,survey?survey->observations[1]:"登望台",WalkLandLookout);
+            leg_button({x+2*third+8,row,w-2*third-8,PricedButtonHeight},ReturnToCity,survey?"回城":"回河堤",WalkLandBack);
         } else if (game.land_away()) {
-            leg_button({x,row,w,PricedButtonHeight},ReturnToCity,"回河堤",WalkLandBack,true);
+            leg_button({x,row,w,PricedButtonHeight},ReturnToCity,survey?"回城":"回河堤",WalkLandBack,true);
         }
     }
 
@@ -1694,7 +1722,7 @@ struct VoyageApp {
             set_modal(TimberTrailPage);
             return;
         }
-        if (id==PostRoadTarget) {
+        if (id==PostRoadTarget || id==RegionalTrailTarget) {
             inland_archive=false;
             set_modal(LandPage);
             return;
@@ -1822,6 +1850,7 @@ struct VoyageApp {
     }
     void route_list(Draw& d) {
         page_title(d,"已知航点");
+        button(d,{body.right()-169,body.y+3,36,23},"全图",WorldChart);
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
         button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
         std::array<int,PlaceCount> order{};
@@ -1988,7 +2017,7 @@ struct VoyageApp {
         std::array<int,PortCount> order{};
         int count=0;
         for (int port=0;port<PortCount;++port)
-            if (game.s.visited & (1U<<port)) order[count++]=port;
+            if (game.s.visited & place_bit(port)) order[count++]=port;
         std::sort(order.begin(),order.begin()+count,[&](int a,int b) {
             return game.price_at(a,good,true)>game.price_at(b,good,true);
         });
@@ -2626,7 +2655,7 @@ struct VoyageApp {
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
             const int p=entries[page*rows+i];
-            bool seen=game.s.surveyed & (1U<<p);
+            bool seen=game.s.surveyed & place_bit(p);
             row(d,i,Places[p].name,seen?"已测绘":"待测绘",AtlasEntry+p,seen);
         }
         pager(d,pages);
@@ -2701,8 +2730,11 @@ struct VoyageApp {
         const int y=body.y;
         const Rect actions{x,bottom-28,w,24};
         page_title(d,study.title);
-        if (at_archive && game.s.origin==lisbon && game.s.land_stage>=LandNotes)
-            button(d,{body.right()-107,body.y+3,54,23},"驿道图",OpenLandReport,game.s.land_stage<LandFiled);
+        if (at_archive && game.land_stage()>=LandNotes) {
+            const int land=regional_survey_at(game.s.origin);
+            const Text report=land>=0?RegionalSurveys[land].report:Text("驿道图");
+            button(d,{body.right()-107,body.y+3,54,23},report,OpenLandReport,game.land_stage()<LandFiled);
+        }
         if (on_site || record.stage>=HasEvidence) {
             const bool large=body.h>=174 || w>=290;
             const int art_w=large?std::min(w/3,126):46;
@@ -2787,7 +2819,7 @@ struct VoyageApp {
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
             "在目的地页点掌舵可自由出海，用左右舵或点海面改航向。未知港口可从传闻圈出大致海域，驶近后会发现港口。",
             "航海时点顶部倍速。沿航线可用一、二或四倍，自由掌舵可用一或二倍。船速和水粮消耗按原航程计算。",
-            "从里斯本城门走到河堤，沿旧驿道进山。两条路线耗费的天数和水粮不同。把测绘图带回城内档案室。",
+            "里斯本可从河堤走旧驿道，丰沙尔可调查灌渠，加的斯可去盐田。按水粮与潮位选择路，回城到档案室交图。",
             "去港务的档案室抄录手记。可出资或领预支，也可询问船工。抵达水域后点考察，按线索观测，再回原港交付。错过首报仍可交复测。"
         };
         page=std::clamp(page,0,int(std::size(instructions))-1);
@@ -3047,9 +3079,15 @@ struct VoyageApp {
                     town_go(OutskirtsSites[id],OutsideGateTarget+id);
                 }
                 break;
+            case WalkRegionalTrail:
+                if (modal==HarborTown && !outside && regional_survey_at(game.s.origin)>=0)
+                    town_go(Towns[town_id].field_gate,RegionalTrailTarget);
+                break;
+            case WaitLandTide:
+                if (modal==LandPage && game.wait_land_tide()) changed();
+                break;
             case OpenLandReport:
-                if (modal==ExpeditionPage && game.archive_here()==expedition_item &&
-                    game.s.origin==lisbon && game.s.land_stage>=LandNotes) {
+                if (modal==ExpeditionPage && game.archive_here()==expedition_item && game.land_stage()>=LandNotes) {
                     inland_archive=true;
                     set_modal(LandPage);
                 }
@@ -3058,7 +3096,10 @@ struct VoyageApp {
                 if (modal==LandPage && !inland_archive) {
                     if (game.explore_land(static_cast<LandAction>(action-WalkLandStream))) {
                         if (action==WalkLandBack) {
-                            if (!outside) {
+                            if (regional_survey_at(game.s.origin)>=0) {
+                                show_town();
+                                town.at=Towns[town_id].field_gate;
+                            } else if (!outside) {
                                 show_town();
                                 change_outskirts(true);
                                 town.at=OutskirtsSites.back();
@@ -3240,6 +3281,11 @@ struct VoyageApp {
             break;
         case Close: back(); break;
         case ZoomIn: set_zoom(zoom+1); break;
+        case WorldChart:
+            set_modal(None);
+            follow=false;
+            set_zoom(0);
+            break;
         case ZoomOut:
             set_zoom(zoom-1);
             if (!zoom) follow=false;

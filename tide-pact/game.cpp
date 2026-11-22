@@ -20,9 +20,15 @@ int length(Point a, Point b) {
 }
 
 int sailing_wind(const Leg& leg, bool reverse, int month) {
+    if (leg.from==malindi && leg.to==calicut) {
+        const bool southwest=month>=4 && month<=8;
+        return southwest!=reverse?18:-14;
+    }
+    if (leg.from==canaries && leg.to==santo_domingo) return reverse?-13:15;
     auto a = Anchor[reverse ? leg.to : leg.from], b = Anchor[reverse ? leg.from : leg.to];
     int latitude = ChartNorth - (a.y+b.y)/16;
     const int dx = b.x-a.x, dy = b.y-a.y;
+    a.x-=LegacyMapX; b.x-=LegacyMapX;
     if (latitude >= 37 || latitude < -31) return dx > 10 ? 15 : (dx < -10 ? -13 : 0);
     if (latitude < 6 && b.x < 450 && latitude > -6) return -28;
     if (a.x > 563 && b.x > 563) return (month >= 4 && month <= 8) == (dy < 0) ? 18 : -14;
@@ -92,6 +98,7 @@ bool open_water(Point from, Point to, WaterTest water_at) {
 
 SeaConditions conditions_at(Point p, int day) {
     const int latitude=ChartNorth-p.y/8;
+    p.x-=LegacyMapX; p.y-=LegacyMapY;
     const unsigned cell=unsigned(p.x/54+1)*73856093U ^ unsigned(p.y/60+1)*19349663U ^
                         unsigned(day/2+1)*83492791U;
     const unsigned sample=(cell^(cell>>13))%100U;
@@ -382,47 +389,83 @@ bool Game::resolve_timber_trail(bool return_cargo) {
     return true;
 }
 
+int Game::land_stage() const {
+    const int region=regional_survey_at(s.origin);
+    return s.origin==lisbon?int(s.land_stage):region>=0?int(s.inland_stages[region]):int(LandUnvisited);
+}
+
+LandLeg Game::land_cost(LandAction action) const {
+    const int region=regional_survey_at(s.origin);
+    auto leg=region>=0?RegionalSurveys[region].legs[action]:LandLegs[action];
+    if (s.first_mate==Quartermaster) leg.water=std::max(1,leg.water-1);
+    return leg;
+}
+
+bool Game::cadiz_low_tide() const {
+    // A lunar semidiurnal cycle is approximately 12 h 25 min.
+    const int phase=((s.day*HoursPerDay+s.sail_watch*HoursPerWatch)*60+35)%745;
+    return phase<185 || phase>=560;
+}
+
+bool Game::wait_land_tide() {
+    if (s.origin!=cadiz || !port() || land_stage()!=LandUnvisited || cadiz_low_tide()) return false;
+    do {
+        if (++s.sail_watch==SailingWatches) {
+            s.sail_watch=0;
+            spend_day(1);
+        }
+    } while (!cadiz_low_tide());
+    notice="潮已退，潮滩可以走";
+    return true;
+}
+
 bool Game::knows_land_pass() const {
+    if (s.origin==cadiz) return cadiz_low_tide();
+    if (s.origin==madeira) return true;
     return s.timber_trail!=TrailUnknown || s.first_mate==Pilot;
 }
 
 Text Game::land_requirement(LandAction action) const {
-    if (action<FollowStream || action>ReturnToCity || s.origin!=lisbon || sea() || encounter())
-        return "要从里斯本出发";
+    if (action<FollowStream || action>ReturnToCity ||
+        (s.origin!=lisbon && regional_survey_at(s.origin)<0) || sea() || encounter())
+        return "要从考察所在港出发";
     const bool outward=action==FollowStream || action==CrossPass;
-    if (outward ? s.land_stage!=LandUnvisited : !land_away())
+    if (outward ? land_stage()!=LandUnvisited : !land_away())
         return "这段路走不了了";
-    if (action==CrossPass && !knows_land_pass()) return "需要货签背面的线索，或请安娜领路";
-    if ((action==CopyMilestone || action==SurveyLookout) && s.land_stage!=LandRidge)
-        return "已经记下这段驿道";
-    const auto leg=LandLegs[action];
-    const auto reserve=action==ReturnToCity?LandLeg{}:LandLegs[ReturnToCity];
+    if (action==CrossPass && !knows_land_pass())
+        return s.origin==cadiz?"等潮退再走潮滩":"需要货签背面的线索，或请安娜领路";
+    if ((action==CopyMilestone || action==SurveyLookout) && land_stage()!=LandRidge)
+        return "已经记下这处地形";
+    const auto leg=land_cost(action);
+    const auto reserve=action==ReturnToCity?LandLeg{}:land_cost(ReturnToCity);
     if (s.stores<leg.food+reserve.food || s.water<leg.water+reserve.water) return "留足返程水粮才能走这一段";
     return {};
 }
 
 bool Game::explore_land(LandAction action) {
     if (const Text blocked=land_requirement(action); !blocked.empty()) { notice=blocked; return false; }
-    const auto leg=LandLegs[action];
+    const int region=regional_survey_at(s.origin);
+    auto& stage=region>=0?s.inland_stages[region]:s.land_stage;
+    const auto leg=land_cost(action);
     s.stores-=leg.food;
     s.water-=leg.water;
     spend_day(leg.days);
     switch (action) {
     case FollowStream: case CrossPass:
-        s.land_stage=LandRidge;
-        notice="走到了山脊的老路碑";
+        stage=LandRidge;
+        notice=region>=0?"到了考察地点":"走到了山脊的老路碑";
         break;
     case CopyMilestone:
-        s.land_stage=LandInscription;
-        notice="拓下路碑，记下了山道";
+        stage=LandInscription;
+        notice=region>=0?"已记下地形":"拓下路碑，记下了山道";
         break;
     case SurveyLookout:
-        s.land_stage=LandLookout;
-        notice="登上望台，补画了背坡的岔路";
+        stage=LandLookout;
+        notice=region>=0?"已补全考察记录":"登上望台，补画了背坡的岔路";
         break;
     case ReturnToCity:
-        s.land_stage=s.land_stage==LandRidge?LandUnvisited:s.land_stage==LandLookout?LandFullNotes:LandNotes;
-        notice=s.land_stage==LandUnvisited?"已返回河堤":"已返回河堤，可去档案室交图";
+        stage=stage==LandRidge?LandUnvisited:stage==LandLookout?LandFullNotes:LandNotes;
+        notice=stage==LandUnvisited?"已返回来时的路口":"可以去档案室交图";
         break;
     }
     return true;
@@ -433,12 +476,17 @@ int Game::road_timber_bonus() const {
 }
 
 bool Game::file_land_report() {
-    if (!port() || s.origin!=lisbon || (s.land_stage!=LandNotes && s.land_stage!=LandFullNotes)) return false;
-    const bool complete=s.land_stage==LandFullNotes;
-    earn(complete?215:150);
-    s.renown+=complete?2:1;
-    s.land_stage=complete?LandFullFiled:LandFiled;
-    notice="驿道图已入档，商队可以通行";
+    const int region=regional_survey_at(s.origin);
+    if (!port() || (s.origin!=lisbon && region<0) ||
+        (land_stage()!=LandNotes && land_stage()!=LandFullNotes)) return false;
+    auto& stage=region>=0?s.inland_stages[region]:s.land_stage;
+    const bool complete=stage==LandFullNotes;
+    const auto* survey=region>=0?&RegionalSurveys[region]:nullptr;
+    earn(survey?(complete?survey->full_reward:survey->sketch_reward):(complete?215:150));
+    s.renown=std::min(999999,s.renown+(complete?2:1));
+    if (survey && complete) s.trust=std::min(999999,s.trust+1);
+    stage=complete?LandFullFiled:LandFiled;
+    notice=survey?"考察图已入档":"驿道图已入档，商队可以通行";
     return true;
 }
 
@@ -593,13 +641,13 @@ void Game::toggle_ration(RationFlag flag) {
 
 Game::Game() {
     for (int p=0;p<PlaceCount;++p)
-        if (StartingChart&(1U<<p)) reveal_chart(Anchor[p],18);
+        if (StartingChart&place_bit(p)) reveal_chart(Anchor[p],18);
     reveal_chart(Anchor[lisbon],34);
 }
 
 bool Game::charted(int place) const {
     if (place<0 || place>=PlaceCount) return false;
-    return ((s.chart_marks|s.visited|s.surveyed)&(1U<<place)) ||
+    return ((s.chart_marks|s.visited|s.surveyed)&(place_bit(place))) ||
            place==s.origin || place==s.destination ||
            (s.chapter<Chapters && Story[s.chapter].place==place);
 }
@@ -634,7 +682,7 @@ int Game::sighting(Point center) {
         if (charted(p)) continue;
         const int dx=center.x-Anchor[p].x, dy=center.y-Anchor[p].y;
         if (dx*dx+dy*dy>radius*radius) continue;
-        s.chart_marks|=1U<<p;
+        s.chart_marks|=place_bit(p);
         if (seen<0) seen=p;
     }
     return seen;
@@ -711,7 +759,7 @@ bool Game::resolve_port_story(int id, int choice) {
     case TornChart:
         if (choice==0) {
             earn(-28);
-            s.chart_marks|=1U<<ribeira;
+            s.chart_marks|=place_bit(ribeira);
         } else {
             s.heard_rumors|=1U<<RibeiraRumor;
         }
@@ -761,7 +809,7 @@ bool Game::choose_tale(int tale, bool share) {
     if (state==Unmet) {
         if (!share) return false;
         state=InProgress;
-        s.chart_marks|=1U<<Tales[tale].finish;
+        s.chart_marks|=place_bit(Tales[tale].finish);
         notice="故事已记入日志";
         return true;
     }
@@ -940,15 +988,15 @@ void Game::restore() {
     route=s.helm?Passage{}:passage(s.origin,s.destination);
     paused = sea() && !encounter();
     s.chart_marks|=StartingChart;
-    for (int i=0;i<=s.chapter && i<Chapters;++i) s.chart_marks|=1U<<Story[i].place;
+    for (int i=0;i<=s.chapter && i<Chapters;++i) s.chart_marks|=place_bit(Story[i].place);
     for (int i=0;i<TaleCount;++i)
-        if (s.tales[i]!=Unmet) s.chart_marks|=1U<<Tales[i].finish;
+        if (s.tales[i]!=Unmet) s.chart_marks|=place_bit(Tales[i].finish);
     for (int i=0;i<ExpeditionCount;++i)
-        if (s.expeditions[i].flags&HeardWitness) s.chart_marks|=1U<<Expeditions[i].site;
-    if (s.contract>=0) s.chart_marks|=1U<<s.contract;
-    if (s.destination>=0) s.chart_marks|=1U<<s.destination;
+        if (s.expeditions[i].flags&HeardWitness) s.chart_marks|=place_bit(Expeditions[i].site);
+    if (s.contract>=0) s.chart_marks|=place_bit(s.contract);
+    if (s.destination>=0) s.chart_marks|=place_bit(s.destination);
     for (int p=0;p<PlaceCount;++p) {
-        if ((StartingChart|s.visited|s.surveyed)&(1U<<p)) reveal_chart(Anchor[p],18);
+        if ((StartingChart|s.visited|s.surveyed)&place_bit(p)) reveal_chart(Anchor[p],18);
     }
     reveal_chart(Anchor[lisbon],34);
     reveal_chart(position(),24);
@@ -1262,12 +1310,12 @@ void Game::advance() {
         const auto draw=roll(100);
         const int local=draw<50?regional_encounter(here):Calm;
         if (local!=Calm) start_encounter(local);
-        else if (here.y>790 || draw<26) start_encounter(Storm);
+        else if (here.y>790+LegacyMapY || draw<26) start_encounter(Storm);
         else if (draw<51) start_encounter(Privateer);
         else if (draw<63) start_encounter(Castaways);
         else if (draw<74) start_encounter(Rigging);
         else if (draw<85 || s.stores<20) start_encounter(ReliefShip);
-        else if (draw<88) start_encounter(here.x<300 && here.y<530 ? FalseBeacon : Fog);
+        else if (draw<88) start_encounter(here.x<300+LegacyMapX && here.y<530+LegacyMapY ? FalseBeacon : Fog);
         else if (draw<94) start_encounter(ReversedFlag);
         else start_encounter(StrandedPost);
     }
@@ -1278,8 +1326,8 @@ void Game::arrive() {
     s.destination = -1;
     clear_helm();
     s.leg = s.progress = s.stop_next = 0;
-    if (!(s.visited & (1U << s.origin))) {
-        s.visited |= 1U << s.origin;
+    if (!(s.visited & place_bit(s.origin))) {
+        s.visited |= place_bit(s.origin);
         if (port()) ++s.renown;
     }
     reveal_chart(Anchor[s.origin],26);
@@ -1311,7 +1359,7 @@ void Game::rescue() {
     s.hull = 45;
     s.spirits = 48;
     s.crew = std::max(8, s.crew - 3);
-    s.visited |= 1U << nearest;
+    s.visited |= place_bit(nearest);
     reveal_chart(Anchor[nearest],26);
     if (s.dispatch.number) {
         finish_dispatch(DispatchLost);
@@ -1420,7 +1468,7 @@ void Game::take_contract() {
     if (!port()) return;
     if (s.contract >= 0 && s.day <= s.deadline) { notice = "已有未交付委托"; return; }
     s.contract = proposal();
-    s.chart_marks|=1U<<s.contract;
+    s.chart_marks|=place_bit(s.contract);
     s.contract_good = proposal_good();
     s.deadline = s.day + forecast(passage(s.origin,s.contract)).days * 2 + 9;
     notice = "委托已记入航海日志";
@@ -1495,8 +1543,8 @@ bool Game::accept_dispatch(int id) {
     const auto& order=DispatchOrders[id];
     const auto& rate=DispatchRates[order.kind];
     earn(-rate.bond);
-    s.chart_marks|=1U<<order.to;
-    if (order.stop>=0) s.chart_marks|=1U<<order.stop;
+    s.chart_marks|=place_bit(order.to);
+    if (order.stop>=0) s.chart_marks|=place_bit(order.stop);
     s.dispatch={.due=std::min(99999,s.day+quote.days+rate.slack), .number=std::uint8_t(id+1),
                 .last=s.dispatch.last, .outcome=s.dispatch.outcome};
     notice="已接运单，货件装船";
@@ -1537,7 +1585,7 @@ void Game::finish_dispatch(DispatchOutcome outcome) {
 
 void Game::survey() {
     if (sea() || encounter() || port()) return;
-    const auto bit = 1U << s.origin;
+    const auto bit = place_bit(s.origin);
     if (s.surveyed & bit) { notice = "此处已测绘"; return; }
     s.surveyed |= bit;
     ++s.charts;
@@ -1650,7 +1698,7 @@ bool Game::decide_tide_ledger(bool publish) {
     s.tide_ledger=publish?LedgerPublished:LedgerReturned;
     if (publish) { s.trust+=2; ++s.renown; }
     else earn(100);
-    s.chart_marks|=1U<<gibraltar;
+    s.chart_marks|=place_bit(gibraltar);
     notice=publish?"渡口挂出了双语潮簿":"收下谢金，潮图留在船上";
     return true;
 }
@@ -1750,7 +1798,7 @@ bool Game::consult_witness(int id) {
     if (record.stage<ReadClue || record.stage>=HasEvidence || (record.flags&HeardWitness)) return false;
     if (!understands(WitnessLanguage[id])) return false;
     record.flags|=HeardWitness;
-    s.chart_marks|=1U<<Expeditions[id].site;
+    s.chart_marks|=place_bit(Expeditions[id].site);
     notice="口述线索已抄入考察簿";
     return true;
 }
@@ -1863,7 +1911,7 @@ void Game::chapter_choice(int choice) {
         break;
     }
     ++s.chapter;
-    if (s.chapter<Chapters) s.chart_marks|=1U<<Story[s.chapter].place;
+    if (s.chapter<Chapters) s.chart_marks|=place_bit(Story[s.chapter].place);
     ++s.renown;
     notice = s.ending ? "结局已记进日志" : "日志里记下了下一站";
 }
@@ -1952,7 +2000,7 @@ Text Game::encounter_requirement(int choice) const {
     if (s.weather==ReliefShip && choice==1 && s.gold<water_price()) return "金币不足";
     if (s.weather==Fog && choice==1 && s.charts<2) return "需测绘两处水域";
     if (s.weather==ShoalLantern && choice==0 && !s.cargo[Timber]) return "需要一件木料";
-    if (s.weather==ShoalLantern && choice==1 && s.first_mate!=Pilot && !(s.surveyed&(1U<<arguin)))
+    if (s.weather==ShoalLantern && choice==1 && s.first_mate!=Pilot && !(s.surveyed&place_bit(arguin)))
         return "需安娜领航或测过阿尔金";
     if (s.weather==Doldrums && choice==0 && !s.cargo[Cloth]) return "需要一件织锦";
     if (s.weather==Doldrums && choice==1 && s.first_mate!=Pilot && s.charts<2)
@@ -2216,15 +2264,44 @@ void Game::encounter_action(int action) {
     check_ship();
 }
 
-static_assert(4 + 28*4 + 4*4 + GoodsCount + PortCount*GoodsCount +
+static_assert(4 + 28*4 + 4*4 + GoodsCount + LegacyPortCount*GoodsCount +
               TaleCount + 1 + 3*4 + 4 == LegacySaveBytes);
 static_assert(CombatSaveBytes==LegacySaveBytes+7+4+5);
 static_assert(HelmSaveBytes>=LegacySaveBytes+7+4+8+4);
-static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+4);
-constexpr auto WakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+ChartBytes+2+4*WakeCapacity;
-static_assert(WakeSaveBytes>=WakeRecordBytes+4);
-static_assert(LanguageSaveBytes>=WakeRecordBytes+9+4);
-static_assert(SaveBytes>=WakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4);
+constexpr int OldChartCell=12;
+constexpr int OldChartColumns=(LegacyChartWidth+OldChartCell-1)/OldChartCell;
+constexpr int OldChartRows=(LegacyChartHeight+OldChartCell-1)/OldChartCell;
+constexpr int OldChartBytes=(OldChartColumns*OldChartRows+7)/8;
+static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+OldChartBytes+4);
+constexpr auto OldWakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+OldChartBytes+2+4*WakeCapacity;
+static_assert(WakeSaveBytes>=OldWakeRecordBytes+4);
+static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
+constexpr int AddedPorts=PortCount-LegacyPortCount;
+static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+2);
+
+constexpr int migrate_place(int place) {
+    return place>=LegacyPortCount?place+AddedPorts:place;
+}
+
+constexpr std::uint64_t migrate_places(std::uint64_t places) {
+    const auto old_ports=place_bit(LegacyPortCount)-1;
+    return (places&old_ports)|((places&~old_ports)<<AddedPorts);
+}
+
+void migrate_chart(State& state, std::span<const std::byte> old) {
+    for (int cell=0;cell<OldChartColumns*OldChartRows;++cell) {
+        if (!(std::to_integer<unsigned>(old[cell/8])&(1U<<(cell%8)))) continue;
+        const int x=LegacyMapX+cell%OldChartColumns*OldChartCell;
+        const int y=LegacyMapY+cell/OldChartColumns*OldChartCell;
+        for (int row=y/ChartCell;row<=(y+OldChartCell-1)/ChartCell;++row) {
+            for (int column=x/ChartCell;column<=(x+OldChartCell-1)/ChartCell;++column) {
+                const int bit=row*ChartColumns+column;
+                state.coast[bit/8]|=1U<<(bit%8);
+            }
+        }
+    }
+}
 
 std::array<std::byte, SaveBytes> encode(const State& s) {
     std::array<std::byte, SaveBytes> bytes{};
@@ -2232,12 +2309,17 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     auto put = [&](std::uint32_t value) {
         for (int i = 0; i < 4; ++i) bytes[offset++] = std::byte(value >> (i*8));
     };
-    put(0x41445054);
+    const auto put_mask=[&](std::uint64_t mask) {
+        put(std::uint32_t(mask));
+        put(std::uint32_t(mask>>32));
+    };
+    put(0x42445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
         s.contract,s.contract_good,s.deadline,s.weather,s.enemy,s.range,s.aim,s.stop_next}) put(field);
-    for (const auto field : {s.visited,s.surveyed,s.rng,s.event_mask}) put(field);
+    put_mask(s.visited); put_mask(s.surveyed);
+    put(s.rng); put(s.event_mask);
     for (int count : s.cargo) bytes[offset++] = std::byte(count);
     for (auto delta : s.stock_delta) bytes[offset++] = std::byte(delta + 48);
     for (auto state : s.tales) bytes[offset++]=std::byte(state);
@@ -2255,7 +2337,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     }
     bytes[offset++]=std::byte(s.officer_roster);
     bytes[offset++]=std::byte(s.first_mate);
-    put(s.chart_marks);
+    put_mask(s.chart_marks);
     put(s.heard_rumors);
     for (auto cell : s.coast) bytes[offset++]=std::byte(cell);
     bytes[offset++]=std::byte(s.wake_head);
@@ -2283,6 +2365,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.ration_flags);
     bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4)|
                               (s.road_delivery?0x80:0));
+    for (auto stage : s.inland_stages) bytes[offset++]=std::byte(stage);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2292,7 +2375,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (bytes.size()!=LegacySaveBytes && bytes.size()!=CombatSaveBytes &&
         bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes &&
         bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes &&
-        bytes.size()!=LanguageSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2302,7 +2385,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool with_merchants=version==0x41445054 && bytes.size()==SaveBytes;
+    const bool expanded=version==0x42445054 && bytes.size()==SaveBytes;
+    const bool with_merchants=expanded || (version==0x41445054 && bytes.size()==MerchantSaveBytes);
+    const auto get_mask=[&]() -> std::uint64_t {
+        const std::uint64_t low=get();
+        return expanded?low|(std::uint64_t(get())<<32):migrate_places(low);
+    };
     const bool with_languages=with_merchants || (version==0x39445054 && bytes.size()==LanguageSaveBytes);
     const bool with_wake=with_languages || (version==0x38445054 && bytes.size()==WakeSaveBytes);
     const bool with_coast=with_wake || (version==0x37445054 && bytes.size()==CoastSaveBytes);
@@ -2318,9 +2406,17 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         &s.gold,&s.day,&s.hull,&s.stores,&s.spirits,&s.ship,&s.guns,&s.crew,&s.charts,&s.renown,&s.trust,
         &s.origin,&s.destination,&s.leg,&s.progress,&s.reefed,&s.chapter,&s.ending,&s.patron,&s.allies,
         &s.contract,&s.contract_good,&s.deadline,&s.weather,&s.enemy,&s.range,&s.aim,&s.stop_next}) *field = int(get());
-    for (auto* field : {&s.visited,&s.surveyed,&s.rng,&s.event_mask}) *field = get();
+    if (!expanded) {
+        if (s.origin>=LegacyPlaceCount || s.destination>=LegacyPlaceCount || s.contract>=LegacyPortCount) return false;
+        s.origin=migrate_place(s.origin);
+        s.destination=migrate_place(s.destination);
+    }
+    s.visited=get_mask(); s.surveyed=get_mask();
+    s.rng=get(); s.event_mask=get();
+    if ((s.visited|s.surveyed)>>PlaceCount) return false;
     for (auto& count : s.cargo) count = std::to_integer<int>(bytes[offset++]);
-    for (auto& delta : s.stock_delta) {
+    const int saved_ports=expanded?PortCount:LegacyPortCount;
+    for (auto& delta : std::span{s.stock_delta}.first(saved_ports*GoodsCount)) {
         const int stock = std::to_integer<int>(bytes[offset++])-48;
         if (stock > 48 || stock < -48) return false;
         delta = static_cast<std::int8_t>(stock);
@@ -2355,6 +2451,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         for (auto* value : {&s.water,&s.helm,&s.heading,&s.sail_watch})
             *value=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.helm>1 || s.heading>7 || s.sail_watch>=SailingWatches) return false;
+        if (s.helm && !expanded) {
+            if (s.helm_x<0 || s.helm_y<0 || s.helm_x>=LegacyChartWidth*16 || s.helm_y>=LegacyChartHeight*16)
+                return false;
+            s.helm_x+=LegacyMapX*16;
+            s.helm_y+=LegacyMapY*16;
+        }
     } else {
         if (s.stores<0 || s.stores>255) return false;
         s.water=static_cast<std::uint8_t>(s.stores);
@@ -2379,20 +2481,32 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             (s.first_mate!=NoOfficer && !(s.officer_roster & (1U<<(s.first_mate-1))))) return false;
     }
     if (with_coast) {
-        s.chart_marks=get();
+        s.chart_marks=get_mask();
         s.heard_rumors=get();
         if (s.chart_marks>>PlaceCount || s.heard_rumors>>RumorCount) return false;
-        for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
+        if (expanded) {
+            for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
+        } else {
+            migrate_chart(s,bytes.subspan(offset,OldChartBytes));
+            offset+=OldChartBytes;
+        }
     }
     if (with_wake) {
         s.wake_head=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.wake_count=std::to_integer<std::uint8_t>(bytes[offset++]);
         if (s.wake_head>=WakeCapacity || s.wake_count>WakeCapacity ||
             (s.wake_count<WakeCapacity && s.wake_head!=s.wake_count)) return false;
-        for (auto& point : s.wake) {
+        for (int i=0;i<WakeCapacity;++i) {
             const auto value=get();
+            auto& point=s.wake[i];
             point={int(value&0xffffU),int(value>>16)};
-            if (point.x>=ChartWidth || point.y>=ChartHeight) return false;
+            const int width=expanded?ChartWidth:LegacyChartWidth;
+            const int height=expanded?ChartHeight:LegacyChartHeight;
+            if (point.x>=width || point.y>=height) return false;
+            if (!expanded && i<s.wake_count) {
+                point.x+=LegacyMapX;
+                point.y+=LegacyMapY;
+            }
         }
     }
     if (with_languages) {
@@ -2438,8 +2552,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             (order.number && (!due || (order.stopped && DispatchOrders[order.number-1].stop<0)))) return false;
         if (order.number) {
             const auto& cargo=DispatchOrders[order.number-1];
-            if (!(s.chart_marks & (1U<<cargo.to)) ||
-                (cargo.stop>=0 && !(s.chart_marks & (1U<<cargo.stop)))) return false;
+            if (!(s.chart_marks & place_bit(cargo.to)) ||
+                (cargo.stop>=0 && !(s.chart_marks & place_bit(cargo.stop)))) return false;
         }
         order.due=int(due);
         const int sailing_revision=std::to_integer<int>(bytes[offset++]);
@@ -2461,6 +2575,16 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         if (s.land_stage>=LandRidge && s.land_stage<=LandLookout &&
             (s.origin!=lisbon || s.helm || s.destination>=0 || s.weather!=Calm ||
              s.stores<LandLegs[ReturnToCity].food || s.water<LandLegs[ReturnToCity].water)) return false;
+        if (expanded) {
+            for (int i=0;i<int(s.inland_stages.size());++i) {
+                auto& stage=s.inland_stages[i];
+                stage=std::to_integer<std::uint8_t>(bytes[offset++]);
+                if (stage>LandFullFiled) return false;
+                if (stage>=LandRidge && stage<=LandLookout &&
+                    (s.origin!=RegionalSurveys[i].port || s.helm || s.destination>=0 || s.weather!=Calm ||
+                     s.stores<1 || s.water<1)) return false;
+            }
+        }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }

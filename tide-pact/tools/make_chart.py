@@ -12,8 +12,8 @@ import shapefile
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-W, H = 728, 912
-WEST, NORTH = -45, 72
+W, H = 1540, 1136
+WEST, NORTH = -125, 84
 SX, SY = 7, 8
 DIRS = ((1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (-1, -1), (1, -1))
 
@@ -103,34 +103,29 @@ def nautical(a, b):
 
 
 def chart(mask, destination):
-    # Each group of four shades shares a base color, with subtle paper grain.
-    bases = [(21,59,67), (34,78,82), (53,99,95), (111,131,103),
-             (188,164,112), (151,137,100), (54,104,109), (155,141,109)]
-    colors = [tuple(v + delta for v in base) for base in bases for delta in (-3, 0, 3, 5)]
+    # Terrain uses two bits per pixel. Grain and the graticule are drawn at runtime.
+    bases = [(21,59,67), (48,91,91), (184,163,113), (144,132,95)]
+    grid = [(53,104,108), (66,109,105), (164,146,104), (134,123,88)]
+    colors = []
+    for base, line in zip(bases, grid):
+        colors.extend(tuple(v+shade for v in base) for shade in (-2, 2, 5))
+        colors.append(line)
     rgb565 = [((r >> 3) << 11) | ((g >> 2) << 5) | (b >> 3) for r, g, b in colors]
-    shelves = [mask.filter(ImageFilter.MaxFilter(size)).load() for size in (3, 9, 23)]
+    shelf = mask.filter(ImageFilter.MaxFilter(9)).load()
     inland = mask.filter(ImageFilter.MinFilter(3)).load()
     binary = mask.load()
-    shade = bytearray()
+    packed = bytearray()
+    assert W % 4 == 0
     for y in range(H):
-        for x in range(W):
-            grid = (x - 35) % 70 == 0 or (y - 16) % 80 == 0
-            if binary[x, y]:
-                color = (7 if grid else 4) if inland[x, y] else 5
-            elif shelves[0][x, y]:
-                color = 3
-            elif shelves[1][x, y]:
-                color = 2
-            elif shelves[2][x, y]:
-                color = 1
-            else:
-                color = 6 if grid else 0
-            grain = (x * 0x9E3779B1 + y * 0x85EBCA77) & 0xffffffff
-            grain = ((grain ^ (grain >> 16)) * 0x7FEB352D) & 0xffffffff
-            shade.append(color * 4 + ((grain ^ (grain >> 15)) & 3))
-    packed = bytes(shade)
+        for left in range(0, W, 4):
+            tile = 0
+            for i in range(4):
+                x = left + i
+                terrain = (2 if inland[x, y] else 3) if binary[x, y] else int(bool(shelf[x, y]))
+                tile |= terrain << (2*i)
+            packed.append(tile)
     (destination / "chart.pxi").write_bytes(
-        struct.pack("<HH256H", W, H, *rgb565, *([0] * (256-len(rgb565)))) + packed)
+        struct.pack("<HH256H", W | 0x8000, H, *rgb565, *([0] * (256-len(rgb565)))) + packed)
 
 
 def quote(value):
@@ -167,21 +162,28 @@ def world(data, mask):
         points.append(anchor)
     links = []
     waypoints = []
-    for left, right in data["links"]:
+    for left, right, *via in data["links"]:
         a, b = ids[left], ids[right]
+        intermediate = [project(lon, lat) for lon, lat in via[0]] if via else []
+        course = [points[a], *intermediate, points[b]]
         step = 1 if "gibraltar" in (left, right) or "mandeb" in (left, right) else 3
-        path = water_path(mask, points[a], points[b], step)
-        if path is None and step != 1:
-            path = water_path(mask, points[a], points[b], 1)
-        if path is None:
-            raise ValueError(f"No water path: {left} to {right}")
+        path = [course[0]]
+        for start, end in zip(course, course[1:]):
+            if not sea(mask, end):
+                raise ValueError(f"Waypoint is on land: {left} to {right} at {end}")
+            segment_path = water_path(mask, start, end, step)
+            if segment_path is None and step != 1:
+                segment_path = water_path(mask, start, end, 1)
+            if segment_path is None:
+                raise ValueError(f"No water path: {left} to {right} between {start} and {end}")
+            path += segment_path[1:]
         nm = round(sum(nautical(p, q) for p, q in zip(path, path[1:])))
         print(f"{left} → {right}: {nm} nmi, {len(path)} points")
         links.append(f"    {{{a}, {b}, {len(waypoints)}, {len(path)}, {nm}}},")
         waypoints += path
-    assert {i for edge in data["links"] for i in edge} == set(ids)
+    assert {i for left, right, *_ in data["links"] for i in (left, right)} == set(ids)
     blocks = [
-        f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH};\n"
+        f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH}, ChartWest = {WEST};\n"
         f"inline constexpr int ChartLongitudeScale = {SX}, ChartLatitudeScale = {SY};",
         f"inline constexpr int PortCount = {len(data['ports'])};",
         "enum PlaceId {\n    " + ", ".join(ids) + "\n};",

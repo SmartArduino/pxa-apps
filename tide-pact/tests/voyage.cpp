@@ -8,7 +8,7 @@
 using namespace tide;
 
 void sail_to(Game& game, int destination) {
-    game.s.chart_marks|=1U<<destination;
+    game.s.chart_marks|=place_bit(destination);
     assert(game.depart(destination));
     for (int i=0; i<220 && game.sea(); ++i) {
         if (game.encounter()) {
@@ -471,8 +471,8 @@ void free_helm() {
     Game grounded;
     assert(grounded.start_helm(-1));
     grounded.s.heading=2;
-    grounded.helm_step([](Point p){return p.x<=248;});
-    assert(grounded.paused && grounded.s.hull==94 && grounded.position().x==248);
+    grounded.helm_step([](Point p){return p.x<=Anchor[lisbon].x;});
+    assert(grounded.paused && grounded.s.hull==94 && grounded.position().x==Anchor[lisbon].x);
     assert(grounded.dock_helm() && grounded.s.origin==lisbon && !grounded.sea());
     assert(grounded.s.sail_watch==1 && decode(save,encode(grounded.s)) && save.sail_watch==1);
     auto reembarked=grounded;
@@ -496,7 +496,7 @@ void sailing_units() {
     for (const int latitude : {0,60}) {
         Game ship;
         assert(ship.start_helm(-1));
-        const int x=122*16, y=(ChartNorth-latitude)*ChartLatitudeScale*16;
+        const int x=(122+LegacyMapX)*16, y=(ChartNorth-latitude)*ChartLatitudeScale*16;
         ship.s.helm_x=x;
         ship.s.helm_y=y;
         ship.s.heading=2;
@@ -630,7 +630,7 @@ void sea_stories() {
     auto cast_off=[] {
         Game ship;
         ship.s.origin=canaries;
-        ship.s.chart_marks|=1U<<ribeira;
+        ship.s.chart_marks|=place_bit(ribeira);
         assert(ship.depart(ribeira));
         ship.s.progress=180;
         return ship;
@@ -646,7 +646,7 @@ void sea_stories() {
     shoal.encounter_action(0);
     assert(shoal.s.weather==ShoalLantern && !shoal.heard_rumor(ArguinRumor));
     auto surveyor=shoal;
-    surveyor.s.surveyed|=1U<<arguin;
+    surveyor.s.surveyed|=place_bit(arguin);
     ++surveyor.s.charts;
     const int supplies=surveyor.s.stores, day=surveyor.s.day;
     surveyor.encounter_action(1);
@@ -1005,7 +1005,7 @@ void ship_officers() {
     ship=original;
     assert(ship.hire_officer(Pilot) && ship.start_helm(-1));
     ship.s.heading=2;
-    ship.helm_step([](Point p){return p.x<=248;});
+    ship.helm_step([](Point p){return p.x<=Anchor[lisbon].x;});
     assert(ship.paused && ship.s.hull==97);
     assert(ship.dock_helm());
 
@@ -1066,7 +1066,7 @@ void unknown_waters() {
         game.helm_step([](Point) { return true; });
     const auto visited=game.s.visited;
     assert(game.charted(site) && exposed() && game.paused &&
-           game.visible_landmark()==site && !(visited&(1U<<site)));
+           game.visible_landmark()==site && !(visited&place_bit(site)));
     State loaded;
     assert(decode(loaded,encode(game.s)));
     const auto coast=game.s.coast;
@@ -1076,7 +1076,7 @@ void unknown_waters() {
     game.paused=false;
     for (int steps=0;steps<12 && game.nearby_anchorage()<0;++steps)
         game.helm_step([](Point) { return true; });
-    assert(game.dock_helm() && game.s.origin==site && (game.s.visited&(1U<<site)));
+    assert(game.dock_helm() && game.s.origin==site && (game.s.visited&place_bit(site)));
     assert(game.depart(lisbon));
 
     Game official;
@@ -1092,16 +1092,16 @@ void harbor_navigation() {
     // A narrow strip of land separates the vessel from a charted Azores anchorage.
     const auto water=[](Point p) {
         return p.x>=0 && p.x<ChartWidth && p.y>=0 && p.y<ChartHeight &&
-               !(p.x>=137 && p.x<=140 && p.y>=272 && p.y<=274);
+               !(p.x>=137+LegacyMapX && p.x<=140+LegacyMapX && p.y>=272+LegacyMapY && p.y<=274+LegacyMapY);
     };
     Game ship;
-    ship.s.chart_marks|=1U<<azores;
+    ship.s.chart_marks|=place_bit(azores);
     assert(ship.start_helm(-1));
-    ship.s.helm_x=140*16;
-    ship.s.helm_y=270*16;
+    ship.s.helm_x=(140+LegacyMapX)*16;
+    ship.s.helm_y=(270+LegacyMapY)*16;
     const auto channel=ship.harbor_approach(azores,water);
     assert(channel.count>2 && !channel.direct);
-    assert(channel.points[0].x==140 && channel.points[0].y==270);
+    assert(channel.points[0].x==140+LegacyMapX && channel.points[0].y==270+LegacyMapY);
     const auto berth=channel.points[channel.count-1];
     assert(berth.x==Anchor[azores].x && berth.y==Anchor[azores].y);
     for (int i=1;i<channel.count;++i) {
@@ -1111,8 +1111,8 @@ void harbor_navigation() {
         if (dx && dy) assert(water({b.x,a.y}) && water({a.x,b.y}));
     }
 
-    ship.s.helm_x=148*16;
-    ship.s.helm_y=276*16;
+    ship.s.helm_x=(148+LegacyMapX)*16;
+    ship.s.helm_y=(276+LegacyMapY)*16;
     assert(ship.harbor_approach(azores,water).direct);
     assert(ship.nearby_anchorage(water)<0);
     for (int i=0;i<8 && !ship.paused;++i) ship.helm_step(water);
@@ -1125,8 +1125,9 @@ void harbor_navigation() {
     assert(saved.wake_count==ship.s.wake_count && saved.wake_head==ship.s.wake_head);
     assert(ship.start_helm(-1) && ship.s.wake_count==1);
 
-    ship.s.helm_x=25*16;
-    ship.s.helm_y=100*16;
+    const auto open_atlantic=chart_point(-40.f,55.f);
+    ship.s.helm_x=open_atlantic.x*16;
+    ship.s.helm_y=open_atlantic.y*16;
     ship.s.heading=2;
     ship.s.day=99999;
     for (int i=0;i<80;++i) ship.helm_step(water);
@@ -1134,7 +1135,7 @@ void harbor_navigation() {
     int previous=-1;
     for (int i=0;i<ship.s.wake_count;++i) {
         const auto point=ship.wake_point(i);
-        assert(point.x>previous && point.y==100);
+        assert(point.x>previous && point.y==open_atlantic.y);
         previous=point.x;
     }
     assert(decode(saved,encode(ship.s)) && saved.wake_count==WakeCapacity);
@@ -1244,15 +1245,55 @@ void port_dispatches() {
     Game visited;
     visited.s.origin=canaries;
     assert(!visited.accept_dispatch(7));
-    visited.s.visited|=1U<<ribeira;
+    visited.s.visited|=place_bit(ribeira);
     assert(visited.accept_dispatch(7) && decode(visited.s,encode(visited.s)));
 }
 
+void expanded_world_and_land() {
+    Game ship;
+    State saved;
+    assert(!ship.charted(calicut) && !ship.charted(santo_domingo) && town_index(calicut)>=0);
+    ship.s.chart_marks|=place_bit(mandeb)|place_bit(calicut);
+    ship.s.surveyed|=place_bit(mandeb);
+    assert(decode(saved,encode(ship.s)) && saved.chart_marks==ship.s.chart_marks &&
+           saved.surveyed==ship.s.surveyed);
+    for (const int port : {bergen,vardo,muscat,hormuz,calicut,santo_domingo}) {
+        const auto route=passage(lisbon,port);
+        assert(route.miles>300 && route.count>0 && route.count<=32);
+    }
+
+    Game summer, winter;
+    summer.s.origin=winter.s.origin=malindi;
+    summer.s.day=150;
+    const auto indian_ocean=passage(malindi,calicut);
+    assert(summer.forecast(indian_ocean).days<winter.forecast(indian_ocean).days);
+
+    ship.s.origin=madeira;
+    assert(ship.hire_officer(Quartermaster) && ship.land_cost(CrossPass).water==2);
+    assert(ship.explore_land(CrossPass) && ship.explore_land(SurveyLookout));
+    assert(ship.land_away() && !ship.start_helm(-1));
+    assert(decode(saved,encode(ship.s)) && saved.inland_stages[0]==LandLookout);
+    const int purse=ship.s.gold, trust=ship.s.trust;
+    assert(ship.explore_land(ReturnToCity) && ship.file_land_report() && !ship.file_land_report());
+    assert(ship.s.gold==purse+245 && ship.s.trust==trust+1 && ship.s.land_stage==LandUnvisited);
+
+    Game salt;
+    salt.s.origin=cadiz;
+    salt.s.sail_watch=1;
+    assert(!salt.cadiz_low_tide() && !salt.explore_land(CrossPass));
+    const int rations=salt.s.stores, water=salt.s.water;
+    assert(salt.wait_land_tide() && salt.cadiz_low_tide() && salt.s.stores==rations && salt.s.water==water);
+    assert(salt.explore_land(CrossPass) && salt.explore_land(CopyMilestone));
+    assert(salt.explore_land(ReturnToCity) && salt.file_land_report());
+    assert(salt.s.gold==680 && decode(saved,encode(salt.s)) && saved.inland_stages[1]==LandFiled);
+}
+
 int main() {
+    expanded_world_and_land();
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {
             const auto route=passage(from,to);
-            assert(from==to ? route.count==0 : route.count>0);
+            assert(from==to ? route.count==0 : route.count>0 && route.count<=32);
             if (from==to) continue;
             const auto a=vessel_at(route,0,0), b=vessel_at(route,route.count-1,1);
             assert(a.x==Anchor[from].x && a.y==Anchor[from].y);

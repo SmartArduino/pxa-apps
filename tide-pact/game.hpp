@@ -15,6 +15,14 @@ struct Location { Text name, region, note; Point map; int longitude, latitude; }
 struct Leg { int from, to, offset, count, nautical_miles; };
 #include "world_data.hpp"
 inline constexpr int PlaceCount = std::size(Places);
+static_assert(PlaceCount<64 && PortCount<32);
+constexpr std::uint64_t place_bit(int place) { return std::uint64_t{1}<<place; }
+inline constexpr int LegacyPortCount=20, LegacyPlaceCount=29, LegacyChartWidth=728, LegacyChartHeight=912;
+inline constexpr int LegacyMapX=(-45-ChartWest)*ChartLongitudeScale;
+inline constexpr int LegacyMapY=(ChartNorth-72)*ChartLatitudeScale;
+constexpr Point chart_point(float lon, float lat) {
+    return {int((lon-ChartWest)*ChartLongitudeScale+.5f),int((ChartNorth-lat)*ChartLatitudeScale+.5f)};
+}
 
 } // namespace tide
 
@@ -116,7 +124,7 @@ inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风"};
 inline constexpr int HoursPerDay=24, SailingWatches=4, HoursPerWatch=HoursPerDay/SailingWatches;
 enum DriftStage : std::uint8_t { DriftUnheard, DriftSearching, DriftRecovered, DriftReturned, DriftFiled };
 enum DriftMethod { LaunchBoat, RigHook };
-inline constexpr Point DriftGround{174,335};
+inline constexpr Point DriftGround{174+LegacyMapX,335+LegacyMapY};
 inline constexpr int DriftReach=7;
 SeaConditions conditions_at(Point position, int day);
 int direction_to(Point offset);
@@ -170,6 +178,12 @@ enum LandAction { FollowStream, CrossPass, CopyMilestone, SurveyLookout, ReturnT
 struct LandLeg { int days, food, water; };
 inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 
+} // namespace tide
+
+#include "inland.hpp"
+
+namespace tide {
+
 Passage passage(int from, int to);
 Point vessel_at(const Passage& route, int leg, float fraction);
 
@@ -189,7 +203,8 @@ struct State {
     int chapter = 0, ending = 0, patron = 0, allies = 0;
     int contract = -1, contract_good = 0, deadline = 0;
     int weather = 0, enemy = 0, range = 0, aim = 0, stop_next = 0;
-    std::uint32_t visited = 1, surveyed = 0, rng = 0x57980218, event_mask = 0;
+    std::uint64_t visited=1, surveyed=0;
+    std::uint32_t rng=0x57980218, event_mask=0;
     std::array<int, GoodsCount> cargo{0, 0, 0, 0, 0, 2, 0, 0};
     std::array<std::int8_t, PortCount * GoodsCount> stock_delta{};
     std::array<std::uint8_t, TaleCount> tales{};
@@ -203,7 +218,8 @@ struct State {
     std::uint8_t ration_flags=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
-    std::uint32_t chart_marks=StartingChart, heard_rumors=0;
+    std::uint64_t chart_marks=StartingChart;
+    std::uint32_t heard_rumors=0;
     std::array<std::uint8_t, ChartBytes> coast{};
     std::array<Point,WakeCapacity> wake{};
     std::uint8_t wake_head=0, wake_count=0;
@@ -215,13 +231,14 @@ struct State {
     std::uint8_t drift_stage=DriftUnheard;
     std::uint8_t port_stories=0;
     bool road_delivery=false;
+    std::array<std::uint8_t,std::size(RegionalSurveys)> inland_stages{};
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
-inline constexpr std::size_t LanguageSaveBytes=1232, SaveBytes=1264;
+inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, SaveBytes=1648;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -250,7 +267,11 @@ struct Game {
     bool inspect_timber_trail();
     bool resolve_timber_trail(bool return_cargo);
     int road_timber_bonus() const;
-    bool land_away() const { return s.land_stage>=LandRidge && s.land_stage<=LandLookout; }
+    int land_stage() const;
+    bool land_away() const { return land_stage()>=LandRidge && land_stage()<=LandLookout; }
+    LandLeg land_cost(LandAction action) const;
+    bool cadiz_low_tide() const;
+    bool wait_land_tide();
     bool knows_land_pass() const;
     Text land_requirement(LandAction action) const;
     bool explore_land(LandAction action);

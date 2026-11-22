@@ -28,9 +28,16 @@ inline int u16(const unsigned char* p) { return p[0] | (p[1] << 8); }
 
 struct Image {
     const unsigned char* bytes;
-    int width() const { return u16(bytes); }
+    int width() const { return u16(bytes)&0x7fff; }
+    bool packed() const { return (bytes[1]&0x80)!=0; }
     int height() const { return u16(bytes+2); }
-    unsigned index(int x, int y) const { return bytes[516 + y*width() + x]; }
+    unsigned index(int x, int y) const {
+        const int offset=y*width()+x;
+        return packed()?packed_terrain(bytes+516,offset):bytes[516+offset];
+    }
+    static unsigned packed_terrain(const unsigned char* data, int offset) {
+        return (data[offset/4]>>(2*(offset&3)))&3;
+    }
     Color color(unsigned index) const { return u16(bytes+4 + 2*index); }
 };
 
@@ -138,13 +145,23 @@ struct Draw {
         const int first=initial/dst.w, first_error=initial%dst.w;
         const int pitch=src.w/dst.w, step=src.w%dst.w;
         const int stride=img.width();
+        const bool packed=img.packed();
+        const bool distant=packed && dst.w*2<src.w;
         for (int y = r.y; y < r.bottom(); ++y) {
             const int sy = src.y + (y-dst.y)*src.h/dst.h;
-            const auto* indexes=img.bytes+516+sy*stride+src.x;
+            const int line=sy*stride;
+            const bool latitude_line=packed && (sy-ChartNorth*ChartLatitudeScale)%(10*ChartLatitudeScale)==0;
+            const auto* indexes=img.bytes+516;
             auto row = *pixels.row(y);
             int source=first, error=first_error;
             for (int x = r.x; x < r.right(); ++x) {
-                const auto index=indexes[flip?src.w-1-source:source];
+                const int sx=src.x+(flip?src.w-1-source:source), offset=line+sx;
+                unsigned index;
+                if (packed) {
+                    const bool grid=latitude_line || (sx+ChartWest*ChartLongitudeScale)%(10*ChartLongitudeScale)==0;
+                    const unsigned grain=unsigned(sx)*0x9e3779b1U ^ unsigned(sy)*0x85ebca77U;
+                    index=Image::packed_terrain(indexes,offset)*4+(grid?3:distant?1:grain>>31);
+                } else index=indexes[offset];
                 if (!transparent || index != 255) row[x] = img.color(index);
                 source+=pitch;
                 error+=step;

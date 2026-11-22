@@ -14,7 +14,7 @@ static_assert(std::size(PortStoryDoors)==PortStoryCount);
 inline constexpr Text TownNames[]{"市场","船坞","商会","档案室","酒馆","码头"};
 inline constexpr int TownExtent=1000;
 enum TownWalkTarget { TownStoryTarget=TownFacilityCount, CityGateTarget, OutsideGateTarget,
-                      RiverTarget, TimberShedTarget, PostRoadTarget };
+                      RiverTarget, TimberShedTarget, PostRoadTarget, RegionalTrailTarget };
 inline constexpr Point LisbonGate{934,620};
 inline constexpr int OutskirtsQuay=606;
 inline constexpr std::array<Point,4> OutskirtsSites{{{82,546},{495,755},{802,527},{650,535}}};
@@ -22,13 +22,15 @@ inline constexpr std::array<Point,4> OutskirtsSites{{{82,546},{495,755},{802,527
 struct TownLayout {
     int port, quay;
     std::array<Point, TownFacilityCount> doors;
+    Point field_gate{};
 };
 
 inline constexpr TownLayout Towns[]{
     {lisbon, 620, {{{244,543},{107,603},{627,501},{416,500},{852,529},{506,768}}}},
-    {madeira, 610, {{{241,494},{113,587},{633,480},{422,468},{861,507},{500,769}}}},
+    {madeira, 610, {{{241,494},{113,587},{633,480},{422,468},{861,507},{500,769}}}, {920,610}},
     {canaries, 610, {{{228,523},{102,579},{626,445},{394,432},{861,526},{501,767}}}},
-    {cadiz, 612, {{{225,490},{100,588},{628,476},{416,467},{848,524},{496,777}}}},
+    {cadiz, 612, {{{225,490},{100,588},{628,476},{416,467},{848,524},{496,777}}}, {916,612}},
+    {calicut, 594, {{{254,552},{106,552},{619,552},{405,552},{861,552},{507,735}}}},
 };
 
 inline int town_index(int port) {

@@ -35,4 +35,7 @@ extern const unsigned char weather_icons[];
 extern const unsigned char sea_stories[];
 extern const unsigned char outskirts[];
 extern const unsigned char inland[];
+extern const unsigned char calicut[];
+extern const unsigned char levada[];
+extern const unsigned char marsh[];
 }

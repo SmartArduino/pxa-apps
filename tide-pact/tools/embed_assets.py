@@ -14,7 +14,7 @@ def main():
                      "wordmark", "skin", "controls", "tabs", "goods", "navigation", "ports", "boarding", "cadiz_duel",
                      "duel_fx", "discoveries", "officers", "voyage_icons", "driftwood",
                      "towns", "town_icons", "town_walk", "port_people", "port_ui", "dispatch_icons",
-                     "weather_icons", "sea_stories", "outskirts", "inland"):
+                     "weather_icons", "sea_stories", "outskirts", "inland", "calicut", "levada", "marsh"):
             data = (args.source / (name + ".pxi")).read_bytes()
             out.write(f'const unsigned char {name}[] =\n')
             for start in range(0, len(data), 48):
