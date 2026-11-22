@@ -33,6 +33,7 @@ constexpr Point chart_point(float lon, float lat) {
 #include "rumors.hpp"
 #include "stories.hpp"
 #include "settlement.hpp"
+#include "pilotage.hpp"
 
 namespace tide {
 
@@ -233,6 +234,8 @@ struct SeaFishery {
 };
 
 struct State {
+    PilotageState pilot;
+    std::uint32_t pilot_visits=0;
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
     int origin = lisbon, destination = -1, leg = 0, progress = 0, reefed = 0;
@@ -291,7 +294,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SaveBytes=1872;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, SaveBytes=1896;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -356,6 +359,16 @@ struct Game {
     bool resupply(int food, int water);
     bool unload_provisions(bool water);
     SeaConditions conditions() const { return conditions_at(position(),s.day); }
+    int pilot_region() const;
+    bool begin_pilotage(int index,PilotWater map);
+    bool leave_pilotage(WaterTest ocean);
+    void set_pilot_heading(int heading);
+    int pilot_speed(PilotWater map) const;
+    void pilot_tick(PilotWater map);
+    int pilot_berth(PilotWater map) const;
+    bool moor_pilotage(PilotWater map);
+    void cast_off_pilotage();
+    bool pilot_supplies(bool water);
     bool start_helm(int destination);
     void helm_step(WaterTest water_at);
     void helm_pulses(WaterTest water_at, int count);

@@ -5,19 +5,19 @@
 
 namespace tide {
 
-inline constexpr int VesselFrameWidth=40, VesselFrameHeight=30, VesselFrames=8;
+inline constexpr int VesselFrames=8;
 inline constexpr unsigned VesselFrameMs=135;
-inline constexpr std::array<int,VesselFrames> VesselHeave{0,-1,-1,0,0,1,1,0};
-inline constexpr std::array<Point,3> VesselMast{{{19,10},{24,9},{17,2}}};
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
-inline constexpr int SailFrameWidth=SeaPictureWidth/2, SailFrameHeight=SeaPictureHeight/2;
-inline constexpr int CaravelDetail=100, FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
-inline constexpr int LightSailDetail=104, CarrackDetail=105, ChartFleetPicture=106;
-inline constexpr int FleetCellSize=24, FleetColumns=6, HelmIconSize=22;
-inline constexpr int DetailedHullPictures[]{LightSailDetail,CaravelDetail,CarrackDetail};
-inline constexpr Point DetailedHullMasts[]{{39,6},{33,7},{39,2}};
+inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
+inline constexpr int HelmIconSize=22, PilotPictureBase=120;
+inline constexpr int PilotMarkSize=22, SmallShipSize=16, SmallShipStride=8*SmallShipSize;
 
-inline constexpr Text sea_picture_path(int kind) {
+inline bool pilot_picture(int kind) {
+    return kind>=PilotPictureBase && kind<PilotPictureBase+int(std::size(PilotRegions));
+}
+
+inline Text sea_picture_path(int kind) {
+    if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
     switch (kind) {
     case Castaways: return "assets/sea/castaways.pxi";
     case FalseBeacon: return "assets/sea/false-beacon.pxi";
@@ -32,10 +32,6 @@ inline constexpr Text sea_picture_path(int kind) {
     case MachicoPicture: return "assets/sea/machico.pxi";
     case VilaFrancaPicture: return "assets/sea/vila-franca.pxi";
     case FisheryPicture: return "assets/sea/fishery.pxi";
-    case LightSailDetail: return "assets/sea/light-sail-detail.pxi";
-    case CarrackDetail: return "assets/sea/carrack-detail.pxi";
-    case ChartFleetPicture: return "assets/sea/chart-fleet.pxi";
-    case CaravelDetail: return "assets/sea/caravel-detail.pxi";
     default: return {};
     }
 }
@@ -52,6 +48,8 @@ public:
         if (!ctx.tasks().start(load(ctx.assets(),kind,dirty))) busy_=false;
     }
 
+    bool failed(int kind) const { return wanted_==kind && failed_; }
+
     const unsigned char* pixels(int kind) const {
         return kind!=Calm && ready_==kind?bytes_.data():nullptr;
     }
@@ -59,7 +57,9 @@ public:
 private:
     pxa::Task<void> load(pxa::AssetService assets, int kind, bool& dirty) {
         ready_=Calm;
-        auto output=std::as_writable_bytes(std::span(bytes_));
+        const bool nearshore=pilot_picture(kind);
+        const auto count=nearshore?PilotMapBytes:int(bytes_.size());
+        auto output=std::as_writable_bytes(std::span(bytes_)).first(count);
         std::size_t offset=0;
         while (offset<output.size()) {
             const auto length=std::min<std::size_t>(output.size()-offset,4064);
@@ -68,8 +68,10 @@ private:
             offset+=read->bytes;
         }
         const Image image{bytes_.data()};
-        const bool complete=offset==output.size() && !image.packed() &&
-                            image.width()==SeaPictureWidth && image.height()==SeaPictureHeight;
+        const auto valid=nearshore?
+            bytes_[0]=='P' && bytes_[1]=='C' && bytes_[2]=='H' && bytes_[3]=='1':
+            !image.packed() && image.width()==SeaPictureWidth && image.height()==SeaPictureHeight;
+        const bool complete=offset==output.size() && valid;
         if (complete) ready_=kind;
         else if (wanted_==kind) failed_=true;
         busy_=false;

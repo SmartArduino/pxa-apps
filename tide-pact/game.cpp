@@ -1147,6 +1147,7 @@ bool Game::start_helm(int destination) {
 }
 
 void Game::clear_helm() {
+    s.pilot={.minutes=s.pilot.minutes};
     s.fishery={};
     s.helm=s.heading=0;
     s.helm_x=s.helm_y=0;
@@ -1254,7 +1255,7 @@ void Game::record_wake() {
 }
 
 bool Game::dock_helm(WaterTest water_at) {
-    if (encounter()) return false;
+    if (encounter() || s.pilot.region) return false;
     const int port=nearby_anchorage(water_at);
     if (port<0) { notice="请靠近锚地再停靠"; return false; }
     s.helm_x=Anchor[port].x*16;
@@ -1278,7 +1279,7 @@ void Game::helm_pulses(WaterTest water_at, int count) {
 }
 
 void Game::helm_move(WaterTest water_at, int pulses) {
-    if (!s.helm || paused || encounter()) return;
+    if (!s.helm || s.pilot.region || paused || encounter()) return;
     const bool started_near_drift=near_drift();
     const auto weather=conditions();
     const bool has_pilot=s.first_mate==Pilot;
@@ -2658,7 +2659,7 @@ constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2693,7 +2694,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x49445054);
+    put(0x4a445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2788,6 +2789,10 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (const auto& dates : {s.sea_warrant,s.patrol_after})
         for (const auto day : dates) put(day);
     bytes[offset++]=std::byte(s.whale_blubber);
+    put(unsigned(s.pilot.x)|unsigned(s.pilot.y)<<16);
+    put(s.pilot_visits);
+    for (auto value : {s.pilot.region,s.pilot.heading,s.pilot.moored,s.pilot.minutes})
+        bytes[offset++]=std::byte(value);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2800,7 +2805,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes &&
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
-        bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes &&
+        bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
         bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
@@ -2811,7 +2816,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool sea_law=version==0x49445054 && bytes.size()==SaveBytes;
+    const bool pilotage=version==0x4a445054 && bytes.size()==SaveBytes;
+    const bool sea_law=pilotage || (version==0x49445054 && bytes.size()==SeaLawSaveBytes);
     const bool enclaves=sea_law || (version==0x48445054 && bytes.size()==EnclaveSaveBytes);
     const bool fishery=enclaves || (version==0x47445054 && bytes.size()==FisherySaveBytes);
     const bool skirmish=fishery || (version==0x46445054 && bytes.size()==SkirmishSaveBytes);
@@ -3149,6 +3155,27 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             }
             s.whale_blubber=std::to_integer<std::uint8_t>(bytes[offset++]);
             if (int(s.whale_blubber)+s.whale_oil>12) return false;
+        }
+        if (pilotage) {
+            const auto position=get();
+            s.pilot.x=static_cast<std::uint16_t>(position);
+            s.pilot.y=static_cast<std::uint16_t>(position>>16);
+            s.pilot_visits=get();
+            for (auto* field : {&s.pilot.region,&s.pilot.heading,&s.pilot.moored,&s.pilot.minutes})
+                *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (s.pilot.region>std::size(PilotRegions) || s.pilot.heading>=16 ||
+                s.pilot.x>=PilotWidth*PilotSubcell || s.pilot.y>=PilotHeight*PilotSubcell ||
+                s.pilot.minutes>=60 || s.pilot.minutes%PilotTickMinutes ||
+                (s.pilot_visits>>std::size(PilotSites)) ||
+                (!s.pilot.region && (s.pilot.moored || s.pilot.x || s.pilot.y || s.pilot.heading)))
+                return false;
+            if (s.pilot.region) {
+                if (!s.helm || s.weather!=Calm) return false;
+                const auto& region=PilotRegions[s.pilot.region-1];
+                if (s.pilot.moored && (s.pilot.moored-1<=region.first ||
+                    s.pilot.moored-1>=region.first+region.count ||
+                    PilotSites[s.pilot.moored-1].berth.x<0)) return false;
+            }
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

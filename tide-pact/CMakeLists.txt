@@ -6,7 +6,7 @@ include(PxaGuest)
 find_package(Python3 REQUIRED COMPONENTS Interpreter)
 
 set(asset_files)
-foreach(asset chart relief chart_materials helm_icons skirmish fishery enclave harbor title_compact storm portraits vessels broadside glyphs glyphs_compact wordmark skin controls tabs goods navigation ports boarding cadiz_duel duel_fx discoveries officers voyage_icons driftwood towns town_icons town_walk port_people port_ui dispatch_icons weather_icons outskirts inland calicut levada marsh nature flags shore_tasks)
+foreach(asset chart relief chart_materials helm_icons skirmish fishery enclave harbor title_compact storm portraits pilot_ships pilot_marks broadside glyphs glyphs_compact wordmark skin controls tabs goods navigation ports boarding cadiz_duel duel_fx discoveries officers voyage_icons driftwood towns town_icons town_walk port_people port_ui dispatch_icons weather_icons outskirts inland calicut levada marsh nature flags shore_tasks)
     list(APPEND asset_files "${CMAKE_CURRENT_SOURCE_DIR}/art/${asset}.pxi")
 endforeach()
 set(asset_source "${CMAKE_CURRENT_BINARY_DIR}/embedded_assets.cpp")
@@ -17,5 +17,5 @@ add_custom_command(
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tools/embed_assets.py" ${asset_files}
     VERBATIM
 )
-pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp game.cpp sea_skirmish.cpp sea_fishery.cpp sea_law.cpp settlement.cpp "${asset_source}")
+pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp game.cpp sea_skirmish.cpp sea_fishery.cpp sea_law.cpp settlement.cpp pilotage.cpp "${asset_source}")
 target_include_directories(pxa_main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
