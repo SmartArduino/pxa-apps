@@ -3,8 +3,8 @@
   "id": "tide-pact",
   "name": "大航路时代：潮汐之约",
   "description": "自由航行、跨港贸易、绘制海图，在十五世纪末的海路追查失踪的制图师。",
-  "version": "1.36.0",
-  "release_sequence": 40,
+  "version": "1.37.0",
+  "release_sequence": 41,
   "icon": "assets/icon.png",
   "min_sdk": [2, 0],
   "target_sdk": [2, 0],
@@ -14,7 +14,7 @@
   ],
   "build": {
     "system": "cmake",
-    "linear_memory": {"maximum_bytes": 2621440, "pinned": true}
+    "linear_memory": {"maximum_bytes": 2686976, "pinned": true}
   },
   "interaction": {
     "schema": "pxa-app-interaction-1",

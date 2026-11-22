@@ -89,7 +89,7 @@ def pack_scene(path, name, size):
     write_texture(image, name)
 
 
-def pack_icons(path, name, cols, rows, size):
+def pack_icons(path, name, cols, rows, size, alpha_cutoff=100):
     original = Image.open(path).convert("RGBA")
     sheet = Image.new("RGBA", (size * cols, size * rows))
     for row in range(rows):
@@ -97,10 +97,12 @@ def pack_icons(path, name, cols, rows, size):
             rect = (round(original.width*col/cols), round(original.height*row/rows),
                     round(original.width*(col+1)/cols), round(original.height*(row+1)/rows))
             cell = original.crop(rect)
-            mask = cell.getchannel("A").point(lambda a: 255 if a >= 100 else 0)
-            bounds = mask.getbbox()
+            alpha = cell.getchannel("A")
+            bounds = alpha.point(lambda a: 255 if a >= alpha_cutoff else 0).getbbox()
             if bounds is None:
                 raise ValueError(f"Empty icon in {name} at ({row}, {col})")
+            if alpha_cutoff>100:
+                cell.putalpha(alpha.point(lambda a: a if a >= alpha_cutoff else 0))
             icon = cell.crop(bounds)
             icon.thumbnail((size-2,size-2), Image.Resampling.LANCZOS)
             sheet.paste(icon,(col*size+(size-icon.width)//2,row*size+(size-icon.height)//2))

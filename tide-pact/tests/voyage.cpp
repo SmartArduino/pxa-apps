@@ -571,6 +571,63 @@ void chart_skirmish() {
            read_sea(escape.s.sea_log[0]).choice==1);
 }
 
+void coastal_fishery() {
+    const auto ocean=[](Point) { return true; };
+    const auto ready=[&](Game& ship,Point area) {
+        assert(ship.start_helm(-1));
+        ship.s.helm_x=area.x*16;
+        ship.s.helm_y=area.y*16;
+        while (ship.conditions().weather==Squall) ++ship.s.day;
+    };
+    Game fishing;
+    ready(fishing,chart_point(-11,39));
+    fishing.s.stores=50;
+    assert(fishing.fishery_available()==SardineFishery && fishing.begin_fishery(ocean));
+    auto& net=fishing.s.fishery;
+    const auto initial=net.animal;
+    fishing.helm_pulses(ocean,3);
+    assert(initial.x!=net.animal.x || initial.y!=net.animal.y);
+    assert(!fishing.work_fishery());
+    fishing.s.reefed=1;
+    fishing.s.helm_x=net.animal.x;
+    fishing.s.helm_y=net.animal.y;
+    assert(fishing.work_fishery() && net.stage==GearSet);
+    fishing.helm_pulses(ocean,8);
+    assert(net.stage==GearReady);
+    const int stores=fishing.s.stores;
+    fishing.s.helm_x=net.gear.x;
+    fishing.s.helm_y=net.gear.y;
+    State saved;
+    assert(decode(saved,encode(fishing.s)) && saved.fishery.stage==GearReady);
+    assert(fishing.work_fishery() && fishing.s.stores>stores);
+    assert(!fishing.fishery_available() && !fishing.work_fishery());
+
+    Game whale;
+    ready(whale,chart_point(-6,44.5f));
+    assert(whale.fishery_available()==WhaleFishery && whale.begin_fishery(ocean));
+    auto& job=whale.s.fishery;
+    whale.s.reefed=1;
+    whale.s.helm_x=job.animal.x;
+    whale.s.helm_y=job.animal.y;
+    job.age=21;
+    assert(!whale.whale_at_surface() && !whale.work_fishery());
+    job.age=0;
+    const int load=whale.load();
+    assert(whale.work_fishery());
+    whale.helm_pulses(ocean,10);
+    assert(job.stage==GearReady);
+    whale.s.helm_x=job.gear.x;
+    whale.s.helm_y=job.gear.y;
+    assert(whale.work_fishery() && whale.s.whale_oil==3 && whale.load()==load+3);
+    whale.s.helm_x=Anchor[bordeaux].x*16;
+    whale.s.helm_y=Anchor[bordeaux].y*16;
+    whale.s.chart_marks|=place_bit(bordeaux);
+    assert(whale.dock_helm(ocean));
+    const int gold=whale.s.gold, quote=whale.whale_oil_quote();
+    assert(quote>0 && whale.sell_whale_oil() && whale.s.gold==gold+quote);
+    assert(!whale.sell_whale_oil() && whale.load()==load);
+}
+
 void sailing_units() {
     const Game at_port;
     assert(at_port.forecast(passage(lisbon,cadiz)).days==2);
@@ -1676,6 +1733,7 @@ int main() {
     free_helm();
     continuous_helm();
     chart_skirmish();
+    coastal_fishery();
     sailing_units();
     weather_forecasts();
     sailing_rations();

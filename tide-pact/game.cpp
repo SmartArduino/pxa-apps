@@ -228,7 +228,7 @@ int Game::water_capacity() const {
 int Game::crew_limit() const { return berths[s.ship]; }
 
 int Game::load() const {
-    int all = dispatch_space();
+    int all = dispatch_space()+s.whale_oil;
     for (const int count : s.cargo) all += count;
     return all;
 }
@@ -1146,6 +1146,7 @@ bool Game::start_helm(int destination) {
 }
 
 void Game::clear_helm() {
+    s.fishery={};
     s.helm=s.heading=0;
     s.helm_x=s.helm_y=0;
 }
@@ -1269,8 +1270,10 @@ void Game::helm_step(WaterTest water_at) {
 }
 
 void Game::helm_pulses(WaterTest water_at, int count) {
-    for (int i=0;i<count && s.helm && !paused && !encounter();++i)
+    for (int i=0;i<count && s.helm && !paused && !encounter();++i) {
         helm_move(water_at,1);
+        if (!paused && !encounter() && s.helm) tick_fishery(water_at);
+    }
 }
 
 void Game::helm_move(WaterTest water_at, int pulses) {
@@ -1475,6 +1478,7 @@ void Game::arrive() {
 void Game::rescue() {
     earn(-160);
     for (auto& item : s.cargo) item /= 2;
+    s.whale_oil/=2;
     const auto here = position();
     int nearest = 0;
     for (int p = 1; p < PortCount; ++p)
@@ -2634,9 +2638,9 @@ static_assert(WakeSaveBytes>=OldWakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
 constexpr int AddedPorts=PortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
-constexpr int SkirmishSaveFields=2*8+2*(8+2)+7;
+constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2671,7 +2675,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x46445054);
+    put(0x47445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2746,6 +2750,12 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (const auto field : {std::uint8_t(battle.active),battle.heading,battle.reload,battle.enemy_reload,
                             battle.turn_delay,battle.rope_ticks,battle.snared})
         bytes[offset++]=std::byte(field);
+    const auto& fish=s.fishery;
+    put_point(fish.animal);
+    put_point(fish.gear);
+    for (const auto field : {fish.target,fish.stage,fish.bearing,fish.age,fish.work,s.whale_oil})
+        bytes[offset++]=std::byte(field);
+    for (const auto day : s.fishery_next) put(day);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2757,7 +2767,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes &&
         bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes &&
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
-        bytes.size()!=HelmClockSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
+        bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2767,7 +2778,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool skirmish=version==0x46445054 && bytes.size()==SaveBytes;
+    const bool fishery=version==0x47445054 && bytes.size()==SaveBytes;
+    const bool skirmish=fishery || (version==0x46445054 && bytes.size()==SkirmishSaveBytes);
     const bool continuous=skirmish || (version==0x45445054 && bytes.size()==HelmClockSaveBytes);
     const bool with_colors=continuous || (version==0x44445054 && bytes.size()==HelmClockSaveBytes);
     const bool with_berth=with_colors || (version==0x43445054 && bytes.size()==BerthSaveBytes);
@@ -3018,8 +3030,13 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             s.helm_pulse=std::to_integer<std::uint8_t>(bytes[offset++]);
             if (s.helm_pulse>=HelmPulsesPerWatch) return false;
         }
+        const auto read_point=[&]() {
+            return Point{static_cast<int>(get()),static_cast<int>(get())};
+        };
+        const auto fixed_in_chart=[](Point p) {
+            return p.x>=0 && p.x<ChartWidth*16 && p.y>=0 && p.y<ChartHeight*16;
+        };
         if (skirmish) {
-            auto read_point=[&]() { return Point{static_cast<int>(get()),static_cast<int>(get())}; };
             auto& battle=s.skirmish;
             battle.rival=read_point();
             battle.rope=read_point();
@@ -3034,15 +3051,28 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             for (auto* field : {&battle.heading,&battle.reload,&battle.enemy_reload,
                                &battle.turn_delay,&battle.rope_ticks,&battle.snared})
                 *field=std::to_integer<std::uint8_t>(bytes[offset++]);
-            const auto valid=[](Point p) {
-                return p.x>=0 && p.x<ChartWidth*16 && p.y>=0 && p.y<ChartHeight*16;
-            };
             for (const auto& shot : battle.shots)
-                if (shot.heading>=8 || shot.steps>10 || (shot.steps && (!active || !valid(shot.position))))
+                if (shot.heading>=8 || shot.steps>10 || (shot.steps && (!active || !fixed_in_chart(shot.position))))
                     return false;
             if (battle.heading>=8 || battle.reload>29 || battle.enemy_reload>40 ||
                 battle.turn_delay>3 || battle.rope_ticks>92 || battle.snared>25 ||
-                (active && !valid(battle.rival)) || (battle.rope_ticks && !valid(battle.rope))) return false;
+                (active && !fixed_in_chart(battle.rival)) || (battle.rope_ticks && !fixed_in_chart(battle.rope))) return false;
+        }
+        if (fishery) {
+            auto& fish=s.fishery;
+            fish.animal=read_point();
+            fish.gear=read_point();
+            for (auto* field : {&fish.target,&fish.stage,&fish.bearing,&fish.age,&fish.work,&s.whale_oil})
+                *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+            for (auto& day : s.fishery_next) {
+                const auto next=get();
+                if (next>99999) return false;
+                day=static_cast<int>(next);
+            }
+            if (fish.target>WhaleFishery || fish.stage>GearReady || fish.bearing>=8 ||
+                fish.work>10 || fish.age>=252 || s.whale_oil>12 ||
+                (fish.target && (!s.helm || !fixed_in_chart(fish.animal))) ||
+                (fish.stage!=TrackingFish && (!fish.target || !fixed_in_chart(fish.gear)))) return false;
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
@@ -3060,7 +3090,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    int load = s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0;
+    int load = s.whale_oil+(s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;
     if (load > cargo_capacity(s) || s.crew+s.berth.sailors>berths[2]) return false;
     if (s.helm) {

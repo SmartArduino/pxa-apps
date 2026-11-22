@@ -218,6 +218,13 @@ enum SkirmishEffect : unsigned {
     SkirmishRope=16, SkirmishEnded=32,
 };
 
+enum FisheryTarget : std::uint8_t { NoFishery, SardineFishery, WhaleFishery };
+enum FisheryStage : std::uint8_t { TrackingFish, GearSet, GearReady };
+struct SeaFishery {
+    Point animal{}, gear{};
+    std::uint8_t target=NoFishery, stage=TrackingFish, bearing=0, age=0, work=0;
+};
+
 struct State {
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
@@ -264,6 +271,9 @@ struct State {
     std::array<int,CourtCount> court_hold_until{};
     std::array<std::uint8_t,ShoreTaskCount> shore_tasks{};
     SeaSkirmish skirmish;
+    SeaFishery fishery;
+    std::array<int,2> fishery_next{};
+    std::uint8_t whale_oil=0;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -271,7 +281,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SaveBytes=1760;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, SaveBytes=1792;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -388,6 +398,14 @@ struct Game {
     bool can_board_skirmish() const;
     bool board_skirmish();
     unsigned tick_skirmish(WaterTest water);
+    int fishery_available() const;
+    bool begin_fishery(WaterTest water);
+    bool whale_at_surface() const;
+    Text fishery_action_requirement() const;
+    bool work_fishery();
+    bool cancel_fishery();
+    int whale_oil_quote() const;
+    bool sell_whale_oil();
     bool duel() const { return s.weather==Boarding || s.weather==DockDuel; }
     bool convoy_battle() const;
     int naval_intent() const;
@@ -503,6 +521,7 @@ private:
     bool consume_day(SeaConditions weather);
     void clear_helm();
     void helm_move(WaterTest water_at, int pulses);
+    void tick_fishery(WaterTest water);
     bool observation_day();
     void reveal_chart(Point center, int radius);
     int lookout_radius() const { return s.first_mate==Pilot?19:14; }

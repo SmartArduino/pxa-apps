@@ -29,7 +29,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -54,6 +54,7 @@ enum Action {
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
     ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart, ToggleHelmView,
     BeginSkirmish, FirePort, FireStarboard, DropRope, BoardSkirmish,
+    BeginFishery, WorkFishery, CancelFishery, ShowFishBook, SellWhaleOil,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -78,7 +79,7 @@ enum Action {
     OpenShoreTask, AdvanceShoreTask, OpenShoreJournal, FlagEntry, ShoreEntry=FlagEntry+int(ColorsCount)
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
-static_assert(ToggleHelmView<DockService);
+static_assert(SellWhaleOil<DockService);
 
 template<class... Args>
 auto format(const char* message, Args... args) {
@@ -390,6 +391,7 @@ struct VoyageApp {
                 const int old_food=game.s.stores, old_water=game.s.water;
                 const auto old_marks=game.s.chart_marks;
                 const bool manual=game.s.helm;
+                const auto fish_stage=game.s.fishery.stage, fish_target=game.s.fishery.target;
                 if (manual) {
                     previous_helm={game.s.helm_x,game.s.helm_y};
                     game.helm_pulses(chart_water,voyage_rate);
@@ -407,6 +409,7 @@ struct VoyageApp {
                 if ((game.s.day!=old_day && game.s.day%4==0) ||
                     !game.sea() || game.encounter() || game.paused || game.s.chart_marks!=old_marks)
                     save_needed=true;
+                if (game.s.fishery.stage!=fish_stage || game.s.fishery.target!=fish_target) changed();
                 if (modal==ExpeditionPage && game.s.day!=old_day) dirty=true;
                 if (game.paused || game.s.hull<old_hull) notify();
                 if (manual && game.s.helm && game.paused) {
@@ -677,8 +680,10 @@ struct VoyageApp {
     }
     Point map_point(Point p) const { return map_point(p.x,p.y); }
     void atlas_background(Draw& d) {
-        if (game.s.skirmish.active) {
-            const auto foe=game.s.skirmish.rival;
+        if (game.s.skirmish.active || (game.s.fishery.target && full_helm_chart() && zoom>=4)) {
+            const auto& fish=game.s.fishery;
+            const auto foe=game.s.skirmish.active?game.s.skirmish.rival:
+                fish.stage==TrackingFish?fish.animal:fish.gear;
             const float camera_w=std::max(12.f,std::abs(game.s.helm_x-foe.x)/16.f+3.5f);
             const float camera_h=std::max(7.8f,std::abs(game.s.helm_y-foe.y)/16.f+4.4f);
             factor=std::min({map.w/camera_w,map.h/camera_h,27.f});
@@ -841,7 +846,16 @@ struct VoyageApp {
             ship_x=std::lerp(float(previous_helm.x),float(game.s.helm_x),blend)/16;
             ship_y=std::lerp(float(previous_helm.y),float(game.s.helm_y),blend)/16;
         }
-        if (game.sea() && follow && zoom) { chart_x=ship_x; chart_y=ship_y; }
+        if (game.sea() && follow && zoom) {
+            chart_x=ship_x;
+            chart_y=ship_y;
+            const auto& fish=game.s.fishery;
+            if (full_helm_chart() && fish.target && zoom>=4) {
+                const auto target=fish.stage==TrackingFish?fish.animal:fish.gear;
+                chart_x=(chart_x+target.x/16.f)*.5f;
+                chart_y=(chart_y+target.y/16.f)*.5f;
+            }
+        }
         atlas_background(d);
         if (full_helm_chart()) helm_rain(d);
         auto path=game.sea() ? game.route : passage(game.s.origin,selected);
@@ -972,6 +986,7 @@ struct VoyageApp {
             auto p=map_point(Places[game.s.origin].map);
             d.line({p.x-3,p.y+5},{p.x+3,p.y+5},mint);
         }
+        if (full_helm_chart()) draw_fishery(d);
         if (landmark>=0) {
             const auto mark=map_point(Anchor[landmark]);
             d.diamond(mark,5,ink);
@@ -1000,8 +1015,31 @@ struct VoyageApp {
         }
     }
 
+    void fish_sprite(Draw& d,int frame,Point at,int size) {
+        d.image({art::fishery},{frame%4*26,frame/4*26,26,26},
+                {at.x-size/2,at.y-size/2,size,size},true);
+    }
+
+    void draw_fishery(Draw& d) {
+        const auto& job=game.s.fishery;
+        if (!job.target) return;
+        const auto at=map_point(job.animal.x/16.f,job.animal.y/16.f);
+        if (job.target==SardineFishery) {
+            if (job.stage!=GearReady) fish_sprite(d,job.age/3%2,at,27);
+        } else if (job.stage!=GearReady) {
+            fish_sprite(d,game.whale_at_surface()?4:5,at,33);
+            if (job.age%28<5) fish_sprite(d,6,{at.x+5,at.y-10},23);
+        }
+        if (job.stage!=TrackingFish) {
+            const auto gear=map_point(job.gear.x/16.f,job.gear.y/16.f);
+            fish_sprite(d,job.target==WhaleFishery?7:job.work>=3?3:2,gear,31);
+            if (job.stage==GearReady) d.diamond({gear.x,gear.y-15},3,gold);
+        }
+    }
+
     void chart_full_helm(Draw& d) {
-        map={body.x,body.y,body.w,body.h-47};
+        const auto& fish=game.s.fishery;
+        map={body.x,body.y,body.w,body.h-(fish.target?69:47)};
         const int berth=game.nearby_anchorage(chart_water);
         const int landmark=berth>=0?berth:game.visible_landmark();
         const bool salvage=berth<0 && game.near_drift();
@@ -1021,15 +1059,32 @@ struct VoyageApp {
         constexpr Text labels[]{"+","-","定位","海图"};
         constexpr int actions[]{ZoomIn,ZoomOut,Center,ToggleHelmView};
         const bool lookout=game.nature_site()!=NoNatureSite && !salvage;
-        const int count=lookout?6:5;
+        const int fishing=fish.target?NoFishery:game.fishery_available();
+        const int count=5+int(lookout)+int(fishing!=NoFishery);
         for (int i=0;i<4;++i) button(d,bar(i,count,0),labels[i],actions[i]);
-        if (lookout) button(d,bar(4,count,0),"观察",OpenNatureWatch,true);
-        button(d,bar(count-1,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
+        int next=4;
+        if (lookout) button(d,bar(next++,count,0),"观察",OpenNatureWatch,true);
+        if (fishing)
+            button(d,bar(next++,count,0),fishing==WhaleFishery?"寻鲸":"寻鱼",BeginFishery,true);
+        button(d,bar(next,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
                berth>=0 || salvage,berth<0 && !salvage);
         button(d,bar(0,4,1),"左舵",SteerLeft);
         button(d,bar(1,4,1),"右舵",SteerRight);
         button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},game.s.reefed?SailIcon:ReefIcon);
         button(d,bar(3,4,1),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
+        if (fish.target) {
+            const auto reason=game.fishery_action_requirement();
+            const auto width=body.w/2;
+            const Text action=fish.target==WhaleFishery?(fish.stage==GearReady?"接回小艇":"放小艇"):
+                fish.stage==GearReady?"收网":"撒网";
+            const Rect label{body.x,map.bottom()+46,width-2,21};
+            skin_box(d,label,0,3);
+            d.center(label.inset(2),reason.empty()?(fish.target==WhaleFishery?"北大西洋露脊鲸":"欧洲沙丁鱼"):reason,
+                     reason.empty()?mint:mist);
+            button(d,{body.x+width+1,label.y,body.w/4-2,21},action,WorkFishery,true,!reason.empty());
+            button(d,{body.x+width+body.w/4+1,label.y,body.w-width-body.w/4-1,21},
+                   "召回",CancelFishery);
+        }
     }
 
     void chart(Draw& d) {
@@ -1241,8 +1296,10 @@ struct VoyageApp {
         const Text stock_note=news?(news->price_percent>0?"求购中":"到货中"):road_goods?"驿道来货":"";
         const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
         const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
-        d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
-                negotiated?mint:news || road_goods?gold:mist,w-(pages>1?72:10));
+        if (s.whale_oil)
+            button(d,{x+4,body.bottom()-54,std::min(104,w-71),22},format("鲸油 ×%d",int(s.whale_oil)),ShowFishBook,true);
+        else d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
+                     negotiated?mint:news || road_goods?gold:mist,w-(pages>1?72:10));
         if (pages>1) {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
@@ -1609,6 +1666,18 @@ struct VoyageApp {
         }
     }
 
+    void fish_book(Draw& d) {
+        page_title(d,"海边的渔获",CargoIcon);
+        const int x=body.x+6, y=body.y+28, width=body.w-12;
+        const int art_height=std::max(30,(body.h-58)*3/5);
+        sea_picture_panel(d,FisheryPicture,{x,y,width,art_height});
+        const int quote=game.whale_oil_quote();
+        const Rect button_at{x,body.bottom()-27,width,24};
+        d.wrap({x,y+art_height+3,width,std::max(0,button_at.y-y-art_height-5)},
+               "葡萄牙近岸的银色鱼群能补口粮。比斯开湾入冬后，渔队会留意露脊鲸的双柱鲸息。",ivory);
+        if (quote) button(d,button_at,format("卖出%d桶鲸油 · 收%d金",int(game.s.whale_oil),quote),SellWhaleOil,true);
+    }
+
     void shore_page(Draw& d) {
         const auto& task=ShoreTasks[shore_item];
         const int step=game.s.shore_tasks[shore_item], x=body.x+7, y=body.y+31, w=body.w-14;
@@ -1861,6 +1930,7 @@ struct VoyageApp {
     }
     int visible_sea_picture() const {
         if (title) return Calm;
+        if (modal==FishBook) return FisheryPicture;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
         if (modal==NatureWatch && game.s.helm) return Doldrums;
         if (full_helm_chart() && !game.encounter() && game.s.ship==1 && zoom>=4) return CaravelDetail;
@@ -3448,7 +3518,7 @@ struct VoyageApp {
             "点港口或菱形选择目的地。拖动海图，用加减调整比例。手柄方向键选项，A 确认，B 返回。海图上 START 可启航或停船。",
             "在市场选货后点数量，可输入件数并预览总价。议价以五件为一批，出价后会看到还价、成交或失败。船坞可补给和修船。",
             "出发前看预计天数。船员越多耗粮越快。海上可缩帆、停船、掉头或在下站靠泊。遇到私掠船时，火炮齐射后需装填，机动可以贴近并瞄准。距一且有六名船员时可以接舷。",
-            "海里是航程单位。一节等于每小时航行一海里。航线按整日估算。自由掌舵每步推进六小时，靠泊后时刻会保留。",
+            "海里是航程单位。一节等于每小时航行一海里。航线按整日估算。自由掌舵每次推进一小时，靠泊后时刻会保留。",
             "金色菱形标明下一处主线。到青色测绘点后记入图鉴。交易和航行中会自动保存，重开可续航。",
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
             "在目的地页点掌舵可自由出海，用左右舵或点海面改航向。未知港口可从传闻圈出大致海域，驶近后会发现港口。",
@@ -3547,6 +3617,7 @@ struct VoyageApp {
         case FlagPage: flag_page(d); break;
         case ShorePage: shore_page(d); break;
         case ShoreJournal: shore_journal(d); break;
+        case FishBook: fish_book(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -4144,6 +4215,26 @@ struct VoyageApp {
                 game.s.heading=(game.s.heading+(action==SteerLeft?7:1))%8;
                 changed();
             }
+            break;
+        case BeginFishery:
+            if (game.begin_fishery(chart_water)) {
+                follow=true;
+                set_zoom(std::max(zoom,4));
+                changed();
+            } else notify();
+            break;
+        case WorkFishery:
+            if (game.work_fishery()) changed();
+            else notify();
+            break;
+        case CancelFishery:
+            if (game.cancel_fishery()) changed();
+            break;
+        case ShowFishBook:
+            if (game.port()) set_modal(FishBook);
+            break;
+        case SellWhaleOil:
+            if (game.sell_whale_oil()) { set_modal(None); changed(); }
             break;
         case BeginSkirmish:
             if (game.begin_skirmish(chart_water)) {

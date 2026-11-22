@@ -69,6 +69,13 @@ def main():
     effects=args.generated / 'skirmish-effects.png'
     if effects.is_file():
         pack_icons(effects,'skirmish',4,2,26)
+    wildlife=args.generated / 'fish-whale-sprites.png'
+    if wildlife.is_file():
+        pack_icons(wildlife,'fishery',4,2,26,alpha_cutoff=198)
+    quay=args.generated / 'fishery-illustration.png'
+    if quay.is_file():
+        with Image.open(quay) as illustration:
+            write_scene(ASSETS.parent / 'assets' / 'sea','fishery',illustration)
 
 
 if __name__ == "__main__":
