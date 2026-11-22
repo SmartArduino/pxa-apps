@@ -137,11 +137,8 @@ struct Draw {
             fill({p.x-extent,p.y+dy,2*extent+1,1},color);
         }
     }
-    static Color relief_color(int x, int y) {
+    static int relief_level(int x,int y) {
         constexpr int stride=8, columns=(ChartWidth+stride-1)/stride, rows=(ChartHeight+stride-1)/stride;
-        constexpr std::array<unsigned,16> colors{0x5d674c,0x656d4c,0x6e744e,0x777a51,
-            0x808256,0x898a5a,0x92905e,0x9a9763,0xa29e68,0xaaa46d,0xb4ad77,0xbeb682,
-            0xc7bf8f,0xd2c99e,0xd9d0aa,0xe2d7b3};
         const auto read=[](int column,int row) {
             const int index=row*columns+column;
             return int((art::relief[index/2]>>(4*(index&1)))&15);
@@ -151,10 +148,10 @@ struct Draw {
         const int dx=x&(stride-1), dy=y&(stride-1);
         const int top=read(column,row)*(stride-dx)+read(right,row)*dx;
         const int bottom=read(column,down)*(stride-dx)+read(right,down)*dx;
-        return rgb(colors[(top*(stride-dy)+bottom*dy+stride*stride/2)/(stride*stride)]);
+        return (top*(stride-dy)+bottom*dy+stride*stride/2)/(stride*stride);
     }
 
-    void image(Image img, Rect src, Rect dst, bool transparent = false, bool flip = false, bool relief = false) {
+    void image(Image img, Rect src, Rect dst, bool transparent = false, bool flip = false) {
         if (dst.w<=0 || dst.h<=0 || src.w<=0 || src.h<=0) return;
         const auto r = clipped(dst);
         if (!r.w || !r.h) return;
@@ -179,7 +176,7 @@ struct Draw {
                     const unsigned grain=unsigned(sx)*0x9e3779b1U ^ unsigned(sy)*0x85ebca77U;
                     const auto terrain=Image::packed_terrain(indexes,offset);
                     index=terrain*4+(grid?3:distant?1:grain>>31);
-                    row[x]=relief && terrain==2?relief_color(sx,sy):img.color(index);
+                    row[x]=img.color(index);
                 } else {
                     index=indexes[offset];
                     if (!transparent || index != 255) row[x]=img.color(index);
@@ -284,7 +281,7 @@ struct Draw {
         center_run({box.x,y,box.w,top.ink.h},top,first_color);
         center_run({box.x,y+top.ink.h+1,box.w,bottom.ink.h},bottom,second_color);
     }
-    void center_with_icon(Rect box, Text text, Color color, Image atlas, Rect sprite, int size) {
+    void center_with_icon(Rect box, Text text, Color color, Image atlas, Rect sprite, int size, bool flip=false) {
         constexpr int gap=4;
         const auto run=fit(text,box.w-size-gap,1);
         if (run.text.size()!=text.size()) {
@@ -293,7 +290,7 @@ struct Draw {
         }
         const int width=size+gap+run.ink.w;
         const int x=box.x+(box.w-width)/2;
-        image(atlas,sprite,{x,box.y+(box.h-size)/2,size,size},true);
+        image(atlas,sprite,{x,box.y+(box.h-size)/2,size,size},true,flip);
         label(x+size+gap-run.ink.x,box.y+(box.h-run.ink.h)/2-run.ink.y,text,color);
     }
     int wrap(Rect r, Text text, Color color, int spacing = 17, bool paint = true) {

@@ -1,4 +1,5 @@
 #include "draw.hpp"
+#include "chart_style.hpp"
 #include "game_audio.hpp"
 #include "game_save.hpp"
 #include "sea_art.hpp"
@@ -36,6 +37,10 @@ enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon,
 enum VoyageIcon { SpeechIcon, PhrasebookIcon, LetterIcon, AstrolabeIcon, PennantIcon,
                   FlaskIcon, RationIcon, MooringIcon, SeaChartIcon, SettingsIcon, CrewIcon,
                   RepairIcon, ReefIcon, ResumeIcon, PauseIcon, SailIcon, HelmIcon, CargoIcon };
+enum HelmGlyph {
+    HelmTurnLeft=100, HelmTurnRight, HelmGunLeft, HelmAnchor, HelmRope,
+    HelmBoard, HelmNet, HelmCanvas, HelmGunRight
+};
 enum Action {
     Begin=1, OpenChart, OpenMarket, OpenShipyard, OpenOffice, OpenJournal,
     RouteList, Close, ZoomIn, ZoomOut, Center, Sail, Pause, Trim, Retreat, NextStop,
@@ -548,6 +553,11 @@ struct VoyageApp {
         d.clip=d.clipped(content);
         if (!price.empty()) {
             d.center_lines(content,text,color,price,inactive ? quiet : mist);
+        } else if (glyph>=HelmTurnLeft) {
+            const bool reflected= glyph==HelmGunRight;
+            const int item=(reflected?HelmGunLeft:glyph)-HelmTurnLeft;
+            const Rect sprite{item%4*HelmIconSize,item/4*HelmIconSize,HelmIconSize,HelmIconSize};
+            d.center_with_icon(content,text,color,{art::helm_icons},sprite,std::clamp(r.h-7,12,17),reflected);
         } else if (glyph>=0) {
             const Rect sprite{glyph%3*32,glyph/3*32,32,32};
             d.center_with_icon(content,text,color,{art::voyage_icons},sprite,std::clamp(r.h-7,12,17));
@@ -701,8 +711,13 @@ struct VoyageApp {
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
         const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
         d.fill(map,ocean);
-        if (!zoom || full_helm_chart()) {
-            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area,false,false,full_helm_chart());
+        if (full_helm_chart()) {
+            draw_helm_chart(d,chart_area);
+            if (!zoom && !game.s.skirmish.active) d.frame(chart_area,border);
+            return;
+        }
+        if (!zoom) {
+            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
             return;
         }
         constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
@@ -733,6 +748,32 @@ struct VoyageApp {
             }
         }
     }
+    Rect chart_scale_box() const { return {map.right()-78,map.bottom()-23,74,20}; }
+
+    void draw_chart_scale(Draw& d) {
+        if (map.w<115 || factor<=0.f) return;
+        constexpr int distances[]{1,2,5,10,20,50,100,200,500,1000,2000,5000,10000};
+        const float latitude=ChartNorth-chart_y/ChartLatitudeScale;
+        const float pixels_per_mile=factor*ChartLongitudeScale/
+            (60.f*std::cos(latitude*0.0174532925f));
+        const Rect box=chart_scale_box();
+        int miles=distances[0];
+        for (int candidate : distances) {
+            if (candidate*pixels_per_mile>box.w-7) break;
+            miles=candidate;
+        }
+        const int length=std::clamp(int(miles*pixels_per_mile+.5f),1,box.w-7);
+        const int end=box.right()-3, begin=end-length, y=box.bottom()-4;
+        const auto caption=format("%d海里",miles);
+        const int label_x=end-d.measure(caption);
+        d.label(label_x+1,box.y+1,caption,ink);
+        d.label(label_x,box.y,caption,ivory);
+        d.line({begin,y+1},{end,y+1},ink);
+        d.line({begin,y},{end,y},gold);
+        d.line({begin,y-3},{begin,y},gold);
+        d.line({end,y-3},{end,y},gold);
+    }
+
     void draw_wake(Draw& d) {
         constexpr auto wake_color=rgb(0x61aabd);
         for (int i=1;i<game.s.wake_count;++i)
@@ -811,12 +852,13 @@ struct VoyageApp {
     void map_vessel(Draw& d, Point at, int hull, bool west, bool following) {
         const int frame=(vessel_frame()+(following?2:0))%VesselFrames;
         const bool close=!following && full_helm_chart() && zoom>=4 && !game.s.skirmish.active;
+        const bool distant=full_helm_chart() && !zoom;
         const auto* detail=close?sea_picture.pixels(DetailedHullPictures[hull]):nullptr;
         const int w=detail?std::clamp(map.w/4,60,88):
-                    following?27:close?48:VesselFrameWidth;
+                    distant?23:following?27:close?48:VesselFrameWidth;
         const int h=detail?w*SailFrameHeight/SailFrameWidth:
-                    following?20:close?36:VesselFrameHeight;
-        if (!game.paused) {
+                    distant?17:following?20:close?36:VesselFrameHeight;
+        if (!game.paused && !distant) {
             const int stern=west?1:-1;
             const Color outer=rgb(0x689b95), inner=rgb(0xb4c5ac);
             const int length=(game.s.reefed?5:8)+frame/2, edge=at.x+stern*(w/2-4);
@@ -840,7 +882,7 @@ struct VoyageApp {
         } else {
             vessel_sprite(d,hull,frame,body,west);
         }
-        if (following || game.s.colors==FurledColors) return;
+        if (distant || following || game.s.colors==FurledColors) return;
         const int x=body.x+(west?source_w-1-mast.x:mast.x)*w/source_w;
         const int y=body.y+mast.y*h/source_h+VesselHeave[frame];
         const int width=frame%3==0?11:13;
@@ -907,10 +949,11 @@ struct VoyageApp {
         placed[labels++]=compass;
         const auto ship_mark=map_point(ship_x,ship_y);
         if (full_helm_chart()) {
-            const int w=zoom>=4?std::clamp(map.w/4,60,88):48;
-            const int h=std::max(36,w*SailFrameHeight/SailFrameWidth);
+            const int w=!zoom?27:zoom>=4?std::clamp(map.w/4,60,88):48;
+            const int h=!zoom?19:std::max(36,w*SailFrameHeight/SailFrameWidth);
             placed[labels++]={ship_mark.x-w/2-2,ship_mark.y-h, w+4,h+8};
             placed[labels++]={map.x+3,map.y+3,92,22};
+            if (map.w>=115) placed[labels++]=chart_scale_box();
         }
         auto draw_label=[&](Point p, Text text, Color color, bool coast, bool force) {
             Rect r{p.x,p.y,d.measure(text)+4,d.font.cell+2};
@@ -1016,6 +1059,7 @@ struct VoyageApp {
             d.dot(mark.x,mark.y,ink);
         }
         nav_icon(d,CompassIcon,compass);
+        if (full_helm_chart()) draw_chart_scale(d);
         d.clip=before;
         d.frame(map,border);
     }
@@ -1092,10 +1136,10 @@ struct VoyageApp {
             button(d,bar(next++,count,0),fishing==WhaleFishery?"寻鲸":"寻鱼",BeginFishery,true);
         if (village) button(d,bar(next++,count,0),"村镇",DockEnclave);
         button(d,bar(next,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
-               berth>=0 || salvage,berth<0 && !salvage);
-        button(d,bar(0,4,1),"左舵",SteerLeft);
-        button(d,bar(1,4,1),"右舵",SteerRight);
-        button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},game.s.reefed?SailIcon:ReefIcon);
+               berth>=0 || salvage,berth<0 && !salvage,{},salvage?int(LetterIcon):int(HelmAnchor));
+        button(d,bar(0,4,1),"左舵",SteerLeft,false,false,{},HelmTurnLeft);
+        button(d,bar(1,4,1),"右舵",SteerRight,false,false,{},HelmTurnRight);
+        button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
         button(d,bar(3,4,1),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
         if (fish.target) {
             const auto reason=game.fishery_action_requirement();
@@ -1106,7 +1150,8 @@ struct VoyageApp {
             skin_box(d,label,0,3);
             d.center(label.inset(2),reason.empty()?(fish.target==WhaleFishery?"北大西洋露脊鲸":"欧洲沙丁鱼"):reason,
                      reason.empty()?mint:mist);
-            button(d,{body.x+width+1,label.y,body.w/4-2,21},action,WorkFishery,true,!reason.empty());
+            button(d,{body.x+width+1,label.y,body.w/4-2,21},action,WorkFishery,true,!reason.empty(),
+                   {},fish.target==SardineFishery?HelmNet:-1);
             button(d,{body.x+width+body.w/4+1,label.y,body.w-width-body.w/4-1,21},
                    "召回",CancelFishery);
         }
@@ -2107,6 +2152,7 @@ struct VoyageApp {
     }
     int visible_sea_picture() const {
         if (title) return Calm;
+        if (game.s.skirmish.active && screen==Chart && modal==None) return ChartFleetPicture;
         if (modal==FishBook) return FisheryPicture;
         if (modal==EnclavePage && enclave_tab==0) return enclave_item==0?MachicoPicture:VilaFrancaPicture;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
@@ -2152,7 +2198,11 @@ struct VoyageApp {
                    !game.encounter_requirement(i).empty());
         }
     }
-    void push_sea_flash(Point position,int sprite) {
+    void push_sea_flash(Point position,int sprite,int heading=-1) {
+        if (heading>=0) {
+            position.x+=Directions[heading].x/2;
+            position.y+=Directions[heading].y/2;
+        }
         sea_flashes[flash_slot++%sea_flashes.size()]={position,now,sprite};
         dirty=true;
     }
@@ -2165,7 +2215,7 @@ struct VoyageApp {
         const auto before=game.s.skirmish;
         const auto effects=game.tick_skirmish(chart_water);
         if (effects&SkirmishEnemyFire) {
-            push_sea_flash(before.rival,0);
+            push_sea_flash(before.rival,0,game.s.skirmish.shots[1].heading);
             audio.cue(Sound::Broadside);
         }
         if (effects&SkirmishHit) push_sea_flash(before.rival,6);
@@ -2195,6 +2245,42 @@ struct VoyageApp {
                 {at.x-width/2,at.y-width/2,width,width},true);
     }
 
+    void tactical_ship(Draw& d,Point at,int hull,int heading,int colors,Color marker,bool moving) {
+        const auto vector=Directions[heading];
+        const Point side{-vector.y,vector.x};
+        if (moving && !game.paused) {
+            const int trail=22+vessel_frame()/2;
+            for (int beam : {-1,1}) {
+                const Point stern{at.x-vector.x*2/3+side.x*beam/5,at.y-vector.y*2/3+side.y*beam/5};
+                const Point tip{at.x-vector.x*trail/16+side.x*beam/3,at.y-vector.y*trail/16+side.y*beam/3};
+                d.line(stern,tip,rgb(0x75aaa5),true);
+            }
+        }
+        if (const auto* pixels=sea_picture.pixels(ChartFleetPicture)) {
+            const int frame=hull*8+heading, size=map.w>=345?42:37;
+            const Rect sprite{frame%FleetColumns*FleetCellSize,frame/FleetColumns*FleetCellSize,
+                              FleetCellSize,FleetCellSize};
+            d.image({pixels},sprite,{at.x-size/2,at.y-size/2,size,size},true);
+        } else {
+            vessel_sprite(d,hull,vessel_frame(),{at.x-20,at.y-23,40,30},vector.x<0);
+        }
+        if (colors!=FurledColors) flag_art(d,colors,{at.x+5,at.y-10,11,7});
+        const Point tip{at.x+vector.x*19/16,at.y+vector.y*19/16};
+        d.diamond(tip,3,ink);
+        d.diamond(tip,2,marker);
+    }
+
+    void broadside_guide(Draw& d,int side) {
+        const auto& s=game.s;
+        const auto bearing=Directions[(s.heading+side*2+8)%8];
+        for (int distance=24;distance<=SkirmishPlayerReach;distance+=12) {
+            const Point point{s.helm_x+bearing.x*distance/16,s.helm_y+bearing.y*distance/16};
+            if (point.x<0 || point.y<0 || !chart_water({point.x/16,point.y/16})) break;
+            const auto position=skirmish_point(point);
+            d.dot(position.x,position.y,mist);
+        }
+    }
+
     void skirmish_view(Draw& d) {
         const auto& battle=game.s.skirmish;
         const auto& s=game.s;
@@ -2212,30 +2298,16 @@ struct VoyageApp {
         const auto status=format("%s %d",target.data(),s.enemy);
         const auto wind=game.conditions();
         const auto course=format("风向%s %d级",Bearings[wind.direction].data(),wind.strength);
-        const Point heading=Directions[s.heading], rival_heading=Directions[battle.heading];
-        const auto heading_mark=[&](Point at,Point direction,Color color) {
-            const Point tip{at.x+direction.x*5/4,at.y+direction.y*5/4};
-            d.line(at,tip,color);
-            d.diamond(tip,2,color);
-        };
-        if (battle.rope_ticks) skirmish_effect(d,4,skirmish_point(battle.rope),23);
-        if (battle.snared) skirmish_effect(d,5,enemy,31);
-        const int rival_hull=battle.opponent>=FirstMerchantOpponent?2:1;
-        vessel_sprite(d,rival_hull,(vessel_frame()+3)%VesselFrames,{enemy.x-20,enemy.y-23,40,30},rival_heading.x<0);
-        if (battle.court) {
-            const int flag=battle.court==1?PortugueseColors:CastilianColors;
-            flag_art(d,flag,{enemy.x-4,enemy.y-24,12,7});
-        }
-        map_vessel(d,player,s.ship,heading.x<0,false);
-        heading_mark(player,heading,mint);
-        heading_mark(enemy,rival_heading,vermilion);
         if (!game.paused && !battle.reload) {
-            for (int side : {-1,1}) {
-                const auto beam=Directions[(s.heading+side*2+8)%8];
-                d.line({player.x+beam.x,player.y+beam.y},
-                       {player.x+beam.x*3/2,player.y+beam.y*3/2},quiet,true);
-            }
+            broadside_guide(d,-1);
+            broadside_guide(d,1);
         }
+        if (battle.rope_ticks) skirmish_effect(d,4,skirmish_point(battle.rope),23);
+        const int rival_hull=battle.opponent>=FirstMerchantOpponent?2:1;
+        const int rival_colors=battle.court==1?PortugueseColors:battle.court==2?CastilianColors:FurledColors;
+        tactical_ship(d,enemy,rival_hull,battle.heading,rival_colors,vermilion,!battle.snared);
+        tactical_ship(d,player,s.ship,s.heading,s.colors,mint,true);
+        if (battle.snared) skirmish_effect(d,5,enemy,31);
         for (const auto& shot : battle.shots) {
             if (!shot.steps) continue;
             const auto at=skirmish_point(shot.position);
@@ -2254,8 +2326,16 @@ struct VoyageApp {
         const Rect right{map.right()-d.measure(course)-12,map.y+4,d.measure(course)+8,20};
         skin_box(d,right,0,4);
         d.center(right,course,ivory);
+        if (battle.reload) {
+            const Rect reload{map.x+4,map.bottom()-23,74,19};
+            skin_box(d,reload,0,3);
+            d.label(reload.x+5,reload.y+2,"装填",ivory);
+            const int ticks=skirmish_reload_ticks(s.guns);
+            meter(d,{reload.x+35,reload.y+6,reload.w-40,8},ticks-battle.reload,ticks,true);
+        }
         if (game.paused)
             d.center({map.x+4,map.bottom()-24,map.w-8,20},"战斗暂停",gold);
+        draw_chart_scale(d);
         d.clip=clip;
         d.frame(map,border);
 
@@ -2264,15 +2344,15 @@ struct VoyageApp {
             const int right_edge=body.x+(index+1)*(body.w+3)/count-3;
             return Rect{left_edge,map.bottom()+3+row*22,right_edge-left_edge,21};
         };
-        button(d,bar(0,4,0),"左舵",SteerLeft);
-        button(d,bar(1,4,0),"右舵",SteerRight);
-        button(d,bar(2,4,0),s.reefed?"张帆":"缩帆",Trim,false,false,{},s.reefed?SailIcon:ReefIcon);
-        button(d,bar(3,4,0),game.paused?"继续":"停船",Pause,true);
+        button(d,bar(0,4,0),"左舵",SteerLeft,false,false,{},HelmTurnLeft);
+        button(d,bar(1,4,0),"右舵",SteerRight,false,false,{},HelmTurnRight);
+        button(d,bar(2,4,0),s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
+        button(d,bar(3,4,0),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
         const bool loading=game.paused || battle.reload;
-        button(d,bar(0,4,1),battle.reload?"装填":"左舷炮",FirePort,true,loading);
-        button(d,bar(1,4,1),battle.reload?"装填":"右舷炮",FireStarboard,true,loading);
-        button(d,bar(2,4,1),"抛浮索",DropRope,false,game.paused || battle.rope_ticks || !s.cargo[Timber]);
-        button(d,bar(3,4,1),"接舷",BoardSkirmish,false,!game.can_board_skirmish());
+        button(d,bar(0,4,1),"左舷炮",FirePort,true,loading,{},HelmGunLeft);
+        button(d,bar(1,4,1),"右舷炮",FireStarboard,true,loading,{},HelmGunRight);
+        button(d,bar(2,4,1),"抛浮索",DropRope,false,game.paused || battle.rope_ticks || !s.cargo[Timber],{},HelmRope);
+        button(d,bar(3,4,1),"接舷",BoardSkirmish,false,!game.can_board_skirmish(),{},HelmBoard);
     }
 
     void encounter_screen(Draw& d) {
@@ -4524,7 +4604,7 @@ struct VoyageApp {
             break;
         case FirePort: case FireStarboard:
             if (game.fire_skirmish(action==FirePort?-1:1)) {
-                push_sea_flash({game.s.helm_x,game.s.helm_y},0);
+                push_sea_flash({game.s.helm_x,game.s.helm_y},0,game.s.skirmish.shots[0].heading);
                 audio.cue(Sound::Broadside);
                 audio.cue(Sound::FireCall);
                 save_needed=true;

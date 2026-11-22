@@ -12,7 +12,8 @@ inline constexpr std::array<Point,3> VesselMast{{{19,10},{24,9},{17,2}}};
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
 inline constexpr int SailFrameWidth=SeaPictureWidth/2, SailFrameHeight=SeaPictureHeight/2;
 inline constexpr int CaravelDetail=100, FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
-inline constexpr int LightSailDetail=104, CarrackDetail=105;
+inline constexpr int LightSailDetail=104, CarrackDetail=105, ChartFleetPicture=106;
+inline constexpr int FleetCellSize=24, FleetColumns=6, HelmIconSize=22;
 inline constexpr int DetailedHullPictures[]{LightSailDetail,CaravelDetail,CarrackDetail};
 inline constexpr Point DetailedHullMasts[]{{39,6},{33,7},{39,2}};
 
@@ -33,6 +34,7 @@ inline constexpr Text sea_picture_path(int kind) {
     case FisheryPicture: return "assets/sea/fishery.pxi";
     case LightSailDetail: return "assets/sea/light-sail-detail.pxi";
     case CarrackDetail: return "assets/sea/carrack-detail.pxi";
+    case ChartFleetPicture: return "assets/sea/chart-fleet.pxi";
     case CaravelDetail: return "assets/sea/caravel-detail.pxi";
     default: return {};
     }

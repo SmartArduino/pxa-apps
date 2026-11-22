@@ -74,12 +74,13 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 
 ## 海图与美术
 
-海图范围为西经 125°至东经 95°、南纬 58°至北纬 84°。在「目的地 → 全图」可浏览整个范围，局部放大后按航行进度显露海域；港口仍须发现或取得确切线索。位置和近岸锚地分别记录，原有航路和海里数保持不变。新增卑尔根、瓦尔德、马斯喀特、霍尔木兹、卡利卡特和圣多明各，航线由实际水域生成。基于 Natural Earth 简化海岸线，不绘制现代国界。在底图像素不足以分开直布罗陀两岸时，生成脚本保留一像素航道。剧情、人物和委托为虚构。
+海图范围为西经 125°至东经 95°、南纬 58°至北纬 84°。航区与实时海战显示以当前中心纬度换算的海里比例尺。在「目的地 → 全图」可浏览整个范围，局部放大后按航行进度显露海域；港口仍须发现或取得确切线索。位置和近岸锚地分别记录，原有航路和海里数保持不变。新增卑尔根、瓦尔德、马斯喀特、霍尔木兹、卡利卡特和圣多明各，航线由实际水域生成。基于 Natural Earth 简化海岸线，不绘制现代国界。在底图像素不足以分开直布罗陀两岸时，生成脚本保留一像素航道。剧情、人物和委托为虚构。
 
 - 加那利至加勒比海的西行参考帆船借东北信风跨洋的走向，马林迪至卡利卡特参考达·伽马在 1498 年从东非横渡阿拉伯海的航行，挪威北岸航线绕过北角。游戏以设计的经过点连接航路，并沿同一陆地掩膜验证。季风改变航速，返航沿相同海域反向行驶。[哥伦布首航日志](https://ems.kcl.ac.uk/content/pub/b001.html) · [达·伽马首航日志](https://www.cambridge.org/core/books/abs/journal-of-the-first-voyage-of-vasco-da-gama-14971499/journal-of-the-voyage-of-vasco-da-gama-in-149799/B47DC1671D3BD096377C4ACEA8DB083D)
 - 丰沙尔灌渠和加的斯盐田的年代与用途参考[联合国教科文组织的灌渠资料](https://whc.unesco.org/en/tentativelists/6230/)和[加的斯湾十五世纪盐业研究](https://revistas.usal.es/uno/index.php/Studia_H_Historia_Medieval/es/article/view/32260)。卡利卡特沿用十五世纪港名，今称科泽科德。[科泽科德地区历史](https://kozhikode.gov.in/about-district/history/)
 - 海岸数据来自公有领域的 Natural Earth 1:10m Land 5.1.1。可用 `python tools/make_chart.py ne_10m_land.zip` 重建海图和航路，需要 Pillow 和 PyShp。[数据](https://www.naturalearthdata.com/downloads/10m-physical-vectors/10m-land/) · [许可](https://www.naturalearthdata.com/about/terms-of-use/)
 - 航区的地形明暗取自 Natural Earth 公有领域的 1:50m Gray Earth，并沿用海图陆地掩膜。可用 `python tools/make_relief.py GRAY_50M_SR.zip` 重建地形层。[地形数据](https://www.naturalearthdata.com/downloads/50m-raster-data/50m-gray-earth/)
+- 航区在现有海岸栅格之间重建岸线轮廓，并用四种材质描绘深海、浅水、植被和高地。通航以原海图栅格和锚点为准。实时海战用三种船体的八方向俯视帧，左右舷的射向会显示在海面，装填进度显示在左下角。使用 `tools/make_chart_style.py` 可从生成的材质、船只和控制图标 PNG 构建资源。
 - 航速以适航时约四到五节为基础，按风向、载货量、船型和船员调整。历史量级参考达·伽马船队 1497 年从里斯本到加那利水域的航行日志。 [航行日志](https://www.cambridge.org/core/books/journal-of-the-first-voyage-of-vasco-da-gama-14971499/B37176D56DC08C06585EAE631D23BA6F/listing) · [节与海里](https://oceanservice.noaa.gov/facts/nautical-mile-knot.html)
 - 语言按游戏中的说话人和文书设定。瓦伦西亚档案、基尔瓦贸易和刚果王国的口译记载提供了背景。 [瓦伦西亚大学历史图书馆](https://www.uv.es/uvweb/libraries-documentation-service/en/news/new-discovery-historical-library-1285923456427/Novetat.html?id=1286451015046) · [联合国教科文组织](https://whc.unesco.org/en/list/144/) · [刚果口译史研究](https://www.academia.edu/29773271/ARTICLE_Kongo_interpreters_travelling_priests_and_political_leaders_in_the_Kongo_Kingdom_15th_19th_century_International_Journal_of_African_Historical_Studies_49_2_2016_255_276)
 - 佛得角里贝拉格兰德、埃尔米纳和基尔瓦的港口注记参考 UNESCO。开普航路时代背景参考英国国家海事博物馆。[里贝拉格兰德](https://whc.unesco.org/en/list/1310/) · [埃尔米纳](https://whc.unesco.org/en/list/34/) · [基尔瓦](https://whc.unesco.org/en/list/144/) · [开普航路](https://www.rmg.co.uk/collections/objects/rmgc-object-14176)

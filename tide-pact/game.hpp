@@ -217,6 +217,9 @@ struct SeaSkirmish {
     std::uint8_t opponent=PrivateerOpponent, court=0;
 };
 
+inline constexpr int SkirmishPlayerReach=88;
+constexpr int skirmish_reload_ticks(int guns) { return 29-guns*3; }
+
 enum SkirmishEffect : unsigned {
     SkirmishEnemyFire=1, SkirmishHit=2, SkirmishDamaged=4, SkirmishSplash=8,
     SkirmishRope=16, SkirmishEnded=32,

@@ -6,7 +6,7 @@
 namespace tide {
 namespace {
 
-constexpr int EnemyReach=66, PlayerReach=88, ChaseLimit=151;
+constexpr int EnemyReach=66, ChaseLimit=151;
 constexpr int ShotSpeed=9, HullRadius=9;
 
 int distance_squared(Point a,Point b) {
@@ -87,8 +87,8 @@ bool Game::begin_skirmish(WaterTest water) {
 bool Game::fire_skirmish(int side) {
     auto& battle=s.skirmish;
     if (!battle.active || paused || battle.reload || (side!=-1 && side!=1)) return false;
-    if (!fire(battle.shots[0],{s.helm_x,s.helm_y},s.heading,side,PlayerReach)) return false;
-    battle.reload=29-s.guns*3;
+    if (!fire(battle.shots[0],{s.helm_x,s.helm_y},s.heading,side,SkirmishPlayerReach)) return false;
+    battle.reload=skirmish_reload_ticks(s.guns);
     return true;
 }
 
