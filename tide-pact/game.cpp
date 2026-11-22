@@ -225,18 +225,18 @@ const MarketNotice* market_notice(int port, int good, int day) {
 }
 
 namespace {
-int stock_base(int port, int good, int day) {
+int stock_base(int port, int good, int day, int road_timber) {
     constexpr int seasonal[]{-2,0,3,1};
-    return 17+Bias[port][good]*6+seasonal[(day/29+port+good)%4];
+    return 17+Bias[port][good]*6+seasonal[(day/29+port+good)%4]+(port==lisbon && good==Timber?road_timber:0);
 }
 
-int stock_limit(int port, int good, int day) {
-    return std::min(65,stock_base(port,good,day)+48);
+int stock_limit(int port, int good, int day, int road_timber) {
+    return std::min(65,stock_base(port,good,day,road_timber)+48);
 }
 
-int daily_stock_change(int port, int good, int delta, int day) {
-    const int base=stock_base(port,good,day);
-    const int supply=std::clamp(base+delta,0,stock_limit(port,good,day));
+int daily_stock_change(int port, int good, int delta, int day, int road_timber) {
+    const int base=stock_base(port,good,day,road_timber);
+    const int supply=std::clamp(base+delta,0,stock_limit(port,good,day,road_timber));
     const auto* news=market_notice(port,good,day);
     const int target=std::max(0,base+(news?news->reserve_shift:0));
     const bool exports=Bias[port][good]>0;
@@ -249,7 +249,7 @@ int daily_stock_change(int port, int good, int delta, int day) {
 
 int Game::market_stock(int port, int good) const {
     if (port<0 || port>=PortCount || good<0 || good>=GoodsCount) return 0;
-    return std::clamp(stock_base(port,good,s.day)+s.stock_delta[port*GoodsCount+good],0,65);
+    return std::clamp(stock_base(port,good,s.day,road_timber_bonus())+s.stock_delta[port*GoodsCount+good],0,65);
 }
 
 int Game::stock(int good) const {
@@ -277,8 +277,8 @@ TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool l
     if (!port() || good<0 || good>=GoodsCount || quantity<=0) return {};
     const int limit=std::min(quantity,sell ? s.cargo[good] : capacity()-load());
     const int budget=sell ? 999999-s.gold : s.gold;
-    const int port=s.origin, base_stock=stock_base(port,good,s.day);
-    const int stock_cap=stock_limit(port,good,s.day);
+    const int port=s.origin, base_stock=stock_base(port,good,s.day,road_timber_bonus());
+    const int stock_cap=stock_limit(port,good,s.day,road_timber_bonus());
     TradeQuote offer{.stock_change=s.stock_delta[port*GoodsCount+good]};
     int supply=market_stock(port,good);
     int normal=0, reverse=0;
@@ -421,13 +421,17 @@ bool Game::explore_land(LandAction action) {
     return true;
 }
 
+int Game::road_timber_bonus() const {
+    return s.land_stage==LandFullFiled?6:s.land_stage==LandFiled?3:0;
+}
+
 bool Game::file_land_report() {
     if (!port() || s.origin!=lisbon || (s.land_stage!=LandNotes && s.land_stage!=LandFullNotes)) return false;
     const bool complete=s.land_stage==LandFullNotes;
     earn(complete?215:150);
     s.renown+=complete?2:1;
     s.land_stage=complete?LandFullFiled:LandFiled;
-    notice=complete?"完整驿道图已入档，赏金215":"驿道图已入档，赏金150";
+    notice="驿道图已入档，商队可以通行";
     return true;
 }
 
@@ -800,9 +804,9 @@ void Game::plan_merchant(int company) {
         for (int good=0;good<GoodsCount;++good) {
             const int local=market_stock(origin,good);
             int remote=s.stock_delta[port*GoodsCount+good];
-            for (int day=s.day+1;day<=arrival;++day) remote=daily_stock_change(port,good,remote,day);
-            const int cap=stock_limit(port,good,arrival);
-            const int supply=std::clamp(stock_base(port,good,arrival)+remote,0,cap);
+            for (int day=s.day+1;day<=arrival;++day) remote=daily_stock_change(port,good,remote,day,road_timber_bonus());
+            const int cap=stock_limit(port,good,arrival,road_timber_bonus());
+            const int supply=std::clamp(stock_base(port,good,arrival,road_timber_bonus())+remote,0,cap);
             int cost=provisions, revenue=0;
             for (int unit=0;unit<std::min({MerchantLot,local,cap-supply});++unit) {
                 cost+=market_price(origin,good,false,local-unit,s.day,false);
@@ -825,7 +829,7 @@ void Game::plan_merchant(int company) {
     ship.units=best_units;
     if (best_units)
         s.stock_delta[origin*GoodsCount+best_good]=
-            market_stock(origin,best_good)-best_units-stock_base(origin,best_good,s.day);
+            market_stock(origin,best_good)-best_units-stock_base(origin,best_good,s.day,road_timber_bonus());
 }
 
 void Game::merchant_day(int company) {
@@ -848,11 +852,11 @@ void Game::merchant_day(int company) {
     ship.progress=0;
     const int port=MerchantPorts[ship.port];
     const int supply=market_stock(port,ship.good);
-    const int sold=std::min(int(ship.units),stock_limit(port,ship.good,s.day)-supply);
+    const int sold=std::min(int(ship.units),stock_limit(port,ship.good,s.day,road_timber_bonus())-supply);
     for (int unit=0;unit<sold;++unit)
         ship.gold=std::min(MerchantReserve,ship.gold+
             market_price(port,ship.good,true,supply+unit,s.day,false));
-    if (sold) s.stock_delta[port*GoodsCount+ship.good]=supply+sold-stock_base(port,ship.good,s.day);
+    if (sold) s.stock_delta[port*GoodsCount+ship.good]=supply+sold-stock_base(port,ship.good,s.day,road_timber_bonus());
     ship.units=sold;
 }
 
@@ -867,7 +871,7 @@ void Game::spend_day(int days) {
         for (int port=0;port<PortCount;++port)
             for (int good=0;good<GoodsCount;++good) {
                 auto& delta=s.stock_delta[port*GoodsCount+good];
-                delta=daily_stock_change(port,good,delta,s.day);
+                delta=daily_stock_change(port,good,delta,s.day,road_timber_bonus());
             }
         if (s.day>=2)
             for (std::size_t company=0;company<s.merchants.size();++company) merchant_day(company);
@@ -1460,8 +1464,14 @@ DispatchQuote Game::dispatch_quote(int id) const {
     return {forecast(path,dispatch_order()==id?0:rate.space).days,rate.fee+path.miles/7};
 }
 
+bool Game::dispatch_offer_here(int id) const {
+    return id>=0 && id<DispatchCount && port() && DispatchOrders[id].from==s.origin &&
+           (id!=RoadFreight || (road_timber_bonus()>0 && !s.road_delivery));
+}
+
 Text Game::dispatch_requirement(int id) const {
     if (id<0 || id>=DispatchCount || !port() || DispatchOrders[id].from!=s.origin) return "在发单港接单";
+    if (!dispatch_offer_here(id)) return "暂无驿道货运";
     const auto& order=DispatchOrders[id];
     const auto& rate=DispatchRates[order.kind];
     if (s.dispatch.number) return "已有一份运单";
@@ -1496,6 +1506,12 @@ bool Game::deliver_dispatch() {
     const bool on_time=s.day<=s.dispatch.due;
     earn(rate.bond+(on_time?quote.fee:quote.fee/2));
     if (on_time) s.renown=std::min(999999,s.renown+rate.renown);
+    if (id==RoadFreight) {
+        const int base=stock_base(s.origin,Timber,s.day,road_timber_bonus());
+        const int cap=stock_limit(s.origin,Timber,s.day,road_timber_bonus());
+        s.stock_delta[s.origin*GoodsCount+Timber]=std::min(cap,stock(Timber)+rate.space)-base;
+        s.road_delivery=true;
+    }
     finish_dispatch(on_time?DispatchOnTime:DispatchLate);
     notice=on_time?"按期交付，押金已退":"逾期交付，运费减半";
     return true;
@@ -2258,7 +2274,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.dispatch.due);
     bytes[offset++]=std::byte(SailingTimeRevision);
     bytes[offset++]=std::byte(s.ration_flags);
-    bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4));
+    bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4)|
+                              (s.road_delivery?0x80:0));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2427,11 +2444,16 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         const auto shore=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.bargain_warnings=shore&3;
         s.timber_trail=(shore>>2)&3;
-        s.land_stage=shore>>4;
-        if (s.land_stage>LandFullFiled ||
-            (s.land_stage>=LandRidge && s.land_stage<=LandLookout &&
-             (s.origin!=lisbon || s.helm || s.destination>=0 || s.weather!=Calm ||
-              s.stores<LandLegs[ReturnToCity].food || s.water<LandLegs[ReturnToCity].water))) return false;
+        s.land_stage=(shore>>4)&7;
+        s.road_delivery=(shore&0x80)!=0;
+        const bool road_loaded=order.number==RoadFreight+1;
+        const bool road_delivered=order.last==RoadFreight+1 &&
+                                  (order.outcome==DispatchOnTime || order.outcome==DispatchLate);
+        if ((s.road_delivery || road_loaded) && s.land_stage<LandFiled) return false;
+        if ((s.road_delivery && road_loaded) || (road_delivered && !s.road_delivery)) return false;
+        if (s.land_stage>=LandRidge && s.land_stage<=LandLookout &&
+            (s.origin!=lisbon || s.helm || s.destination>=0 || s.weather!=Calm ||
+             s.stores<LandLegs[ReturnToCity].food || s.water<LandLegs[ReturnToCity].water)) return false;
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }

@@ -37,8 +37,9 @@ inline constexpr DispatchOrder DispatchOrders[]{
     {bristol,bordeaux,-1,DispatchFreight,"羊毛样包"},
     {bristol,bruges,-1,DispatchMail,"织机订条"},
     {bruges,bristol,-1,DispatchMail,"布市的回函"},
+    {lisbon,madeira,-1,DispatchFreight,"驿道木料"},
 };
-inline constexpr int DispatchCount=std::size(DispatchOrders);
+inline constexpr int DispatchCount=std::size(DispatchOrders), RoadFreight=19;
 static_assert(DispatchCount<255);
 
 enum DispatchOutcome { NoDispatchReceipt, DispatchOnTime, DispatchLate, DispatchCancelled, DispatchLost };

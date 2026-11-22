@@ -1042,11 +1042,12 @@ struct VoyageApp {
         }
         const bool negotiated=s.bargain_good==good+1;
         const auto* news=market_notice(s.origin,good,s.day);
-        const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),
-                               news?(news->price_percent>0?"求购中":"到货中"):"");
+        const bool road_goods=s.origin==lisbon && good==Timber && game.road_timber_bonus()>0;
+        const Text stock_note=news?(news->price_percent>0?"求购中":"到货中"):road_goods?"驿道来货":"";
+        const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
         const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
         d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
-                negotiated?mint:news?gold:mist,w-(pages>1?72:10));
+                negotiated?mint:news || road_goods?gold:mist,w-(pages>1?72:10));
         if (pages>1) {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
@@ -1508,8 +1509,10 @@ struct VoyageApp {
         d.frame(picture,border);
         Text story;
         if (inland_archive) {
-            story=filed?"抄图人把驿道图收进柜子。往后商队来问路，他就能拿图给他们看。":
-                full?"你画出了望台背后的岔路。抄图人认出那正是商队常走错的地方。":
+            if (filed)
+                story=game.s.road_delivery?"丰沙尔的船匠收到了木料。往后商队还会沿这条路给里斯本供货。":
+                      "抄图人把图抄给商队。山里的木料正运进市场，商会想找船送一批去丰沙尔。";
+            else story=full?"你画出了望台背后的岔路。抄图人认出那正是商队常走错的地方。":
                      "抄图人对着路碑拓片核了地名，准备用你的图换下那张漏了路的旧图。";
         } else {
             switch (stage) {
@@ -1534,6 +1537,8 @@ struct VoyageApp {
         const int row=bottom-37;
         if (inland_archive && !filed) {
             button(d,{x,row,w,PricedButtonHeight},format("交图 · %d金",reward),FileLandReport,true);
+        } else if (inland_archive && !game.s.road_delivery) {
+            button(d,{x,row,w,PricedButtonHeight},"查看港际运单",OpenDispatch,true);
         } else if (!inland_archive && stage==LandUnvisited) {
             const int half=(w-5)/2;
             leg_button({x,row,half,PricedButtonHeight},FollowStream,"沿溪走",WalkLandStream,true);
@@ -2083,12 +2088,11 @@ struct VoyageApp {
         if (id<0) {
             page_title(d,"港际运单",LetterIcon);
             int offer=0;
-            if (game.port()) {
-                for (int i=0;i<DispatchCount;++i) {
-                    const auto& order=DispatchOrders[i];
-                    if (order.from!=game.s.origin) continue;
-                    row(d,offer++,order.title,DispatchRates[order.kind].name,DispatchEntry+i,true);
-                }
+            for (int i=0;i<DispatchCount;++i) {
+                if (!game.dispatch_offer_here(i)) continue;
+                const auto& order=DispatchOrders[i];
+                row(d,offer++,order.title,i==RoadFreight?"驿道货运":DispatchRates[order.kind].name,
+                    DispatchEntry+i,true);
             }
             if (!offer)
                 d.wrap({x,y+35,width,body.h-68},"本港暂无新运单。可在里斯本、丰沙尔等港的商会接单。",mist);
@@ -2112,6 +2116,7 @@ struct VoyageApp {
             const auto requirement=game.dispatch_requirement(id);
             if (!requirement.empty()) d.label(x,y+84,requirement,vermilion,width);
             else if (order.stop>=0) d.label(x,y+84,format("须在%s靠港",known(order.stop)),mint,width);
+            else if (id==RoadFreight) d.label(x,y+84,"完单后木料进入丰沙尔市场",mint,width);
             else d.label(x,y+84,"迟到运费减半，交付退押金",mist,width);
             button(d,bottom,"交押金接单",AcceptDispatch,true,!requirement.empty());
             return;
@@ -2823,8 +2828,7 @@ struct VoyageApp {
         dirty=true;
         if (action>=DispatchEntry && action<DispatchEntry+DispatchCount) {
             const int id=action-DispatchEntry;
-            if (modal==DispatchBoard && game.port() && !game.s.dispatch.number &&
-                DispatchOrders[id].from==game.s.origin) {
+            if (modal==DispatchBoard && !game.s.dispatch.number && game.dispatch_offer_here(id)) {
                 dispatch_page=id;
                 focused=0;
             }

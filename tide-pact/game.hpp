@@ -214,6 +214,7 @@ struct State {
     std::uint8_t bargain_warnings=0, timber_trail=TrailUnknown, land_stage=LandUnvisited;
     std::uint8_t drift_stage=DriftUnheard;
     std::uint8_t port_stories=0;
+    bool road_delivery=false;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -247,6 +248,7 @@ struct Game {
     HaggleResult bargain_offer(int good, bool sell, int rate);
     bool inspect_timber_trail();
     bool resolve_timber_trail(bool return_cargo);
+    int road_timber_bonus() const;
     bool land_away() const { return s.land_stage>=LandRidge && s.land_stage<=LandLookout; }
     bool knows_land_pass() const;
     Text land_requirement(LandAction action) const;
@@ -306,6 +308,7 @@ struct Game {
     int dispatch_target() const;
     int dispatch_space() const;
     bool dispatch_board_here() const;
+    bool dispatch_offer_here(int id) const;
     DispatchQuote dispatch_quote(int id) const;
     Text dispatch_requirement(int id) const;
     bool accept_dispatch(int id);

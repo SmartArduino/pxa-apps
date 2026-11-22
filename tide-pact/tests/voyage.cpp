@@ -876,6 +876,35 @@ void inland_survey() {
     assert(with_pilot.knows_land_pass() && with_pilot.explore_land(CrossPass));
 }
 
+void road_freight() {
+    Game game;
+    assert(!game.dispatch_offer_here(RoadFreight) && !game.accept_dispatch(RoadFreight));
+    assert(game.explore_land(FollowStream) && game.explore_land(SurveyLookout) && game.explore_land(ReturnToCity));
+    const int original_stock=game.stock(Timber);
+    const int original_quote=game.quote(Timber,false);
+    assert(!game.dispatch_offer_here(RoadFreight) && game.file_land_report());
+    assert(game.road_timber_bonus()==6 && game.stock(Timber)==original_stock+6);
+    assert(game.quote(Timber,false)<original_quote && game.dispatch_offer_here(RoadFreight));
+
+    State legacy;
+    assert(decode(legacy,encode(game.s)) && !legacy.road_delivery && legacy.land_stage==LandFullFiled);
+    assert(game.accept_dispatch(RoadFreight) && game.dispatch_space()==6 && game.dispatch_target()==madeira);
+    assert(decode(legacy,encode(game.s)) && legacy.dispatch.number==RoadFreight+1);
+    assert(!game.deliver_dispatch() && game.cancel_dispatch() && game.dispatch_offer_here(RoadFreight));
+    assert(game.accept_dispatch(RoadFreight));
+    sail_to(game,madeira);
+    const int timber=game.stock(Timber);
+    assert(timber<=59 && game.deliver_dispatch());
+    assert(game.stock(Timber)==timber+6 && game.s.road_delivery && !game.dispatch_space());
+    assert(decode(legacy,encode(game.s)) && legacy.road_delivery);
+    sail_to(game,lisbon);
+    assert(!game.dispatch_offer_here(RoadFreight) && !game.accept_dispatch(RoadFreight));
+    assert(game.accept_dispatch(0) && game.cancel_dispatch());
+    assert(decode(legacy,encode(game.s)) && legacy.road_delivery && legacy.dispatch.last==1);
+    assert(!game.dispatch_offer_here(RoadFreight));
+}
+
+
 void search_for_driftwood() {
     Game ship;
     assert(!ship.take_drift_lead());
@@ -1282,6 +1311,7 @@ int main() {
     dockside_bargaining();
     riverside_timber();
     inland_survey();
+    road_freight();
     search_for_driftwood();
     ship_officers();
     unknown_waters();
