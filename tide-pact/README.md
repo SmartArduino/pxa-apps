@@ -44,6 +44,10 @@
 - 在「船坞 → 泊位」查看可选港口。立契前须入股本港商栈，并满足当地信任与口译条件。在驻港可修船并留泊一艘备船，换乘时两船各自保留船况和火炮。人员与货物随旗舰调动，装不下的水粮、货物须先卸下，多出的水手可留港候船。泊位空出后可到其他港迁租。
 - 马拉巴尔外海新增亚丁商船事件。带会阿拉伯语的译员可升商旗买水，冒称王家差船会留下证词，使卡利卡特暂停市场交易和签发新泊位。到港可缴偿金提前结案，或等留案期结束。
 
+- 在原泊位可把备船编入船队，两船随行时共用旗舰的补给。第二艘船增加货舱、每天多消耗一份水粮，并限制全队航速。随行船的火炮可支援齐射，船体损伤单独记录。解编要回原泊位，旗舰得装得下余货。
+- 在「船坞 → 旗号」选择商旗、葡萄牙王室纹旗、卡斯蒂利亚与莱昂纹旗，或收旗。差船委状分别在里斯本和加的斯领取，持合法委状并挂对应旗号时可按本港差船价格补给。无委状的王旗可能被查验，港务按管辖地留案停市。
+- 「港务 → 岸上见闻」可去埃尔米纳雇向导筛金砂、在基尔瓦取得青花瓷货单并赴卡利卡特核对，以及在佛得角协助莉娜把家人的遭遇写入记录。完成后可在日志重读。
+
 ## 构建与维护
 
 标题或日志中的「设置」可单独打开或关闭配乐、航海音效和船员语音。港口、航行与战斗使用不同的配乐，PXA Host 流式播放单声道 Ogg，短音效和语音按需载入。游戏把内嵌美术保存在 `art/`，音频资源保存在 `assets/audio/`。
@@ -87,4 +91,6 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 里斯本河堤由内置图像生成工具绘制。用 `tools/make_outskirts.py --help` 生成背景图和设备纹理。城门、河堤、木料棚与旧驿道的位置定义在 `town.hpp`。
 - 自然图鉴的六幅原创插画由内置图像生成工具绘制，用 `tools/make_nature.py` 合成索引色图集。栖息地和物种特征参考当地生态资料，游戏中的时段、候潮和停船规则用于安排探索。 [马德拉自然保护机构](https://ifcn.madeira.gov.pt/pt/areas-protegidas/parque-natural-da-madeira/valores-naturais.html) · [加的斯湾保护区](https://www.juntadeandalucia.es/medioambiente/portal/documents/20151/98730912/ES0000140_bahiadecadiz.pdf/7c61f16c-6317-071e-6c70-001fcf7e1bcd) · [马德拉鲸类博物馆](https://museudabaleia.org/ciencia/baleias-e-golfinhos/d/423-golfinhocomum) · [佛得角物种名录](https://www.cms.int/country/cabo-verde)
 - 商馆的租金、信任要求和登记规则属于游戏设定。卡利卡特由扎莫林统治，已有阿拉伯商人经营海路。马林迪和蒙巴萨各有自己的商路及对外关系。亚丁商船插画由内置图像生成工具绘制。 [卡利卡特地区历史](https://kozhikode.gov.in/about-district/history/) · [达·伽马首航手稿](https://www.loc.gov/item/2021667835/) · [马林迪与蒙巴萨的史料综述](https://whc.unesco.org/uploads/nominations/1295rev.pdf) · [突尼斯旧城](https://whc.unesco.org/en/list/36)
+- 商号旗为原创图案。两面王室纹旗是参考十五世纪末纹章的像素复原。王家委状的取得方式、补给折扣和港务留案按游戏规则制定。 [约1502年的坎蒂诺海图](https://cultura.marinha.pt/pt/museumarinha_web/colecoes_web/pecasemdestaque_web/Paginas/mapa-cantino.aspx) · [葡萄牙王室旗帜资料](https://casarealportugal.org/english-version/royal-house/flags/) · [卡斯蒂利亚与莱昂纹章资料](https://www.loc.gov/exhibits/1492/columbus.html)
+- 三段岸上见闻是虚构剧情。阿坎地区的黄金、基尔瓦的中国瓷器与里贝拉格兰德的奴役贸易背景有史料根据。用 `tools/make_flag_art.py` 把六幅图像生成作品整理成运行时图集。 [阿坎黄金](https://82nd-and-fifth.metmuseum.org/toah/ht/08/afu.html) · [基尔瓦](https://whc.unesco.org/en/list/144/) · [里贝拉格兰德](https://whc.unesco.org/en/list/1310/)
 - 标准字模来自 Noto Sans CJK SC。紧凑字模使用缝合像素字体 12px 的简体中文比例版，缺字由 Noto Sans 补齐。增加文字后运行 `python tools/make_font.py NotoSansCJK-Regular.ttc --compact-bdf fusion-pixel-12px-proportional-zh_hans.bdf` 更新两个字模。[Noto Sans](https://github.com/notofonts/noto-cjk/tree/main/Sans) · [缝合像素字体 2026.11.10](https://github.com/TakWolf/fusion-pixel-font/releases/tag/2026.11.10)

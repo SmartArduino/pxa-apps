@@ -47,8 +47,6 @@ def ship_frame(index):
     draw.polygon(points([(23,7),(30,9),(27,15),(22+belly*.5,16)], drift),
                  fill="#dcaf6b", outline="#4a3c2b", width=3)
     draw.line(points([(10,6),(16+belly,7),(13+belly,14)], drift), fill="#cfa977", width=3)
-    flutter = math.sin(phase) * 1.3
-    draw.polygon(points([(19,3),(24,2+flutter),(22,5),(19,5)], drift), fill="#bd6549")
     return frame.resize((36, 27), Image.Resampling.LANCZOS)
 
 

@@ -28,7 +28,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -71,7 +71,9 @@ enum Action {
     OpenNatureWatch=DispatchEntry+DispatchCount, OpenNatureAlbum, WaitForNature, SketchNature, NatureSelect,
     OpenCharterDesk=NatureSelect+int(NatureCount), OpenCharterRegistry, SignBerth, OpenReserveOrder,
     ChangeFlagship, OpenReserveSale, ConfirmReserveSale, LocateBerth, OpenPortCase, SettlePortCase, CharterEntry,
-    PurchaseReserve=CharterEntry+int(HarborCharters.size())
+    PurchaseReserve=CharterEntry+int(HarborCharters.size()),
+    ToggleCompany=PurchaseReserve+int(std::size(HullNames)), OpenFlags, RaiseColors, SignRoyalPass,
+    OpenShoreTask, AdvanceShoreTask, OpenShoreJournal, FlagEntry, ShoreEntry=FlagEntry+int(ColorsCount)
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(WorldChart<DockService);
@@ -137,6 +139,8 @@ struct VoyageApp {
     int trade_quantity=0;
     bool quantity_sell=false;
     int charter_item=-1;
+    int flag_item=MerchantColors, shore_item=GoldWash;
+    Overlay shore_back=None;
     Overlay port_case_back=None;
     int nature_item=IslandLaurel;
     Overlay nature_page_back=NatureAlbum;
@@ -858,7 +862,11 @@ struct VoyageApp {
             int frame=(now/115)%12;
             const auto heading=game.position(.9f);
             const bool west=game.s.helm?Directions[game.s.heading].x<0:heading.x<ship.x;
+            if (game.s.in_company)
+                d.image({art::caravel},{frame*36,0,36,27},{p.x+(west?13:-32),p.y-4,22,17},true,west);
             d.image({art::caravel},{frame*36,0,36,27},{p.x-18,p.y-20,36,27},true,west);
+            if (game.s.colors!=FurledColors)
+                flag_art(d,game.s.colors,{p.x+(west?0:-11),p.y-24,13,8});
             if (game.s.helm) {
                 const auto bearing=Directions[game.s.heading];
                 const Point end{p.x+bearing.x,p.y+bearing.y};
@@ -1037,9 +1045,9 @@ struct VoyageApp {
         }
         if (game.market_held()) {
             skin_box(d,body,0,6);
-            d.label(body.x+7,body.y+6,"卡利卡特市场",gold);
+            d.label(body.x+7,body.y+6,format("%s市场",Places[game.s.origin].name.data()),gold);
             d.wrap({body.x+7,body.y+31,body.w-14,body.h-64},
-                   "亚丁船主留下了证词。商会暂不与你买卖，去港务处问清留案。",ivory,17);
+                   "旗号的查验结果已记入港簿。商会暂不与你买卖，去港务处查看留案。",ivory,17);
             button(d,{body.x+7,body.bottom()-28,body.w-14,24},"查看旗号留案",OpenPortCase,true);
             return;
         }
@@ -1261,14 +1269,22 @@ struct VoyageApp {
         button(d,{body.x+5,body.bottom()-30,body.w-10,25},"返回海图",OpenChart,true);
     }
     void shipyard(Draw& d) {
-        if (!game.port()) { no_port(d,"靠港后才能整备船只"); return; }
+        if (!game.port()) {
+            if (!game.sea() || game.encounter()) { no_port(d,"靠港后才能整备船只"); return; }
+            skin_box(d,body,0,6);
+            d.label(body.x+7,body.y+7,HullNames[game.s.ship],gold);
+            d.label(body.x+7,body.y+28,game.s.in_company?"两船随行":"单船航行",mist);
+            button(d,{body.x+7,body.bottom()-29,body.w-14,25},"查看旗号",OpenFlags,true,false,{},PennantIcon);
+            return;
+        }
         const auto& s=game.s;
         skin_box(d,body,0,6);
         d.label(body.x+5,body.y+4,HullNames[s.ship],gold,body.w-139);
         button(d,{body.right()-128,body.y+2,54,20},"泊位",OpenCharterDesk,game.at_berth());
         button(d,{body.right()-71,body.y+2,67,20},"副官",ShowOfficers,s.first_mate!=NoOfficer,false,{},CrewIcon);
-        d.label(body.x+5,body.y+22,format("船员 %d/%d  士气 %d  火炮 %d",s.crew,
-            game.crew_limit(),s.spirits,s.guns),mist,body.w-10);
+        d.label(body.x+5,body.y+22,format("船员 %d/%d  士气 %d  炮 %d",s.crew,
+            game.crew_limit(),s.spirits,s.guns),mist,body.w-67);
+        button(d,{body.right()-58,body.y+20,54,17},"旗号",OpenFlags,false);
         int height=std::clamp((body.h-36)/4-3,20,34);
         const auto fill=format("补给 %d金",game.ration_cost());
         const auto repair=format("维修 %d金",game.repair_cost());
@@ -1295,16 +1311,21 @@ struct VoyageApp {
         }
         if (game.at_berth()) {
             if (berth.vessel) {
-                d.label(x,y+20,format("留泊 %s  船体%d  炮%d",
+                d.label(x,y+20,format("%s %s  船体%d  炮%d",game.s.in_company?"随行":"留泊",
                         HullNames[berth.vessel-1].data(),berth.hull,berth.guns),ivory,w);
-                const Text blocked=game.swap_requirement();
-                const auto shore=format("岸上候船水手 %d",berth.sailors);
-                if (d.measure("出售备船")+21<w/2)
-                    button(d,{x+w-82,y+40,82,22},"出售备船",OpenReserveSale);
-                d.label(x,y+42,blocked.empty()?Text(shore):blocked,blocked.empty()?mist:vermilion,w-86);
-                const int split=(w-4)/2;
-                button(d,{x,bottom-29,split,25},"港口名录",OpenCharterRegistry);
-                button(d,{x+split+4,bottom-29,w-split-4,25},"更换旗舰",ChangeFlagship,true,!blocked.empty());
+                const Text swap=game.swap_requirement(), company=game.company_requirement();
+                d.label(x,y+42,format("%s水手 %d",game.s.in_company?"随行船":"岸上候船",berth.sailors),mist,w-88);
+                if (!game.s.in_company)
+                    button(d,{x+w-82,y+38,82,22},"出售备船",OpenReserveSale);
+                const Text hint=company.empty()?swap:company;
+                if (!hint.empty() && (!game.s.in_company || !company.empty()))
+                    d.label(x,y+62,hint,vermilion,w);
+                const int count=game.s.in_company?2:3, col=(w-4*(count-1))/count;
+                button(d,{x,bottom-29,col,25},"港口名录",OpenCharterRegistry);
+                if (!game.s.in_company)
+                    button(d,{x+col+4,bottom-29,col,25},"更换旗舰",ChangeFlagship,false,!swap.empty());
+                button(d,{x+(count-1)*(col+4),bottom-29,col,25},game.s.in_company?"解编留港":"编入船队",
+                       ToggleCompany,true,!company.empty());
             } else {
                 d.wrap({x,y+21,w,bottom-y-55},"这里可留泊一艘备船。租下泊位后，船匠也会按商馆的价格维修。",ivory,17);
                 pair(d,{x,bottom-29,w,25},"港口名录",OpenCharterRegistry,"购置备船",OpenReserveOrder);
@@ -1313,7 +1334,7 @@ struct VoyageApp {
         }
         const Text blocked=game.lease_requirement();
         if (base>=0)
-            d.label(x,y+22,format("%s%s",berth.vessel?"备船留在":"商馆泊位在",Places[base].name.data()),ivory,w);
+            d.label(x,y+22,format("%s%s",game.s.in_company?"解编须回":berth.vessel?"备船留在":"商馆泊位在",Places[base].name.data()),ivory,w);
         else
             d.label(x,y+22,"先选适合自己航路的港口。",ivory,w);
         d.wrap({x,y+41,w,bottom-y-73},blocked.empty()?"租契准许留船和接洽本地船匠。":blocked,mist,17);
@@ -1372,11 +1393,91 @@ struct VoyageApp {
             d.label(x,y,"商会已重新开放交易。",mint,w);
             return;
         }
-        d.label(x,y,format("还需等 %d 日",game.s.calicut_hold_until-game.s.day),gold,w);
+        d.label(x,y,format("还需等 %d 日",game.port_hold_until()-game.s.day),gold,w);
         d.wrap({x,y+20,w,body.bottom()-y-48},
                "冒称王家差船一事已记入港簿。交偿金可以提前结案。补给、修船和出海仍可照常办理。",ivory,16);
         button(d,{x,body.bottom()-28,w,24},format("交偿金 %d金",Game::PortSettlement),SettlePortCase,
                true,game.s.gold<Game::PortSettlement);
+    }
+
+    void flag_art(Draw& d, int id, Rect area) {
+        if (id<FurledColors) d.image({art::flags},{id*96,0,96,56},area,true);
+    }
+
+    void flag_rack(Draw& d) {
+        page_title(d,"船上旗号",PennantIcon);
+        const int x=body.x+6, y=body.y+30, w=body.w-12, row=std::clamp((body.h-44)/2,31,52);
+        const int col=(w-5)/2;
+        for (int id=0;id<ColorsCount;++id) {
+            const Rect card{x+(id%2)*(col+5),y+(id/2)*(row+3),col,row-3};
+            const bool selected=game.s.colors==id;
+            const bool focus=pad_focus && button_count==focused;
+            skin_box(d,card,(selected||focus)?1:0,4);
+            if (id==FurledColors) d.center(card,FlagDetails[id].name,selected?gold:ivory);
+            else {
+                flag_art(d,id,{card.x+(card.w-41)/2,card.y+4,41,24});
+                const Text name=id==CastilianColors?"卡斯蒂利亚王旗":FlagDetails[id].name;
+                d.center({card.x+3,card.bottom()-19,card.w-6,16},name,selected?gold:ivory);
+            }
+            buttons[button_count++]={card,FlagEntry+id};
+        }
+    }
+
+    void flag_page(Draw& d) {
+        const auto& flag=FlagDetails[flag_item];
+        const auto court=colors_court(flag_item);
+        const int x=body.x+7, y=body.y+31, w=body.w-14, bottom=body.bottom();
+        page_title(d,flag.name,PennantIcon);
+        const int picture_h=std::max(0,bottom-y-55);
+        const int picture_w=flag_item==FurledColors?0:std::min({132,w/3,picture_h*96/56});
+        if (picture_w)
+            flag_art(d,flag_item,{x,y,picture_w,picture_w*56/96});
+        const int text_x=x+(picture_w?picture_w+7:0);
+        d.wrap({text_x,y,x+w-text_x,bottom-y-59},flag.note,ivory,d.font.cell+2);
+        const bool has_pass=game.has_royal_pass(court);
+        const bool issuing=court!=NoCourt && game.port() && game.s.origin==issuing_port(court) && !has_pass;
+        if (court!=NoCourt) {
+            const Text status=has_pass?"本船持有盖印委状":issuing?game.royal_pass_requirement():"冒用王旗可能被港务留案";
+            d.label(x,bottom-51,status.empty()?"可以申请差船委状":status,has_pass?mint:gold,w);
+        }
+        const int half=issuing?(w-5)/2:w;
+        button(d,{x,bottom-29,half,24},flag_item==FurledColors?"收起旗帜":"升起此旗",RaiseColors,true);
+        if (issuing)
+            button(d,{x+half+5,bottom-29,w-half-5,24},format("领委状 %d金",Game::RoyalPassCost),
+                   SignRoyalPass,false,!game.royal_pass_requirement().empty());
+    }
+
+    void shore_journal(Draw& d) {
+        page_title(d,"岸上见闻",LetterIcon);
+        for (int id=0;id<ShoreTaskCount;++id) {
+            const int step=game.s.shore_tasks[id];
+            row(d,id,step?ShoreTasks[id].title:Places[ShoreTasks[id].port].name,
+                step>=3?"已记完":step?"待续":"有待探访",ShoreEntry+id,step>=3);
+        }
+    }
+
+    void shore_page(Draw& d) {
+        const auto& task=ShoreTasks[shore_item];
+        const int step=game.s.shore_tasks[shore_item], x=body.x+7, y=body.y+31, w=body.w-14;
+        const int bottom=body.bottom();
+        const bool local=shore_back!=ShoreJournal && game.shore_task_here()==shore_item;
+        const bool has_step=local && step<3;
+        const int picture_h=std::max(0,bottom-y-(has_step?55:19));
+        const int picture_w=std::min({145,w/3,picture_h*160/104});
+        page_title(d,task.title,AstrolabeIcon);
+        if (picture_w) {
+            const Rect picture{x,y,picture_w,picture_w*104/160};
+            d.image({art::shore_tasks},{shore_item*160,0,160,104},picture);
+            d.frame(picture,border);
+        }
+        const int text_x=x+(picture_w?picture_w+7:0), text_w=x+w-text_x;
+        d.wrap({text_x,y,text_w,picture_h},task.story[step],ivory,d.font.cell+1);
+        if (!has_step) return;
+        const auto blocked=game.shore_requirement(shore_item);
+        const bool route=shore_item==KilwaPorcelain && step==2 && game.s.origin!=calicut;
+        if (!route) d.label(x,bottom-52,blocked,mist,w);
+        button(d,{x,bottom-34,w,30},route?Text("在海图上标出卡利卡特"):task.action[step],
+               route?Destination+int(calicut):AdvanceShoreTask,true,!route && !blocked.empty(),task.cost[step]);
     }
 
     void office(Draw& d) {
@@ -1413,7 +1514,9 @@ struct VoyageApp {
                        game.s.expeditions[archive].stage==HasEvidence?"档案室 · 交考察记录":"档案室",
                        OpenArchive,true);
             button(d,{body.x+3,body.bottom()-51,split-6,21},"港口商会",OpenDesk);
-            if (local_tale>=0)
+            if (game.shore_task_here()>=0)
+                button(d,{body.x+split+2,body.bottom()-51,body.w-split-5,21},"岸上见闻",OpenShoreTask,true);
+            else if (local_tale>=0)
                 button(d,{body.x+split+2,body.bottom()-51,body.w-split-5,21},
                        Tales[local_tale].title,PortTaleAction,true);
             button(d,{body.x+3,body.bottom()-26,split-6,24},
@@ -1455,8 +1558,10 @@ struct VoyageApp {
         if (s.contract>=0 && body.h>=177)
             d.label(body.x+5,body.y+99,format("委托  %s / %s",
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
-        pair(d,{body.x+4,body.bottom()-53,body.w-8,23},"港口故事",ShowTales,"海上纪事",ShowSeaLog);
         const int third=(body.w-16)/3, row=body.bottom()-27;
+        button(d,{body.x+4,row-26,third,23},"港口故事",ShowTales);
+        button(d,{body.x+8+third,row-26,third,23},"海上纪事",ShowSeaLog);
+        button(d,{body.x+12+third*2,row-26,body.w-16-third*2,23},"岸上见闻",OpenShoreJournal);
         button(d,{body.x+4,row,third,23},"发现图鉴",ShowAtlas);
         button(d,{body.x+8+third,row,third,23},"自然图鉴",OpenNatureAlbum);
         button(d,{body.x+12+third*2,row,body.w-16-third*2,23},"操作帮助",ShowHelp);
@@ -2383,6 +2488,8 @@ struct VoyageApp {
             row(d,2,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"码头决斗",ShowDuel,true);
         else if (game.s.origin==tunis)
             row(d,2,"优素福","招募领航",Recruit,true);
+        if (game.shore_task_here()>=0 && game.tale_here()>=0)
+            row(d,2,Tales[game.tale_here()].title,"港口故事",PortTaleAction,true);
         pair(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors,"口译与学话",OpenLanguages);
     }
     void dispatch_board(Draw& d) {
@@ -3135,6 +3242,10 @@ struct VoyageApp {
         case ReserveOrder: reserve_order(d); break;
         case ReserveSale: reserve_sale(d); break;
         case PortCasePage: port_case(d); break;
+        case FlagRack: flag_rack(d); break;
+        case FlagPage: flag_page(d); break;
+        case ShorePage: shore_page(d); break;
+        case ShoreJournal: shore_journal(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -3222,8 +3333,47 @@ struct VoyageApp {
             }
             return;
         }
+        if (action>=FlagEntry && action<ShoreEntry) {
+            if (modal==FlagRack) { flag_item=action-FlagEntry; set_modal(FlagPage); }
+            return;
+        }
+        if (action>=ShoreEntry && action<ShoreEntry+int(ShoreTaskCount)) {
+            if (modal==ShoreJournal) {
+                shore_item=action-ShoreEntry;
+                shore_back=ShoreJournal;
+                set_modal(ShorePage);
+            }
+            return;
+        }
         if (action>=OpenLanguages) {
             switch (action) {
+            case ToggleCompany:
+                if (modal==CharterDesk && game.change_company()) changed();
+                break;
+            case OpenFlags:
+                if (game.encounter() || game.land_away()) break;
+                if (game.sea()) {
+                    game.paused=true;
+                    voyage_rate=1;
+                }
+                set_modal(FlagRack);
+                break;
+            case RaiseColors: if (modal==FlagPage && game.display_colors(flag_item)) changed(); break;
+            case SignRoyalPass: if (modal==FlagPage && game.receive_royal_pass()) changed(); break;
+            case OpenShoreTask:
+                if (game.shore_task_here()>=0) {
+                    shore_item=game.shore_task_here();
+                    shore_back=modal;
+                    set_modal(ShorePage);
+                }
+                break;
+            case AdvanceShoreTask:
+                if (modal==ShorePage && shore_back!=ShoreJournal && game.advance_shore_task(shore_item)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case OpenShoreJournal: set_modal(ShoreJournal); break;
             case OpenPortCase:
                 if (game.market_held()) {
                     port_case_back=modal;
@@ -3884,6 +4034,8 @@ struct VoyageApp {
             if (modal==CharterRegistry && charter_item>=0) { charter_item=-1; focused=0; dirty=true; }
             else if (modal==CharterRegistry || modal==ReserveOrder || modal==ReserveSale) set_modal(CharterDesk);
             else if (modal==PortCasePage) set_modal(port_case_back);
+            else if (modal==FlagPage) set_modal(FlagRack);
+            else if (modal==ShorePage) set_modal(shore_back);
             else if (modal==PortStoryPage) set_modal(port_story_back);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
             else if (modal==LandPage) set_modal(inland_archive?ExpeditionPage:HarborTown);

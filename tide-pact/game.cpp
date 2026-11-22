@@ -13,6 +13,11 @@ constexpr int provisions[] = {90,135,185};
 constexpr int berths[] = {18,27,38};
 constexpr int MerchantMilesPerDay=104;
 constexpr int SailingTimeRevision=1;
+constexpr int CompanionCrew=6;
+
+int cargo_capacity(const State& state) {
+    return holds[state.ship]+(state.in_company?holds[state.berth.vessel-1]:0);
+}
 
 int length(Point a, Point b) {
     const int x = a.x-b.x, y = a.y-b.y;
@@ -39,9 +44,12 @@ int sailing_wind(const Leg& leg, bool reverse, int month) {
 
 int sailing_miles_per_day(const State& ship, int load, int spirits, int wind, SeaWeather weather) {
     constexpr int hull_pace[]{92,110,100};
-    const int drag=load*26/holds[ship.ship];
+    const int drag=load*26/cargo_capacity(ship);
+    const int companion=ship.in_company?ship.berth.vessel-1:ship.ship;
+    const int pace=std::min(hull_pace[ship.ship],hull_pace[companion])-
+                   (ship.in_company?7+(100-ship.berth.hull)/8:0);
     const int seas=weather==Squall?(ship.reefed?9:24):weather==Rain?5:0;
-    return std::clamp(hull_pace[ship.ship]+std::min(18,ship.crew)+(spirits-60)/5-drag+wind
+    return std::clamp(pace+std::min(18,ship.crew)+(spirits-60)/5-drag+wind
                      -seas-(ship.reefed?24:0)+(ship.allies&1?6:0)+(ship.allies&2?4:0)
                      +(ship.first_mate==Pilot?12:0),35,170);
 }
@@ -209,7 +217,7 @@ Point Game::merchant_position(int company) const {
     return vessel_at(lane,leg,float(miles)/Legs[lane.edge[leg]].nautical_miles);
 }
 
-int Game::capacity() const { return holds[s.ship]; }
+int Game::capacity() const { return cargo_capacity(s); }
 int Game::max_stores() const { return provisions[s.ship]; }
 int Game::food_capacity() const {
     return std::min(max_stores()+20,2*max_stores()-s.water);
@@ -328,7 +336,7 @@ int Game::negotiation_rate() const {
 
 Text Game::bargain_block(int good, bool sell) const {
     if (!port()) return "靠港后才能议价";
-    if (market_held()) return "卡利卡特商会暂停交易";
+    if (market_held()) return "本港商会暂停交易";
     if (s.bargain_good) return "本次停泊的议价已结束";
     if (!negotiation_rate()) return "需本地短语、随船口译或码头口译";
     if (bargain_quote(good,sell,0).units!=TradeLot)
@@ -665,7 +673,11 @@ int Game::resupply_cost(int food, int water) const {
     const int count=order.x+order.y;
     if (!count) return 0;
     const int price=(count+7)/8;
-    return port() && Zone[s.origin]==3 && s.tales[Monsoon]==Shared ? (price*3+3)/4 : price;
+    if (port() && Zone[s.origin]==3 && s.tales[Monsoon]==Shared) return (price*3+3)/4;
+    const auto court=colors_court(s.colors);
+    if (port() && court!=NoCourt && court==port_court(s.origin) && has_royal_pass(court) && !market_held())
+        return (price*4+4)/5;
+    return price;
 }
 
 int Game::ration_cost() const { return resupply_cost(food_capacity(),water_capacity()); }
@@ -695,13 +707,16 @@ bool Game::unload_provisions(bool water) {
 }
 
 int Game::repair_cost() const {
-    const int price = (100-s.hull)*2;
+    const int price = (100-s.hull)*2+(s.in_company?(100-s.berth.hull)*2:0);
     const bool helpers=port() && ((Zone[s.origin]==1 && s.tales[Chartmakers]==Shared) ||
                                  (s.origin==cadiz && s.drift_stage==DriftReturned));
     return helpers?(price*3+3)/4:at_berth()?(price*4+4)/5:price;
 }
 
-int Game::daily_rations() const { return s.crew>=27 ? 3 : (s.crew>14 ? 2 : 1); }
+int Game::daily_rations() const {
+    const int crew=s.crew+(s.in_company?s.berth.sailors:0);
+    return (crew>=27?3:crew>14?2:1)+int(s.in_company);
+}
 int Game::daily_water(SeaWeather weather) const {
     return std::max(1,daily_rations()+(weather==Heat)-(s.first_mate==Quartermaster));
 }
@@ -1021,6 +1036,7 @@ void Game::spend_day(int days) {
 
 bool Game::depart(int to) {
     if (sea() || encounter() || land_away() || to==s.origin) return false;
+    if (s.in_company && s.berth.hull<13) { notice="随行船受损，先到船坞维修"; return false; }
     if (!charted(to)) { notice="此处尚未定位，需掌舵探索"; return false; }
     auto path = passage(s.origin, to);
     if (!path.count) return false;
@@ -1105,6 +1121,7 @@ bool Game::consume_day(SeaConditions weather) {
 }
 
 bool Game::start_helm(int destination) {
+    if (s.in_company && s.berth.hull<13) { notice="随行船受损，先到船坞维修"; return false; }
     if (sea() || encounter() || land_away() || s.hull<=12 ||
         s.stores<daily_rations() || s.water<daily_water(Fair)) {
         notice="掌舵前请备足一日水粮并修船";
@@ -1301,6 +1318,7 @@ void Game::helm_step(WaterTest water_at) {
             s.water=static_cast<std::uint8_t>(std::min(water_capacity(),int(s.water)+1));
         if (weather.weather==Squall && !s.reefed) {
             s.hull-=3;
+            wear_company_hull(3);
             notice="骤风伤船，缩帆可减损";
             if (s.hull<=0) { rescue(); return; }
         }
@@ -1423,6 +1441,7 @@ void Game::arrive() {
     }
     reveal_chart(Anchor[s.origin],26);
     notice = port() ? "安全入港" : "到达测绘水域";
+    if (port()) inspect_colors();
     if (s.dispatch.number) {
         const auto& order=DispatchOrders[dispatch_order()];
         if (s.origin==order.stop && !s.dispatch.stopped) {
@@ -1487,7 +1506,7 @@ bool Game::request_tow() {
 TradeQuote Game::trade(int good, bool sell, int quantity) {
     const auto offer=trade_quote(good,sell,quantity);
     if (!offer.units) {
-        notice=market_held()?"卡利卡特商会暂停交易":sell?"没有可出售的货物":"金币、舱位或库存不足";
+        notice=market_held()?"本港商会暂停交易":sell?"没有可出售的货物":"金币、舱位或库存不足";
         return offer;
     }
     apply_trade(good,sell,offer);
@@ -1519,8 +1538,12 @@ void Game::service(int action) {
         resupply(food_capacity(),water_capacity());
         break;
     case 1:
-        if (s.hull == 100) { notice = "船体完好"; break; }
-        if (pay(repair_cost())) { s.hull = 100; notice = "船体已修复"; }
+        if (!repair_cost()) { notice = "船体完好"; break; }
+        if (pay(repair_cost())) {
+            s.hull=100;
+            if (s.in_company) s.berth.hull=100;
+            notice=s.in_company?"两船已修复":"船体已修复";
+        }
         break;
     case 2:
         if (s.spirits == 100) { notice = "士气已满"; break; }
@@ -2099,6 +2122,7 @@ int Game::reserve_value() const {
 }
 
 Text Game::swap_requirement() const {
+    if (s.in_company) return "先让随行船回原泊位";
     if (!at_berth() || !s.berth.vessel) return "要回商馆泊位换船";
     const int vessel=s.berth.vessel-1;
     const int supplies=provisions[vessel];
@@ -2127,18 +2151,134 @@ bool Game::swap_vessel() {
 }
 
 bool Game::sell_reserve() {
-    if (!at_berth() || !s.berth.vessel) return false;
+    if (!at_berth() || !s.berth.vessel || s.in_company) return false;
     earn(reserve_value());
     notice=s.berth.sailors?"备船已售，候船水手在本港离船":"备船已售，租契仍然有效";
     s.berth={.port=s.berth.port};
     return true;
 }
 
+Text Game::company_requirement() const {
+    if (!at_berth() || !s.berth.vessel) return "只能在原泊位编队或解编";
+    if (s.in_company) {
+        if (load()>holds[s.ship]) return "旗舰装不下，先卖货或交运单";
+    } else {
+        if (s.berth.hull<13) return "备船船况太差，先换乘维修";
+        if (s.crew+s.berth.sailors<4+CompanionCrew) return "两船合计至少要十名水手";
+    }
+    return {};
+}
+
+bool Game::change_company() {
+    if (const auto blocked=company_requirement(); !blocked.empty()) { notice=blocked; return false; }
+    const int crew=s.crew+s.berth.sailors;
+    if (s.in_company) s.crew=std::min(crew,crew_limit());
+    else s.crew=std::min(crew-CompanionCrew,crew_limit());
+    s.berth.sailors=crew-s.crew;
+    s.in_company=!s.in_company;
+    notice=s.in_company?"随行船已入编":"随行船已留在商馆泊位";
+    return true;
+}
+
+void Game::wear_company_hull(int loss) {
+    if (s.in_company) s.berth.hull=std::max(1,int(s.berth.hull)-loss);
+}
+
+int Game::port_hold_until() const {
+    if (s.origin==calicut) return s.calicut_hold_until;
+    const auto court=port_court(s.origin);
+    return court==NoCourt?0:s.court_hold_until[court];
+}
+
 bool Game::settle_port_case() {
     if (!market_held() || s.gold<PortSettlement) return false;
     earn(-PortSettlement);
-    s.calicut_hold_until=0;
+    if (s.origin==calicut) s.calicut_hold_until=0;
+    else s.court_hold_until[port_court(s.origin)]=0;
     notice="旗号留案已了结，市场重新开放";
+    return true;
+}
+
+bool Game::display_colors(int colors) {
+    if (colors<0 || colors>=ColorsCount || !(port() || (sea() && paused && !encounter()))) return false;
+    s.colors=colors;
+    const auto court=colors_court(colors);
+    notice=court!=NoCourt && !has_royal_pass(court)?"船上没有这份王家委状":"旗号已更换";
+    return true;
+}
+
+Text Game::royal_pass_requirement() const {
+    const auto court=port_court(s.origin);
+    if (!port() || court==NoCourt || s.origin!=issuing_port(court)) return "委状由里斯本或加的斯签发";
+    if (market_held()) return "先处理本地的港务留案";
+    if (has_royal_pass(court)) return "已经持有这份委状";
+    if (s.renown<4 || s.trust<2 || !guild_stake(s.origin)) return "需入股本港、声望4、信任2";
+    if (court==Castile && !understands(Castilian)) return "签署委状需要卡斯蒂利亚语";
+    if (s.gold<RoyalPassCost) return "缺少委状押金";
+    return {};
+}
+
+bool Game::receive_royal_pass() {
+    if (const auto blocked=royal_pass_requirement(); !blocked.empty()) { notice=blocked; return false; }
+    s.royal_passes|=1U<<port_court(s.origin);
+    earn(-RoyalPassCost);
+    notice="已领到盖印的差船委状";
+    return true;
+}
+
+void Game::inspect_colors() {
+    const auto flag=colors_court(s.colors), host=port_court(s.origin);
+    if (flag==NoCourt || (host==NoCourt && s.origin!=calicut)) return;
+    if (has_royal_pass(flag)) {
+        notice="港务验明了差船委状";
+        return;
+    }
+    auto& until=s.origin==calicut?s.calicut_hold_until:s.court_hold_until[host];
+    until=std::max(until,std::min(99999,s.day+8));
+    s.colors=MerchantColors;
+    notice="王旗与委状不符，已记入港簿";
+}
+
+int Game::shore_task_here() const {
+    if (!port()) return -1;
+    for (int i=0;i<ShoreTaskCount;++i)
+        if (s.origin==ShoreTasks[i].port) return i;
+    if (s.origin==calicut && s.shore_tasks[KilwaPorcelain]>=2) return KilwaPorcelain;
+    return -1;
+}
+
+Text Game::shore_requirement(int task) const {
+    if (task<0 || task!=shore_task_here()) return "要在见闻所在的港口";
+    const int step=s.shore_tasks[task];
+    if (step>=3) return "这段见闻已记完";
+    if (task==GoldWash) {
+        if (step==0 && !understands(Akan)) return "需阿坎语口译";
+        if (step==0 && s.gold<32) return "需付32金向导费";
+        if (step==1 && (s.stores<4 || s.water<3)) return "要备好往返水粮";
+    } else if (task==KilwaPorcelain) {
+        if (step==0 && !understands(Swahili) && !understands(Arabic)) return "需斯瓦希里语或阿拉伯语口译";
+        if (step==1 && !s.cargo[Cloth]) return "需要一件织锦";
+        if (step==2 && s.origin!=calicut) return "拿抄本去卡利卡特";
+        if (step==2 && !understands(Malayalam) && !understands(Arabic)) return "需马拉雅拉姆语或阿拉伯语口译";
+    } else if (step==2 && s.stores<4) return "还缺四份口粮";
+    return {};
+}
+
+bool Game::advance_shore_task(int task) {
+    if (const auto blocked=shore_requirement(task); !blocked.empty()) { notice=blocked; return false; }
+    const int step=s.shore_tasks[task]++;
+    if (task==GoldWash) {
+        if (step==0) earn(-32);
+        if (step==1) { s.stores-=4; s.water-=3; spend_day(2); }
+        if (step==2) earn(110);
+    } else if (task==KilwaPorcelain) {
+        if (step==1) { --s.cargo[Cloth]; s.chart_marks|=place_bit(calicut); }
+    } else {
+        if (step==1) spend_day(1);
+        if (step==2) { s.stores-=4; s.trust=std::min(999999,s.trust+2); }
+    }
+    if (step==2) s.renown=std::min(999999,s.renown+2);
+    notice=step==2?"见闻已记入航海日志":"已记下这段线索";
     return true;
 }
 
@@ -2243,7 +2383,8 @@ void Game::naval_action(int action) {
         return;
     }
     if (action==FireGuns) {
-        const int hit=11+s.guns*8+s.aim*8-(s.range-1)*3+int(roll(6));
+        const int support=s.in_company && s.berth.hull>12?s.berth.guns*4:0;
+        const int hit=11+s.guns*8+s.aim*8-(s.range-1)*3+int(roll(6))+support;
         s.enemy-=std::max(3,hit);
         s.aim=0;
         s.needs_reload=1;
@@ -2273,6 +2414,7 @@ void Game::naval_action(int action) {
     if (intent==EnemyFire) {
         const int hit=std::max(2,13-s.range*2+s.ship+int(roll(5))-(action==BreakAway?3:0));
         s.hull-=std::max(0,hit-(s.first_mate==Boatswain?3:0));
+        wear_company_hull(hit/2);
         s.spirits-=3;
     } else if (intent==EnemyClose) {
         s.range=std::max(1,s.range-1);
@@ -2359,6 +2501,7 @@ void Game::encounter_action(int action) {
     if (s.weather == Storm) {
         const int loss = action == 0 ? 4 : (action == 1 ? 12 : 20);
         s.hull -= std::max(1, loss + int(roll(8)) - (s.reefed ? 5 : 0));
+        wear_company_hull(loss/2);
         if (action == 0) { spend_day(1); s.stores = std::max(0,s.stores-4); s.reefed = 1; }
         if (action == 2) { s.spirits -= 12; s.progress = std::max(0,s.progress-90); }
         notice = action == 0 ? "缩帆熬过风暴" : (action == 1 ? "船已冲出风暴" : "顶浪转舵，航程倒退");
@@ -2470,7 +2613,7 @@ static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
 constexpr int AddedPorts=PortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2505,7 +2648,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x43445054);
+    put(0x44445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2563,6 +2706,10 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         bytes[offset++]=std::byte(field);
     bytes[offset++]=std::byte(s.met_aden_ship);
     put(s.calicut_hold_until);
+    for (auto value : {std::uint8_t(s.in_company),s.colors,s.royal_passes})
+        bytes[offset++]=std::byte(value);
+    for (auto until : s.court_hold_until) put(until);
+    for (auto step : s.shore_tasks) bytes[offset++]=std::byte(step);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2573,7 +2720,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=HelmSaveBytes && bytes.size()!=OfficerSaveBytes &&
         bytes.size()!=CoastSaveBytes && bytes.size()!=WakeSaveBytes &&
         bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes &&
-        bytes.size()!=NatureSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2583,7 +2730,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool with_berth=version==0x43445054 && bytes.size()==SaveBytes;
+    const bool with_colors=version==0x44445054 && bytes.size()==SaveBytes;
+    const bool with_berth=with_colors || (version==0x43445054 && bytes.size()==BerthSaveBytes);
     const bool expanded=with_berth || (version==0x42445054 && bytes.size()==NatureSaveBytes);
     const bool with_merchants=expanded || (version==0x41445054 && bytes.size()==MerchantSaveBytes);
     const auto get_mask=[&]() -> std::uint64_t {
@@ -2807,8 +2955,25 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             if (met>1) return false;
             s.met_aden_ship=met!=0;
             const auto hold_until=get();
-            if (hold_until>99999 || (hold_until && !s.met_aden_ship)) return false;
+            if (hold_until>99999 || (!with_colors && hold_until && !s.met_aden_ship)) return false;
             s.calicut_hold_until=int(hold_until);
+        }
+        if (with_colors) {
+            const auto company=std::to_integer<unsigned>(bytes[offset++]);
+            if (company>1 || (company && (!s.berth.vessel || s.berth.sailors<CompanionCrew))) return false;
+            s.in_company=company!=0;
+            s.colors=std::to_integer<std::uint8_t>(bytes[offset++]);
+            s.royal_passes=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (s.colors>=ColorsCount || s.royal_passes>>CourtCount) return false;
+            for (auto& until : s.court_hold_until) {
+                const auto value=get();
+                if (value>99999) return false;
+                until=int(value);
+            }
+            for (auto& step : s.shore_tasks) {
+                step=std::to_integer<std::uint8_t>(bytes[offset++]);
+                if (step>3) return false;
+            }
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
@@ -2828,7 +2993,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
     int load = s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0;
     for (const int count : s.cargo) load += count;
-    if (load > holds[s.ship] || s.crew+s.berth.sailors>berths[2]) return false;
+    if (load > cargo_capacity(s) || s.crew+s.berth.sailors>berths[2]) return false;
     if (s.helm) {
         if (!bound(s.helm_x,0,ChartWidth*16-1) || !bound(s.helm_y,0,ChartHeight*16-1) ||
             s.weather==DockDuel || s.leg || s.progress || s.destination==s.origin) return false;

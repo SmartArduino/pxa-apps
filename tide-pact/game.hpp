@@ -183,6 +183,8 @@ inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 #include "inland.hpp"
 #include "nature.hpp"
 #include "charters.hpp"
+#include "flags.hpp"
+#include "shore_tasks.hpp"
 
 namespace tide {
 
@@ -239,6 +241,10 @@ struct State {
     MerchantBerth berth;
     bool met_aden_ship=false;
     int calicut_hold_until=0;
+    bool in_company=false;
+    std::uint8_t colors=MerchantColors, royal_passes=0;
+    std::array<int,CourtCount> court_hold_until{};
+    std::array<std::uint8_t,ShoreTaskCount> shore_tasks{};
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -246,7 +252,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t SaveBytes=1664;
+inline constexpr std::size_t BerthSaveBytes=1664, SaveBytes=1696;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -377,7 +383,20 @@ struct Game {
     Text swap_requirement() const;
     bool swap_vessel();
     bool sell_reserve();
-    bool market_held() const { return port() && s.origin==calicut && s.calicut_hold_until>s.day; }
+    Text company_requirement() const;
+    bool change_company();
+    bool has_royal_pass(RoyalCourt court) const {
+        return court!=NoCourt && (s.royal_passes&(1U<<court));
+    }
+    bool display_colors(int colors);
+    Text royal_pass_requirement() const;
+    bool receive_royal_pass();
+    static constexpr int RoyalPassCost=90;
+    int shore_task_here() const;
+    Text shore_requirement(int task) const;
+    bool advance_shore_task(int task);
+    int port_hold_until() const;
+    bool market_held() const { return port() && port_hold_until()>s.day; }
     static constexpr int PortSettlement=60, AdenWaterPrice=18;
     bool settle_port_case();
     int archive_here() const;
@@ -429,6 +448,8 @@ private:
     int next_route_pace() const;
     unsigned roll(unsigned range);
     void arrive();
+    void inspect_colors();
+    void wear_company_hull(int loss);
     void rescue();
     void finish_encounter();
     void finish_dispatch(DispatchOutcome outcome);

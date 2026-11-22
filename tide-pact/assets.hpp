@@ -40,4 +40,6 @@ extern const unsigned char levada[];
 extern const unsigned char marsh[];
 extern const unsigned char nature[];
 extern const unsigned char aden_ship[];
+extern const unsigned char flags[];
+extern const unsigned char shore_tasks[];
 }

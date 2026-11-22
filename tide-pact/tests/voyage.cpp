@@ -1037,6 +1037,92 @@ void aden_merchant_and_colors() {
     assert(ship.trade_limit(Wine,true)>0);
 }
 
+void voyages_in_company() {
+    Game flotilla;
+    flotilla.s.gold=8000;
+    flotilla.s.crew=16;
+    assert(flotilla.invest() && flotilla.open_berth() && flotilla.purchase_reserve(1));
+    const int single_space=flotilla.capacity(), single_food=flotilla.daily_rations();
+    const auto lane=passage(lisbon,madeira);
+    const auto alone_forecast=flotilla.forecast(lane);
+    assert(flotilla.change_company() && flotilla.s.in_company);
+    assert(flotilla.capacity()==single_space+48 && flotilla.daily_rations()==single_food+1);
+    assert(flotilla.s.crew==10 && flotilla.s.berth.sailors==6);
+    assert(flotilla.forecast(lane).provisions>alone_forecast.provisions);
+    assert(!flotilla.sell_reserve() && !flotilla.swap_vessel());
+    flotilla.s.cargo[Timber]=40;
+    assert(!flotilla.change_company());
+    State persisted;
+    assert(decode(persisted,encode(flotilla.s)) && persisted.in_company && persisted.berth.sailors==6);
+    flotilla.s=persisted;
+    sail_to(flotilla,madeira);
+    assert(flotilla.s.in_company && !flotilla.change_company() && flotilla.berth_port()==lisbon);
+    flotilla.s.berth.hull=9;
+    assert(!flotilla.start_helm(-1));
+    const int quote=flotilla.repair_cost(), gold=flotilla.s.gold;
+    flotilla.service(1);
+    assert(flotilla.s.berth.hull==100 && flotilla.s.gold==gold-quote);
+    flotilla.s.origin=lisbon;
+    flotilla.s.cargo[Timber]=12;
+    assert(flotilla.change_company() && !flotilla.s.in_company && flotilla.s.crew>=10);
+    assert(flotilla.capacity()==single_space);
+}
+
+void royal_colors_and_port_inspections() {
+    Game ship;
+    ship.s.gold=900;
+    assert(ship.display_colors(CastilianColors));
+    assert(!ship.receive_royal_pass());
+    sail_to(ship,madeira);
+    assert(ship.s.colors==MerchantColors && ship.market_held());
+    const int deadline=ship.port_hold_until();
+    assert(deadline==ship.s.day+8 && ship.s.court_hold_until[Castile]==0);
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.court_hold_until[Portugal]==deadline);
+    ship.s.origin=cadiz;
+    assert(!ship.market_held() && !ship.settle_port_case());
+    ship.s.origin=lisbon;
+    assert(ship.market_held() && ship.settle_port_case());
+    ship.s.renown=4;
+    ship.s.trust=2;
+    assert(ship.invest() && ship.receive_royal_pass() && !ship.receive_royal_pass());
+    assert(ship.has_royal_pass(Portugal) && ship.display_colors(PortugueseColors));
+    const int discount=ship.resupply_cost(100,100);
+    assert(ship.display_colors(FurledColors) && discount<ship.resupply_cost(100,100));
+    assert(ship.display_colors(PortugueseColors));
+    sail_to(ship,madeira);
+    assert(!ship.market_held() && ship.s.colors==PortugueseColors);
+}
+
+void shore_assignments() {
+    Game gold;
+    gold.s.origin=elmina;
+    assert(gold.shore_task_here()==GoldWash && !gold.advance_shore_task(GoldWash));
+    assert(gold.hire_interpreter() && gold.advance_shore_task(GoldWash));
+    const int stores=gold.s.stores, day=gold.s.day, price=gold.s.gold;
+    assert(gold.advance_shore_task(GoldWash) && gold.s.day==day+2 && gold.s.stores==stores-4);
+    assert(gold.advance_shore_task(GoldWash) && gold.s.gold==price+110 && !gold.advance_shore_task(GoldWash));
+
+    Game documents;
+    documents.s.origin=kilwa;
+    assert(documents.hire_interpreter() && documents.advance_shore_task(KilwaPorcelain));
+    assert(!documents.advance_shore_task(KilwaPorcelain));
+    documents.s.cargo[Cloth]=1;
+    assert(documents.advance_shore_task(KilwaPorcelain) && documents.charted(calicut));
+    assert(!documents.advance_shore_task(KilwaPorcelain));
+    documents.s.origin=calicut;
+    assert(documents.shore_task_here()==KilwaPorcelain && !documents.advance_shore_task(KilwaPorcelain));
+    assert(documents.hire_interpreter() && documents.advance_shore_task(KilwaPorcelain));
+    State saved;
+    assert(decode(saved,encode(documents.s)) && saved.shore_tasks[KilwaPorcelain]==3);
+    documents.s.origin=ribeira;
+    assert(documents.advance_shore_task(IslandTestimony) && documents.advance_shore_task(IslandTestimony));
+    documents.s.stores=3;
+    assert(!documents.advance_shore_task(IslandTestimony));
+    documents.s.stores=4;
+    assert(documents.advance_shore_task(IslandTestimony) && documents.s.stores==0 && documents.s.trust==2);
+}
+
 void road_freight() {
     Game game;
     assert(!game.dispatch_offer_here(RoadFreight) && !game.accept_dispatch(RoadFreight));
@@ -1517,6 +1603,9 @@ int main() {
     nature_observation();
     charter_and_reserve_vessel();
     aden_merchant_and_colors();
+    voyages_in_company();
+    royal_colors_and_port_inspections();
+    shore_assignments();
     road_freight();
     search_for_driftwood();
     ship_officers();
