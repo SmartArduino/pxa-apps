@@ -1,10 +1,10 @@
-"""Pack the shoal and doldrums illustrations for the encounter screen."""
+"""Build the source strip for the shoal and doldrums story panels."""
 import argparse
 from pathlib import Path
 
 from PIL import Image, ImageOps
 
-from make_art import ASSETS, write_texture
+from make_art import ASSETS
 
 
 def main():
@@ -18,7 +18,6 @@ def main():
         tile = ImageOps.fit(sheet, (160, 104), Image.Resampling.LANCZOS)
         atlas.paste(tile, (160 * i, 0))
     atlas.save(ASSETS / "sea-stories.jpg", quality=93, optimize=True)
-    write_texture(atlas, "sea_stories")
 
 
 if __name__ == "__main__":

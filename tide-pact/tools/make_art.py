@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw, ImageOps
 ASSETS = Path(__file__).resolve().parents[1] / "art"
 
 
-def write_texture(image, name):
+def texture_bytes(image):
     rgb = image.convert("RGB").quantize(colors=255, dither=Image.Dither.NONE)
     colors = rgb.getpalette()[:768]
     colors += [0] * (768 - len(colors))
@@ -20,34 +20,11 @@ def write_texture(image, name):
         for i, alpha in enumerate(image.getchannel("A").tobytes()):
             if alpha < 100:
                 data[i] = 255
-    (ASSETS / (name + ".pxi")).write_bytes(struct.pack("<HH256H", *image.size, *palette) + data)
+    return struct.pack("<HH256H", *image.size, *palette) + data
 
 
-def ship_frame(index):
-    phase = index * math.tau / 12
-    frame = Image.new("RGBA", (144, 108))
-    draw = ImageDraw.Draw(frame)
-
-    def points(vertices, bob=0):
-        return [(x * 4, (y + bob) * 4) for x, y in vertices]
-
-    drift = round(math.sin(phase) * 1.4, 1)
-    for j in range(3):
-        start = -5 + ((index + j * 4) % 12) * 0.6
-        draw.line(points([(start, 22+j*1.4), (7+j*2, 22.5+j*1.4), (22, 21+j*1.4)]),
-                  fill=("#669f91", "#86b6a0", "#bbcfad")[j], width=3)
-    draw.polygon(points([(5,17),(11,18),(28,18),(34,15),(31,21),(26,23),(12,23),(7,21)], drift),
-                 fill="#61422d", outline="#251d1a", width=4)
-    draw.line(points([(8,20),(17,21),(28,20),(32,17)], drift), fill="#c18d53", width=4)
-    draw.line(points([(18,19),(18,3)], drift), fill="#473b28", width=5)
-    draw.line(points([(26,17),(26,8)], drift), fill="#3d2f25", width=4)
-    belly = math.sin(phase) * 1.2
-    draw.polygon(points([(9,4),(21,6),(18+belly,15),(8,17),(12+belly,11)], drift),
-                 fill="#f4dda2", outline="#463830", width=3)
-    draw.polygon(points([(23,7),(30,9),(27,15),(22+belly*.5,16)], drift),
-                 fill="#dcaf6b", outline="#4a3c2b", width=3)
-    draw.line(points([(10,6),(16+belly,7),(13+belly,14)], drift), fill="#cfa977", width=3)
-    return frame.resize((36, 27), Image.Resampling.LANCZOS)
+def write_texture(image, name):
+    (ASSETS / (name + ".pxi")).write_bytes(texture_bytes(image))
 
 
 def cannon_frame(index):
@@ -169,7 +146,6 @@ def main():
         frame.paste(ImageOps.fit(tile, (86,86)), (i*86,0))
     frame.save(ASSETS / "portraits.jpg", quality=89, optimize=True)
     write_texture(frame, "portraits")
-    sheet([ship_frame(i) for i in range(12)], "caravel")
     sheet([cannon_frame(i) for i in range(8)], "broadside")
     build_skin(args.ui)
     build_logo(Image.open(args.wordmark))

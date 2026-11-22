@@ -1,6 +1,7 @@
 #include "draw.hpp"
 #include "game_audio.hpp"
 #include "game_save.hpp"
+#include "sea_art.hpp"
 #include "town.hpp"
 #include <pxa/app.hpp>
 
@@ -105,6 +106,7 @@ struct VoyageApp {
 
     Game game;
     GameAudio audio;
+    SeaPicture sea_picture;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
     // Loading completes before gameplay can start. Subsequent saves use one
@@ -164,7 +166,7 @@ struct VoyageApp {
     unsigned font_retry_at=0;
     unsigned now=0, last_day=0, last_step=0, notice_until=0, flash_until=0, saved_until=0;
     unsigned surface_retry=0, duel_flash_until=0;
-    unsigned voyage_rate=1;
+    unsigned voyage_rate=1, presented_vessel_frame=0;
     int duel_animation=0;
     unsigned long long next_frame=1;
     Screen screen=Chart;
@@ -414,7 +416,14 @@ struct VoyageApp {
         } else last_day=now;
         if (notice_until && now >= notice_until) { notice_until=0; dirty=true; }
         if (saved_until && now >= saved_until) { saved_until=0; dirty=true; }
-        if (game.s.weather==Privateer) dirty=true;
+        if (!title && screen==Chart && modal==None && game.sea()) {
+            const unsigned frame=now/VesselFrameMs;
+            if (frame!=presented_vessel_frame) {
+                presented_vessel_frame=frame;
+                dirty=true;
+            }
+        }
+        sea_picture.show(*context,visible_sea_picture(),dirty);
         if (duel_flash_until) {
             dirty=true;
             if (now>=duel_flash_until) duel_flash_until=0;
@@ -753,6 +762,27 @@ struct VoyageApp {
             }
         }
     }
+    int vessel_frame() const { return (now/VesselFrameMs)%VesselFrames; }
+
+    void vessel_sprite(Draw& d, int hull, int frame, Rect viewport, bool west) {
+        d.image({art::vessels},{frame*VesselFrameWidth,hull*VesselFrameHeight,
+                              VesselFrameWidth,VesselFrameHeight},viewport,true,west);
+    }
+
+    void map_vessel(Draw& d, Point at, int hull, bool west, bool following) {
+        const int frame=(vessel_frame()+(following?2:0))%VesselFrames;
+        const int w=following?27:VesselFrameWidth, h=following?20:VesselFrameHeight;
+        if (!game.paused) {
+            const int stern=west?1:-1;
+            const Color outer=rgb(0x689b95), inner=rgb(0xb4c5ac);
+            const int length=(game.s.reefed?5:8)+frame/2, edge=at.x+stern*(w/2-4);
+            d.line({edge,at.y+2},{edge+stern*length,at.y+4},outer);
+            d.line({edge+stern*3,at.y+5},{edge+stern*(length+3),at.y+7},outer);
+            if (frame<5) d.line({edge-2*stern,at.y+2},{edge+6*stern,at.y+3},inner);
+        }
+        vessel_sprite(d,hull,frame,{at.x-w/2,at.y-h+6,w,h},west);
+    }
+
     void draw_map(Draw& d, int landmark, int berth) {
         const auto before=d.clip;
         d.clip=map;
@@ -859,14 +889,18 @@ struct VoyageApp {
         }
         if (game.sea()) {
             auto p=map_point(ship_x,ship_y);
-            int frame=(now/115)%12;
             const auto heading=game.position(.9f);
             const bool west=game.s.helm?Directions[game.s.heading].x<0:heading.x<ship.x;
             if (game.s.in_company)
-                d.image({art::caravel},{frame*36,0,36,27},{p.x+(west?13:-32),p.y-4,22,17},true,west);
-            d.image({art::caravel},{frame*36,0,36,27},{p.x-18,p.y-20,36,27},true,west);
-            if (game.s.colors!=FurledColors)
-                flag_art(d,game.s.colors,{p.x+(west?0:-11),p.y-24,13,8});
+                map_vessel(d,{p.x+(west?27:-27),p.y+8},game.s.berth.vessel-1,west,true);
+            map_vessel(d,p,game.s.ship,west,false);
+            if (game.s.colors!=FurledColors) {
+                const auto mast=VesselMast[game.s.ship];
+                const int x=p.x-VesselFrameWidth/2+(west?VesselFrameWidth-1-mast.x:mast.x);
+                const int y=p.y-VesselFrameHeight+6+mast.y+VesselHeave[vessel_frame()];
+                const int width=vessel_frame()%3==0?11:13;
+                flag_art(d,game.s.colors,{x-(west?0:width-1),y-6,width,8});
+            }
             if (game.s.helm) {
                 const auto bearing=Directions[game.s.heading];
                 const Point end{p.x+bearing.x,p.y+bearing.y};
@@ -1372,8 +1406,12 @@ struct VoyageApp {
 
     void reserve_order(Draw& d) {
         page_title(d,"购置留港备船",SailIcon);
-        for (int i=0;i<int(std::size(HullNames));++i)
-            row(d,i,HullNames[i],format("%d金",BerthVesselPrices[i]),PurchaseReserve+i);
+        for (int i=0;i<int(std::size(HullNames));++i) {
+            const auto price=format("%d金",BerthVesselPrices[i]);
+            row(d,i,HullNames[i],price,PurchaseReserve+i);
+            const int h=row_pitch()-3;
+            vessel_sprite(d,i,0,{body.right()-d.measure(price)-36,body.y+28+i*row_pitch(),26,h},false);
+        }
         d.label(body.x+7,body.bottom()-23,"买下后停在本港，靠泊时可换乘。",mist,body.w-14);
     }
 
@@ -1584,10 +1622,13 @@ struct VoyageApp {
         const int card_w=(x+w-start_x-5*(columns-1))/columns;
         if (local) {
             const bool land=site==LaurelWoods || site==SaltMarsh;
-            const auto* scene=site==LaurelWoods?art::levada:site==SaltMarsh?art::marsh:art::sea_stories;
             const Rect picture{x,y,scene_w,std::min(scene_w*104/160,body.bottom()-y-26)};
-            d.image({scene},{land?0:160,0,160,104},picture);
-            d.frame(picture,border);
+            if (land) {
+                d.image({site==LaurelWoods?art::levada:art::marsh},{0,0,160,104},picture);
+                d.frame(picture,border);
+            } else {
+                sea_picture_panel(d,Doldrums,picture);
+            }
         }
         const int card_h=std::clamp((body.h-56)/3-3,24,38);
         int index=0;
@@ -1703,27 +1744,47 @@ struct VoyageApp {
         button(d,{actions.x+half+5,actions.y,actions.w-half-5,actions.h},
                officer_talk?"查看专长":"交谈",OfficerTalk);
     }
-    void regional_scene(Draw& d, int kind) {
+    int visible_sea_picture() const {
+        if (title) return Calm;
+        if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
+        if (modal==NatureWatch && game.s.helm) return Doldrums;
+        if (screen==Chart && modal==None) return game.s.weather;
+        return Calm;
+    }
+
+    void sea_picture_panel(Draw& d, int kind, Rect illustration) {
+        if (illustration.w<=0 || illustration.h<=0) return;
+        if (const auto* pixels=sea_picture.pixels(kind)) {
+            const int crop_w=std::min(SeaPictureWidth,SeaPictureHeight*illustration.w/illustration.h);
+            const int crop_h=std::min(SeaPictureHeight,SeaPictureWidth*illustration.h/illustration.w);
+            d.image({pixels},{(SeaPictureWidth-crop_w)/2,(SeaPictureHeight-crop_h)/2,crop_w,crop_h},illustration);
+        } else {
+            skin_box(d,illustration,0,4);
+            voyage_icon(d,SeaChartIcon,{illustration.x+(illustration.w-24)/2,
+                                       illustration.y+(illustration.h-24)/2,24,24});
+        }
+        d.frame(illustration,border);
+    }
+
+    void illustrated_encounter(Draw& d, int kind) {
         const auto& scene=Encounters[kind];
         skin_box(d,body,0,6);
-        const int x=body.x+7, w=body.w-14;
-        const int choices_y=body.bottom()-33;
+        const int x=body.x+7, w=body.w-14, choices_y=body.bottom()-33;
         d.label(x,body.y+5,scene.title,gold,w);
-        const Rect illustration{x,body.y+25,std::min(w/3,160),std::max(1,choices_y-body.y-31)};
-        constexpr int tile_w=160, tile_h=104;
-        const int crop_w=std::min(tile_w,tile_h*illustration.w/illustration.h);
-        const int crop_h=std::min(tile_h,tile_w*illustration.h/illustration.w);
-        d.image({kind==AdenMerchant?art::aden_ship:art::sea_stories},
-                {(kind==Doldrums?tile_w:0)+(tile_w-crop_w)/2,
-                (tile_h-crop_h)/2,crop_w,crop_h},illustration);
-        d.frame(illustration,border);
+        const int y=body.y+25, text_h=std::max(1,choices_y-y-6);
+        const int picture_w=std::min(w/3,160), picture_h=std::min(text_h,picture_w*104/160);
+        const Rect illustration{x,y+(text_h-picture_h)/2,picture_w,picture_h};
+        sea_picture_panel(d,kind,illustration);
         const int text_x=illustration.right()+7;
         const Text blocked=kind==AdenMerchant?game.encounter_requirement(1):Text{};
-        d.wrap({text_x,illustration.y,w+x-text_x,illustration.h},
-               blocked.empty()?scene.message:blocked,ivory,d.font.cell+1);
+        const Text copy=kind==FalseBeacon && game.s.tales[Lamps]==Shared?
+            "渔会的潮表就在手边。照着潮表可直接辨出假灯，省下一天水粮。":scene.message;
+        d.wrap({text_x,y,w+x-text_x,text_h},blocked.empty()?copy:blocked,ivory,d.font.cell+1);
+        const auto price=format("买水%d金",game.water_price());
         for (int i=0;i<3;++i) {
             const int left=x+i*(w+3)/3, right=x+(i+1)*(w+3)/3-3;
-            button(d,{left,choices_y,right-left,27},scene.choices[i],FightFirst+i,i==0,
+            const Text choice=kind==ReliefShip && i==1?Text(price):scene.choices[i];
+            button(d,{left,choices_y,right-left,27},choice,FightFirst+i,i==0,
                    !game.encounter_requirement(i).empty());
         }
     }
@@ -1731,7 +1792,7 @@ struct VoyageApp {
         const auto& s=game.s;
         const auto weather=s.weather;
         if (game.duel()) { duel_screen(d); return; }
-        if (weather==ShoalLantern || weather==Doldrums || weather==AdenMerchant) { regional_scene(d,weather); return; }
+        if (!sea_picture_path(weather).empty()) { illustrated_encounter(d,weather); return; }
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
         const auto& scene=Encounters[weather];
@@ -1747,10 +1808,10 @@ struct VoyageApp {
             const auto threat=format("%s  %s",tell.data(),
                                      wind>5?"顺风":wind<-5?"逆风":"风平");
             d.label(x,body.y+40,threat,mist,w);
-            const int n=(now/115)%12;
+            const int n=vessel_frame();
             const int ship_y=arena.y==body.y?body.y+53:arena.bottom()-36;
-            d.image({art::caravel},{n*36,0,36,27},{x+6,ship_y,43,32},true);
-            d.image({art::caravel},{n*36,0,36,27},{x+43+s.range*(w-92)/4,ship_y,43,32},true,true);
+            vessel_sprite(d,s.ship,n,{x+6,ship_y,43,32},false);
+            vessel_sprite(d,1,(n+3)%VesselFrames,{x+43+s.range*(w-92)/4,ship_y,43,32},true);
             if (flash_until) {
                 const int f=std::clamp(7-int((flash_until-now)/74),0,7);
                 d.image({art::broadside},{f*32,0,32,32},{x+31,ship_y-4,36,36},true);
@@ -1758,15 +1819,11 @@ struct VoyageApp {
             combat_buttons(d,SailOrders);
             return;
         } else {
-            const Text copy=weather==FalseBeacon && s.tales[Lamps]==Shared ?
-                "渔会的潮表就在手边。现在就能认出哪盏灯有假，也不用耗一天水粮。" : scene.message;
-            d.wrap({x,body.y+29,w,body.h-66},copy,ivory);
+            d.wrap({x,body.y+29,w,body.h-66},scene.message,ivory);
         }
         const int gap=3, step=w/3;
-        const auto price=format("买水%d金",game.water_price());
         for (int i=0;i<3;++i) {
-            const auto label=weather==ReliefShip && i==1 ? Text(price) : scene.choices[i];
-            button(d,{x+i*step,body.bottom()-33,step-gap,28},label,FightFirst+i,i==0,
+            button(d,{x+i*step,body.bottom()-33,step-gap,28},scene.choices[i],FightFirst+i,i==0,
                    !game.encounter_requirement(i).empty());
         }
     }
@@ -2934,9 +2991,18 @@ struct VoyageApp {
         if (sea_item>=0) {
             const auto entry=read_sea(game.s.sea_log[sea_item]);
             const auto& scene=Encounters[entry.kind];
-            d.label(x,body.y+31,scene.title,gold,w);
-            d.label(x,body.y+52,format("第 %d 日",entry.day+1),mist,w);
-            d.wrap({x,body.y+73,w,body.h-76},scene.results[entry.choice],ivory);
+            const int y=body.y+31;
+            int text_x=x;
+            if (!sea_picture_path(entry.kind).empty()) {
+                const int width=std::min(160,w/3);
+                const Rect picture{x,y,width,std::min(width*104/160,body.bottom()-y-6)};
+                sea_picture_panel(d,entry.kind,picture);
+                text_x=picture.right()+8;
+            }
+            const int text_w=x+w-text_x;
+            d.label(text_x,y,scene.title,gold,text_w);
+            d.label(text_x,y+20,format("第 %d 日",entry.day+1),mist,text_w);
+            d.wrap({text_x,y+41,text_w,body.bottom()-y-44},scene.results[entry.choice],ivory);
             return;
         }
         if (!game.s.sea_log[0]) {

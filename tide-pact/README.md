@@ -79,7 +79,7 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 航速以适航时约四到五节为基础，按风向、载货量、船型和船员调整。历史量级参考达·伽马船队 1497 年从里斯本到加那利水域的航行日志。 [航行日志](https://www.cambridge.org/core/books/journal-of-the-first-voyage-of-vasco-da-gama-14971499/B37176D56DC08C06585EAE631D23BA6F/listing) · [节与海里](https://oceanservice.noaa.gov/facts/nautical-mile-knot.html)
 - 语言按游戏中的说话人和文书设定。瓦伦西亚档案、基尔瓦贸易和刚果王国的口译记载提供了背景。 [瓦伦西亚大学历史图书馆](https://www.uv.es/uvweb/libraries-documentation-service/en/news/new-discovery-historical-library-1285923456427/Novetat.html?id=1286451015046) · [联合国教科文组织](https://whc.unesco.org/en/list/144/) · [刚果口译史研究](https://www.academia.edu/29773271/ARTICLE_Kongo_interpreters_travelling_priests_and_political_leaders_in_the_Kongo_Kingdom_15th_19th_century_International_Journal_of_African_Historical_Studies_49_2_2016_255_276)
 - 佛得角里贝拉格兰德、埃尔米纳和基尔瓦的港口注记参考 UNESCO。开普航路时代背景参考英国国家海事博物馆。[里贝拉格兰德](https://whc.unesco.org/en/list/1310/) · [埃尔米纳](https://whc.unesco.org/en/list/34/) · [基尔瓦](https://whc.unesco.org/en/list/144/) · [开普航路](https://www.rmg.co.uk/collections/objects/rmgc-object-14176)
-- 标题字标、场景、角色、货物、航海图标及界面材料由内置图像生成工具为游戏制作。帆船循环为 12 帧，炮击为 8 帧，决斗的三种出招各 6 帧。接舷和码头背景及序列图保存在 `art/`。素材可用 `tools/make_art.py --help` 查看预处理入口。
+- 标题字标、场景、角色、货物、航海图标及界面材料由内置图像生成工具为游戏制作。三种船型各有 8 帧航行动画，炮击为 8 帧，决斗的三种出招各 6 帧。接舷和码头背景及序列图保存在 `art/`。素材可用 `tools/make_art.py --help` 查看预处理入口。
 - 考察插画使用四联图，可用 `tools/make_discoveries.py` 生成运行时图集。阿尔金生态和本格拉寒流注记参考联合国教科文组织与 NASA。游戏按日离散潮汐与天气，手记、考察人物与竞赛为原创虚构。 [阿尔金浅滩](https://whc.unesco.org/en/list/506/) · [本格拉寒流](https://science.nasa.gov/earth/earth-observatory/namibia-3464/)
 - 三位副官的原创肖像由内置图像生成工具绘制，用 `tools/make_officers.py` 从三联图生成运行时图集。
 - 港区插画按四座港口的地景绘制，街道和建筑为游戏布局。用 `tools/make_town_art.py --help` 查看地图、设施图标和角色行走帧的预处理方式。
@@ -87,7 +87,7 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 港城牌匾、按钮和对话纸的纹理使用内置图像生成工具绘制。用 `tools/make_port_ui.py --help` 生成四边可缩放的图集。
 - 运单图标使用内置图像生成工具绘制。用 `tools/make_dispatch_icons.py --help` 将透明横条整理为游戏图集。
 - 晴天、炎热、雨天和骤风的图标由内置图像生成工具绘制。用 `tools/make_weather_icons.py --help` 将透明四宫格整理为天气图集。
-- 浅滩小船和赤道静风的事件插画由内置图像生成工具绘制。用 `tools/make_sea_stories.py --help` 生成两幅插画的游戏图集。
+- 新海上事件插画、船身底图由内置图像生成工具绘制。用 `tools/make_sea_art.py` 从生成的 PNG 构建船身序列和索引图。事件、海上观察和航海纪事共用一张按需读入的插画缓冲区。船型轮廓参考葡萄牙海军博物馆与海军史资料。 [卡拉维尔船模](https://cultura.marinha.pt/pt/museumarinha_web/colecoes_web/pecasemdestaque_web/Paginas/caravela-latina.aspx) · [葡萄牙航海史](https://academia.marinha.pt/pt/edicoes/historiadamarinha/Navios%20Marinheiros%20e%20arte%20de%20navegar%201139-1499-compactado_compressed.pdf)
 - 里斯本河堤由内置图像生成工具绘制。用 `tools/make_outskirts.py --help` 生成背景图和设备纹理。城门、河堤、木料棚与旧驿道的位置定义在 `town.hpp`。
 - 自然图鉴的六幅原创插画由内置图像生成工具绘制，用 `tools/make_nature.py` 合成索引色图集。栖息地和物种特征参考当地生态资料，游戏中的时段、候潮和停船规则用于安排探索。 [马德拉自然保护机构](https://ifcn.madeira.gov.pt/pt/areas-protegidas/parque-natural-da-madeira/valores-naturais.html) · [加的斯湾保护区](https://www.juntadeandalucia.es/medioambiente/portal/documents/20151/98730912/ES0000140_bahiadecadiz.pdf/7c61f16c-6317-071e-6c70-001fcf7e1bcd) · [马德拉鲸类博物馆](https://museudabaleia.org/ciencia/baleias-e-golfinhos/d/423-golfinhocomum) · [佛得角物种名录](https://www.cms.int/country/cabo-verde)
 - 商馆的租金、信任要求和登记规则属于游戏设定。卡利卡特由扎莫林统治，已有阿拉伯商人经营海路。马林迪和蒙巴萨各有自己的商路及对外关系。亚丁商船插画由内置图像生成工具绘制。 [卡利卡特地区历史](https://kozhikode.gov.in/about-district/history/) · [达·伽马首航手稿](https://www.loc.gov/item/2021667835/) · [马林迪与蒙巴萨的史料综述](https://whc.unesco.org/uploads/nominations/1295rev.pdf) · [突尼斯旧城](https://whc.unesco.org/en/list/36)

@@ -10,11 +10,11 @@ def main():
     args = cli.parse_args()
     with args.output.open("w") as out:
         out.write('#include "assets.hpp"\nnamespace tide::art {\n')
-        for name in ("chart", "harbor", "title_compact", "storm", "portraits", "caravel", "broadside", "glyphs", "glyphs_compact",
+        for name in ("chart", "harbor", "title_compact", "storm", "portraits", "vessels", "broadside", "glyphs", "glyphs_compact",
                      "wordmark", "skin", "controls", "tabs", "goods", "navigation", "ports", "boarding", "cadiz_duel",
                      "duel_fx", "discoveries", "officers", "voyage_icons", "driftwood",
                      "towns", "town_icons", "town_walk", "port_people", "port_ui", "dispatch_icons",
-                     "weather_icons", "sea_stories", "outskirts", "inland", "calicut", "levada", "marsh", "nature", "aden_ship", "flags", "shore_tasks"):
+                     "weather_icons", "outskirts", "inland", "calicut", "levada", "marsh", "nature", "flags", "shore_tasks"):
             data = (args.source / (name + ".pxi")).read_bytes()
             out.write(f'const unsigned char {name}[] =\n')
             for start in range(0, len(data), 48):

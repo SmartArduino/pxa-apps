@@ -2570,7 +2570,7 @@ void Game::encounter_action(int action) {
                 start_encounter(Privateer);
                 s.range=2;
                 s.aim=1;
-                notice="借倒挂旗号接近追船";
+                notice="你迎向追船，对方亮出了火炮";
                 return;
             }
             if (action==1) { s.water-=4; ++s.trust; ++s.renown; }
