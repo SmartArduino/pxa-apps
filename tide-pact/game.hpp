@@ -181,6 +181,7 @@ inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 } // namespace tide
 
 #include "inland.hpp"
+#include "nature.hpp"
 
 namespace tide {
 
@@ -232,6 +233,8 @@ struct State {
     std::uint8_t port_stories=0;
     bool road_delivery=false;
     std::array<std::uint8_t,std::size(RegionalSurveys)> inland_stages{};
+    std::uint8_t nature_records=0;
+    bool nature_hike=false;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -268,7 +271,7 @@ struct Game {
     bool resolve_timber_trail(bool return_cargo);
     int road_timber_bonus() const;
     int land_stage() const;
-    bool land_away() const { return land_stage()>=LandRidge && land_stage()<=LandLookout; }
+    bool land_away() const { return s.nature_hike || (land_stage()>=LandRidge && land_stage()<=LandLookout); }
     LandLeg land_cost(LandAction action) const;
     bool cadiz_low_tide() const;
     bool wait_land_tide();
@@ -276,6 +279,14 @@ struct Game {
     Text land_requirement(LandAction action) const;
     bool explore_land(LandAction action);
     bool file_land_report();
+    NatureSite nature_site() const;
+    bool nature_recorded(int entry) const {
+        return entry>=0 && entry<NatureCount && (s.nature_records&(1U<<entry));
+    }
+    Text nature_requirement(int entry) const;
+    Text nature_wait() const;
+    bool wait_for_nature();
+    bool record_nature(int entry);
     int stock(int good) const;
     int market_stock(int port, int good) const;
     int wind(int leg) const;
@@ -421,6 +432,7 @@ private:
     void merchant_day(int company);
     void plan_merchant(int company);
 
+    bool advance_watch();
     void spend_day(int n);
     void earn(int gold);
     void check_ship();

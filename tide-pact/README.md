@@ -38,6 +38,9 @@
 - 丰沙尔商会的「红漆木匣」会圈出港口西南的搜索海域。木匣随风在附近漂移，亲自掌舵靠近才能看见。风浪小时可放艇，备有木料也能架长钩，等风则消耗一日水粮。把匣里的名册带到加的斯，译出欠付的工资，再决定送交船工换取当地维修折扣，还是入档领取赏金。
 - 交易、港务、剧情和抵达时自动存档。海上定期保存，回到游戏时会暂停在最近的航行记录。
 
+- 丰沙尔林地与加的斯盐田的考察路上可选「自然观察」。清晨容易看到马德拉林鸽，退潮后能观察觅食的大红鹳。每次绘制速写花六小时并用一份淡水，须留足回城水粮。交过地形图也能再访。
+- 掌舵到马德拉外海或佛得角近海时，海图下方会出现「观察」。海况允许时可以停船记录，观测红海龟前要缩帆。完成的速写、辨认特征和地点收录在「日志 → 自然图鉴」，第一次记载增加一点声望。
+
 ## 构建与维护
 
 标题或日志中的「设置」可单独打开或关闭配乐、航海音效和船员语音。港口、航行与战斗使用不同的配乐，PXA Host 流式播放单声道 Ogg，短音效和语音按需载入。游戏把内嵌美术保存在 `art/`，音频资源保存在 `assets/audio/`。
@@ -79,4 +82,5 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 晴天、炎热、雨天和骤风的图标由内置图像生成工具绘制。用 `tools/make_weather_icons.py --help` 将透明四宫格整理为天气图集。
 - 浅滩小船和赤道静风的事件插画由内置图像生成工具绘制。用 `tools/make_sea_stories.py --help` 生成两幅插画的游戏图集。
 - 里斯本河堤由内置图像生成工具绘制。用 `tools/make_outskirts.py --help` 生成背景图和设备纹理。城门、河堤、木料棚与旧驿道的位置定义在 `town.hpp`。
+- 自然图鉴的六幅原创插画由内置图像生成工具绘制，用 `tools/make_nature.py` 合成索引色图集。栖息地和物种特征参考当地生态资料，游戏中的时段、候潮和停船规则用于安排探索。 [马德拉自然保护机构](https://ifcn.madeira.gov.pt/pt/areas-protegidas/parque-natural-da-madeira/valores-naturais.html) · [加的斯湾保护区](https://www.juntadeandalucia.es/medioambiente/portal/documents/20151/98730912/ES0000140_bahiadecadiz.pdf/7c61f16c-6317-071e-6c70-001fcf7e1bcd) · [马德拉鲸类博物馆](https://museudabaleia.org/ciencia/baleias-e-golfinhos/d/423-golfinhocomum) · [佛得角物种名录](https://www.cms.int/country/cabo-verde)
 - 标准字模来自 Noto Sans CJK SC。紧凑字模使用缝合像素字体 12px 的简体中文比例版，缺字由 Noto Sans 补齐。增加文字后运行 `python tools/make_font.py NotoSansCJK-Regular.ttc --compact-bdf fusion-pixel-12px-proportional-zh_hans.bdf` 更新两个字模。[Noto Sans](https://github.com/notofonts/noto-cjk/tree/main/Sans) · [缝合像素字体 2026.11.10](https://github.com/TakWolf/fusion-pixel-font/releases/tag/2026.11.10)

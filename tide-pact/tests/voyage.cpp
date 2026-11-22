@@ -897,6 +897,67 @@ void inland_survey() {
     assert(with_pilot.knows_land_pass() && with_pilot.explore_land(CrossPass));
 }
 
+void nature_observation() {
+    Game woods;
+    woods.s.origin=madeira;
+    assert(woods.nature_site()==NoNatureSite && !woods.record_nature(IslandLaurel));
+    assert(woods.explore_land(FollowStream) && woods.nature_site()==LaurelWoods);
+    woods.s.sail_watch=2;
+    assert(!woods.record_nature(Trocaz) && !woods.nature_wait().empty());
+    const int day=woods.s.day, water=woods.s.water;
+    assert(woods.wait_for_nature() && woods.s.day==day+1 && woods.s.sail_watch==1);
+    assert(woods.record_nature(Trocaz) && woods.record_nature(IslandLaurel));
+    assert(!woods.record_nature(Trocaz) && !woods.record_nature(Saltwort));
+    assert(woods.s.renown==2 && woods.s.water==water-2 && woods.s.sail_watch==3);
+    assert(woods.explore_land(SurveyLookout) && woods.explore_land(ReturnToCity) && woods.file_land_report());
+    assert(woods.explore_land(FollowStream) && woods.s.nature_hike && woods.land_away());
+    assert(!woods.explore_land(FollowStream) && !woods.explore_land(SurveyLookout) && !woods.start_helm(-1));
+    State saved;
+    assert(decode(saved,encode(woods.s)) && saved.nature_hike && saved.nature_records==woods.s.nature_records);
+    woods.s=saved;
+    woods.restore();
+    assert(woods.explore_land(ReturnToCity) && woods.port() && woods.land_stage()==LandFullFiled);
+
+    Game marsh;
+    marsh.s.origin=cadiz;
+    assert(marsh.explore_land(FollowStream) && marsh.nature_site()==SaltMarsh);
+    while (marsh.cadiz_low_tide()) ++marsh.s.day;
+    assert(!marsh.record_nature(Flamingo));
+    assert(marsh.wait_for_nature() && marsh.cadiz_low_tide());
+    marsh.s.water=1;
+    assert(!marsh.record_nature(Flamingo) && marsh.s.water==1);
+    marsh.s.water=3;
+    assert(marsh.record_nature(Flamingo) && marsh.record_nature(Saltwort));
+    assert(marsh.s.water==1 && marsh.explore_land(ReturnToCity));
+
+    Game sea;
+    assert(sea.start_helm(-1));
+    const auto move=[&sea](float lon,float lat) {
+        const auto point=chart_point(lon,lat);
+        sea.s.helm_x=point.x*16;
+        sea.s.helm_y=point.y*16;
+        while (sea.conditions().weather==Squall) ++sea.s.day;
+    };
+    move(-16.5f,35);
+    assert(sea.nature_site()==MadeiraWaters && !sea.record_nature(CommonDolphin));
+    sea.paused=true;
+    sea.s.sail_watch=SailingWatches-1;
+    const int stores=sea.s.stores;
+    sea.s.stores=0;
+    assert(!sea.record_nature(CommonDolphin));
+    sea.s.stores=stores;
+    const int sea_day=sea.s.day;
+    assert(sea.record_nature(CommonDolphin) && sea.s.day==sea_day+1 && sea.s.stores<stores);
+    assert(sea.s.sail_watch==0 && sea.paused);
+    move(-24.4f,15.3f);
+    assert(sea.nature_site()==CaboVerdeWaters && !sea.record_nature(Loggerhead));
+    sea.s.reefed=1;
+    assert(sea.record_nature(Loggerhead) && !sea.record_nature(Loggerhead));
+    assert(decode(saved,encode(sea.s)) && saved.nature_records==sea.s.nature_records);
+    move(-30,22);
+    assert(sea.nature_site()==NoNatureSite);
+}
+
 void road_freight() {
     Game game;
     assert(!game.dispatch_offer_here(RoadFreight) && !game.accept_dispatch(RoadFreight));
@@ -1374,6 +1435,7 @@ int main() {
     dockside_bargaining();
     riverside_timber();
     inland_survey();
+    nature_observation();
     road_freight();
     search_for_driftwood();
     ship_officers();

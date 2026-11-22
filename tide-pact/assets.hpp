@@ -38,4 +38,5 @@ extern const unsigned char inland[];
 extern const unsigned char calicut[];
 extern const unsigned char levada[];
 extern const unsigned char marsh[];
+extern const unsigned char nature[];
 }

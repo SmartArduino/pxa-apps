@@ -409,12 +409,7 @@ bool Game::cadiz_low_tide() const {
 
 bool Game::wait_land_tide() {
     if (s.origin!=cadiz || !port() || land_stage()!=LandUnvisited || cadiz_low_tide()) return false;
-    do {
-        if (++s.sail_watch==SailingWatches) {
-            s.sail_watch=0;
-            spend_day(1);
-        }
-    } while (!cadiz_low_tide());
+    do { advance_watch(); } while (!cadiz_low_tide());
     notice="潮已退，潮滩可以走";
     return true;
 }
@@ -430,7 +425,8 @@ Text Game::land_requirement(LandAction action) const {
         (s.origin!=lisbon && regional_survey_at(s.origin)<0) || sea() || encounter())
         return "要从考察所在港出发";
     const bool outward=action==FollowStream || action==CrossPass;
-    if (outward ? land_stage()!=LandUnvisited : !land_away())
+    const bool revisiting=regional_survey_at(s.origin)>=0 && land_stage()>=LandNotes;
+    if (outward ? land_away() || (land_stage()!=LandUnvisited && !revisiting) : !land_away())
         return "这段路走不了了";
     if (action==CrossPass && !knows_land_pass())
         return s.origin==cadiz?"等潮退再走潮滩":"需要货签背面的线索，或请安娜领路";
@@ -452,7 +448,8 @@ bool Game::explore_land(LandAction action) {
     spend_day(leg.days);
     switch (action) {
     case FollowStream: case CrossPass:
-        stage=LandRidge;
+        if (stage>=LandNotes) s.nature_hike=true;
+        else stage=LandRidge;
         notice=region>=0?"到了考察地点":"走到了山脊的老路碑";
         break;
     case CopyMilestone:
@@ -464,10 +461,91 @@ bool Game::explore_land(LandAction action) {
         notice=region>=0?"已补全考察记录":"登上望台，补画了背坡的岔路";
         break;
     case ReturnToCity:
+        if (s.nature_hike) {
+            s.nature_hike=false;
+            notice="已回到城外";
+            break;
+        }
         stage=stage==LandRidge?LandUnvisited:stage==LandLookout?LandFullNotes:LandNotes;
         notice=stage==LandUnvisited?"已返回来时的路口":"可以去档案室交图";
         break;
     }
+    return true;
+}
+
+NatureSite Game::nature_site() const {
+    if (encounter()) return NoNatureSite;
+    if (land_away()) {
+        if (s.origin==madeira) return LaurelWoods;
+        if (s.origin==cadiz) return SaltMarsh;
+    }
+    if (!s.helm) return NoNatureSite;
+    const auto here=position();
+    const auto within=[here](Point northwest, Point southeast) {
+        return here.x>=northwest.x && here.x<=southeast.x &&
+               here.y>=northwest.y && here.y<=southeast.y;
+    };
+    if (within(chart_point(-20,39),chart_point(-8,29))) return MadeiraWaters;
+    if (within(chart_point(-26,19),chart_point(-21,14))) return CaboVerdeWaters;
+    return NoNatureSite;
+}
+
+Text Game::nature_requirement(int entry) const {
+    if (entry<0 || entry>=NatureCount || nature_site()!=NatureRecords[entry].site)
+        return "这里没有这项线索";
+    if (nature_recorded(entry)) return "已经记下这项发现";
+    if (land_away()) {
+        const auto reserve=land_cost(ReturnToCity);
+        if (s.stores<reserve.food || s.water<reserve.water+1)
+            return "要多带一份水，留下返程水粮";
+        if (entry==Trocaz && s.sail_watch!=1) return "清晨的林鸽容易看见";
+        if (entry==Flamingo && !cadiz_low_tide()) return "退潮后再去看觅食";
+    } else {
+        const auto here=position();
+        const auto sea=conditions_at(here,s.day);
+        if (!paused) return "先停船观察";
+        if (sea.weather==Squall) return "风浪太大，平静些再来";
+        if (entry==Loggerhead && !s.reefed) return "先缩帆，让船慢下来";
+        if (s.sail_watch==SailingWatches-1) {
+            const int day=std::min(99999,s.day+1);
+            const auto ration=sailing_ration(day,conditions_at(here,day).weather);
+            if (s.stores<ration.food || s.water<ration.water) return "跨日要留足船员水粮";
+        }
+    }
+    return {};
+}
+
+Text Game::nature_wait() const {
+    if (nature_site()==LaurelWoods && !nature_recorded(Trocaz) && s.sail_watch!=1)
+        return "等到清晨";
+    if (nature_site()==SaltMarsh && !nature_recorded(Flamingo) && !cadiz_low_tide())
+        return "等潮退";
+    return {};
+}
+
+bool Game::wait_for_nature() {
+    if (nature_wait().empty()) return false;
+    if (s.origin==madeira) {
+        do { advance_watch(); } while (s.sail_watch!=1);
+        notice="林中有了晨光";
+    } else {
+        do { advance_watch(); } while (!cadiz_low_tide());
+        notice="潮已退，浅滩露了出来";
+    }
+    return true;
+}
+
+bool Game::record_nature(int entry) {
+    if (const auto blocked=nature_requirement(entry); !blocked.empty()) {
+        notice=blocked;
+        return false;
+    }
+    const bool aboard=s.helm;
+    if (!aboard) --s.water;
+    if (advance_watch() && aboard) consume_day(conditions());
+    s.nature_records|=1U<<entry;
+    s.renown=std::min(999999,s.renown+1);
+    notice="速写已收入自然图鉴";
     return true;
 }
 
@@ -920,6 +998,13 @@ unsigned Game::roll(unsigned range) {
     return (s.rng >> 8) % range;
 }
 
+bool Game::advance_watch() {
+    if (++s.sail_watch<SailingWatches) return false;
+    s.sail_watch=0;
+    spend_day(1);
+    return true;
+}
+
 void Game::spend_day(int days) {
     for (int i = 0; i < days && s.day < 99999; ++i) {
         ++s.day;
@@ -1207,11 +1292,7 @@ void Game::helm_step(WaterTest water_at) {
         if (found<0) notice="已到锚地，可以靠泊";
         paused=true;
     }
-    const bool new_day=++s.sail_watch==SailingWatches;
-    if (new_day) {
-        s.sail_watch=0;
-        spend_day(1);
-    }
+    const bool new_day=advance_watch();
     if (s.hull<=0) { rescue(); return; }
     if (new_day) {
         if (!consume_day(conditions())) return;
@@ -2278,7 +2359,7 @@ static_assert(WakeSaveBytes>=OldWakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
 constexpr int AddedPorts=PortCount-LegacyPortCount;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+2);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2366,6 +2447,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4)|
                               (s.road_delivery?0x80:0));
     for (auto stage : s.inland_stages) bytes[offset++]=std::byte(stage);
+    bytes[offset++]=std::byte(s.nature_records|(s.nature_hike?NatureHikeBit:0));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2583,6 +2665,15 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 if (stage>=LandRidge && stage<=LandLookout &&
                     (s.origin!=RegionalSurveys[i].port || s.helm || s.destination>=0 || s.weather!=Calm ||
                      s.stores<1 || s.water<1)) return false;
+            }
+            const unsigned nature=std::to_integer<unsigned>(bytes[offset++]);
+            if (nature&~(NatureMarks|NatureHikeBit)) return false;
+            s.nature_records=nature&NatureMarks;
+            s.nature_hike=(nature&NatureHikeBit)!=0;
+            if (s.nature_hike) {
+                const int region=regional_survey_at(s.origin);
+                if (region<0 || s.inland_stages[region]<LandNotes || s.helm || s.destination>=0 ||
+                    s.weather!=Calm || s.stores<1 || s.water<1) return false;
             }
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||

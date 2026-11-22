@@ -28,7 +28,8 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage
+    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
+    NatureWatch, NatureAlbum, NaturePage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -67,7 +68,8 @@ enum Action {
     CancelDispatch, OpenLandReport, WalkLandStream, WalkLandPass, WalkLandCopy, WalkLandLookout,
     WalkLandBack, FileLandReport, OpenTradeQuantity, QuantityBuy, QuantitySell,
     QuantityBackspace, QuantityMaximum, QuantityConfirm, WalkRegionalTrail, WaitLandTide, QuantityDigit,
-    DispatchEntry=QuantityDigit+10
+    DispatchEntry=QuantityDigit+10,
+    OpenNatureWatch=DispatchEntry+DispatchCount, OpenNatureAlbum, WaitForNature, SketchNature, NatureSelect
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(WorldChart<DockService);
@@ -132,6 +134,8 @@ struct VoyageApp {
     HaggleReply bargain_reply=InvalidOffer;
     int trade_quantity=0;
     bool quantity_sell=false;
+    int nature_item=IslandLaurel;
+    Overlay nature_page_back=NatureAlbum;
     int expedition_item=0;
     int officer_item=Pilot;
     int rumor_item=0, pinned_rumor=-1;
@@ -895,11 +899,20 @@ struct VoyageApp {
         button(d,{map.x,y,icon_w,24},"+",ZoomIn);
         button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
         button(d,{map.x+2*(icon_w+3),y,36,24},landmark>=0 && zoom<5?"近岸":"定位",Center);
-        button(d,{map.x+2*(icon_w+3)+39,y,map.w-2*(icon_w+3)-39,24},
+        const int action_x=map.x+2*(icon_w+3)+39;
+        const int action_w=map.right()-action_x;
+        const auto site=game.nature_site();
+        const bool lookout=site!=NoNatureSite && !salvage && action_w>=68;
+        const int watch_w=lookout?std::clamp(action_w/3,33,73):0;
+        if (lookout)
+            button(d,{action_x,y,watch_w,24},"观察",OpenNatureWatch,
+                   !game.nature_recorded(site==MadeiraWaters?CommonDolphin:Loggerhead));
+        const int dock_offset=lookout?watch_w+3:0;
+        button(d,{action_x+dock_offset,y,action_w-dock_offset,24},
                salvage?"捞木匣":game.s.helm?"靠泊":game.sea()?(game.s.stop_next?"取消停靠":"下站停靠"):"目的地",
                salvage?OpenDriftRecovery:game.s.helm?DockHelm:game.sea()?NextStop:RouteList,
                salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},
-               salvage?LetterIcon:game.s.helm?MooringIcon:-1);
+               salvage?LetterIcon:game.s.helm && action_w-dock_offset>=55?MooringIcon:-1);
         if (game.s.helm) { helm_panel(d,info,wide,landmark); return; }
 
         skin_box(d,info,0,5);
@@ -1334,8 +1347,95 @@ struct VoyageApp {
             d.label(body.x+5,body.y+99,format("委托  %s / %s",
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
         pair(d,{body.x+4,body.bottom()-53,body.w-8,23},"港口故事",ShowTales,"海上纪事",ShowSeaLog);
-        pair(d,{body.x+4,body.bottom()-27,body.w-8,23},"发现图鉴",ShowAtlas,"操作帮助",ShowHelp);
+        const int third=(body.w-16)/3, row=body.bottom()-27;
+        button(d,{body.x+4,row,third,23},"发现图鉴",ShowAtlas);
+        button(d,{body.x+8+third,row,third,23},"自然图鉴",OpenNatureAlbum);
+        button(d,{body.x+12+third*2,row,body.w-16-third*2,23},"操作帮助",ShowHelp);
     }
+
+    void nature_art(Draw& d, int entry, Rect picture) {
+        d.image({art::nature},{(entry%2)*144,(entry/2)*96,144,96},picture);
+        d.frame(picture,border);
+    }
+
+    void nature_index(Draw& d, bool local) {
+        const auto site=game.nature_site();
+        int recorded=0;
+        for (int id=0;id<NatureCount;++id) recorded+=game.nature_recorded(id);
+        page_title(d,local?nature_site_name(site):Text("自然图鉴"),AstrolabeIcon);
+        const int x=body.x+6, y=body.y+31, w=body.w-12;
+        const int columns=local?1:2;
+        const int scene_w=local?std::min(130,w/3):0;
+        const int start_x=local?x+scene_w+6:x;
+        const int card_w=(x+w-start_x-5*(columns-1))/columns;
+        if (local) {
+            const bool land=site==LaurelWoods || site==SaltMarsh;
+            const auto* scene=site==LaurelWoods?art::levada:site==SaltMarsh?art::marsh:art::sea_stories;
+            const Rect picture{x,y,scene_w,std::min(scene_w*104/160,body.bottom()-y-26)};
+            d.image({scene},{land?0:160,0,160,104},picture);
+            d.frame(picture,border);
+        }
+        const int card_h=std::clamp((body.h-56)/3-3,24,38);
+        int index=0;
+        for (int id=0;id<NatureCount;++id) {
+            const auto& specimen=NatureRecords[id];
+            if (local && specimen.site!=site) continue;
+            const bool known=game.nature_recorded(id);
+            const Rect card{start_x+(index%columns)*(card_w+5),y+(index/columns)*(card_h+4),card_w,card_h};
+            const bool focused_row=pad_focus && button_count==focused;
+            skin_box(d,card,focused_row?1:0,4);
+            const Text name=local && !known?specimen.trace:specimen.name;
+            const int badge_width=d.measure("已记载")+8;
+            const int badge_w=local && known && d.measure(name)+15+badge_width<=card.w?badge_width:0;
+            const int thumb_w=(card.h-6)*3/2;
+            const bool thumbnail=known && d.measure(name)+thumb_w+15+badge_w<=card.w;
+            if (thumbnail) nature_art(d,id,{card.x+4,card.y+3,thumb_w,card.h-6});
+            const int name_x=card.x+7+(thumbnail?thumb_w+3:0);
+            const int text_y=card.y+(card.h-d.font.cell)/2;
+            d.label(name_x,text_y,name,known?mint:local?ivory:quiet,card.right()-name_x-5-badge_w);
+            if (badge_w) d.label(card.right()-badge_w+2,text_y,"已记载",mint);
+            buttons[button_count++]={card,NatureSelect+id};
+            ++index;
+        }
+        constexpr Text scenery[]{"","树影越过渠水，林里时有鸟声。","潮水从盐田的沟口进出。",
+                                 "水手白天在船头轮流瞭望。","靠近群岛，透过浅水能看见沙底。"};
+        const auto status=format("已记载 %d / %d",recorded,NatureCount);
+        d.center({x,body.bottom()-21,w,18},local?scenery[site]:Text(status),mist);
+    }
+
+    void nature_page(Draw& d) {
+        const auto& specimen=NatureRecords[nature_item];
+        const bool known=game.nature_recorded(nature_item);
+        const bool local=nature_page_back==NatureWatch;
+        const int x=body.x+7, y=body.y+31, w=body.w-14;
+        const int bottom=body.bottom();
+        page_title(d,known || !local?specimen.name:specimen.trace,AstrolabeIcon);
+        if (known) {
+            const int art_w=std::min({168,w*46/100,(bottom-y-21)*3/2});
+            const Rect picture{x,y,art_w,art_w*2/3};
+            nature_art(d,nature_item,picture);
+            const int text_x=picture.right()+8, text_w=x+w-text_x;
+            d.label(text_x,y,nature_site_name(specimen.site),gold,text_w);
+            d.wrap({text_x,y+20,text_w,bottom-y-43},specimen.note,ivory,17);
+            d.label(x,bottom-20,specimen.scientific,quiet,w);
+            return;
+        }
+        d.label(x,y,nature_site_name(specimen.site),gold,w);
+        d.wrap({x,y+21,w,bottom-y-(local?79:27)},specimen.hint,ivory,17);
+        if (!local) {
+            d.label(x,bottom-20,"尚未观察，找到线索后可绘制速写",mist,w);
+            return;
+        }
+        const Text blocked=game.nature_requirement(nature_item);
+        const Text wait=game.nature_wait();
+        const bool this_wait=!wait.empty() && (nature_item==Trocaz || nature_item==Flamingo);
+        d.label(x,bottom-53,blocked.empty()?"首次记载 · 声望 +1":blocked,blocked.empty()?mint:gold,w);
+        const int wait_w=this_wait?w/3:0;
+        if (this_wait) button(d,{x,bottom-35,wait_w-4,31},wait,WaitForNature,true);
+        button(d,{x+wait_w,bottom-35,w-wait_w,31},specimen.sketch,SketchNature,true,
+               !blocked.empty(),game.land_away()?"6小时 · 水1":"停船约6小时");
+    }
+
     void officer_portrait(Draw& d, int officer, Rect viewport) {
         d.image({art::officers},{(officer-1)*96,0,96,96},viewport);
         d.frame(viewport,border);
@@ -1601,6 +1701,8 @@ struct VoyageApp {
         const int reward=survey?(full?survey->full_reward:survey->sketch_reward):(full?215:150);
         page_title(d,survey?(inland_archive?survey->report:survey->site):
                    inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
+        if (!inland_archive && game.nature_site()!=NoNatureSite)
+            button(d,{body.right()-77,body.y+3,73,23},"自然观察",OpenNatureWatch,true);
         const auto* scene=game.s.origin==madeira?art::levada:game.s.origin==cadiz?art::marsh:art::inland;
         d.image({scene},{0,0,160,104},picture);
         d.frame(picture,border);
@@ -1612,6 +1714,9 @@ struct VoyageApp {
                       "抄图人把图抄给商队。山里的木料正运进市场，商会想找船送一批去丰沙尔。";
             else story=full?"你画出了望台背后的岔路。抄图人认出那正是商队常走错的地方。":
                      "抄图人对着路碑拓片核了地名，准备用你的图换下那张漏了路的旧图。";
+        } else if (game.s.nature_hike) {
+            story=game.s.origin==madeira?"回到山间水渠。沿着树影走，看能不能找到林中的住客。":
+                                        "又到了湾边盐田。有些生灵要等潮水退去才看得清。";
         } else {
             switch (stage) {
             case LandUnvisited:
@@ -1637,6 +1742,11 @@ struct VoyageApp {
             button(d,{x,row,w,PricedButtonHeight},format("交图 · %d金",reward),FileLandReport,true);
         } else if (inland_archive && !survey && !game.s.road_delivery) {
             button(d,{x,row,w,PricedButtonHeight},"查看港际运单",OpenDispatch,true);
+        } else if (game.s.nature_hike) {
+            leg_button({x,row,w,PricedButtonHeight},ReturnToCity,"回城",WalkLandBack,true);
+        } else if (!inland_archive && survey && stage>=LandNotes) {
+            leg_button({x,row,w,PricedButtonHeight},FollowStream,
+                       game.s.origin==madeira?"再访林地":"再访盐田",WalkLandStream,true);
         } else if (filed) {
             d.label(x,row+8,"已入档",mint,w);
         } else if (!inland_archive && stage==LandUnvisited) {
@@ -2901,6 +3011,9 @@ struct VoyageApp {
         case HaggleOutcomePage: haggle_outcome_page(d); break;
         case TimberTrailPage: timber_trail_page(d); break;
         case LandPage: land_page(d); break;
+        case NatureWatch: nature_index(d,true); break;
+        case NatureAlbum: nature_index(d,false); break;
+        case NaturePage: nature_page(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -2964,8 +3077,37 @@ struct VoyageApp {
             if (modal==HarborTown) town_go(Towns[town_id].doors[id],id);
             return;
         }
+        if (action>=NatureSelect && action<NatureSelect+int(NatureCount)) {
+            if (modal==NatureWatch || modal==NatureAlbum) {
+                nature_item=action-NatureSelect;
+                nature_page_back=modal;
+                set_modal(NaturePage);
+            }
+            return;
+        }
         if (action>=OpenLanguages) {
             switch (action) {
+            case OpenNatureWatch:
+                if (game.nature_site()==NoNatureSite) break;
+                if (game.s.helm) {
+                    game.paused=true;
+                    voyage_rate=1;
+                }
+                set_modal(NatureWatch);
+                break;
+            case OpenNatureAlbum:
+                set_modal(NatureAlbum);
+                break;
+            case WaitForNature:
+                if (modal==NaturePage && nature_page_back==NatureWatch && game.wait_for_nature())
+                    changed();
+                break;
+            case SketchNature:
+                if (modal==NaturePage && nature_page_back==NatureWatch && game.record_nature(nature_item)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
             case OpenLanguages:
                 show_languages(modal==RumorPage?PortSpeech[Rumors[rumor_item].port]:
                                modal==ExpeditionPage?BookLanguage[expedition_item]:LanguageCount);
@@ -3562,6 +3704,8 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (modal==NaturePage) { set_modal(nature_page_back); return true; }
+        if (modal==NatureWatch) { set_modal(game.land_away()?LandPage:None); return true; }
         if (game.land_away()) return true;
         if (inside_town_facility && modal==town_facility) {
             show_town();
