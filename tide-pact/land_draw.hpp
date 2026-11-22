@@ -28,9 +28,10 @@ inline void draw_land_ground(Draw& d,Rect tile,LandGround ground,int cell,bool c
         d.fill({mid-6,floor-9,12,3},rgb(0xb09563));
         d.line({mid-5,floor-1},{mid+5,floor-6},rgb(0x8e7149));
     } else if (ground==LandGoal) {
-        d.line({mid-7,floor-1},{mid-7,floor-13},rgb(0x3e3329));
-        d.fill({mid-6,floor-13,11,5},rgb(0xedc584));
-        d.fill({mid+2,floor-10,3,2},rgb(0x885e3e));
+        const int post=tile.right()-14, top=tile.y+3;
+        d.line({post,tile.bottom()-3},{post,top},rgb(0x3e3329));
+        d.fill({post+1,top,10,7},rgb(0xedc584));
+        d.line({post+2,top+5},{post+8,top+5},rgb(0xb47946));
     }
     d.frame(tile,rgb(0x464a36));
 }
