@@ -30,12 +30,30 @@ struct PilotRaster {
     }
 };
 
-inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas) {
+// The regional chart blends over eight terrain cells on each edge.
+inline constexpr int PilotDetailBlend=8;
+inline Rect opaque_pilot_detail(Rect target) {
+    if (target.w<=0 || target.h<=0) return {};
+    const auto project=[](int cell,int pixels,int count) {
+        return int((std::int64_t(cell)*pixels+count-1)/count);
+    };
+    const int left=project(PilotDetailBlend,target.w,PilotWidth);
+    const int right=project(PilotWidth-PilotDetailBlend,target.w,PilotWidth);
+    const int top=project(PilotDetailBlend,target.h,PilotHeight);
+    const int bottom=project(PilotHeight-PilotDetailBlend,target.h,PilotHeight);
+    return {target.x+left,target.y+top,right-left,bottom-top};
+}
+
+inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas,Rect covered) {
     const auto rect=raster.view;
     const auto r=d.clipped(rect);
+    covered=d.clipped(covered);
+    const int gap_left=std::max(r.x,covered.x), gap_right=std::min(r.right(),covered.right());
     const Image overview{art::chart};
     constexpr auto coast=rgb(0x31767c), beyond=rgb(0x142b37);
     for (int y=r.y;y<r.bottom();++y) {
+        const bool masked=gap_left<gap_right && y>=covered.y && y<covered.bottom();
+        if (masked && gap_left==r.x && gap_right==r.right()) continue;
         auto pixels=*d.pixels.row(y);
         const int v=raster.y(y);
         if (v<0 || v>=PilotAtlasHeight) {
@@ -48,6 +66,10 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
         Point origin{};
         PilotAtlas::Row middle,above,below;
         for (int x=r.x;x<r.right();++x) {
+            if (masked && x==gap_left) {
+                x=gap_right-1;
+                continue;
+            }
             const int u=raster.x(x);
             if (u<0 || u>=PilotAtlasWidth) { pixels[x]=beyond; continue; }
             const int column=u/PilotPatchWidth;
@@ -62,7 +84,7 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
             }
             const int cell=(u-origin.x*8)/PilotSubcell;
             const int gx=u/PilotAtlasUnit;
-            const int coarse=overview.index(gx,gy);
+            const int coarse=middle.loaded?0:overview.index(gx,gy);
             const bool land=middle.loaded?middle.land(cell):coarse>=2;
             if (land) {
                 const int height=Draw::relief_level(gx,gy);
@@ -92,20 +114,26 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
                 result[terrain][shade]=chart_style::tint(colors[terrain],(shade-8)*(terrain<4?1:3));
         return result;
     }();
+    const int width=PilotWidth*4;
+    const auto offset=std::int64_t(r.x-target.x)*width;
+    const int first=int(offset/target.w), initial_error=int(offset%target.w);
+    const int step=width/target.w, remainder=width%target.w;
     for (int y=r.y;y<r.bottom();++y) {
         auto pixels=*d.pixels.row(y);
-        const int v=(y-target.y)*PilotHeight*4/target.h;
+        const int v=int(std::int64_t(y-target.y)*PilotHeight*4/target.h);
         const int latitude=raster.y(y);
+        int u=first, error=initial_error;
         for (int x=r.x;x<r.right();++x) {
-            const int u=(x-target.x)*PilotWidth*4/target.w;
             const Point cell{u/4,v/4};
             const int terrain=water.at(cell);
             const int material=terrain<5?1:terrain<=9?2:3;
             const auto shaded=terrain==0?raster.sea(raster.x(x),latitude):
                 palette[terrain][chart_style::texture(material,u,v)];
             const int edge=std::min({cell.x,PilotWidth-1-cell.x,cell.y,PilotHeight-1-cell.y});
-            const int fade=std::min(16,edge*2);
-            pixels[x]=fade>=16?shaded:Draw::mix(pixels[x],shaded,fade);
+            pixels[x]=edge>=PilotDetailBlend?shaded:Draw::mix(pixels[x],shaded,edge*2);
+            u+=step;
+            error+=remainder;
+            if (error>=target.w) { error-=target.w; ++u; }
         }
     }
 }

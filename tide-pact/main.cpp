@@ -600,7 +600,7 @@ struct VoyageApp {
         if (!frame) return;
         auto pixels=frame->rgb565();
         if (!pixels) return;
-        Draw draw(*pixels,small_text()?CompactFace:StandardFace);
+        Draw draw(*pixels,frame->pixels(),frame->stride_bytes(),small_text()?CompactFace:StandardFace);
         render(draw);
         if (frame->present(next_frame)) { ++next_frame; dirty=false; }
     }
@@ -1357,14 +1357,17 @@ struct VoyageApp {
         const int detail_index=visible_pilot_detail();
         const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
         const PilotRaster raster{map,{int(pilot_x),int(pilot_y)},pilot_scale_x,pilot_scale_y};
-        draw_pilot_world(d,raster,pilot_atlas);
+        Rect detail_view{};
+        PilotWater detail_water{};
         if (detail_index>=0 && pilot_zoom>=2) {
             const auto& area=PilotRegions[detail_index];
             const auto tl=pilot_point(pilot_to_atlas(area,{0,0}));
             const auto br=pilot_point(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
-            draw_pilot_detail(d,{sea_picture.pixels(PilotPictureBase+detail_index)},
-                              {tl.x,tl.y,br.x-tl.x,br.y-tl.y},raster);
+            detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
+            detail_water={sea_picture.pixels(PilotPictureBase+detail_index)};
         }
+        draw_pilot_world(d,raster,pilot_atlas,opaque_pilot_detail(detail_water.bytes?detail_view:Rect{}));
+        draw_pilot_detail(d,detail_water,detail_view,raster);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;

@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstring>
 
 namespace tide {
 
@@ -85,11 +86,15 @@ struct Draw {
     };
 
     pxa::Rgb565Pixels pixels;
+    std::span<std::byte> frame_bytes;
+    std::uint32_t stride_bytes;
     Rect clip;
     const FontFace& font;
 
-    explicit Draw(pxa::Rgb565Pixels image, const FontFace& face=StandardFace)
-        : pixels(image), clip{0,0,int(image.width()),int(image.height())}, font(face) {}
+    explicit Draw(pxa::Rgb565Pixels image,std::span<std::byte> bytes,std::uint32_t stride,
+                  const FontFace& face=StandardFace)
+        : pixels(image), frame_bytes(bytes), stride_bytes(stride),
+          clip{0,0,int(image.width()),int(image.height())}, font(face) {}
 
     int measure(Text text) const {
         int result=0;
@@ -161,12 +166,19 @@ struct Draw {
         const int stride=img.width();
         const bool packed=img.packed();
         const bool distant=packed && dst.w*2<src.w;
+        int previous_row=-1;
         for (int y = r.y; y < r.bottom(); ++y) {
             const int sy = src.y + (y-dst.y)*src.h/dst.h;
+            auto row = *pixels.row(y);
+            if (!packed && !transparent && sy==previous_row) {
+                auto* scanline=frame_bytes.data()+y*stride_bytes+r.x*sizeof(Color);
+                std::memcpy(scanline,scanline-stride_bytes,r.w*sizeof(Color));
+                continue;
+            }
+            previous_row=sy;
             const int line=sy*stride;
             const bool latitude_line=packed && (sy-ChartNorth*ChartLatitudeScale)%(10*ChartLatitudeScale)==0;
             const auto* indexes=img.bytes+516;
-            auto row = *pixels.row(y);
             int source=first, error=first_error;
             for (int x = r.x; x < r.right(); ++x) {
                 const int sx=src.x+(flip?src.w-1-source:source), offset=line+sx;
@@ -222,10 +234,26 @@ struct Draw {
         const int end = x+max_width;
         while (!text.empty()) {
             const auto code = next_char(text);
-            const auto* g = font.glyph(code);
-            const int advance = *g++ * scale;
+            const auto* glyph = font.glyph(code);
+            const int advance = *glyph * scale;
             if (x+advance > end) return;
             if (code != ' ') {
+                const auto* g=glyph+1;
+                if (scale==1) {
+                    const auto ink=font.ink_bounds(glyph);
+                    const auto box=clipped({x+ink.x,y+ink.y,ink.w,ink.h});
+                    for (int j=box.y;j<box.bottom() && box.w;++j) {
+                        auto row=*pixels.row(j);
+                        const auto* line=g+(j-y)*font.stride();
+                        for (int i=box.x;i<box.right();++i) {
+                            const int column=i-x;
+                            const int alpha=(line[column/2]>>((column&1)?0:4))&15;
+                            if (alpha) row[i]=alpha==15?color:mix(row[i],color,alpha);
+                        }
+                    }
+                    x+=advance;
+                    continue;
+                }
                 for (int j = 0; j < font.cell; ++j) {
                     for (int i = 0; i < font.cell; ++i) {
                         const auto packed = g[j*font.stride() + i/2];
