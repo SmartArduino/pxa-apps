@@ -34,13 +34,21 @@ constexpr Point chart_point(float lon, float lat) {
 #include "stories.hpp"
 #include "settlement.hpp"
 #include "pilotage.hpp"
+#include "land_battle.hpp"
 
 namespace tide {
 
 enum Goods { Wine, Sugar, Cloth, Wool, Timber, Salt, Pepper, Porcelain, GoodsCount };
-inline constexpr std::array<Text, GoodsCount> GoodsNames{
-    "葡萄酒", "蔗糖", "织锦", "羊毛", "木料", "海盐", "胡椒", "瓷器"
+enum SpecialtyGoods { MadeiraSugar=GoodsCount, DriedCod, MuranoGlass, GoldDust, MalabarGinger, MarketGoodsCount };
+inline constexpr int SpecialtyCount=int(MarketGoodsCount)-int(GoodsCount);
+inline constexpr std::array<Text, MarketGoodsCount> GoodsNames{
+    "葡萄酒", "蔗糖", "织锦", "羊毛", "木料", "海盐", "胡椒", "瓷器",
+    "马德拉糖", "鳕鱼干", "穆拉诺玻璃", "黄金砂", "马拉巴尔姜"
 };
+
+enum class MarketAccess { Closed, Trading, Producer, Buyer };
+MarketAccess market_access(int port,int good);
+Text specialty_note(int good);
 
 struct MarketNotice {
     int port, good, first_day, duration, price_percent, reserve_shift;
@@ -246,8 +254,12 @@ struct State {
     int weather = 0, enemy = 0, range = 0, aim = 0, stop_next = 0;
     std::uint64_t visited=1, surveyed=0;
     std::uint32_t rng=0x57980218, event_mask=0;
-    std::array<int, GoodsCount> cargo{0, 0, 0, 0, 0, 2, 0, 0};
+    std::array<int, MarketGoodsCount> cargo{0, 0, 0, 0, 0, 2, 0, 0};
     std::array<std::int8_t, PortCount * GoodsCount> stock_delta{};
+    std::array<std::int8_t,SpecialtyCount> specialty_stock{};
+    std::array<std::uint8_t,SpecialtyCount> specialty_demand{};
+    LandFight land_fight;
+    std::uint8_t shore_campaign=0;
     std::array<std::uint8_t, TaleCount> tales{};
     std::uint8_t beacon = BeaconUnseen;
     std::array<std::uint32_t, 3> sea_log{};
@@ -296,7 +308,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, SaveBytes=1912;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912, SaveBytes=1960;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -412,7 +424,7 @@ struct Game {
     bool choose_tale(int tale, bool share);
     int proposal() const;
     int proposal_good() const;
-    bool port() const { return !sea() && !encounter() && !land_away() && s.origin<PortCount; }
+    bool port() const { return !sea() && !encounter() && !land_away() && !s.land_fight.kind && s.origin<PortCount; }
     bool sea() const { return s.helm || s.destination>=0; }
     bool encounter() const { return s.weather != 0; }
     Point position(float frame = 0) const;
@@ -474,8 +486,14 @@ struct Game {
     bool take_enclave_migrants(int site);
     bool land_enclave_migrants(int site);
     Text enclave_siege_requirement(int site) const;
-    int enclave_assault_power() const;
     bool siege_enclave(int site);
+    Text land_battle_requirement(int kind,int site=0) const;
+    bool begin_land_battle(int kind,int site=0);
+    bool move_land_unit(int unit,int cell);
+    bool strike_land_unit(int unit,int target);
+    bool brace_land_unit(int unit);
+    bool end_land_round();
+    void withdraw_land_battle();
     bool decide_enclave_prisoners(int site,int choice);
     bool duel() const { return s.weather==Boarding || s.weather==DockDuel; }
     bool convoy_battle() const;
@@ -559,6 +577,8 @@ struct Game {
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:
+    bool settle_land_battle(bool retreat=false);
+    void resolve_enclave_siege(int site,bool victory);
     Point pilot_exit{-1,-1};
     Point pilot_remainder{}, pilot_dock_from{};
     float pilot_dock_travel=0;

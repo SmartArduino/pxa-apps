@@ -631,6 +631,42 @@ void coastal_fishery() {
     assert(!whale.sell_whale_oil() && whale.load()==load);
 }
 
+void regional_specialties_and_land_combat() {
+    Game trader;
+    trader.s.origin=madeira;
+    assert(market_access(madeira,MadeiraSugar)==MarketAccess::Producer && trader.stock(MadeiraSugar)>4);
+    const int starting=trader.s.gold;
+    const auto bought=trader.trade(MadeiraSugar,false,4);
+    assert(bought.units==4 && trader.s.gold==starting-bought.gold && trader.s.cargo[MadeiraSugar]==4);
+    const int depleted=trader.stock(MadeiraSugar);
+    trader.wait_at_port();
+    trader.wait_at_port();
+    assert(trader.stock(MadeiraSugar)>depleted);
+    trader.s.origin=santo_domingo;
+    assert(!trader.quote(Porcelain,false) && !trader.trade(MadeiraSugar,true,4).units);
+    trader.s.origin=bruges;
+    assert(market_access(trader.s.origin,MadeiraSugar)==MarketAccess::Buyer && !trader.quote(MadeiraSugar,false));
+    const auto sold=trader.trade(MadeiraSugar,true,4);
+    assert(sold.units==4 && sold.gold>bought.gold && trader.s.specialty_demand[0]==4);
+    State saved;
+    assert(decode(saved,encode(trader.s)) && saved.specialty_demand[0]==4 &&
+           saved.specialty_stock[0]==trader.s.specialty_stock[0]);
+
+    Game escort;
+    assert(escort.begin_land_battle(RoadEscort) && !escort.begin_land_battle(RoadEscort));
+    assert(!escort.move_land_unit(0,land_cell({4,3})) && escort.move_land_unit(0,land_cell({3,3})));
+    assert(!escort.move_land_unit(0,land_cell({4,3})) && escort.brace_land_unit(1));
+    assert(decode(saved,encode(escort.s)) && saved.land_fight.units[0].orders&LandMoved);
+    assert(escort.end_land_round() && escort.s.land_fight.round==2 &&
+           !(escort.s.land_fight.units[0].orders&LandMoved));
+    auto& fight=escort.s.land_fight;
+    fight.units[0].cell=land_cell({7,3});
+    for (int i=LandFriends;i<LandUnits;++i) fight.units[i].cell=land_cell({i-2,5});
+    const int gold=escort.s.gold;
+    assert(escort.move_land_unit(0,land_cell({8,3})) && escort.s.gold==gold+90 &&
+           (escort.s.shore_campaign&1) && !escort.begin_land_battle(RoadEscort));
+}
+
 void island_settlements() {
     Game colony;
     colony.s.origin=madeira;
@@ -672,7 +708,15 @@ void island_settlements() {
     siege.s.chart_marks|=place_bit(azores);
     assert(siege.enclave_here()==1 && !siege.siege_enclave(1));
     siege.s.guns=3;
-    assert(siege.siege_enclave(1) && siege.s.enclaves[1].status==EnclaveOccupied);
+    assert(siege.siege_enclave(1) && siege.s.land_fight.kind==WharfAssault &&
+           siege.s.enclaves[1].status==EnclaveClosed);
+    assert(decode(saved,encode(siege.s)) && saved.land_fight.kind==WharfAssault);
+    auto& forces=siege.s.land_fight.units;
+    const int flag=land_cell(land_field(WharfAssault,1).objective);
+    forces[0].cell=flag-1;
+    assert(siege.move_land_unit(0,flag) && siege.s.land_fight.kind);
+    assert(siege.end_land_round() && siege.s.enclaves[1].status==EnclaveOccupied &&
+           !siege.s.land_fight.kind);
     assert(siege.s.enclaves[1].prisoners==3 && siege.s.court_hold_until[Portugal]>siege.s.day);
     const int before=siege.s.court_hold_until[Portugal];
     assert(decode(saved,encode(siege.s)) && saved.enclaves[1].prisoners==3);
@@ -1833,6 +1877,7 @@ int main() {
     continuous_helm();
     chart_skirmish();
     coastal_fishery();
+    regional_specialties_and_land_combat();
     island_settlements();
     merchant_raids_and_patrols();
     sailing_units();

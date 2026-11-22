@@ -3,6 +3,7 @@
 #include "pilot_draw.hpp"
 #include "game_audio.hpp"
 #include "game_save.hpp"
+#include "land_draw.hpp"
 #include "sea_art.hpp"
 #include "town.hpp"
 #include <pxa/app.hpp>
@@ -31,7 +32,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage, LandBriefing, SpecialtyInfo
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -89,7 +90,9 @@ enum Action {
     EnclaveConstruction=EnclaveEntry+EnclaveCount, EnclaveSupply=EnclaveConstruction+EnclaveBuildingCount, PrepareMerchantRaid=EnclaveSupply+4, ConfirmMerchantRaid, RenderWhaleOil,
     EnterPilot, LeavePilot, PilotZoomIn, PilotZoomOut, PilotCenter, PilotMoor, PilotUnmoor,
     PilotWaterBuy, PilotFoodBuy, PilotBookOpen, PilotStoryOpen, PilotGuide, PilotAim, PilotOpenParcel,
-    PilotHandleParcel, PilotSpeed, PilotCenterShip, PilotCoastHint, PilotSiteEntry
+    PilotHandleParcel, PilotSpeed, PilotCenterShip, PilotCoastHint,
+    ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
+    LandBrace, LandEndRound, LandRetreat, LandCellAction, PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(SellWhaleOil<DockService);
@@ -126,6 +129,11 @@ struct VoyageApp {
     GameAudio audio;
     SeaPicture sea_picture;
     PilotAtlas pilot_atlas;
+    Rect land_area{};
+    LandFight land_before;
+    unsigned land_frame_start=0;
+    int land_selected=0, land_striker=-1;
+    bool land_retreat=false;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
     // Loading completes before gameplay can start. Subsequent saves use one
@@ -444,7 +452,7 @@ struct VoyageApp {
     void on_frame(pxa::Context&, pxa::game::FrameTick tick) {
         if (!foreground) return;
         now=unsigned(tick.timestamp_us / 1000);
-        const bool battle=game.s.weather==Privateer || game.duel();
+        const bool battle=game.s.weather==Privateer || game.duel() || game.s.land_fight.kind;
         audio.tick(tick.timestamp_us,battle?Score::Battle:!title && game.sea()?Score::Voyage:Score::Harbor);
         if ((reconfigure || !surface) && !opening && now>=surface_retry) {
             opening=true;
@@ -465,6 +473,8 @@ struct VoyageApp {
         }
 
         if (!title && game.s.skirmish.active) update_skirmish();
+        if (!title && game.s.land_fight.kind && land_frame_start && now-land_frame_start<220)
+            dirty=true;
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
             const unsigned interval=voyage_interval();
@@ -644,7 +654,8 @@ struct VoyageApp {
         d.image({art::navigation},{icon%4*42,icon/4*42,42,42},r,true);
     }
     void goods_icon(Draw& d, int icon, Rect r) {
-        d.image({art::goods},{icon%4*48,icon/4*48,48,48},r,true);
+        if (icon<GoodsCount) d.image({art::goods},{icon%4*48,icon/4*48,48,48},r,true);
+        else d.image({art::specialty_icons},{(icon-GoodsCount)*24,0,24,24},r,true);
     }
     void voyage_icon(Draw& d, int icon, Rect r) {
         d.image({art::voyage_icons},{icon%3*32,icon/3*32,32,32},r,true);
@@ -654,10 +665,11 @@ struct VoyageApp {
     }
     void port_scene(Draw& d, Rect area, int port) {
         if (port<0 || port>=PortCount || area.w<1 || area.h<1) return;
-        constexpr int tw=188, th=105;
-        const int width=std::min(tw,th*area.w/area.h);
-        const int height=std::min(th,tw*area.h/area.w);
-        d.image({art::ports},{Zone[port]*tw+(tw-width)/2,(th-height)/2,width,height},area);
+        if (const auto* view=sea_picture.pixels(harbor_picture(port))) {
+            const int width=std::min(SeaPictureWidth,SeaPictureHeight*area.w/area.h);
+            const int height=std::min(SeaPictureHeight,SeaPictureWidth*area.h/area.w);
+            d.image({view},{(SeaPictureWidth-width)/2,(SeaPictureHeight-height)*2/5,width,height},area);
+        } else d.fill(area,ocean);
     }
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
                 Text price={}, int glyph=-1) {
@@ -1766,6 +1778,13 @@ struct VoyageApp {
 
     int market_pitch() const { return dense_layout()?17:19; }
     int market_rows() const { return std::clamp((body.h-72)/market_pitch(),2,8); }
+    int market_selection_page() const { return (good>=GoodsCount?good-GoodsCount:good)/market_rows(); }
+
+    static FormattedText market_prices(int buy,int sell) {
+        if (!buy && !sell) return format("%s","—");
+        if (!buy) return format("— / %d",sell);
+        return format("%d / %d",buy,sell);
+    }
 
     void market(Draw& d) {
         if (!game.port()) {
@@ -1782,11 +1801,14 @@ struct VoyageApp {
         }
         const auto& s=game.s;
         const int rows=market_rows();
-        const int pages=(GoodsCount+rows-1)/rows;
+        const bool specials=good>=GoodsCount;
+        const int first=specials?int(GoodsCount):0;
+        const int count=specials?SpecialtyCount:int(GoodsCount);
+        const int pages=(count+rows-1)/rows;
         page=std::clamp(page,0,pages-1);
         const int x=body.x, y=body.y, w=body.w;
         skin_box(d,body,0,6);
-        const bool regional=std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
+        const bool regional=!specials && std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
         voyage_icon(d,CargoIcon,{x+5,y+2,13,13});
         d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold,regional?w-174:w-21);
         const int right=x+w-4;
@@ -1794,39 +1816,48 @@ struct VoyageApp {
             button(d,{right-150,y+1,45,18},"船讯",ShowMerchants);
             if (w>=315) d.label(right-197,y+2,"买/卖",quiet);
         } else if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
-        button(d,{right-101,y+1,53,18},"议价",ShowBargain,false,false,{},SpeechIcon);
+        button(d,{right-101,y+1,53,18},specials?"货源":"议价",specials?ShowSpecialty:ShowBargain,false,false,{},SpeechIcon);
         button(d,{right-44,y+1,42,18},"比价",ShowPortPrices);
-        for (int i=0; i<rows && page*rows+i<GoodsCount; ++i) {
-            const int g=page*rows+i;
+        for (int i=0; i<rows && page*rows+i<count; ++i) {
+            const int g=first+page*rows+i;
             const Rect item{x+3,y+19+i*market_pitch(),w-6,market_pitch()-1};
             const bool foc=pad_focus && button_count==focused;
             d.fill(item,foc ? rgb(0x3b5550) : g==good ? light : (i%2 ? rgb(0x1e3b3f) : panel));
             if (foc || g==good) nav_icon(d,CursorIcon,{item.x+1,item.y+4,10,10});
             goods_icon(d,g,{item.x+13,item.y,item.h,item.h});
-            d.label(item.x+34,item.y+2,GoodsNames[g],g==good ? gold : ivory);
-            d.label(item.x+83,item.y+2,format("%d",s.cargo[g]),mint);
-            const auto price=format("%d / %d",game.quote(g,false),game.quote(g,true));
+            const auto access=market_access(s.origin,g);
+            const int cargo_x=specials?110:83;
+            d.label(item.x+34,item.y+2,GoodsNames[g],g==good?gold:access==MarketAccess::Closed?mist:ivory,cargo_x-36);
+            d.label(item.x+cargo_x,item.y+2,format("%d",s.cargo[g]),mint);
+            const auto price=market_prices(game.quote(g,false),game.quote(g,true));
             d.label(right-d.measure(price)-5,item.y+2,price,ivory);
             if (w>=220) {
                 const int stock=game.stock(g);
-                const Text supply=stock==0?"缺货":stock<=7?"紧缺":stock>=24?"充足":"平稳";
-                d.label(item.x+111,item.y+2,supply,stock<=7?vermilion:stock>=24?mint:quiet,
-                        right-d.measure(price)-120-item.x);
+                const Text supply=access==MarketAccess::Closed?"不经营":access==MarketAccess::Buyer?"仅收购":
+                                  !stock?"售罄":access==MarketAccess::Producer?"本港出产":
+                                  stock<=7?"紧缺":stock>=24?"充足":"平稳";
+                const int meta=cargo_x+27, room=right-d.measure(price)-10-item.x-meta;
+                if (room>=d.measure(supply))
+                    d.label(item.x+meta,item.y+2,supply,access==MarketAccess::Producer?gold:stock?quiet:vermilion);
             }
             buttons[button_count++]={item,GoodsRow+g};
         }
-        const bool negotiated=s.bargain_good==good+1;
+        const bool negotiated=!specials && s.bargain_good==good+1;
         const auto* news=market_notice(s.origin,good,s.day);
         const bool road_goods=s.origin==lisbon && good==Timber && game.road_timber_bonus()>0;
         const Text stock_note=news?(news->price_percent>0?"求购中":"到货中"):road_goods?"驿道来货":"";
-        const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
+        const auto access=market_access(s.origin,good);
+        const auto note=access==MarketAccess::Closed?format("%s 不经营",GoodsNames[good].data()):
+                        access==MarketAccess::Buyer?format("%s 仅收购",GoodsNames[good].data()):
+                        format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
         const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
         if (s.whale_oil || s.whale_blubber)
             button(d,{x+4,body.bottom()-54,std::min(104,w-71),22},
                    format("%s ×%d",s.whale_blubber?"鲸脂":"鲸油",int(s.whale_blubber?s.whale_blubber:s.whale_oil)),
                    ShowFishBook,true);
         else d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
-                     negotiated?mint:news || road_goods?gold:mist,w-(pages>1?72:10));
+                     negotiated?mint:news || road_goods?gold:mist,w-(pages>1?115:57));
+        button(d,{right-(pages>1?106:47),body.bottom()-54,44,23},specials?"常货":"特产",ToggleSpecialties,specials);
         if (pages>1) {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
@@ -1846,6 +1877,13 @@ struct VoyageApp {
             const auto price=format("%d%s",offer.gold,width>=48?"金":"");
             button(d,r,label,BuyOne+i,i==0 || offer.saved,!offer.units,offer.units?Text(price):Text("—"));
         }
+    }
+
+    void specialty_info(Draw& d) {
+        page_title(d,GoodsNames[good],CargoIcon);
+        goods_icon(d,good,{body.x+8,body.y+35,34,34});
+        d.wrap({body.x+49,body.y+32,body.w-58,body.h-73},specialty_note(good),ivory,16);
+        button(d,{body.x+5,body.bottom()-29,body.w-10,25},"查看已到访港口的收购价",ShowPortPrices,true);
     }
 
     void trade_quantity_page(Draw& d) {
@@ -2323,12 +2361,18 @@ struct VoyageApp {
             d.wrap({x,top+20,w,bottom-top-48},"家人到码头找人。放人能缩短港务留案，收赎金也可送他们回家。",ivory,14);
             button(d,{x,bottom-25,span,23},"释放守卫",ReleaseGuards,true,!local);
             button(d,{x+span+4,bottom-25,w-span-4,23},"交换赎金",RansomGuards,false,!local);
-        } else {
-            d.label(x,top+2,format("守备%d  我方%d",site.resistance,game.enclave_assault_power()),gold,w);
-            const auto blocked=game.enclave_siege_requirement(enclave_item);
+        } else if (h.status) {
+            const auto blocked=game.land_battle_requirement(WharfDefense,enclave_item);
+            d.label(x,top+2,"仓房守卫",gold,w);
             d.wrap({x,top+19,w,bottom-top-48},blocked.empty()?
-                   Text("封锁码头需两日，守军会反击。无论胜负，葡萄牙都会暂禁交易。"):blocked,ivory,14);
-            button(d,{x,bottom-25,w,23},"下令夺取码头",StormEnclave,false,!blocked.empty());
+                   Text("有人盯上新入仓的粮袋。带队守住仓房五回合，保护村里的存粮。"):blocked,ivory,14);
+            button(d,{x,bottom-25,w,23},"布置防守",DefendEnclave,true,!local || !blocked.empty());
+        } else {
+            d.label(x,top+2,"码头的争夺",gold,w);
+            const auto blocked=game.land_battle_requirement(WharfAssault,enclave_item);
+            d.wrap({x,top+19,w,bottom-top-48},blocked.empty()?
+                   Text("亲自带队控制旗位。争夺会耗去两日水粮，胜负都会留下港务留案。"):blocked,ivory,14);
+            button(d,{x,bottom-25,w,23},"带队争夺",StormEnclave,false,!blocked.empty());
         }
     }
 
@@ -2392,10 +2436,12 @@ struct VoyageApp {
         }
         const bool has_town=game.port() && town_index(game.s.origin)>=0;
         const bool village=game.enclave_here()>=0;
+        const bool escort=game.port() && game.s.origin==lisbon && !(game.s.shore_campaign&1);
         d.label(body.x+9,body.y+6,p.name,gold,body.w-(has_town?87:18)-(village?62:0));
         d.label(body.x+9,body.y+22,p.region,ivory,body.w-18);
         if (has_town) button(d,{body.right()-66,body.y+6,58,22},"进城",OpenTown,true);
         if (village) button(d,{body.right()-(has_town?128:66),body.y+6,58,22},"村镇",ShowLocalEnclave);
+        if (escort) button(d,{body.right()-128,body.y+6,58,22},"陆战",OpenLandBriefing);
         const int y=body.y+banner+8;
         if (game.port()) {
             const int dest=valid_contract ? game.s.contract : game.proposal();
@@ -2607,6 +2653,9 @@ struct VoyageApp {
     }
     int visible_sea_picture() const {
         if (title) return Calm;
+        if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
+        if (screen==Office && modal==None && game.port() && !game.s.land_fight.kind)
+            return harbor_picture(game.s.origin);
         if (const int detail=visible_pilot_detail();detail>=0) return PilotPictureBase+detail;
         if (game.s.pilot.region || pilot_pending>=0) return Calm;
         if (modal==FishBook) return FisheryPicture;
@@ -2858,6 +2907,11 @@ struct VoyageApp {
         const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
         constexpr int scene_w=288, scene_h=136;
         if (outside) d.image({art::outskirts},{0,0,scene_w,scene_h},view);
+        else if (const int picture=harbor_street_picture(Towns[city].port); picture!=Calm) {
+            if (const auto* image=sea_picture.pixels(picture))
+                d.image({image},{0,0,SeaPictureWidth,SeaPictureHeight},view);
+            else d.fill(view,ocean);
+        }
         else if (Towns[city].port==calicut) d.image({art::calicut},{0,0,scene_w,scene_h},view);
         else d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
         d.frame(view,rgb(0x342921));
@@ -3428,7 +3482,7 @@ struct VoyageApp {
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
             const int port=order[page*rows+i];
-            const auto prices=format("%d / %d",game.price_at(port,good,false),game.price_at(port,good,true));
+            const auto prices=market_prices(game.price_at(port,good,false),game.price_at(port,good,true));
             row(d,i,Places[port].name,prices,Destination+port,port==game.s.origin,47);
         }
         if (pages>1) pager(d,pages);
@@ -4261,10 +4315,159 @@ struct VoyageApp {
             font_choice==SmallFont?"紧凑":"标准";
         row(d,3,"界面字号",text,loaded?CycleFont:0,true);
     }
+    void land_briefing(Draw& d) {
+        page_title(d,"里斯本 · 林道护送",CrewIcon);
+        d.wrap({body.x+8,body.y+31,body.w-16,body.h-62},
+               "三袋船粮等着从林道运回码头。货主说有人在路口拦车。带两名同伴送队长走到金色路标，护送成功可得90金。",
+               ivory,16);
+        const auto blocked=game.land_battle_requirement(RoadEscort);
+        button(d,{body.x+5,body.bottom()-28,body.w-10,24},blocked.empty()?"带队出城":blocked,
+               StartRoadEscort,true,!blocked.empty(),{},CrewIcon);
+    }
+
+    void show_land_battle() {
+        land_selected=0;
+        land_striker=-1;
+        land_retreat=false;
+        land_frame_start=0;
+        set_modal(None);
+        changed();
+    }
+
+    Rect land_tile(int cell) const {
+        const auto p=land_point(cell);
+        const int w=land_area.w/LandColumns,h=land_area.h/LandRows;
+        return {land_area.x+p.x*w,land_area.y+p.y*h,w,h};
+    }
+
+    Point land_unit_point(int cell) const {
+        const auto tile=land_tile(cell);
+        return {tile.x+tile.w/2,tile.bottom()-4};
+    }
+
+    void land_screen(Draw& d) {
+        const auto& fight=game.s.land_fight;
+        if (land_selected<0 || land_selected>=LandFriends || !fight.units[land_selected].hp) land_selected=0;
+        skin_box(d,safe,0,6);
+        constexpr Text names[]{"","林道护送","码头争夺","守住仓房"};
+        const auto goal=fight.kind==RoadEscort?"让队长抵达金旗":
+            fight.kind==WharfAssault?"占住金旗并撑过敌方回合":"守住仓房五回合";
+        d.label(safe.x+7,safe.y+7,names[fight.kind],gold,safe.w-73);
+        const auto round=format("回合 %d",int(fight.round));
+        d.label(safe.right()-d.measure(round)-7,safe.y+7,round,ivory);
+        d.label(safe.x+7,safe.y+23,goal,mist,safe.w-14);
+        const int cell_h=std::max(13,(safe.h-88)/LandRows);
+        const int cell_w=std::min((safe.w-12)/LandColumns,cell_h*2);
+        land_area={safe.x+(safe.w-cell_w*LandColumns)/2,safe.y+40,
+                   cell_w*LandColumns,cell_h*LandRows};
+        const int focus=pad_focus?focused:-1;
+        const auto steps=land_steps(fight,land_selected);
+        const auto old_clip=d.clip;
+        d.clip=d.clipped(land_area);
+        for (int cell=0;cell<LandCells;++cell) {
+            const auto tile=land_tile(cell);
+            const int unit=land_occupant(fight,cell);
+            const bool move=steps[cell]!=255 && steps[cell]>0;
+            const bool target=unit>=LandFriends && land_can_strike(fight,land_selected,unit);
+            draw_land_ground(d,tile,land_ground(fight,cell),cell,fight.kind!=RoadEscort);
+            if (unit==land_selected || target)
+                d.frame(tile.inset(1),target?vermilion:gold);
+            if (move)
+                d.diamond({tile.x+tile.w/2,tile.y+tile.h/2},2,mint);
+            if (move || (unit>=0 && unit<LandFriends) || target) {
+                if (button_count==focus) d.frame(tile.inset(2),mint);
+                buttons[button_count++]={tile,LandCellAction+cell};
+            }
+        }
+        const int elapsed=land_frame_start?std::min(220U,now-land_frame_start):220;
+        for (int y=0;y<LandRows;++y) for (int i=0;i<LandUnits;++i) {
+            const auto unit=fight.units[i];
+            if (!unit.hp || land_point(unit.cell).y!=y) continue;
+            Point at=land_unit_point(unit.cell);
+            const auto before=land_before.units[i];
+            const bool walking=elapsed<170 && before.hp && before.cell!=unit.cell;
+            if (walking) {
+                const auto old=land_unit_point(before.cell);
+                at={old.x+(at.x-old.x)*elapsed/170,old.y+(at.y-old.y)*elapsed/170};
+            }
+            const int pose=elapsed<165 && (land_striker==i ||
+                (i>=LandFriends && before.hp && !(before.orders&LandStruck) && (unit.orders&LandStruck)))?2:
+                walking && (elapsed/45)%2?1:unit.orders&LandBraced?3:0;
+            const int role=i==0?0:i<LandFriends?1:2;
+            const int sprite_h=std::clamp(cell_h-1,13,24), sprite_w=sprite_h*24/27;
+            const auto team=i<LandFriends?mint:vermilion;
+            d.diamond({at.x,at.y+1},i==land_selected?7:5,ink);
+            d.diamond({at.x,at.y},i==land_selected?6:4,team);
+            d.image({art::shore_troops},{pose*24,role*27,24,27},
+                    {at.x-sprite_w/2,at.y-sprite_h+2,sprite_w,sprite_h},true,i>=LandFriends);
+            const int hp_y=at.y-sprite_h;
+            d.fill({at.x-7,hp_y,14,3},ink);
+            d.fill({at.x-6,hp_y+1,12*unit.hp/land_max_hp(i),1},team);
+            if (elapsed<150 && before.hp>unit.hp) d.diamond({at.x+6,at.y-8},3,gold);
+        }
+        d.clip=old_clip;
+        d.frame(land_area,border);
+        const auto unit=fight.units[land_selected];
+        constexpr Text crew[]{"队长","矛手","水手"};
+        const auto status=format("%s  %d/%d  %s",crew[land_selected].data(),int(unit.hp),
+                                 land_max_hp(land_selected),unit.orders&LandStruck?"已行动":"可攻击");
+        d.label(safe.x+7,land_area.bottom()+4,status,ivory,safe.w-14);
+        const int width=(safe.w-16)/3, bottom=safe.bottom()-26;
+        button(d,{safe.x+5,bottom,width,23},"架盾",LandBrace,false,(unit.orders&LandStruck)!=0);
+        button(d,{safe.x+8+width,bottom,width,23},"结束回合",LandEndRound,true);
+        button(d,{safe.x+11+2*width,bottom,width,23},land_retreat?"确认撤退":"撤退",LandRetreat,land_retreat);
+    }
+
+    void land_result(LandFight before,int striker=-1) {
+        land_before=before;
+        land_striker=striker;
+        land_frame_start=now;
+        land_retreat=false;
+        if (!game.s.land_fight.kind) {
+            screen=Office;
+            if (before.kind==RoadEscort) set_modal(None);
+            else {
+                enclave_item=before.site;
+                enclave_tab=3;
+                set_modal(EnclavePage);
+            }
+        }
+        changed();
+    }
+
+    void land_action(int action) {
+        const auto before=game.s.land_fight;
+        if (action==LandRetreat) {
+            if (land_retreat) { game.withdraw_land_battle(); land_result(before); }
+            else land_retreat=true;
+            return;
+        }
+        land_retreat=false;
+        if (action==LandBrace) {
+            if (game.brace_land_unit(land_selected)) land_result(before);
+        } else if (action==LandEndRound) {
+            if (game.end_land_round()) land_result(before);
+        } else if (action>=LandCellAction && action<LandCellAction+LandCells) {
+            const int cell=action-LandCellAction, unit=land_occupant(before,cell);
+            if (unit>=0 && unit<LandFriends) land_selected=unit;
+            else if (unit>=LandFriends) {
+                if (game.strike_land_unit(land_selected,unit)) {
+                    audio.cue(Sound::Steel);
+                    land_result(before,land_selected);
+                }
+            } else if (game.move_land_unit(land_selected,cell)) land_result(before);
+        }
+    }
+
     void render(Draw& d) {
         layout(d);
         d.fill(d.clip,ink);
         button_count=0;
+        if (!title && game.s.land_fight.kind) {
+            land_screen(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
         if (modal==HarborTown) {
             town_screen(d);
             focused=std::clamp(focused,0,std::max(0,button_count-1));
@@ -4338,6 +4541,8 @@ struct VoyageApp {
         case PilotBook: pilot_book(d); break;
         case PilotStory: pilot_story(d); break;
         case PilotParcelPage: pilot_parcel_page(d); break;
+        case SpecialtyInfo: specialty_info(d); break;
+        case LandBriefing: land_briefing(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -4377,6 +4582,10 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (!title && game.s.land_fight.kind) {
+            land_action(action);
+            return;
+        }
         if (action>=QuantityDigit && action<QuantityDigit+10) {
             if (modal==TradeQuantityPage && trade_quantity<100)
                 trade_quantity=trade_quantity*10+action-QuantityDigit;
@@ -4474,6 +4683,23 @@ struct VoyageApp {
         }
         if (action>=OpenLanguages) {
             switch (action) {
+            case ToggleSpecialties:
+                good=good>=GoodsCount?int(Wine):int(MadeiraSugar);
+                page=0;
+                break;
+            case ShowSpecialty:
+                if (good>=GoodsCount) set_modal(SpecialtyInfo);
+                break;
+            case OpenLandBriefing:
+                if (game.port() && game.s.origin==lisbon) set_modal(LandBriefing);
+                break;
+            case StartRoadEscort:
+                if (modal==LandBriefing && game.begin_land_battle(RoadEscort)) show_land_battle();
+                break;
+            case DefendEnclave:
+                if (modal==EnclavePage && game.begin_land_battle(WharfDefense,enclave_item)) show_land_battle();
+                else notify();
+                break;
             case EnterPilot:
                 if (pilot_pending>=0 || game.s.pilot.region || game.encounter()) break;
                 if (game.s.fishery.target) { game.notice="先收回渔具，再换领航图"; notify(); break; }
@@ -4633,7 +4859,7 @@ struct VoyageApp {
                 if (game.sell_enclave_exports(enclave_item)) changed();
                 break;
             case StormEnclave:
-                if (game.siege_enclave(enclave_item)) changed();
+                if (game.siege_enclave(enclave_item)) show_land_battle();
                 else notify();
                 break;
             case ReleaseGuards: case RansomGuards:
@@ -4974,12 +5200,12 @@ struct VoyageApp {
             if (!game.sea()) select(action-Destination);
             return;
         }
-        if (action>=GoodsRow) { good=action-GoodsRow; return; }
+        if (action>=GoodsRow && action<GoodsRow+int(MarketGoodsCount)) { good=action-GoodsRow; return; }
         if (action>=DockService) { game.service(action-DockService); changed(); return; }
         if (action>=OpenChart && action<=OpenJournal) {
             inside_town_facility=false;
             screen=Screen(action-OpenChart);
-            page=0;
+            page=screen==Market?market_selection_page():0;
             set_modal(None);
             return;
         }
@@ -5380,6 +5606,7 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (game.s.land_fight.kind) { land_retreat=!land_retreat; dirty=true; return true; }
         if (game.s.skirmish.active && !title) {
             if (!game.paused) activate(Pause);
             return true;
@@ -5430,7 +5657,7 @@ struct VoyageApp {
             else if (modal==LanguageDesk) set_modal(language_back);
             else if (modal==TideLedger) set_modal(LanguageDesk);
             else if (modal==MarketNews) { page=0; set_modal(PortPrices); }
-            else if (modal==PortPrices) { page=good/market_rows(); set_modal(None); }
+            else if (modal==PortPrices || modal==SpecialtyInfo) { page=market_selection_page(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }
         else if (game.sea() && !game.encounter()) { game.paused=true; dirty=true; }

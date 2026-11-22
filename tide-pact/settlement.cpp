@@ -190,15 +190,12 @@ Text Game::enclave_siege_requirement(int site) const {
     return {};
 }
 
-int Game::enclave_assault_power() const {
-    return s.crew+s.guns*8+s.hull/9+s.spirits/12+(s.first_mate==Boatswain?5:0);
+bool Game::siege_enclave(int site) {
+    return begin_land_battle(WharfAssault,site);
 }
 
-bool Game::siege_enclave(int site) {
-    const auto reason=enclave_siege_requirement(site);
-    if (!reason.empty()) { notice=reason; return false; }
+void Game::resolve_enclave_siege(int site,bool victory) {
     auto& holding=s.enclaves[site];
-    const bool victory=enclave_assault_power()>=EnclaveSites[site].resistance;
     s.stores-=2*daily_rations();
     s.water-=2*daily_water(Fair);
     s.hull-=victory?10:25;
@@ -218,7 +215,6 @@ bool Game::siege_enclave(int site) {
         holding.prisoners=3;
         notice="夺下码头，三名守卫投降。港务已发出通报";
     } else notice="守卫挡住攻势，船队撤回锚地";
-    return true;
 }
 
 bool Game::decide_enclave_prisoners(int site,int choice) {

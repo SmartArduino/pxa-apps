@@ -12,18 +12,18 @@ struct EnclaveSite {
     int home;
     Point position;
     Text name, ground, people;
-    int fee, resistance, crop_yield, timber_yield;
+    int fee, crop_yield, timber_yield;
 };
 
 inline constexpr EnclaveSite EnclaveSites[]{
     {madeira,chart_point(-16.766f,32.719f),"马希库",
      "小湾背风，有溪水和灌渠。狭谷里可种菜，木料要从山坡运下。",
      "卡塔琳娜说：暴雨冲走了过溪的木桥。商船靠在湾里，村里就得派人划小艇去卸粮。你肯修码头，渔户就留下帮工。",
-     145,37,3,2},
+     145,3,2},
     {azores,chart_point(-25.437f,37.716f),"维拉弗兰卡多坎普",
      "圣米格尔岛南岸。田地肥沃，外海涌浪会穿过锚地。",
      "米格尔说：移居到岛上的人都要找屋住。先把粮库和水井看好，开荒的人吃得饱才会把家人带来。",
-     115,41,4,1},
+     115,4,1},
 };
 inline constexpr int EnclaveCount=std::size(EnclaveSites);
 

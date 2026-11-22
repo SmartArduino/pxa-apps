@@ -164,6 +164,7 @@ int main() {
     water=atlas.read(crossing.s.pilot.patch);
     assert(water.navigable({crossing.s.pilot.x,crossing.s.pilot.y}));
     check_legacy<WorldPilotSaveBytes>(crossing.s,0x4b);
+    check_legacy<CoastalSaveBytes>(crossing.s,0x4c);
 
     const auto& tagus=PilotRegions[0];
     std::array<unsigned char,PilotMapBytes> tagus_bytes{};

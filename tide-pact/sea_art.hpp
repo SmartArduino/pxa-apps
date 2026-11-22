@@ -10,6 +10,22 @@ inline constexpr unsigned VesselFrameMs=135;
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
 inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
+inline constexpr int HarborPictureBase=160;
+inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture=HarborPictureBase+9;
+
+inline int harbor_picture(int port) {
+    switch (port) {
+    case lisbon: return HarborPictureBase+4;
+    case venice: return HarborPictureBase+5;
+    case kilwa: return HarborPictureBase+6;
+    case calicut: return HarborPictureBase+7;
+    default: return HarborPictureBase+Zone[port];
+    }
+}
+
+inline int harbor_street_picture(int port) {
+    return port==venice?VeniceStreetPicture:port==kilwa?KilwaStreetPicture:Calm;
+}
 inline constexpr int PilotMarkSize=22, SmallShipSize=16, SmallShipStride=8*SmallShipSize;
 
 inline bool pilot_picture(int kind) {
@@ -18,6 +34,12 @@ inline bool pilot_picture(int kind) {
 
 inline Text sea_picture_path(int kind) {
     if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
+    constexpr Text ports[]{"assets/ports/atlantic.pxi","assets/ports/mediterranean.pxi",
+        "assets/ports/islands.pxi","assets/ports/indian.pxi","assets/ports/lisbon.pxi",
+        "assets/ports/venice.pxi","assets/ports/kilwa.pxi","assets/ports/calicut.pxi",
+        "assets/ports/venice-streets.pxi","assets/ports/kilwa-streets.pxi"};
+    if (kind>=HarborPictureBase && kind<HarborPictureBase+int(std::size(ports)))
+        return ports[kind-HarborPictureBase];
     switch (kind) {
     case Castaways: return "assets/sea/castaways.pxi";
     case FalseBeacon: return "assets/sea/false-beacon.pxi";

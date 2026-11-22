@@ -240,6 +240,41 @@ const MarketNotice* market_notice(int port, int good, int day) {
 }
 
 namespace {
+struct Specialty {
+    int source, price, stock;
+    std::uint64_t buyers;
+    Text note;
+};
+
+constexpr Specialty specialties[]{
+    {madeira,76,14,place_bit(lisbon)|place_bit(bruges)|place_bit(bordeaux)|place_bit(venice)|place_bit(cadiz),
+     "丰沙尔有糖坊，布鲁日和波尔多的商人会收这批糖。"},
+    {bergen,58,17,place_bit(bristol)|place_bit(bruges)|place_bit(bordeaux)|place_bit(lisbon),
+     "卑尔根收北方渔村晾的鳕鱼干，可运往布里斯托尔或布鲁日。"},
+    {venice,156,9,place_bit(genoa)|place_bit(valencia)|place_bit(tunis)|place_bit(alexandria)|place_bit(lisbon),
+     "威尼斯商人从穆拉诺进玻璃器，可问热那亚和亚历山大的买家。"},
+    {elmina,180,8,place_bit(lisbon)|place_bit(tangier)|place_bit(tunis)|place_bit(venice),
+     "埃尔米纳有称重收金的人，里斯本和突尼斯也有买家。"},
+    {calicut,94,13,place_bit(aden)|place_bit(hormuz)|place_bit(muscat)|place_bit(alexandria)|place_bit(lisbon),
+     "卡利卡特有晒干的姜，亚丁和霍尔木兹的商人会收货。"},
+};
+static_assert(std::size(specialties)==SpecialtyCount);
+
+int specialty_stock_base(int index,int day) {
+    constexpr int season[]{0,3,1,-2};
+    return specialties[index].stock+season[(day/28+index)%4];
+}
+
+int specialty_price(int port,int good,bool sell,int supply,int demand,int day) {
+    const int index=good-GoodsCount;
+    const auto& special=specialties[index];
+    const int seasonal=((day/21+port+index)%5-2)*3;
+    if (port!=special.source)
+        return special.price*(131+seasonal)/100-demand*std::max(1,special.price/78);
+    const int shortage=std::max(0,specialty_stock_base(index,day)-supply);
+    return special.price*((sell?63:83)+seasonal)/100+shortage*std::max(1,special.price/88);
+}
+
 int stock_base(int port, int good, int day, int road_timber) {
     constexpr int seasonal[]{-2,0,3,1};
     return 17+Bias[port][good]*6+seasonal[(day/29+port+good)%4]+(port==lisbon && good==Timber?road_timber:0);
@@ -262,8 +297,29 @@ int daily_stock_change(int port, int good, int delta, int day, int road_timber) 
 }
 }
 
+MarketAccess market_access(int port,int good) {
+    if (port<0 || port>=PortCount || good<0 || good>=MarketGoodsCount) return MarketAccess::Closed;
+    if (good>=GoodsCount) {
+        const auto& special=specialties[good-GoodsCount];
+        if (port==special.source) return MarketAccess::Producer;
+        return special.buyers&place_bit(port)?MarketAccess::Buyer:MarketAccess::Closed;
+    }
+    if ((good==Porcelain && (port==vardo || port==santo_domingo)) ||
+        (good==Wool && port==mpinda)) return MarketAccess::Closed;
+    return MarketAccess::Trading;
+}
+
+Text specialty_note(int good) {
+    return good>=GoodsCount && good<MarketGoodsCount?specialties[good-GoodsCount].note:Text{};
+}
+
 int Game::market_stock(int port, int good) const {
-    if (port<0 || port>=PortCount || good<0 || good>=GoodsCount) return 0;
+    const auto access=market_access(port,good);
+    if (access==MarketAccess::Closed || access==MarketAccess::Buyer) return 0;
+    if (access==MarketAccess::Producer) {
+        const int index=good-GoodsCount;
+        return std::clamp(specialty_stock_base(index,s.day)+s.specialty_stock[index],0,24);
+    }
     return std::clamp(stock_base(port,good,s.day,road_timber_bonus())+s.stock_delta[port*GoodsCount+good],0,65);
 }
 
@@ -282,17 +338,39 @@ int Game::market_price(int port, int good, bool sell, int supply, int day, bool 
 }
 
 int Game::price_at(int port, int good, bool sell) const {
-    if (port<0 || port>=PortCount || good<0 || good>=GoodsCount) return 0;
+    const auto access=market_access(port,good);
+    if (access==MarketAccess::Closed || (!sell && access==MarketAccess::Buyer)) return 0;
+    if (good>=GoodsCount)
+        return specialty_price(port,good,sell,market_stock(port,good),s.specialty_demand[good-GoodsCount],s.day);
     return market_price(port,good,sell,market_stock(port,good),s.day);
 }
 
 int Game::quote(int good, bool sell) const { return price_at(s.origin,good,sell); }
 
 TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const {
-    if (!port() || market_held() || good<0 || good>=GoodsCount || quantity<=0) return {};
+    if (!port() || market_held() || good<0 || good>=MarketGoodsCount || quantity<=0) return {};
+    const int port=s.origin;
+    const auto access=market_access(port,good);
+    if (access==MarketAccess::Closed || (!sell && access==MarketAccess::Buyer)) return {};
     const int limit=std::min(quantity,sell ? s.cargo[good] : capacity()-load());
     const int budget=sell ? 999999-s.gold : s.gold;
-    const int port=s.origin, base_stock=stock_base(port,good,s.day,road_timber_bonus());
+    if (good>=GoodsCount) {
+        const int index=good-GoodsCount;
+        const bool buyer=access==MarketAccess::Buyer;
+        int supply=market_stock(port,good), demand=s.specialty_demand[index];
+        TradeQuote offer{};
+        while (offer.units<limit && (buyer?demand<14:sell?supply<24:supply>0)) {
+            const int gold=specialty_price(port,good,sell,supply,demand,s.day);
+            if (limit_gold && offer.gold+gold>budget) break;
+            ++offer.units;
+            offer.gold+=gold;
+            if (buyer) ++demand;
+            else supply+=sell?1:-1;
+        }
+        offer.stock_change=buyer?demand:supply-specialty_stock_base(index,s.day);
+        return offer;
+    }
+    const int base_stock=stock_base(port,good,s.day,road_timber_bonus());
     const int stock_cap=stock_limit(port,good,s.day,road_timber_bonus());
     TradeQuote offer{.stock_change=s.stock_delta[port*GoodsCount+good]};
     int supply=market_stock(port,good);
@@ -314,7 +392,7 @@ TradeQuote Game::quote_order(int good, bool sell, int quantity, int rate, bool l
 }
 
 TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
-    if (!sell && quantity==TradeLot && s.bargain_good==good+1) {
+    if (good>=0 && good<GoodsCount && !sell && quantity==TradeLot && s.bargain_good==good+1) {
         const auto discounted=quote_order(good,false,quantity,s.bargain_rate,true);
         if (discounted.units==TradeLot) return discounted;
     }
@@ -323,7 +401,7 @@ TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
 
 int Game::trade_limit(int good, bool sell) const {
     const int regular=trade_quote(good,sell,capacity()).units;
-    if (!sell && regular<TradeLot && s.bargain_good==good+1 &&
+    if (good>=0 && good<GoodsCount && !sell && regular<TradeLot && s.bargain_good==good+1 &&
         trade_quote(good,false,TradeLot).units==TradeLot) return TradeLot;
     return regular;
 }
@@ -337,6 +415,8 @@ int Game::negotiation_rate() const {
 Text Game::bargain_block(int good, bool sell) const {
     if (!port()) return "靠港后才能议价";
     if (market_held()) return "本港商会暂停交易";
+    if (good>=GoodsCount) return "特产按挂牌价交易";
+    if (market_access(s.origin,good)==MarketAccess::Closed) return "本港不经营这件货物";
     if (s.bargain_good) return "本次停泊的议价已结束";
     if (!negotiation_rate()) return "需本地短语、随船口译或码头口译";
     if (bargain_quote(good,sell,0).units!=TradeLot)
@@ -951,6 +1031,7 @@ void Game::plan_merchant(int company) {
         const int provisions=4+2*days;
         const int port=MerchantPorts[hub];
         for (int good=0;good<GoodsCount;++good) {
+            if (market_access(port,good)==MarketAccess::Closed) continue;
             const int local=market_stock(origin,good);
             int remote=s.stock_delta[port*GoodsCount+good];
             for (int day=s.day+1;day<=arrival;++day) remote=daily_stock_change(port,good,remote,day,road_timber_bonus());
@@ -1024,6 +1105,10 @@ bool Game::advance_watch() {
 void Game::spend_day(int days) {
     for (int i = 0; i < days && s.day < 99999; ++i) {
         ++s.day;
+        if (s.day%2==0) {
+            for (auto& reserve : s.specialty_stock) reserve+=int(reserve<0)-int(reserve>0);
+            for (auto& demand : s.specialty_demand) demand=std::max(0,int(demand)-2);
+        }
         for (int port=0;port<PortCount;++port)
             for (int good=0;good<GoodsCount;++good) {
                 auto& delta=s.stock_delta[port*GoodsCount+good];
@@ -1036,7 +1121,7 @@ void Game::spend_day(int days) {
 }
 
 bool Game::depart(int to) {
-    if (sea() || encounter() || land_away() || to==s.origin) return false;
+    if (sea() || encounter() || land_away() || s.land_fight.kind || to==s.origin) return false;
     if (s.in_company && s.berth.hull<13) { notice="随行船受损，先到船坞维修"; return false; }
     if (!charted(to)) { notice="此处尚未定位，需掌舵探索"; return false; }
     auto path = passage(s.origin, to);
@@ -1126,7 +1211,7 @@ bool Game::consume_day(SeaConditions weather) {
 
 bool Game::start_helm(int destination) {
     if (s.in_company && s.berth.hull<13) { notice="随行船受损，先到船坞维修"; return false; }
-    if (sea() || encounter() || land_away() || s.hull<=12 ||
+    if (sea() || encounter() || land_away() || s.land_fight.kind || s.hull<=12 ||
         s.stores<daily_rations() || s.water<daily_water(Fair)) {
         notice="掌舵前请备足一日水粮并修船";
         return false;
@@ -1574,7 +1659,9 @@ TradeQuote Game::trade(int good, bool sell, int quantity) {
 
 void Game::apply_trade(int good, bool sell, TradeQuote offer) {
     s.cargo[good]+=sell?-offer.units:offer.units;
-    s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
+    if (good<GoodsCount) s.stock_delta[s.origin*GoodsCount+good]=static_cast<std::int8_t>(offer.stock_change);
+    else if (market_access(s.origin,good)==MarketAccess::Buyer) s.specialty_demand[good-GoodsCount]=offer.stock_change;
+    else s.specialty_stock[good-GoodsCount]=offer.stock_change;
     earn(sell?offer.gold:-offer.gold);
 }
 
@@ -2682,7 +2769,7 @@ constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+3*SpecialtyCount+5+3*LandUnits);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2717,14 +2804,14 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x4c445054);
+    put(0x4d445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
         s.contract,s.contract_good,s.deadline,s.weather,s.enemy,s.range,s.aim,s.stop_next}) put(field);
     put_mask(s.visited); put_mask(s.surveyed);
     put(s.rng); put(s.event_mask);
-    for (int count : s.cargo) bytes[offset++] = std::byte(count);
+    for (int count : std::span(s.cargo).first<GoodsCount>()) bytes[offset++] = std::byte(count);
     for (auto delta : s.stock_delta) bytes[offset++] = std::byte(delta + 48);
     for (auto state : s.tales) bytes[offset++]=std::byte(state);
     bytes[offset++]=std::byte(s.beacon);
@@ -2820,6 +2907,16 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.pilot.patch);
     bytes[offset++]=std::byte(s.pilot.patch>>8);
     put_mask(s.coast_visits);
+    for (int i=0;i<SpecialtyCount;++i) {
+        bytes[offset++]=std::byte(s.cargo[GoodsCount+i]);
+        bytes[offset++]=std::byte(s.specialty_stock[i]+24);
+        bytes[offset++]=std::byte(s.specialty_demand[i]);
+    }
+    const auto& fight=s.land_fight;
+    for (auto value : {s.shore_campaign,fight.kind,fight.site,fight.round,fight.holding})
+        bytes[offset++]=std::byte(value);
+    for (auto unit : fight.units)
+        for (auto value : {unit.cell,unit.hp,unit.orders}) bytes[offset++]=std::byte(value);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2833,7 +2930,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
         bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
-        bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
+        bytes.size()!=CoastalSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2843,7 +2941,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool coast_ports=version==0x4c445054 && bytes.size()==SaveBytes;
+    const bool shore_campaign=version==0x4d445054 && bytes.size()==SaveBytes;
+    const bool coast_ports=shore_campaign || (version==0x4c445054 && bytes.size()==CoastalSaveBytes);
     const bool parcels=coast_ports || (version==0x4b445054 && bytes.size()==WorldPilotSaveBytes);
     const bool pilotage=parcels || (version==0x4a445054 && bytes.size()==PilotSaveBytes);
     const bool sea_law=pilotage || (version==0x49445054 && bytes.size()==SeaLawSaveBytes);
@@ -2882,7 +2981,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     s.visited=get_mask(); s.surveyed=get_mask();
     s.rng=get(); s.event_mask=get();
     if ((s.visited|s.surveyed)>>PlaceCount) return false;
-    for (auto& count : s.cargo) count = std::to_integer<int>(bytes[offset++]);
+    for (auto& count : std::span(s.cargo).first<GoodsCount>()) count = std::to_integer<int>(bytes[offset++]);
     const int saved_ports=expanded?PortCount:LegacyPortCount;
     for (auto& delta : std::span{s.stock_delta}.first(saved_ports*GoodsCount)) {
         const int stock = std::to_integer<int>(bytes[offset++])-48;
@@ -3226,6 +3325,25 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         if (coast_ports) {
             s.coast_visits=get_mask();
             if (s.coast_visits>>std::size(PilotCoastalSites)) return false;
+        }
+        if (shore_campaign) {
+            for (int i=0;i<SpecialtyCount;++i) {
+                s.cargo[GoodsCount+i]=std::to_integer<unsigned>(bytes[offset++]);
+                const int stock=std::to_integer<int>(bytes[offset++])-24;
+                if (stock<-24 || stock>24) return false;
+                s.specialty_stock[i]=stock;
+                s.specialty_demand[i]=std::to_integer<unsigned>(bytes[offset++]);
+                if (s.specialty_demand[i]>14) return false;
+            }
+            auto& fight=s.land_fight;
+            for (auto* field : {&s.shore_campaign,&fight.kind,&fight.site,&fight.round,&fight.holding})
+                *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+            for (auto& unit : fight.units)
+                for (auto* field : {&unit.cell,&unit.hp,&unit.orders})
+                    *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if ((s.shore_campaign>>(1+EnclaveCount)) ||
+                !valid_land_fight(fight,s.origin,s.helm || s.destination>=0 || s.weather!=Calm))
+                return false;
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

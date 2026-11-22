@@ -11,10 +11,11 @@ struct VoyageSave {
     static constexpr std::size_t HeadBytes=960;
     static constexpr const char* HeadKey="voyage-v2";
     static constexpr const char* TailKeys[]{"voyage-v2-tail-a","voyage-v2-tail-b"};
-    static_assert(SaveBytes+1>HeadBytes && SaveBytes+1-HeadBytes<=HeadBytes);
+    static constexpr std::size_t TailBytes=SaveBytes+1-HeadBytes;
+    static_assert(SaveBytes+1>HeadBytes && TailBytes<=1024);
 
     std::array<std::byte,SaveBytes+1> bytes{};
-    std::array<std::byte,HeadBytes+72> packet{};
+    std::array<std::byte,std::max(HeadBytes,TailBytes)+72> packet{};
     unsigned slot=1;
     bool refresh_slot=false;
 
