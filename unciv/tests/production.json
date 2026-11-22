@@ -1,0 +1,1057 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-required",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "unassigned-city-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unassigned-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-worker",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-worker",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-worker",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-one",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "select-settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "select-scout",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-scout",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-scout",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-two",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-monument",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-second",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "move-first",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "reordered-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "reordered-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "remove-selected",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "trimmed-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "trimmed-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "return-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-required",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "unassigned-city-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unassigned-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-worker",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-worker",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-worker",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-one",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "select-settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "select-scout",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-scout",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-scout",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-two",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-monument",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-second",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "move-first",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "reordered-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "reordered-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "remove-selected",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "trimmed-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "trimmed-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "return-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-required",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "unassigned-city-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unassigned-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-worker",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-worker",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-worker",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-one",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "select-settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "select-scout",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-scout",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-scout",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-two",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-monument",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-second",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "move-first",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "reordered-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "reordered-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "remove-selected",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "trimmed-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "trimmed-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "return-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-required",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "unassigned-city-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unassigned-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-worker",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-worker",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-worker",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-one",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "select-settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "select-scout",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-scout",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-scout",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-two",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-monument",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-second",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "move-first",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "reordered-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "reordered-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "remove-selected",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "trimmed-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "trimmed-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "return-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "choose-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "found",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-required",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "unassigned-city-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "unassigned-city-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "inspect-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "start-warrior",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-worker",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-worker",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "production-detail-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-detail-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "queue-worker",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-one",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "select-settler",
+      "action": "controller",
+      "buttons": 4,
+      "ms": 80
+    },
+    {
+      "name": "select-scout",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "inspect-scout",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-scout",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "back-city-two",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "buildings",
+      "action": "controller",
+      "buttons": 2048,
+      "ms": 80
+    },
+    {
+      "name": "inspect-monument",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "queue-monument",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "production-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "production-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "select-second",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "move-first",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "reordered-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "reordered-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "remove-selected",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "trimmed-queue-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "trimmed-queue-screen",
+      "action": "screenshot"
+    },
+    {
+      "name": "return-city",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "return-map",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "map-ready",
+      "action": "wait",
+      "ms": 350
+    },
+    {
+      "name": "map-screen",
+      "action": "screenshot"
+    }
+  ]
+}

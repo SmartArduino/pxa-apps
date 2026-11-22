@@ -1,0 +1,327 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "technologies",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "turn-two",
+      "action": "screenshot"
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "technologies",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "turn-two",
+      "action": "screenshot"
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "technologies",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "turn-two",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "technologies",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "turn-two",
+      "action": "screenshot"
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "select-start",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "confirm-new-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "settle",
+      "action": "controller",
+      "buttons": 256,
+      "ms": 80
+    },
+    {
+      "name": "city",
+      "action": "screenshot"
+    },
+    {
+      "name": "research",
+      "action": "controller",
+      "buttons": 1024,
+      "ms": 80
+    },
+    {
+      "name": "technologies",
+      "action": "screenshot"
+    },
+    {
+      "name": "back",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    },
+    {
+      "name": "turn",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 80
+    },
+    {
+      "name": "turn-two",
+      "action": "screenshot"
+    }
+  ]
+}

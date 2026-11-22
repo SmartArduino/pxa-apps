@@ -1,0 +1,307 @@
+{
+  "pai-touch": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "help-focus",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "music-help",
+      "action": "screenshot"
+    },
+    {
+      "name": "music-control",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "mute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "muted-ready",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "music-off",
+      "action": "screenshot"
+    },
+    {
+      "name": "unmute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "back-title",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    }
+  ],
+  "sensecap-watcher": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "help-focus",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "music-help",
+      "action": "screenshot"
+    },
+    {
+      "name": "music-control",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "mute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "muted-ready",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "music-off",
+      "action": "screenshot"
+    },
+    {
+      "name": "unmute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "back-title",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    }
+  ],
+  "esp-mosaico": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "help-focus",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "music-help",
+      "action": "screenshot"
+    },
+    {
+      "name": "music-control",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "mute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "muted-ready",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "music-off",
+      "action": "screenshot"
+    },
+    {
+      "name": "unmute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "back-title",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "help-focus",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "music-help",
+      "action": "screenshot"
+    },
+    {
+      "name": "music-control",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "mute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "muted-ready",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "music-off",
+      "action": "screenshot"
+    },
+    {
+      "name": "unmute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "back-title",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    }
+  ],
+  "generic": [
+    {
+      "name": "warmup",
+      "action": "wait",
+      "ms": 1800
+    },
+    {
+      "name": "help-focus",
+      "action": "controller",
+      "buttons": 2,
+      "ms": 80
+    },
+    {
+      "name": "help",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "ready",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "music-help",
+      "action": "screenshot"
+    },
+    {
+      "name": "music-control",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 80
+    },
+    {
+      "name": "mute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "muted-ready",
+      "action": "wait",
+      "ms": 300
+    },
+    {
+      "name": "music-off",
+      "action": "screenshot"
+    },
+    {
+      "name": "unmute-music",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 80
+    },
+    {
+      "name": "back-title",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 80
+    }
+  ]
+}
