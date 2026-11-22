@@ -29,7 +29,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -76,7 +76,11 @@ enum Action {
     ChangeFlagship, OpenReserveSale, ConfirmReserveSale, LocateBerth, OpenPortCase, SettlePortCase, CharterEntry,
     PurchaseReserve=CharterEntry+int(HarborCharters.size()),
     ToggleCompany=PurchaseReserve+int(std::size(HullNames)), OpenFlags, RaiseColors, SignRoyalPass,
-    OpenShoreTask, AdvanceShoreTask, OpenShoreJournal, FlagEntry, ShoreEntry=FlagEntry+int(ColorsCount)
+    OpenShoreTask, AdvanceShoreTask, OpenShoreJournal, FlagEntry, ShoreEntry=FlagEntry+int(ColorsCount),
+    OpenEnclaves=ShoreEntry+int(ShoreTaskCount), DockEnclave, ShowLocalEnclave, MarkEnclave, LeaseEnclave,
+    EnclaveWait, HireVillagers, HireCarpenter, CarrySettlers, LodgeSettlers, SellEnclaveGoods,
+    StormEnclave, ReleaseGuards, RansomGuards, EnclaveTab, EnclaveEntry=EnclaveTab+4,
+    EnclaveConstruction=EnclaveEntry+EnclaveCount, EnclaveSupply=EnclaveConstruction+EnclaveBuildingCount
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(SellWhaleOil<DockService);
@@ -163,6 +167,7 @@ struct VoyageApp {
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
     bool open_helm_view=false;
+    int enclave_item=0, enclave_tab=0;
     unsigned trim_ms=0, skirmish_tick=0;
     struct SeaFlash { Point position{}; unsigned started=0; int sprite=0; };
     std::array<SeaFlash,4> sea_flashes{};
@@ -969,6 +974,16 @@ struct VoyageApp {
             if (full_helm_chart()) port_label(p,Places[i].name,ivory,4);
             else draw_label({p.x+4,p.y-14},Places[i].name,ivory,true,false);
         }
+        if (zoom>=4) {
+            for (const auto& site : EnclaveSites) {
+                if (!game.charted(site.home)) continue;
+                const auto p=map_point(site.position);
+                if (!map.contains(p)) continue;
+                d.diamond(p,4,ink);
+                d.diamond(p,2,vermilion);
+                draw_label({p.x+4,p.y+5},site.name,gold,true,false);
+            }
+        }
         if (game.sea()) {
             auto p=ship_mark;
             const auto heading=game.position(.9f);
@@ -1060,12 +1075,14 @@ struct VoyageApp {
         constexpr int actions[]{ZoomIn,ZoomOut,Center,ToggleHelmView};
         const bool lookout=game.nature_site()!=NoNatureSite && !salvage;
         const int fishing=fish.target?NoFishery:game.fishery_available();
-        const int count=5+int(lookout)+int(fishing!=NoFishery);
+        const bool village=berth>=0 && game.enclave_nearby(chart_water)>=0;
+        const int count=5+int(lookout)+int(fishing!=NoFishery)+int(village);
         for (int i=0;i<4;++i) button(d,bar(i,count,0),labels[i],actions[i]);
         int next=4;
         if (lookout) button(d,bar(next++,count,0),"观察",OpenNatureWatch,true);
         if (fishing)
             button(d,bar(next++,count,0),fishing==WhaleFishery?"寻鲸":"寻鱼",BeginFishery,true);
+        if (village) button(d,bar(next++,count,0),"村镇",DockEnclave);
         button(d,bar(next,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
                berth>=0 || salvage,berth<0 && !salvage);
         button(d,bar(0,4,1),"左舵",SteerLeft);
@@ -1666,6 +1683,128 @@ struct VoyageApp {
         }
     }
 
+    void enclave_registry(Draw& d) {
+        page_title(d,"大西洋据点",MooringIcon);
+        for (int i=0;i<EnclaveCount;++i) {
+            const auto& site=EnclaveSites[i];
+            const auto& holding=game.s.enclaves[i];
+            const bool known=game.charted(site.home);
+            const auto status=format("居民%d",int(holding.residents));
+            row(d,i,known?site.name:"尚未定位",
+                known?(holding.status?Text(status):Text("可察看地势")):Text("向船工打听"),EnclaveEntry+i,
+                game.enclave_here()==i,30,MooringIcon);
+        }
+        if (game.s.migrant_site)
+            d.label(body.x+6,body.bottom()-20,"船上已有三名拓居者，记得送他们抵达据点",gold,body.w-12);
+    }
+
+    void enclave_art(Draw& d,int tile,Rect target) {
+        d.image({art::enclave},{tile%4*29,tile/4*29,29,29},target,true);
+    }
+
+    void enclave_page(Draw& d) {
+        const auto& site=EnclaveSites[enclave_item];
+        const auto& h=game.s.enclaves[enclave_item];
+        const bool local=game.enclave_here()==enclave_item;
+        page_title(d,site.name,MooringIcon);
+        const int x=body.x+5, w=body.w-10, top=body.y+49, bottom=body.bottom();
+        const int span=(w-4)/2;
+        constexpr Text tabs[]{"村镇","工程","居民","争夺"};
+        for (int i=0;i<4;++i) {
+            const int left=x+w*i/4;
+            button(d,{left,body.y+25,x+w*(i+1)/4-left-3,21},tabs[i],EnclaveTab+i,enclave_tab==i);
+        }
+        if (enclave_tab==0) {
+            const int art_w=std::min(120,w*37/100);
+            const int art_h=std::min(art_w*104/160,bottom-top-26);
+            const Rect scene{x,top,art_w,art_h};
+            sea_picture_panel(d,enclave_item==0?MachicoPicture:VilaFrancaPicture,scene);
+            if (h.status) {
+                constexpr Point lots[]{{17,34},{48,25},{73,15},{89,28},{45,12},{90,12}};
+                const int size=std::clamp(art_w/5,13,21);
+                for (int i=0;i<EnclaveBuildingCount;++i)
+                    if (h.buildings&building_flag(i))
+                        enclave_art(d,i,{scene.x+lots[i].x*scene.w/105-size/2,
+                                          scene.y+lots[i].y*scene.h/49-size/2,size,size});
+            }
+            const int x_text=scene.right()+5, w_text=x+w-x_text;
+            d.wrap({x_text,top,w_text,bottom-top-26},local?site.people:site.ground,ivory,14);
+            if (local && !h.status) {
+                const auto reason=game.enclave_lease_requirement(enclave_item);
+                const auto price=format("签地契 %d金",site.fee);
+                if (!reason.empty())
+                    d.label(x,bottom-43,reason,vermilion,w);
+                button(d,{x,bottom-25,w,23},price,LeaseEnclave,true,!reason.empty());
+            } else if (local) {
+                button(d,{x,bottom-25,span,23},"等一日",EnclaveWait);
+                const int quote=game.enclave_export_quote(enclave_item);
+                button(d,{x+span+4,bottom-25,w-span-4,23},
+                       quote?Text(format("出货 %d金",quote)):Text("出货"),SellEnclaveGoods,true,!quote);
+            } else {
+                button(d,{x,bottom-25,span,23},"标在海图",MarkEnclave,true,game.sea());
+                button(d,{x+span+4,bottom-25,w-span-4,23},"招募拓居者",CarrySettlers,false,
+                       !h.status || !game.port() || game.s.origin!=lisbon || game.s.migrant_site);
+            }
+            return;
+        }
+        if (enclave_tab==1) {
+            const auto stock=format("木料%d  粮食%d  工坊货%d",int(h.timber),int(h.food),int(h.exports));
+            d.label(x,top+1,stock,ivory,w);
+            const int item_y=top+17;
+            const int pitch=std::clamp((bottom-item_y-21)/3,17,28);
+            for (int i=0;i<EnclaveBuildingCount;++i) {
+                const auto& order=BuildingOrders[i];
+                const Rect r{x+(i%2)*(span+4),item_y+(i/2)*pitch,span,pitch-2};
+                const bool built=h.buildings&building_flag(i);
+                const auto cost=format("%s %d木 %d金",order.name.data(),int(order.timber),int(order.coins));
+                button(d,r,built?Text(format("%s 已建",order.name.data())):Text(cost),
+                       EnclaveConstruction+i,false,!local || !game.enclave_build_requirement(enclave_item,i).empty());
+            }
+            if (h.under_construction) {
+                const auto building=BuildingOrders[h.under_construction-1].name;
+                d.label(x,bottom-18,format("%s在建 · %d日后",building.data(),std::max(0,h.building_day-game.s.day)),
+                        gold,w/2);
+            }
+            if (local && h.status)
+                button(d,{x+span+4,bottom-20,w-span-4,18},"等一日",EnclaveWait,true);
+            return;
+        }
+        if (enclave_tab==2) {
+            d.label(x,top+1,format("居民%d  粮%d  木%d",int(h.residents),int(h.food),int(h.timber)),ivory,w);
+            const int pitch=std::clamp((bottom-top-16)/3,17,27);
+            const bool can=local && h.status;
+            const bool wharf=h.buildings&building_flag(EnclaveWharf);
+            const bool full=h.residents+2>((h.buildings&building_flag(EnclaveHouses))?18:6);
+            const Text labels[]{"送粮","送木","取粮","取木","雇村民 41金","请木匠 76金"};
+            const int orders[]{EnclaveSupply+int(DeliverEnclaveFood),EnclaveSupply+int(DeliverEnclaveTimber),
+                               EnclaveSupply+int(CollectEnclaveFood),EnclaveSupply+int(CollectEnclaveTimber),
+                               HireVillagers,HireCarpenter};
+            for (int i=0;i<6;++i) {
+                const bool closed=!can || (i==0 && !game.s.stores) || (i==1 && !game.s.cargo[Timber]) ||
+                    (i==2 && (!wharf || h.food<=h.residents)) || (i==3 && (!wharf || !h.timber)) ||
+                    (i>=4 && (full || h.food<5)) || (i==5 && h.carpenter);
+                const Rect r{x+(i%2)*(span+4),top+15+i/2*pitch,span,pitch-2};
+                if (i==4 && local && game.s.migrant_site==enclave_item+1)
+                    button(d,r,"安置拓居者",LodgeSettlers,true);
+                else button(d,r,labels[i],orders[i],i==0,closed);
+            }
+            return;
+        }
+
+        if (h.prisoners) {
+            d.label(x,top+2,format("%d名守卫已缴械",int(h.prisoners)),gold,w);
+            d.wrap({x,top+20,w,bottom-top-48},"家人到码头找人。放人能缩短港务留案，收赎金也可送他们回家。",ivory,14);
+            button(d,{x,bottom-25,span,23},"释放守卫",ReleaseGuards,true,!local);
+            button(d,{x+span+4,bottom-25,w-span-4,23},"交换赎金",RansomGuards,false,!local);
+        } else {
+            d.label(x,top+2,format("守备%d  我方%d",site.resistance,game.enclave_assault_power()),gold,w);
+            const auto blocked=game.enclave_siege_requirement(enclave_item);
+            d.wrap({x,top+19,w,bottom-top-48},blocked.empty()?
+                   Text("封锁码头需两日，守军会反击。无论胜负，葡萄牙都会暂禁交易。"):blocked,ivory,14);
+            button(d,{x,bottom-25,w,23},"下令夺取码头",StormEnclave,false,!blocked.empty());
+        }
+    }
+
     void fish_book(Draw& d) {
         page_title(d,"海边的渔获",CargoIcon);
         const int x=body.x+6, y=body.y+28, width=body.w-12;
@@ -1717,9 +1856,11 @@ struct VoyageApp {
             d.darken({display.x,display.y,display.w,std::min(34,display.h)},9);
         }
         const bool has_town=game.port() && town_index(game.s.origin)>=0;
-        d.label(body.x+9,body.y+6,p.name,gold,body.w-(has_town?87:18));
+        const bool village=game.enclave_here()>=0;
+        d.label(body.x+9,body.y+6,p.name,gold,body.w-(has_town?87:18)-(village?62:0));
         d.label(body.x+9,body.y+22,p.region,ivory,body.w-18);
         if (has_town) button(d,{body.right()-66,body.y+6,58,22},"进城",OpenTown,true);
+        if (village) button(d,{body.right()-(has_town?128:66),body.y+6,58,22},"村镇",ShowLocalEnclave);
         const int y=body.y+banner+8;
         if (game.port()) {
             const int dest=valid_contract ? game.s.contract : game.proposal();
@@ -1772,11 +1913,12 @@ struct VoyageApp {
             pair(d,{body.x+4,body.y+64,body.w-8,25},"重读结局",ShowEnding,"考察簿",ShowExpeditions,true);
         } else {
             d.label(body.x+58,body.y+23,Story[s.chapter].title,ivory,body.w-63);
-            d.label(body.x+5,body.y+44,format("下一站  %s",Places[target()].name.data()),mist,body.w-10);
+            d.label(body.x+5,body.y+44,format("下一站  %s",Places[target()].name.data()),mist,body.w-68);
             button(d,{body.x+4,body.y+64,half,25},
                    story_here() ? "会面" : "在海图上标记",story_here()?ReadStory:Destination+target(),true,game.sea());
             button(d,{body.x+9+half,body.y+64,body.w-13-half,25},"考察簿",ShowExpeditions);
         }
+        button(d,{body.right()-64,body.y+40,60,22},"据点",OpenEnclaves,false,false,{},MooringIcon);
         if (s.contract>=0 && body.h>=177)
             d.label(body.x+5,body.y+99,format("委托  %s / %s",
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
@@ -1931,6 +2073,7 @@ struct VoyageApp {
     int visible_sea_picture() const {
         if (title) return Calm;
         if (modal==FishBook) return FisheryPicture;
+        if (modal==EnclavePage && enclave_tab==0) return enclave_item==0?MachicoPicture:VilaFrancaPicture;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
         if (modal==NatureWatch && game.s.helm) return Doldrums;
         if (full_helm_chart() && !game.encounter() && game.s.ship==1 && zoom>=4) return CaravelDetail;
@@ -3618,6 +3761,8 @@ struct VoyageApp {
         case ShorePage: shore_page(d); break;
         case ShoreJournal: shore_journal(d); break;
         case FishBook: fish_book(d); break;
+        case EnclaveRegistry: enclave_registry(d); break;
+        case EnclavePage: enclave_page(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -3720,8 +3865,77 @@ struct VoyageApp {
             }
             return;
         }
+        if (action>=EnclaveTab && action<EnclaveEntry) {
+            enclave_tab=action-EnclaveTab;
+            return;
+        }
+        if (action>=EnclaveEntry && action<EnclaveConstruction) {
+            const int site=action-EnclaveEntry;
+            if (game.charted(EnclaveSites[site].home)) {
+                enclave_item=site;
+                enclave_tab=0;
+                set_modal(EnclavePage);
+            } else {
+                game.notice="先打听这片海岸的泊地";
+                notify();
+            }
+            return;
+        }
+        if (action>=EnclaveConstruction && action<EnclaveSupply) {
+            if (game.build_enclave(enclave_item,action-EnclaveConstruction)) changed();
+            else notify();
+            return;
+        }
+        if (action>=EnclaveSupply && action<EnclaveSupply+4) {
+            if (game.supply_enclave(enclave_item,action-EnclaveSupply)) changed();
+            else notify();
+            return;
+        }
         if (action>=OpenLanguages) {
             switch (action) {
+            case OpenEnclaves: set_modal(EnclaveRegistry); break;
+            case DockEnclave: case ShowLocalEnclave:
+                if (action==DockEnclave && !game.dock_helm(chart_water)) { notify(); break; }
+                if (game.enclave_here()>=0) {
+                    if (action==DockEnclave) { select(game.s.origin); changed(); }
+                    enclave_item=game.enclave_here();
+                    enclave_tab=0;
+                    set_modal(EnclavePage);
+                }
+                break;
+            case MarkEnclave:
+                select(EnclaveSites[enclave_item].home);
+                break;
+            case LeaseEnclave:
+                if (game.lease_enclave(enclave_item)) changed();
+                else notify();
+                break;
+            case EnclaveWait:
+                if (game.enclave_here()==enclave_item) { game.wait_enclave_day(); changed(); }
+                break;
+            case CarrySettlers:
+                if (game.take_enclave_migrants(enclave_item)) changed();
+                else notify();
+                break;
+            case LodgeSettlers:
+                if (game.land_enclave_migrants(enclave_item)) changed();
+                else notify();
+                break;
+            case HireVillagers: case HireCarpenter:
+                if (game.hire_enclave_people(enclave_item,action==HireCarpenter)) changed();
+                else notify();
+                break;
+            case SellEnclaveGoods:
+                if (game.sell_enclave_exports(enclave_item)) changed();
+                break;
+            case StormEnclave:
+                if (game.siege_enclave(enclave_item)) changed();
+                else notify();
+                break;
+            case ReleaseGuards: case RansomGuards:
+                if (game.decide_enclave_prisoners(enclave_item,action==ReleaseGuards?ReleaseEnclavePrisoners:RansomEnclavePrisoners))
+                    changed();
+                break;
             case ToggleCompany:
                 if (modal==CharterDesk && game.change_company()) changed();
                 break;

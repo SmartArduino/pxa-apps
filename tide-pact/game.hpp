@@ -32,6 +32,7 @@ constexpr Point chart_point(float lon, float lat) {
 #include "port_stories.hpp"
 #include "rumors.hpp"
 #include "stories.hpp"
+#include "settlement.hpp"
 
 namespace tide {
 
@@ -272,6 +273,8 @@ struct State {
     std::array<std::uint8_t,ShoreTaskCount> shore_tasks{};
     SeaSkirmish skirmish;
     SeaFishery fishery;
+    std::array<EnclaveHolding,EnclaveCount> enclaves{};
+    std::uint8_t migrant_site=0;
     std::array<int,2> fishery_next{};
     std::uint8_t whale_oil=0;
     DispatchRecord dispatch;
@@ -281,7 +284,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, SaveBytes=1792;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, SaveBytes=1840;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -406,6 +409,23 @@ struct Game {
     bool cancel_fishery();
     int whale_oil_quote() const;
     bool sell_whale_oil();
+    int enclave_here() const;
+    int enclave_nearby(WaterTest water) const;
+    Text enclave_lease_requirement(int site) const;
+    bool lease_enclave(int site);
+    Text enclave_build_requirement(int site,int building) const;
+    bool build_enclave(int site,int building);
+    int enclave_export_quote(int site) const;
+    bool sell_enclave_exports(int site);
+    void wait_enclave_day();
+    bool supply_enclave(int site,int action);
+    bool hire_enclave_people(int site,bool carpenter);
+    bool take_enclave_migrants(int site);
+    bool land_enclave_migrants(int site);
+    Text enclave_siege_requirement(int site) const;
+    int enclave_assault_power() const;
+    bool siege_enclave(int site);
+    bool decide_enclave_prisoners(int site,int choice);
     bool duel() const { return s.weather==Boarding || s.weather==DockDuel; }
     bool convoy_battle() const;
     int naval_intent() const;
@@ -522,6 +542,7 @@ private:
     void clear_helm();
     void helm_move(WaterTest water_at, int pulses);
     void tick_fishery(WaterTest water);
+    void tick_enclaves();
     bool observation_day();
     void reveal_chart(Point center, int radius);
     int lookout_radius() const { return s.first_mate==Pilot?19:14; }

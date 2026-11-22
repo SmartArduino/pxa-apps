@@ -628,6 +628,56 @@ void coastal_fishery() {
     assert(!whale.sell_whale_oil() && whale.load()==load);
 }
 
+void island_settlements() {
+    Game colony;
+    colony.s.origin=madeira;
+    colony.s.gold=1100;
+    colony.s.renown=3;
+    colony.s.trust=1;
+    colony.s.cargo[Timber]=20;
+    assert(colony.enclave_here()==0 && colony.lease_enclave(0));
+    auto& site=colony.s.enclaves[0];
+    assert(site.residents==4 && !colony.lease_enclave(0));
+    assert(colony.build_enclave(0,EnclaveWharf) && !colony.build_enclave(0,EnclaveHouses));
+    colony.wait_enclave_day();
+    State saved;
+    assert(decode(saved,encode(colony.s)) && saved.enclaves[0].under_construction==EnclaveWharf+1);
+    colony.wait_enclave_day();
+    assert(site.buildings&building_flag(EnclaveWharf));
+    assert(colony.supply_enclave(0,DeliverEnclaveTimber));
+    assert(colony.build_enclave(0,EnclaveGardens));
+    for (int day=0;day<2;++day) colony.wait_enclave_day();
+    assert(colony.supply_enclave(0,DeliverEnclaveTimber));
+    assert(colony.build_enclave(0,EnclaveHouses));
+    for (int day=0;day<3;++day) colony.wait_enclave_day();
+    assert(site.buildings&building_flag(EnclaveHouses));
+    colony.s.origin=lisbon;
+    assert(colony.take_enclave_migrants(0) && !colony.take_enclave_migrants(0));
+    assert(decode(saved,encode(colony.s)) && saved.migrant_site==1);
+    colony.s.origin=madeira;
+    assert(colony.land_enclave_migrants(0) && site.residents==7);
+    assert(colony.hire_enclave_people(0,true) && site.carpenter);
+    assert(colony.supply_enclave(0,DeliverEnclaveTimber));
+    assert(colony.supply_enclave(0,DeliverEnclaveTimber));
+    assert(colony.build_enclave(0,EnclaveWorkshop));
+    for (int day=0;day<5;++day) colony.wait_enclave_day();
+    const int payday=colony.enclave_export_quote(0);
+    assert(payday>0 && colony.sell_enclave_exports(0) && !colony.sell_enclave_exports(0));
+
+    Game siege;
+    siege.s.origin=azores;
+    siege.s.chart_marks|=place_bit(azores);
+    assert(siege.enclave_here()==1 && !siege.siege_enclave(1));
+    siege.s.guns=3;
+    assert(siege.siege_enclave(1) && siege.s.enclaves[1].status==EnclaveOccupied);
+    assert(siege.s.enclaves[1].prisoners==3 && siege.s.court_hold_until[Portugal]>siege.s.day);
+    const int before=siege.s.court_hold_until[Portugal];
+    assert(decode(saved,encode(siege.s)) && saved.enclaves[1].prisoners==3);
+    assert(siege.decide_enclave_prisoners(1,ReleaseEnclavePrisoners));
+    assert(siege.s.court_hold_until[Portugal]<before &&
+           !siege.decide_enclave_prisoners(1,RansomEnclavePrisoners));
+}
+
 void sailing_units() {
     const Game at_port;
     assert(at_port.forecast(passage(lisbon,cadiz)).days==2);
@@ -1734,6 +1784,7 @@ int main() {
     continuous_helm();
     chart_skirmish();
     coastal_fishery();
+    island_settlements();
     sailing_units();
     weather_forecasts();
     sailing_rations();

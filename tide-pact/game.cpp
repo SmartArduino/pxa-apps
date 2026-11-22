@@ -228,7 +228,7 @@ int Game::water_capacity() const {
 int Game::crew_limit() const { return berths[s.ship]; }
 
 int Game::load() const {
-    int all = dispatch_space()+s.whale_oil;
+    int all = dispatch_space()+s.whale_oil+(s.migrant_site?3:0);
     for (const int count : s.cargo) all += count;
     return all;
 }
@@ -714,7 +714,7 @@ int Game::repair_cost() const {
 }
 
 int Game::daily_rations() const {
-    const int crew=s.crew+(s.in_company?s.berth.sailors:0);
+    const int crew=s.crew+(s.in_company?s.berth.sailors:0)+(s.migrant_site?3:0);
     return (crew>=27?3:crew>14?2:1)+int(s.in_company);
 }
 int Game::daily_water(SeaWeather weather) const {
@@ -1031,6 +1031,7 @@ void Game::spend_day(int days) {
             }
         if (s.day>=2)
             for (std::size_t company=0;company<s.merchants.size();++company) merchant_day(company);
+        tick_enclaves();
     }
 }
 
@@ -1466,6 +1467,8 @@ void Game::arrive() {
     reveal_chart(Anchor[s.origin],26);
     notice = port() ? "安全入港" : "到达测绘水域";
     if (port()) inspect_colors();
+    if (s.migrant_site && s.origin==EnclaveSites[s.migrant_site-1].home)
+        notice="拓居者已抵达，可在村镇安置";
     if (s.dispatch.number) {
         const auto& order=DispatchOrders[dispatch_order()];
         if (s.origin==order.stop && !s.dispatch.stopped) {
@@ -2639,8 +2642,9 @@ static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
 constexpr int AddedPorts=PortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
 constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
+constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2675,7 +2679,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x47445054);
+    put(0x48445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2756,6 +2760,15 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (const auto field : {fish.target,fish.stage,fish.bearing,fish.age,fish.work,s.whale_oil})
         bytes[offset++]=std::byte(field);
     for (const auto day : s.fishery_next) put(day);
+    bytes[offset++]=std::byte(s.migrant_site);
+    for (const auto& holding : s.enclaves) {
+        put(holding.building_day);
+        put(holding.peace_day);
+        for (const auto field : {holding.status,holding.buildings,holding.under_construction,
+                                holding.residents,holding.food,holding.timber,holding.exports,
+                                holding.term,holding.prisoners,std::uint8_t(holding.carpenter)})
+            bytes[offset++]=std::byte(field);
+    }
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2768,7 +2781,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes &&
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
-        bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FisherySaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2778,7 +2791,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool fishery=version==0x47445054 && bytes.size()==SaveBytes;
+    const bool enclaves=version==0x48445054 && bytes.size()==SaveBytes;
+    const bool fishery=enclaves || (version==0x47445054 && bytes.size()==FisherySaveBytes);
     const bool skirmish=fishery || (version==0x46445054 && bytes.size()==SkirmishSaveBytes);
     const bool continuous=skirmish || (version==0x45445054 && bytes.size()==HelmClockSaveBytes);
     const bool with_colors=continuous || (version==0x44445054 && bytes.size()==HelmClockSaveBytes);
@@ -3074,6 +3088,31 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 (fish.target && (!s.helm || !fixed_in_chart(fish.animal))) ||
                 (fish.stage!=TrackingFish && (!fish.target || !fixed_in_chart(fish.gear)))) return false;
         }
+        if (enclaves) {
+            s.migrant_site=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (s.migrant_site>EnclaveCount) return false;
+            for (auto& holding : s.enclaves) {
+                const auto building_day=get(), peace_day=get();
+                if (building_day>99999 || peace_day>99999) return false;
+                holding.building_day=static_cast<int>(building_day);
+                holding.peace_day=static_cast<int>(peace_day);
+                for (auto* field : {&holding.status,&holding.buildings,&holding.under_construction,
+                                    &holding.residents,&holding.food,&holding.timber,&holding.exports,
+                                    &holding.term,&holding.prisoners})
+                    *field=std::to_integer<std::uint8_t>(bytes[offset++]);
+                const auto carpenter=std::to_integer<unsigned>(bytes[offset++]);
+                if (carpenter>1 || holding.status>EnclaveOccupied ||
+                    holding.buildings>>EnclaveBuildingCount || holding.under_construction>EnclaveBuildingCount ||
+                    bool(holding.under_construction)!=bool(holding.building_day) ||
+                    holding.residents>((holding.buildings&building_flag(EnclaveHouses))?18:6) ||
+                    holding.food>70 || holding.timber>70 || holding.exports>24 ||
+                    holding.term>6 || holding.prisoners>3 ||
+                    (!holding.status && (holding.residents || holding.buildings || carpenter)) ||
+                    (holding.prisoners && holding.status!=EnclaveOccupied))
+                    return false;
+                holding.carpenter=carpenter!=0;
+            }
+        }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }
@@ -3090,7 +3129,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    int load = s.whale_oil+(s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
+    int load = s.whale_oil+(s.migrant_site?3:0)+
+        (s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;
     if (load > cargo_capacity(s) || s.crew+s.berth.sailors>berths[2]) return false;
     if (s.helm) {

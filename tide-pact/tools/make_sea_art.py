@@ -76,6 +76,16 @@ def main():
     if quay.is_file():
         with Image.open(quay) as illustration:
             write_scene(ASSETS.parent / 'assets' / 'sea','fishery',illustration)
+    buildings=args.generated / 'village-tiles.png'
+    if buildings.is_file():
+        pack_icons(buildings,'enclave',4,2,29,alpha_cutoff=174)
+    villages=args.generated / 'village-settlement-scenes.png'
+    if villages.is_file():
+        with Image.open(villages) as atlas:
+            half=atlas.width//2
+            for i,name in enumerate(('machico','vila-franca')):
+                scene=atlas.crop((i*half+8,4,(i+1)*half-8,atlas.height-4))
+                write_scene(ASSETS.parent / 'assets' / 'sea',name,scene)
 
 
 if __name__ == "__main__":

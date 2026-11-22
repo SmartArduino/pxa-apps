@@ -11,7 +11,7 @@ inline constexpr std::array<int,VesselFrames> VesselHeave{0,-1,-1,0,0,1,1,0};
 inline constexpr std::array<Point,3> VesselMast{{{19,10},{24,9},{17,2}}};
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
 inline constexpr int CaravelFrameWidth=SeaPictureWidth/2, CaravelFrameHeight=SeaPictureHeight/2;
-inline constexpr int CaravelDetail=100, FisheryPicture=101;
+inline constexpr int CaravelDetail=100, FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 
 inline constexpr Text sea_picture_path(int kind) {
     switch (kind) {
@@ -25,6 +25,8 @@ inline constexpr Text sea_picture_path(int kind) {
     case ShoalLantern: return "assets/sea/shoal-lantern.pxi";
     case Doldrums: return "assets/sea/doldrums.pxi";
     case AdenMerchant: return "assets/sea/aden-ship.pxi";
+    case MachicoPicture: return "assets/sea/machico.pxi";
+    case VilaFrancaPicture: return "assets/sea/vila-franca.pxi";
     case FisheryPicture: return "assets/sea/fishery.pxi";
     case CaravelDetail: return "assets/sea/caravel-detail.pxi";
     default: return {};
