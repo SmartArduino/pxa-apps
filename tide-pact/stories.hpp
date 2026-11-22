@@ -35,7 +35,7 @@ static_assert(std::size(Tales) == TaleCount);
 
 enum Encounter : std::uint8_t {
     Calm, Storm, Privateer, Castaways, FalseBeacon, Rigging, ReliefShip, Fog,
-    Boarding, DockDuel, ReversedFlag, StrandedPost, ShoalLantern, Doldrums, EncounterCount
+    Boarding, DockDuel, ReversedFlag, StrandedPost, ShoalLantern, Doldrums, AdenMerchant, EncounterCount
 };
 enum EscortStage : std::uint8_t {
     EscortOpen, EscortSailing, EscortWonGuns, EscortWonDuel, EscortPublished, EscortSold
@@ -76,7 +76,10 @@ inline constexpr EncounterScene Encounters[] {
     {"浪里一盏灯","渔人萨法举灯求助。桨断了，潮水正把小船推向浅滩。给一件木料能做临时桨。有安娜或测过阿尔金，可花一天带船绕行。",
      {"送木料做桨","领船绕浅滩","避开沙洲"},{"萨法换上了临时桨，指给你看阿尔金的水鸟往哪儿飞","小船跟在你后面过了浅滩。萨法在图上圈出阿尔金的大致水域","小船举着灯往岸边漂。你驶向深水"}},
     {"帆垂下来了","风停了，帆布贴在桅杆上。西边落着雨，等一天可用一件织锦接水。有安娜或测过两处水域，也能沿云边找风。",
-     {"铺布接雨","沿云找风","漂一天"},{"雨水汇进桶里。雨歇后，帆也重新鼓了起来","船沿云边驶进一片起风的水面","船在原地漂了一天，傍晚终于起了风"}}
+     {"铺布接雨","沿云找风","漂一天"},{"雨水汇进桶里。雨歇后，帆也重新鼓了起来","船沿云边驶进一片起风的水面","船在原地漂了一天，傍晚终于起了风"}},
+    {"亚丁来的商船","亚丁商船问你从哪来。升商旗可用18金买12份淡水。冒称王家差船，对方会查王命文书。",
+     {"升商旗","冒打王旗","让开水道"},
+     {"你以商船身份相见。船主卖了水，也聊起两岸的航路","对方请来见证人核验。你的说法被拆穿，卡利卡特暂停交易","你们各自让开，在马拉巴尔外海分头航行"}}
 };
 static_assert(std::size(Encounters) == EncounterCount);
 static_assert(EncounterCount<=16);

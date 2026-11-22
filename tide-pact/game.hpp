@@ -182,6 +182,7 @@ inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 
 #include "inland.hpp"
 #include "nature.hpp"
+#include "charters.hpp"
 
 namespace tide {
 
@@ -235,13 +236,17 @@ struct State {
     std::array<std::uint8_t,std::size(RegionalSurveys)> inland_stages{};
     std::uint8_t nature_records=0;
     bool nature_hike=false;
+    MerchantBerth berth;
+    bool met_aden_ship=false;
+    int calicut_hold_until=0;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
-inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, SaveBytes=1648;
+inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
+inline constexpr std::size_t SaveBytes=1664;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -363,6 +368,18 @@ struct Game {
     bool guild_stake(int port) const;
     int guild_cost() const;
     bool invest();
+    int berth_port() const { return int(s.berth.port)-1; }
+    bool at_berth() const { return port() && berth_port()==s.origin; }
+    Text lease_requirement() const;
+    bool open_berth();
+    int reserve_value() const;
+    bool purchase_reserve(int vessel);
+    Text swap_requirement() const;
+    bool swap_vessel();
+    bool sell_reserve();
+    bool market_held() const { return port() && s.origin==calicut && s.calicut_hold_until>s.day; }
+    static constexpr int PortSettlement=60, AdenWaterPrice=18;
+    bool settle_port_case();
     int archive_here() const;
     int expedition_here() const;
     bool read_expedition(int expedition);

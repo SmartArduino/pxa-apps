@@ -15,7 +15,6 @@ constexpr Color ink = rgb(0x102429), panel = rgb(0x19343a), light = rgb(0x25464a
 constexpr Color border = rgb(0x497172), gold = rgb(0xf2cd87), ivory = rgb(0xf5ebd3);
 constexpr Color mist = rgb(0xb9cebe), quiet = rgb(0x86a7a3), vermilion = rgb(0xdf825e);
 constexpr Color mint = rgb(0x97d5b2), ocean = rgb(0x173d46);
-constexpr Text ship_names[] = {"轻帆艇", "远洋卡拉维尔", "三桅商船"};
 constexpr Text tabs[] = {"海图","市场","船坞","港务","日志"};
 constexpr int PricedButtonHeight=33;
 
@@ -29,7 +28,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -69,7 +68,10 @@ enum Action {
     WalkLandBack, FileLandReport, OpenTradeQuantity, QuantityBuy, QuantitySell,
     QuantityBackspace, QuantityMaximum, QuantityConfirm, WalkRegionalTrail, WaitLandTide, QuantityDigit,
     DispatchEntry=QuantityDigit+10,
-    OpenNatureWatch=DispatchEntry+DispatchCount, OpenNatureAlbum, WaitForNature, SketchNature, NatureSelect
+    OpenNatureWatch=DispatchEntry+DispatchCount, OpenNatureAlbum, WaitForNature, SketchNature, NatureSelect,
+    OpenCharterDesk=NatureSelect+int(NatureCount), OpenCharterRegistry, SignBerth, OpenReserveOrder,
+    ChangeFlagship, OpenReserveSale, ConfirmReserveSale, LocateBerth, OpenPortCase, SettlePortCase, CharterEntry,
+    PurchaseReserve=CharterEntry+int(HarborCharters.size())
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(WorldChart<DockService);
@@ -134,6 +136,8 @@ struct VoyageApp {
     HaggleReply bargain_reply=InvalidOffer;
     int trade_quantity=0;
     bool quantity_sell=false;
+    int charter_item=-1;
+    Overlay port_case_back=None;
     int nature_item=IslandLaurel;
     Overlay nature_page_back=NatureAlbum;
     int expedition_item=0;
@@ -1031,6 +1035,14 @@ struct VoyageApp {
             no_port(d,"靠港后才能交易");
             return;
         }
+        if (game.market_held()) {
+            skin_box(d,body,0,6);
+            d.label(body.x+7,body.y+6,"卡利卡特市场",gold);
+            d.wrap({body.x+7,body.y+31,body.w-14,body.h-64},
+                   "亚丁船主留下了证词。商会暂不与你买卖，去港务处问清留案。",ivory,17);
+            button(d,{body.x+7,body.bottom()-28,body.w-14,24},"查看旗号留案",OpenPortCase,true);
+            return;
+        }
         const auto& s=game.s;
         const int rows=market_rows();
         const int pages=(GoodsCount+rows-1)/rows;
@@ -1252,7 +1264,8 @@ struct VoyageApp {
         if (!game.port()) { no_port(d,"靠港后才能整备船只"); return; }
         const auto& s=game.s;
         skin_box(d,body,0,6);
-        d.label(body.x+5,body.y+4,ship_names[s.ship],gold,body.w-82);
+        d.label(body.x+5,body.y+4,HullNames[s.ship],gold,body.w-139);
+        button(d,{body.right()-128,body.y+2,54,20},"泊位",OpenCharterDesk,game.at_berth());
         button(d,{body.right()-71,body.y+2,67,20},"副官",ShowOfficers,s.first_mate!=NoOfficer,false,{},CrewIcon);
         d.label(body.x+5,body.y+22,format("船员 %d/%d  士气 %d  火炮 %d",s.crew,
             game.crew_limit(),s.spirits,s.guns),mist,body.w-10);
@@ -1260,8 +1273,8 @@ struct VoyageApp {
         const auto fill=format("补给 %d金",game.ration_cost());
         const auto repair=format("维修 %d金",game.repair_cost());
         const auto guns=format("加炮 %d金",145+s.guns*120);
-        const auto upgrade=format("换船 %d金",s.ship==0?800:1850);
-        const Text titles[]{fill,repair,"休整 24金","雇水手",s.ship<2?Text(upgrade):"已是商船",
+        const auto upgrade=format("换购 %d金",s.ship==0?800:1850);
+        const Text titles[]{fill,repair,"休整 24金","雇本港水手",s.ship<2?Text(upgrade):"已是商船",
                             s.guns<3?Text(guns):"火炮已满","应急信贷","食物淡水"};
         constexpr int glyphs[]{RationIcon,RepairIcon,-1,CrewIcon,SailIcon,-1,-1,FlaskIcon};
         for (int i=0;i<8;++i) {
@@ -1270,6 +1283,102 @@ struct VoyageApp {
                    i==7?OpenProvisions:DockService+i,i==0,(i==4 && s.ship==2)||(i==5 && s.guns==3),{},glyphs[i]);
         }
     }
+    void charter_desk(Draw& d) {
+        const int base=game.berth_port();
+        const auto& berth=game.s.berth;
+        const auto* charter=harbor_charter(game.s.origin);
+        const int x=body.x+7, y=body.y+29, w=body.w-14, bottom=body.bottom();
+        page_title(d,"商馆泊位",MooringIcon);
+        if (charter) {
+            const auto jurisdiction=format("%s · %s",Places[charter->port].name.data(),charter->authority.data());
+            d.label(x,y,jurisdiction,gold,w);
+        }
+        if (game.at_berth()) {
+            if (berth.vessel) {
+                d.label(x,y+20,format("留泊 %s  船体%d  炮%d",
+                        HullNames[berth.vessel-1].data(),berth.hull,berth.guns),ivory,w);
+                const Text blocked=game.swap_requirement();
+                const auto shore=format("岸上候船水手 %d",berth.sailors);
+                if (d.measure("出售备船")+21<w/2)
+                    button(d,{x+w-82,y+40,82,22},"出售备船",OpenReserveSale);
+                d.label(x,y+42,blocked.empty()?Text(shore):blocked,blocked.empty()?mist:vermilion,w-86);
+                const int split=(w-4)/2;
+                button(d,{x,bottom-29,split,25},"港口名录",OpenCharterRegistry);
+                button(d,{x+split+4,bottom-29,w-split-4,25},"更换旗舰",ChangeFlagship,true,!blocked.empty());
+            } else {
+                d.wrap({x,y+21,w,bottom-y-55},"这里可留泊一艘备船。租下泊位后，船匠也会按商馆的价格维修。",ivory,17);
+                pair(d,{x,bottom-29,w,25},"港口名录",OpenCharterRegistry,"购置备船",OpenReserveOrder);
+            }
+            return;
+        }
+        const Text blocked=game.lease_requirement();
+        if (base>=0)
+            d.label(x,y+22,format("%s%s",berth.vessel?"备船留在":"商馆泊位在",Places[base].name.data()),ivory,w);
+        else
+            d.label(x,y+22,"先选适合自己航路的港口。",ivory,w);
+        d.wrap({x,y+41,w,bottom-y-73},blocked.empty()?"租契准许留船和接洽本地船匠。":blocked,mist,17);
+        const int split=(w-4)/2;
+        button(d,{x,bottom-29,split,25},"港口名录",OpenCharterRegistry);
+        if (charter && !berth.vessel)
+            button(d,{x+split+4,bottom-29,w-split-4,25},format("%s %d金",base>=0?"迁租":"租泊",charter->rent),
+                   SignBerth,true,!blocked.empty());
+        else if (base>=0)
+            button(d,{x+split+4,bottom-29,w-split-4,25},"标出泊位",LocateBerth,true);
+    }
+
+    void charter_registry(Draw& d) {
+        page_title(d,"港口名录",LetterIcon);
+        if (charter_item<0) {
+            const int x=body.x+5, y=body.y+30, w=body.w-10;
+            const int half=(w-4)/2;
+            const int height=std::clamp((body.h-33)/3-4,21,38);
+            for (int i=0;i<int(HarborCharters.size());++i) {
+                const auto& entry=HarborCharters[i];
+                const bool known=game.charted(entry.port);
+                button(d,{x+(i%2)*(half+4),y+(i/2)*(height+4),half,height},
+                       known?Places[entry.port].name:Text("待查港口"),CharterEntry+i,
+                       game.berth_port()==entry.port,!known);
+            }
+            return;
+        }
+        const auto& entry=HarborCharters[charter_item];
+        const int x=body.x+7, y=body.y+30, w=body.w-14;
+        d.label(x,y,format("%s · %s",Places[entry.port].name.data(),entry.authority.data()),gold,w);
+        d.wrap({x,y+20,w,body.h-79},entry.advantage,ivory,17);
+        d.label(x,body.bottom()-24,format("租泊 %d金  信任 %d  %s",entry.rent,entry.trust,
+                LanguageNames[entry.language].data()),mist,w);
+    }
+
+    void reserve_order(Draw& d) {
+        page_title(d,"购置留港备船",SailIcon);
+        for (int i=0;i<int(std::size(HullNames));++i)
+            row(d,i,HullNames[i],format("%d金",BerthVesselPrices[i]),PurchaseReserve+i);
+        d.label(body.x+7,body.bottom()-23,"买下后停在本港，靠泊时可换乘。",mist,body.w-14);
+    }
+
+    void reserve_sale(Draw& d) {
+        page_title(d,"出售留港备船",LetterIcon);
+        d.wrap({body.x+7,body.y+30,body.w-14,body.h-63},
+               game.s.berth.sailors?"出售备船后，候船水手会在本港离船。租契仍然有效。":
+                                   "卖出后仍可使用泊位，也可去别处另立租契。",ivory,17);
+        pair(d,{body.x+6,body.bottom()-29,body.w-12,25},"留下备船",Close,
+             format("出售 %d金",game.reserve_value()),ConfirmReserveSale);
+    }
+
+    void port_case(Draw& d) {
+        page_title(d,"旗号留案",LetterIcon);
+        const int x=body.x+7, w=body.w-14, y=body.y+32;
+        if (!game.market_held()) {
+            d.label(x,y,"商会已重新开放交易。",mint,w);
+            return;
+        }
+        d.label(x,y,format("还需等 %d 日",game.s.calicut_hold_until-game.s.day),gold,w);
+        d.wrap({x,y+20,w,body.bottom()-y-48},
+               "冒称王家差船一事已记入港簿。交偿金可以提前结案。补给、修船和出海仍可照常办理。",ivory,16);
+        button(d,{x,body.bottom()-28,w,24},format("交偿金 %d金",Game::PortSettlement),SettlePortCase,
+               true,game.s.gold<Game::PortSettlement);
+    }
+
     void office(Draw& d) {
         if (game.sea()) { no_port(d,"到港或抵达测绘点后办理"); return; }
         const auto& p=Places[game.s.origin];
@@ -1499,12 +1608,14 @@ struct VoyageApp {
         constexpr int tile_w=160, tile_h=104;
         const int crop_w=std::min(tile_w,tile_h*illustration.w/illustration.h);
         const int crop_h=std::min(tile_h,tile_w*illustration.h/illustration.w);
-        d.image({art::sea_stories},{(kind==Doldrums?tile_w:0)+(tile_w-crop_w)/2,
+        d.image({kind==AdenMerchant?art::aden_ship:art::sea_stories},
+                {(kind==Doldrums?tile_w:0)+(tile_w-crop_w)/2,
                 (tile_h-crop_h)/2,crop_w,crop_h},illustration);
         d.frame(illustration,border);
         const int text_x=illustration.right()+7;
+        const Text blocked=kind==AdenMerchant?game.encounter_requirement(1):Text{};
         d.wrap({text_x,illustration.y,w+x-text_x,illustration.h},
-               scene.message,ivory,d.font.cell+1);
+               blocked.empty()?scene.message:blocked,ivory,d.font.cell+1);
         for (int i=0;i<3;++i) {
             const int left=x+i*(w+3)/3, right=x+(i+1)*(w+3)/3-3;
             button(d,{left,choices_y,right-left,27},scene.choices[i],FightFirst+i,i==0,
@@ -1515,7 +1626,7 @@ struct VoyageApp {
         const auto& s=game.s;
         const auto weather=s.weather;
         if (game.duel()) { duel_screen(d); return; }
-        if (weather==ShoalLantern || weather==Doldrums) { regional_scene(d,weather); return; }
+        if (weather==ShoalLantern || weather==Doldrums || weather==AdenMerchant) { regional_scene(d,weather); return; }
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
         const auto& scene=Encounters[weather];
@@ -2254,8 +2365,13 @@ struct VoyageApp {
             button(d,{body.right()-124,body.y+3,70,23},"港际运单",OpenDispatch,true);
         const bool invested=game.guild_stake(game.s.origin);
         const auto cost=format("入股 %d金",game.guild_cost());
-        row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
-        d.label(body.x+7,body.y+52,"入股后在本港买货约省6%",mist,body.w-14);
+        if (game.market_held()) {
+            row(d,0,"旗号留案","暂停交易",OpenPortCase,true);
+            d.label(body.x+7,body.y+52,"商会等港务处结案再开市。",mist,body.w-14);
+        } else {
+            row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
+            d.label(body.x+7,body.y+52,"入股后在本港买货约省6%",mist,body.w-14);
+        }
         if (game.s.origin==madeira ||
             (game.s.origin==cadiz && game.s.drift_stage>=DriftRecovered)) {
             pair(d,{body.x+4,body.y+74,body.w-8,21},
@@ -3014,6 +3130,11 @@ struct VoyageApp {
         case NatureWatch: nature_index(d,true); break;
         case NatureAlbum: nature_index(d,false); break;
         case NaturePage: nature_page(d); break;
+        case CharterDesk: charter_desk(d); break;
+        case CharterRegistry: charter_registry(d); break;
+        case ReserveOrder: reserve_order(d); break;
+        case ReserveSale: reserve_sale(d); break;
+        case PortCasePage: port_case(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -3085,8 +3206,56 @@ struct VoyageApp {
             }
             return;
         }
+        if (action>=CharterEntry && action<PurchaseReserve) {
+            if (modal==CharterRegistry && game.charted(HarborCharters[action-CharterEntry].port)) {
+                charter_item=action-CharterEntry;
+                focused=0;
+            }
+            return;
+        }
+        if (action>=PurchaseReserve && action<PurchaseReserve+int(std::size(HullNames))) {
+            if (modal==ReserveOrder) {
+                if (game.purchase_reserve(action-PurchaseReserve)) {
+                    changed();
+                    set_modal(CharterDesk);
+                } else notify();
+            }
+            return;
+        }
         if (action>=OpenLanguages) {
             switch (action) {
+            case OpenPortCase:
+                if (game.market_held()) {
+                    port_case_back=modal;
+                    set_modal(PortCasePage);
+                }
+                break;
+            case SettlePortCase:
+                if (modal==PortCasePage && game.settle_port_case()) changed();
+                break;
+            case OpenCharterDesk:
+                if (game.port()) set_modal(CharterDesk);
+                break;
+            case OpenCharterRegistry:
+                charter_item=-1;
+                set_modal(CharterRegistry);
+                break;
+            case SignBerth:
+                if (modal==CharterDesk && game.open_berth()) changed();
+                break;
+            case OpenReserveOrder:
+                if (game.at_berth() && !game.s.berth.vessel) set_modal(ReserveOrder);
+                break;
+            case ChangeFlagship:
+                if (modal==CharterDesk && game.swap_vessel()) changed();
+                break;
+            case OpenReserveSale:
+                if (game.at_berth() && game.s.berth.vessel) set_modal(ReserveSale);
+                break;
+            case ConfirmReserveSale:
+                if (modal==ReserveSale && game.sell_reserve()) { changed(); set_modal(CharterDesk); }
+                break;
+            case LocateBerth: if (game.berth_port()>=0) select(game.berth_port()); break;
             case OpenNatureWatch:
                 if (game.nature_site()==NoNatureSite) break;
                 if (game.s.helm) {
@@ -3712,7 +3881,10 @@ struct VoyageApp {
             return true;
         }
         if (modal!=None) {
-            if (modal==PortStoryPage) set_modal(port_story_back);
+            if (modal==CharterRegistry && charter_item>=0) { charter_item=-1; focused=0; dirty=true; }
+            else if (modal==CharterRegistry || modal==ReserveOrder || modal==ReserveSale) set_modal(CharterDesk);
+            else if (modal==PortCasePage) set_modal(port_case_back);
+            else if (modal==PortStoryPage) set_modal(port_story_back);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
             else if (modal==LandPage) set_modal(inland_archive?ExpeditionPage:HarborTown);
             else if (modal==HarborTown && outside) change_outskirts(false);

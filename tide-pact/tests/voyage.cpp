@@ -958,6 +958,85 @@ void nature_observation() {
     assert(sea.nature_site()==NoNatureSite);
 }
 
+void charter_and_reserve_vessel() {
+    Game game;
+    game.s.gold=4500;
+    assert(!game.open_berth() && game.invest() && game.open_berth());
+    assert(game.at_berth() && !game.open_berth());
+    game.s.hull=73;
+    game.s.guns=2;
+    assert(game.repair_cost()==44 && game.purchase_reserve(2) && !game.purchase_reserve(1));
+    assert(game.swap_vessel() && game.s.ship==2 && game.s.hull==100 && game.s.guns==0);
+    assert(game.s.berth.vessel==1 && game.s.berth.hull==73 && game.s.berth.guns==2);
+    game.s.crew=26;
+    game.s.cargo[Timber]=32;
+    assert(!game.swap_vessel());
+    game.s.cargo[Timber]=12;
+    game.s.water=130;
+    assert(!game.swap_vessel());
+    game.s.water=70;
+    assert(game.swap_vessel() && game.s.crew==18 && game.s.berth.sailors==8 && game.s.hull==73);
+    State saved;
+    assert(decode(saved,encode(game.s)) && saved.berth.sailors==8 && saved.berth.guns==0);
+    game.s=saved;
+    assert(game.swap_vessel() && game.s.crew==26 && game.s.berth.sailors==0);
+    game.s.origin=tunis;
+    ++game.s.trust;
+    assert(game.invest() && !game.open_berth() && !game.swap_vessel() && !game.sell_reserve());
+    game.s.origin=lisbon;
+    const int price=game.reserve_value(), gold=game.s.gold;
+    assert(game.sell_reserve() && game.s.gold==gold+price && !game.s.berth.vessel);
+    game.s.origin=tunis;
+    assert(!game.open_berth() && game.hire_interpreter() && game.open_berth());
+    assert(game.berth_port()==tunis && !game.s.berth.vessel);
+}
+
+void aden_merchant_and_colors() {
+    Game ship;
+    ship.s.cargo[Wine]=2;
+    ship.s.chart_marks=place_bit(PlaceCount)-1;
+    assert(ship.start_helm(-1));
+    const auto shore=Anchor[calicut];
+    ship.s.heading=6;
+    for (int day=0;day<20 && !ship.encounter();++day) {
+        ship.s.day=day;
+        ship.s.helm_x=(shore.x-24)*16;
+        ship.s.helm_y=shore.y*16;
+        ship.s.sail_watch=SailingWatches-1;
+        ship.paused=false;
+        ship.helm_step([](Point) { return true; });
+    }
+    assert(ship.s.weather==AdenMerchant);
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.weather==AdenMerchant && !saved.met_aden_ship);
+    assert(!ship.encounter_requirement(0).empty() && !ship.encounter_requirement(1).empty());
+    ship.s.language_skills|=std::uint32_t(Fluent)<<(2*Arabic);
+    Game honest=ship, leave=ship;
+    const int water=honest.s.water, gold=honest.s.gold;
+    honest.encounter_action(0);
+    assert(honest.s.met_aden_ship && !honest.s.calicut_hold_until && honest.s.trust==1);
+    assert(honest.s.gold==gold-Game::AdenWaterPrice && honest.s.water==water+12);
+    leave.encounter_action(2);
+    assert(leave.s.met_aden_ship && !leave.s.calicut_hold_until);
+    ship.encounter_action(1);
+    assert(ship.s.met_aden_ship && ship.s.calicut_hold_until==ship.s.day+12);
+    assert(decode(saved,encode(ship.s)) && saved.calicut_hold_until==ship.s.calicut_hold_until);
+    assert(read_sea(saved.sea_log[0]).kind==AdenMerchant && read_sea(saved.sea_log[0]).choice==1);
+    ship.s.helm_x=shore.x*16;
+    ship.s.helm_y=shore.y*16;
+    assert(ship.dock_helm([](Point) { return true; }) && ship.s.origin==calicut);
+    assert(ship.market_held() && !ship.trade_limit(Wine,true) && !ship.trade(Wine,false,1).units);
+    assert(!ship.invest() && !ship.lease_requirement().empty());
+    Game expiry=ship;
+    expiry.s.day=expiry.s.calicut_hold_until;
+    assert(!expiry.market_held());
+    ship.s.origin=malindi;
+    assert(!ship.market_held() && !ship.settle_port_case());
+    ship.s.origin=calicut;
+    assert(ship.settle_port_case() && !ship.market_held() && ship.s.gold==gold-Game::PortSettlement);
+    assert(ship.trade_limit(Wine,true)>0);
+}
+
 void road_freight() {
     Game game;
     assert(!game.dispatch_offer_here(RoadFreight) && !game.accept_dispatch(RoadFreight));
@@ -1436,6 +1515,8 @@ int main() {
     riverside_timber();
     inland_survey();
     nature_observation();
+    charter_and_reserve_vessel();
+    aden_merchant_and_colors();
     road_freight();
     search_for_driftwood();
     ship_officers();
