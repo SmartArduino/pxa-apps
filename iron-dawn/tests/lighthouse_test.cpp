@@ -97,7 +97,7 @@ void migrate_v10(bool route_known){
  auto input=std::as_bytes(std::span{&restored,1}).first(bytes.size());
  assert(decode_save(input,restored));
  assert(restored.career.unlocked==lighthouse_chapter&&restored.career.wins==127);
- assert(restored.career.best[6]==70&&restored.career.best[7]==0&&restored.defense_best==42);
+ assert(restored.career.best[6]==70&&restored.career.best[7]==0&&restored.defense_best[0]==42);
  assert(restored.career.harbor_plan==(route_known?harbor_shutdown:harbor_choice));
  assert(restored.world.mission.harbor_plan==harbor_choice);
 }

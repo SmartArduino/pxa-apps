@@ -1,0 +1,330 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 289
+    },
+    {
+      "name": "dismiss-guide",
+      "action": "tap",
+      "x": 155,
+      "y": 408
+    },
+    {
+      "name": "initial-0-bed",
+      "action": "tap",
+      "x": 72,
+      "y": 190
+    },
+    {
+      "name": "initial-0-buy",
+      "action": "tap",
+      "x": 95,
+      "y": 430
+    },
+    {
+      "name": "initial-0-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "initial-1-bed",
+      "action": "tap",
+      "x": 178,
+      "y": 181
+    },
+    {
+      "name": "initial-1-buy",
+      "action": "tap",
+      "x": 350,
+      "y": 430
+    },
+    {
+      "name": "initial-1-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "initial-2-bed",
+      "action": "tap",
+      "x": 236,
+      "y": 181
+    },
+    {
+      "name": "initial-2-buy",
+      "action": "tap",
+      "x": 205,
+      "y": 430
+    },
+    {
+      "name": "initial-2-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "wave-one",
+      "action": "tap",
+      "x": 380,
+      "y": 430
+    },
+    {
+      "name": "wave-one-fight",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "first-combat",
+      "action": "screenshot"
+    },
+    {
+      "name": "lane-3-bed",
+      "action": "tap",
+      "x": 346,
+      "y": 181
+    },
+    {
+      "name": "lane-3-buy",
+      "action": "tap",
+      "x": 95,
+      "y": 430
+    },
+    {
+      "name": "lane-3-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "lane-4-bed",
+      "action": "tap",
+      "x": 343,
+      "y": 278
+    },
+    {
+      "name": "lane-4-buy",
+      "action": "tap",
+      "x": 95,
+      "y": 430
+    },
+    {
+      "name": "lane-4-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "second-wave-fight",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "first-1-tower",
+      "action": "tap",
+      "x": 178,
+      "y": 171
+    },
+    {
+      "name": "first-1-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "first-1-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "first-0-tower",
+      "action": "tap",
+      "x": 72,
+      "y": 180
+    },
+    {
+      "name": "first-0-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "first-0-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "third-wave-fight",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "second-1-tower",
+      "action": "tap",
+      "x": 178,
+      "y": 171
+    },
+    {
+      "name": "second-1-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "second-1-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "second-3-tower",
+      "action": "tap",
+      "x": 346,
+      "y": 171
+    },
+    {
+      "name": "second-3-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "second-3-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "fourth-wave-fight",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "third-zero-tower",
+      "action": "tap",
+      "x": 72,
+      "y": 180
+    },
+    {
+      "name": "third-zero-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "third-zero-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "fifth-wave-fight",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "last-2-tower",
+      "action": "tap",
+      "x": 236,
+      "y": 171
+    },
+    {
+      "name": "last-2-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "last-2-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "last-4-tower",
+      "action": "tap",
+      "x": 343,
+      "y": 268
+    },
+    {
+      "name": "last-4-upgrade",
+      "action": "tap",
+      "x": 278,
+      "y": 430
+    },
+    {
+      "name": "last-4-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "finish-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "finish-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "finish-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "finish-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "finish-4",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "finish-5",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "victory",
+      "action": "screenshot"
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "relaunch",
+      "action": "relaunch"
+    },
+    {
+      "name": "open-levels",
+      "action": "tap",
+      "x": 240,
+      "y": 354
+    },
+    {
+      "name": "saved-stars",
+      "action": "screenshot"
+    },
+    {
+      "name": "next-level",
+      "action": "tap",
+      "x": 350,
+      "y": 118
+    },
+    {
+      "name": "second-map",
+      "action": "screenshot"
+    }
+  ]
+}

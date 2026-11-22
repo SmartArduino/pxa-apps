@@ -217,6 +217,7 @@
  }
 
  Vec deployment_view() const {
+  if(extra.mode)return arena().view;
   if (!authored_map()) return {8,10};
   auto home = base_position();
   auto front = campaign_maps[chapter].front;

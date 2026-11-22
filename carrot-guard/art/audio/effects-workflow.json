@@ -1,0 +1,1083 @@
+{
+  "1": {
+    "class_type": "CheckpointLoaderSimple",
+    "inputs": {
+      "ckpt_name": "stable_audio_3_small_sfx.safetensors"
+    }
+  },
+  "2": {
+    "class_type": "CLIPLoader",
+    "inputs": {
+      "clip_name": "t5gemma_b_b_ul2.safetensors",
+      "type": "stable_audio",
+      "device": "default"
+    }
+  },
+  "3": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "music, speech, vocals, singing, long ambience, background noise, distortion, harsh noise, several repeated events, reverb wash"
+    }
+  },
+  "4": {
+    "class_type": "EmptyLatentAudio",
+    "inputs": {
+      "seconds": 2.0,
+      "batch_size": 1
+    }
+  },
+  "10": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single tiny soft wooden button click, friendly cartoon game interface, dry close-up recording, clean silence around the short isolated sound, no music, no voice."
+    }
+  },
+  "11": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "10",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "12": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111750,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "11",
+        0
+      ],
+      "negative": [
+        "11",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "13": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "12",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "14": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "13",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/tap"
+    }
+  },
+  "16": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single cute wooden toy construction pop and gentle springy plonk, cartoon candy cannon being placed, short satisfying warm impact, dry isolated sound effect, no music, no voice."
+    }
+  },
+  "17": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "16",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "18": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111751,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "17",
+        0
+      ],
+      "negative": [
+        "17",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "19": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "18",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "20": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "19",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/build"
+    }
+  },
+  "22": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short cheerful magical rising three note sparkle chime, bright toy bells and a soft twinkle, upgrade success in a cute cartoon game, isolated dry sound effect, no music, no voice."
+    }
+  },
+  "23": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "22",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "24": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111752,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "23",
+        0
+      ],
+      "negative": [
+        "23",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "25": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "24",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "26": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "25",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/upgrade"
+    }
+  },
+  "28": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short soft coin purse jingle and wooden click, selling a tiny toy, dry isolated cheerful cartoon sound effect, no music, no voice."
+    }
+  },
+  "29": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "28",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "30": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111753,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "29",
+        0
+      ],
+      "negative": [
+        "29",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "31": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "30",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "32": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "31",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/sell"
+    }
+  },
+  "34": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single bright small golden coin pickup ping with two delicate bell partials, short satisfying metallic twinkle, dry isolated cartoon sound effect, no music, no voice."
+    }
+  },
+  "35": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "34",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "36": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111754,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "35",
+        0
+      ],
+      "negative": [
+        "35",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "37": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "36",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "38": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "37",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/coin"
+    }
+  },
+  "40": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short gentle muted wooden descending two note bloop, friendly cartoon unavailable action notification, not harsh or alarming, isolated dry game sound, no music, no voice."
+    }
+  },
+  "41": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "40",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "42": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111755,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "41",
+        0
+      ],
+      "negative": [
+        "41",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "43": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "42",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "44": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "43",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/alert"
+    }
+  },
+  "46": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short bright icy crystalline shimmer burst with tiny ice clinks, magical ice freezing spell in a cute cartoon game, isolated clean sound effect, no music, no voice."
+    }
+  },
+  "47": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "46",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "48": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111756,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "47",
+        0
+      ],
+      "negative": [
+        "47",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "49": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "48",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "50": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "49",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/freeze"
+    }
+  },
+  "52": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short cheerful wooden whistle chirrup and soft bell, friendly cartoon adventure starting signal, isolated clean sound effect, no music, no voice."
+    }
+  },
+  "53": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "52",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "54": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111757,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "53",
+        0
+      ],
+      "negative": [
+        "53",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "55": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "54",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "56": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "55",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/begin"
+    }
+  },
+  "58": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single short soft cork pop with a rubbery air puff, small toy candy cannon shooting, cute bouncy cartoon sound effect, dry isolated, no gunfire, no music, no voice."
+    }
+  },
+  "59": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "58",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "60": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111758,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "59",
+        0
+      ],
+      "negative": [
+        "59",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "61": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "60",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "62": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "61",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/fire"
+    }
+  },
+  "64": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single tiny crystal ice projectile whoosh and delicate glass clink, short soft cartoon ice tower firing, dry isolated sound effect, no music, no voice."
+    }
+  },
+  "65": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "64",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "66": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111759,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "65",
+        0
+      ],
+      "negative": [
+        "65",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "67": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "66",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "68": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "67",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/ice"
+    }
+  },
+  "70": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A single short toy firework launch puff followed by tiny cheerful crackles, soft whimsical cartoon game effect, dry isolated, no loud explosion, no music, no voice."
+    }
+  },
+  "71": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "70",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "72": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111760,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "71",
+        0
+      ],
+      "negative": [
+        "71",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "73": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "72",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "74": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "73",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/firework"
+    }
+  },
+  "76": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short crumble of tiny pebbles followed by a small magical sparkle, removing a cartoon obstacle, dry close-up isolated sound effect, no music, no voice."
+    }
+  },
+  "77": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "76",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "78": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111761,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "77",
+        0
+      ],
+      "negative": [
+        "77",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "79": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "78",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "80": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "79",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/clear"
+    }
+  },
+  "82": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short joyful ascending toy bell victory flourish, gentle celebratory marimba and sparkling chime, cute cartoon game success stinger, isolated clean sound, no speech, no singing."
+    }
+  },
+  "83": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "82",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "84": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111762,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "83",
+        0
+      ],
+      "negative": [
+        "83",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "85": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "84",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "86": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "85",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/win"
+    }
+  },
+  "88": {
+    "class_type": "CLIPTextEncode",
+    "inputs": {
+      "clip": [
+        "2",
+        0
+      ],
+      "text": "A short gentle descending wooden marimba consolation flourish, warm friendly cartoon game retry stinger, not scary, isolated dry sound, no speech, no singing."
+    }
+  },
+  "89": {
+    "class_type": "ConditioningStableAudio",
+    "inputs": {
+      "positive": [
+        "88",
+        0
+      ],
+      "negative": [
+        "3",
+        0
+      ],
+      "seconds_start": 0.0,
+      "seconds_total": 2.0
+    }
+  },
+  "90": {
+    "class_type": "KSampler",
+    "inputs": {
+      "model": [
+        "1",
+        0
+      ],
+      "seed": 2026111763,
+      "steps": 24,
+      "cfg": 4.0,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "positive": [
+        "89",
+        0
+      ],
+      "negative": [
+        "89",
+        1
+      ],
+      "latent_image": [
+        "4",
+        0
+      ],
+      "denoise": 1.0
+    }
+  },
+  "91": {
+    "class_type": "VAEDecodeAudio",
+    "inputs": {
+      "samples": [
+        "90",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    }
+  },
+  "92": {
+    "class_type": "SaveAudio",
+    "inputs": {
+      "audio": [
+        "91",
+        0
+      ],
+      "filename_prefix": "carrot-guard/20261117/lose"
+    }
+  }
+}

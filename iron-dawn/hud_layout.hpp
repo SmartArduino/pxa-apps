@@ -73,10 +73,12 @@ struct CompactHudLayout {
  explicit CompactHudLayout(int canvas_height,int physical_height,int canvas_width=480,float density=1,float font=1):height(canvas_height),width(canvas_width){
   bool readable=density>=1.25f;int glyph=12*font_style(std::lround(12*density*font),false).scale;
   auto logical=[&](float pixels){return int(std::ceil(pixels*height/std::max(1,physical_height)));};
-  line=std::clamp(logical(readable?glyph+4:14*font),20,std::max(20,height/11));
+  int line_min=std::min(20,height/16);
+  line=std::clamp(logical(readable?glyph+4:14*font),line_min,std::max(line_min,height/11));
   row=std::min(std::max(line+8,logical(std::max(36.f,30*density))),height/5);
   header=line+8;top=height-row-10;
-  status_height=readable?std::clamp(2*line+8,50,height/4):50;
+  int status_min=std::min(50,(height*50+319)/320);
+  status_height=readable?std::clamp(2*line+8,status_min,height/4):50;
   int drawer_budget=top-status_height-18;
   tactic_row=std::clamp(logical(std::max(32.f,24*density)),24,std::max(24,std::min(row,(drawer_budget-header-18)/2)));
   picture=std::clamp(logical(readable?26*density:22.f),24,std::max(24,drawer_budget-header-24-line*2));
@@ -94,7 +96,7 @@ struct CompactHudLayout {
  Rect price(int index,DockPanel panel)const{auto a=name(index,panel);return {a.x,a.y+line,a.w,line};}
  Rect progress(int index,DockPanel panel)const{auto a=card(index,panel);return {a.x+4,a.y+a.h-4,a.w-8,2};}
  Rect tactic(int index,DockPanel panel=DockPanel::tactics)const{return column(index%4,4,overlay(panel).y+header+4+(index/4)*(tactic_row+6),tactic_row);}
- Rect map()const{int size=std::clamp(std::min(width,height)/5,80,112);return {width-size-10,status_height+8,size,size};}
+ Rect map()const{int size=std::clamp(std::min(width,height)/5,std::min(80,height/4),112);return {width-size-10,status_height+8,size,size};}
  Rect selection()const{auto m=map();return {m.x,m.y+m.h+8,m.w,std::min(row,40)};}
 };
 }

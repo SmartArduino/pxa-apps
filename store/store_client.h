@@ -44,6 +44,15 @@
 #define STORE_BODY_WAITING 2
 #define STORE_BODY_LIMIT 3
 
+inline bool store_retryable_network(int32_t status) {
+    return status == PXA_STATUS_UNAVAILABLE || status == PXA_STATUS_IO_ERROR ||
+           status == PXA_STATUS_TIMED_OUT;
+}
+
+inline bool store_retryable_http(uint16_t status) {
+    return status == 408 || status == 502 || status == 503 || status == 504;
+}
+
 typedef struct {
     uint64_t device_permission;
     uint64_t network_permission;

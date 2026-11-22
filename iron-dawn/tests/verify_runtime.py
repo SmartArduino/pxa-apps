@@ -90,6 +90,13 @@ def run(item):
     tap(offset+295,home_y+menu_row+10+menu_row/2);shot('manual-first');tap(w-90,h-menu_row/2-12);shot('manual-next');tap(90,h-menu_row/2-12);shot('manual-previous');command('KEY BACK');time.sleep(.2)
    tap(offset+185,home_y+menu_row+10+menu_row/2 if readable else home_y+64)
    deadline=time.monotonic()+4
+   while 'screen=10' not in log.read_text() and time.monotonic()<deadline:
+    time.sleep(.06)
+   assert 'screen=10' in log.read_text()
+   time.sleep(.3)
+   shot('defense-map-selection')
+   tap(w/2,h*.30)
+   deadline=time.monotonic()+4
    while 'screen=9' not in log.read_text() and time.monotonic()<deadline:
     time.sleep(.06)
    assert 'screen=9' in log.read_text()

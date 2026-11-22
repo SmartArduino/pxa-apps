@@ -354,6 +354,7 @@ typedef struct {
     uint8_t *body;
     uint32_t body_capacity;
     uint32_t body_limit;
+    uint8_t transport_retried;
     store::ViewerGesture viewer_gesture;
 } store_state_t;
 
@@ -3356,11 +3357,24 @@ static int retry_larger_body(void) {
                               app.packet, sizeof(app.packet));
 }
 
+static int retry_json_transport(void) {
+    if (app.transport_retried || app.pending_restart ||
+        app.pending_search_valid || app.pending_request == STORE_REQUEST_UPDATE_CHECK)
+        return 0;
+    app.transport_retried = 1;
+    if (app.client.body_handle != 0)
+        (void)store_client_close_body(&app.client);
+    store_trace("retry JSON transport", app.pending_request);
+    return store_client_fetch(&app.client, app.pending_request, app.url,
+        string_length(app.url), app.body_limit, app.packet, sizeof(app.packet));
+}
+
 static int start_catalog_fetch(void) {
     store_trace("catalog fetch cursor", (uint32_t)app.request_cursor);
     app.busy = 1;
     app.state = STORE_LOADING;
     app.pending_request = STORE_REQUEST_CATALOG;
+    app.transport_retried = 0;
     static const char *const sorts[] = {"featured", "updated", "downloads", "name"};
     if (!store_client_build_catalog_url(app.url, sizeof(app.url),
                                         app.profile,
@@ -3398,6 +3412,7 @@ static int start_detail_fetch(void) {
                                     item->lineage_root_key_id,app.device_id, app.preferred_format))
         return 0;
     app.pending_request = STORE_REQUEST_DETAIL;
+    app.transport_retried = 0;
     if (!ensure_body_capacity()) return 0;
     if (!store_client_fetch(
             &app.client, STORE_REQUEST_DETAIL, app.url, string_length(app.url),
@@ -3627,7 +3642,7 @@ static int finish_catalog_body(void) {
         return fail_request(STORE_ERROR_FAILED);
     if ((app.client.response_flags & PXA_NET_BODY_LENGTH_KNOWN) != 0 &&
         app.client.response_length != app.client.response_size)
-        return fail_request(STORE_ERROR_PROTOCOL);
+        return retry_json_transport() || fail_request(STORE_ERROR_PROTOCOL);
     app.catalog.has_more = 0;
     if (!store_json_parse_catalog(app.body, app.client.response_size,
                                   &app.catalog, &app.taxonomy))
@@ -3774,7 +3789,8 @@ static int finish_detail_body(void) {
         return fail_detail(STORE_ERROR_FAILED);
     if ((app.client.response_flags & PXA_NET_BODY_LENGTH_KNOWN) != 0 &&
         app.client.response_length != app.client.response_size)
-        return fail_detail(STORE_ERROR_PROTOCOL);
+        return (!detail_request_stale() && retry_json_transport()) ||
+               fail_detail(STORE_ERROR_PROTOCOL);
     app.busy = 0;
     if (detail_request_stale()) return resume_detail_navigation();
     if (!store_json_parse_app_detail(app.body, app.client.response_size,
@@ -3816,6 +3832,9 @@ static int continue_body(void) {
         return finish_catalog_body();
     }
     if (result == STORE_BODY_LIMIT && retry_larger_body()) return 1;
+    if (store_retryable_network(result) &&
+        (app.pending_request != STORE_REQUEST_DETAIL || !detail_request_stale()) &&
+        retry_json_transport()) return 1;
     if (app.pending_request == STORE_REQUEST_UPDATE_CHECK)
         return finish_update_check(1);
     if (app.pending_request == STORE_REQUEST_DETAIL)
@@ -3844,6 +3863,12 @@ static int handle_json_result(const pxa_event_t *parsed) {
     store_trace("body limit", app.body_limit);
     if (result.status == PXA_STATUS_LIMIT_EXCEEDED && retry_larger_body())
         return 1;
+    if (store_retryable_network(result.status) ||
+        (result.status == PXA_STATUS_OK && store_retryable_http(result.status_code))) {
+        app.client.body_handle = result.body_handle;
+        if (retry_json_transport()) return 1;
+        result.body_handle = app.client.body_handle;
+    }
     if (parsed->token == STORE_REQUEST_UPDATE_CHECK) {
         app.client.response_flags = result.flags;
         app.client.response_length = result.body_length;
@@ -3855,6 +3880,8 @@ static int handle_json_result(const pxa_event_t *parsed) {
         return continue_body();
     }
     if (result.status != PXA_STATUS_OK) {
+        app.client.body_handle = result.body_handle;
+        if (app.client.body_handle) (void)store_client_close_body(&app.client);
         toast_failure(PXA_MSG_STATUS_FAILED, result.status);
         if (detail && app.install_refresh) {
             app.install_refresh = 0;

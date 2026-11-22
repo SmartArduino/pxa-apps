@@ -37,11 +37,42 @@ enum Terrain { plain, hills, river };
 enum SiteKind { county, stronghold, crossing, battleSite, pass };
 constexpr const char* siteKinds[]={"县邑","军镇","渡口","战场","关隘"};
 enum Work { recruit, farm, walls, commerce, pacify };
-enum Gear { sword, armor, saddle, manual, noGear };
+enum Gear { sword, armor, saddle, manual, twinJian, dragonBlade, snakeSpear, featherBow,
+            brightArmor, scaleArmor, redHare, whiteHorse, featherFan, noGear };
+enum GearSlot { armsSlot, armorSlot, mountSlot, strategySlot, gearSlotCount };
+constexpr int legacyGearCount=4;
+constexpr const char* gearSlotNames[]={"兵器","盔甲","坐骑","军策"};
+struct GearSpec {
+    const char* name;
+    const char* hint;
+    GearSlot slot;
+    int price;
+    Weapon weapon=longspear;
+};
+constexpr GearSpec gearSpecs[]={
+    {"青锋剑","挥剑出招，兵器伤害提高",armsSlot,120,saber},
+    {"山文甲","会战减损，护住本路武将",armorSlot,150},
+    {"赤绒鞍","出征粮耗减四分之一",mountSlot,130},
+    {"行军策","开战多18军令",strategySlot,160},
+    {"双股剑","近身双击，强攻时更猛",armsSlot,225,saber},
+    {"青龙偃月刀","挥斩波及相邻敌阵",armsSlot,340,saber},
+    {"丈八蛇矛","出招距离更远，拒骑更强",armsSlot,290,longspear},
+    {"铁胎弓","可从后阵远射，射程更长",armsSlot,200,longbow},
+    {"明光铠","本路武将受创更轻，全军小幅减损",armorSlot,240},
+    {"鱼鳞甲","全军减免部分弓弩伤害",armorSlot,210},
+    {"赤兔","阵前带队推进更快，出征省粮",mountSlot,330},
+    {"的卢","出征省粮，能护阵前武将",mountSlot,270},
+    {"白羽扇","开战多12军令，将技少耗6令",strategySlot,235},
+};
+static_assert(std::size(gearSpecs)==noGear);
 enum Maneuver { measured, press, hold, flank, fallBack };
 enum DuelMove { thrust, parry, feint };
 enum DispatchSize { vanguard, division, legion };
-enum Power { charge, guard, guile, inspire, wildfire, volley };
+enum Power { charge, guard, guile, inspire, wildfire, volley, breakSupport, rallyGuard, fireArrow,
+             rallyOath, crescentStrike, bridgeRoar, eightArray, whiteSpear, tigerBanner, ironCommand,
+             markVolley, eyeValor, suddenRaid, brushFire };
+enum class Role { vanguard, marshal, strategist };
+inline constexpr const char* roleNames[]={"猛将","统将","军师"};
 enum class Specialty { envoy, treasury, convoy, command, scout, granary };
 
 struct Officer {
@@ -54,17 +85,24 @@ struct Officer {
     int portrait;
     int valor, counsel;
 };
+constexpr Role battleRole(const Officer& actor) {
+    if ((actor.counsel>=89 && actor.valor<75) || actor.power==brushFire) return Role::strategist;
+    if (actor.power==guard || actor.power==inspire || actor.power==rallyGuard ||
+        actor.power==rallyOath || actor.power==tigerBanner || actor.power==ironCommand ||
+        actor.power==eyeValor) return Role::marshal;
+    return Role::vanguard;
+}
 constexpr Officer officers[3][officerCount] = {
-    {{"赵云","龙胆冲阵","突击兼稳军心",horse,charge,132,3,96,74},
-     {"关羽","青龙破阵","枪阵破城更强",spear,charge,163,6,98,77},
-     {"张飞","长坂断喝","震慑敌军军心",spear,guile,42,7,99,52},
-     {"诸葛亮","八阵伏兵","护军并补充军令",bow,guard,20,8,39,100},
-     {"黄忠","百步穿杨","弓阵强攻压阵",bow,charge,179,9,95,73},
+    {{"赵云","龙胆冲阵","集中突击本路，稳住军心",horse,whiteSpear,132,3,96,74},
+     {"关羽","青龙破阵","重斩本路并横扫相邻敌阵",spear,crescentStrike,147,6,98,77},
+     {"张飞","长坂断喝","震慑军心并打断协战",spear,bridgeRoar,32,7,99,52},
+     {"诸葛亮","八阵伏兵","两合护军并扰乱敌方调度",bow,eightArray,20,8,39,100},
+     {"黄忠","百步穿杨","超远射击本路，弓阵更强",bow,markVolley,179,9,95,73},
      {"法正","奇谋破壁","瓦解阵势与军心",bow,guile,49,18,45,96},
      {"魏延","子午奇兵","骑阵突击更强",horse,charge,156,19,93,76},
      {"马超","西凉铁骑","骑阵冲击兼稳军",horse,charge,183,20,97,65}},
-    {{"夏侯惇","拔矢奋战","鼓舞我军军心",spear,inspire,80,4,92,72},
-     {"张辽","威震逍遥","骑袭令敌胆寒",horse,guile,28,10,95,82},
+    {{"夏侯惇","拔矢奋战","回复体力，稳军心并护军",spear,eyeValor,32,4,92,72},
+     {"张辽","威震逍遥","吓退敌心，本路强攻两合",horse,suddenRaid,104,10,95,82},
      {"曹仁","铁垒坚守","抵消两轮损失",spear,guard,5,11,88,81},
      {"徐晃","长驱破壁","强攻压制守军",horse,charge,173,12,92,78},
      {"贾诩","离间军心","削弱敌军阵势",bow,guile,46,13,42,98},
@@ -75,10 +113,15 @@ constexpr Officer officers[3][officerCount] = {
      {"甘宁","锦帆夜袭","快攻兼挫敌心",horse,charge,168,14,94,77},
      {"吕蒙","白衣渡江","护军并补充军令",spear,guard,12,15,86,93},
      {"鲁肃","义济三军","回稳军心与军令",bow,inspire,42,16,59,96},
-     {"陆逊","焚营断势","水战可重创敌军",bow,wildfire,145,17,75,97},
+     {"陆逊","焚营断势","火攻本路，拖慢敌军并耗军令",bow,brushFire,125,17,75,97},
      {"程普","江表宿卫","护军并补充军令",spear,guard,17,24,91,85},
      {"凌统","横江急袭","疾攻兼提振士气",horse,charge,165,25,92,68},
      {"徐盛","江东疑城","瓦解阵势与军心",bow,guile,43,26,88,86}},
+};
+inline constexpr Officer rulers[]={
+    {"刘备","同袍誓约","恢复军心，集结溃兵并护军一合",shields,rallyOath,27,0,80,88},
+    {"曹操","临阵筹谋","蓄满军令，护军一合",spear,ironCommand,0,1,86,96},
+    {"孙权","江东旌旗","恢复军心，三路两合拒敌",spear,tigerBanner,24,2,79,90},
 };
 struct WildTalent {
     Officer officer;
@@ -100,14 +143,47 @@ inline constexpr WildTalent talents[] = {
      {39,39,39},145,Specialty::scout,"负责搜寻时，更容易找到军械"},
     {{"梁稷","同袍共济","恢复军心并补充军令",spear,inspire,39,32,67,91},
      {36,36,36},140,Specialty::granary,"任太守时，每季增加28粮"},
+    {{"庞统","连环奇策","瓦解阵势与军心",crossbow,guile,57,33,42,98},
+     {6,14,-1},230,Specialty::command,"担任领军时，开战多12军令"},
+    {{"张任","伏弩截道","弩阵连射伤害更高",crossbow,volley,104,34,92,85},
+     {47,47,-1},185,Specialty::scout,"负责搜寻时，更容易找到军械"},
+    {{"吕玲绮","飞骑卷旗","重骑突击兼稳军心",heavyHorse,charge,171,35,94,66},
+     {24,49,24},190,Specialty::command,"担任领军时，开战多12军令"},
+    {{"陈到","白毦固阵","护军并补充军令",shields,guard,23,36,88,80},
+     {18,52,17},175,Specialty::convoy,"担任领军时，出征最多省22粮"},
+    {{"贺齐","山越奇袭","迂回并瓦解敌军",spear,guile,51,37,89,83},
+     {20,20,20},175,Specialty::scout,"负责搜寻时，更容易找到军械"},
+    {{"马良","白眉安军","恢复军心并补充军令",bow,inspire,48,38,47,94},
+     {17,15,53},160,Specialty::envoy,"任太守时，每季额外恢复6民心"},
+    {{"徐庶","断援之计","断敌协战并压制弓弩两合",bow,breakSupport,0,39,66,97},
+     {13,22,22},200,Specialty::treasury,"任太守时，每季增加22金"},
+    {{"王平","无当定军","收住溃退，两合护军",shields,rallyGuard,0,40,87,80},
+     {55,55,52},185,Specialty::command,"担任领军时，开战多12军令"},
+    {{"朱然","江防火矢","火箭突袭本路，水战更强",bow,fireArrow,115,41,87,83},
+     {43,43,43},185,Specialty::convoy,"担任领军时，出征最多省22粮"},
 };
 constexpr int talentCount=int(std::size(talents));
-constexpr int commanderSlots=talentFirst+talentCount;
-inline const WildTalent* talentAtSlot(int slot) {
-    return slot>=talentFirst && slot<commanderSlots?&talents[slot-talentFirst]:nullptr;
+constexpr int legacyTalentCount=6;
+constexpr int previousTalentCount=12;
+constexpr int extraGuestFirst=talentFirst+previousTalentCount;
+constexpr int guestCount=3;
+constexpr int newTalentFirst=extraGuestFirst+guestCount-1;
+constexpr int rulerSlot=newTalentFirst+talentCount-previousTalentCount;
+constexpr int commanderSlots=rulerSlot+1;
+constexpr int guestIndex(int slot) {
+    return slot==guestSlot?0:slot>=extraGuestFirst && slot<newTalentFirst?slot-extraGuestFirst+1:-1;
 }
-constexpr const char* gearNames[]={"青锋剑","山文甲","赤绒鞍","行军策"};
-constexpr const char* gearHints[]={"会战伤害增加","减少会战损失","出征节省粮草","开战军令增加"};
+constexpr int guestCommand(int index) {return index==0?guestSlot:extraGuestFirst+index-1;}
+constexpr int talentSlot(int id) {return id<previousTalentCount?talentFirst+id:newTalentFirst+id-previousTalentCount;}
+constexpr int talentIndex(int slot) {
+    if (slot>=talentFirst && slot<extraGuestFirst) return slot-talentFirst;
+    if (slot>=newTalentFirst && slot<rulerSlot) return slot-newTalentFirst+previousTalentCount;
+    return -1;
+}
+inline const WildTalent* talentAtSlot(int slot) {
+    const int id=talentIndex(slot);
+    return id>=0?&talents[id]:nullptr;
+}
 constexpr const char* maneuvers[]={"整阵","强攻","固守","迂回","回撤"};
 constexpr const char* duelMoves[]={"突刺","格挡","佯攻"};
 constexpr const char* dispatchNames[]={"先锋","偏师","主力"};
@@ -128,7 +204,7 @@ constexpr const char* weaponNames[]={"长枪","环首刀","长弓"};
 constexpr const char* weaponAttacks[]={"挺枪","挥刀","放箭"};
 constexpr const char* weaponHints[]={"前排破骑","前排破阵","后排可射"};
 constexpr Weapon preferredWeapon(Troop troop) {
-    return troop==bow?longbow:troop==horse?saber:longspear;
+    return ranged(troop)?longbow:mounted(troop)?saber:longspear;
 }
 constexpr Troop counterTroop(Troop enemy) {
     constexpr Troop counters[]={bow,horse,spear,heavyHorse,shields,spear};

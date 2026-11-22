@@ -1,0 +1,919 @@
+[
+  {
+    "path": "assets/bat.png",
+    "width": 288,
+    "height": 72,
+    "stored": 6455,
+    "decoded": 12822
+  },
+  {
+    "path": "assets/bee.png",
+    "width": 288,
+    "height": 72,
+    "stored": 8062,
+    "decoded": 15596
+  },
+  {
+    "path": "assets/bush.png",
+    "width": 144,
+    "height": 144,
+    "stored": 6620,
+    "decoded": 11258
+  },
+  {
+    "path": "assets/candyking.png",
+    "width": 384,
+    "height": 96,
+    "stored": 16767,
+    "decoded": 29449
+  },
+  {
+    "path": "assets/carrot.png",
+    "width": 144,
+    "height": 144,
+    "stored": 5304,
+    "decoded": 11469
+  },
+  {
+    "path": "assets/carrot_states.png",
+    "width": 288,
+    "height": 288,
+    "stored": 19638,
+    "decoded": 65488
+  },
+  {
+    "path": "assets/chest.png",
+    "width": 144,
+    "height": 144,
+    "stored": 5435,
+    "decoded": 12239
+  },
+  {
+    "path": "assets/coin.png",
+    "width": 144,
+    "height": 144,
+    "stored": 3656,
+    "decoded": 8687
+  },
+  {
+    "path": "assets/crabking.png",
+    "width": 384,
+    "height": 96,
+    "stored": 17857,
+    "decoded": 29649
+  },
+  {
+    "path": "assets/h1-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6853,
+    "decoded": 17533
+  },
+  {
+    "path": "assets/h1-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6895,
+    "decoded": 15503
+  },
+  {
+    "path": "assets/h1-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6832,
+    "decoded": 15567
+  },
+  {
+    "path": "assets/h1-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6816,
+    "decoded": 16585
+  },
+  {
+    "path": "assets/h1-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6879,
+    "decoded": 17076
+  },
+  {
+    "path": "assets/h1-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6886,
+    "decoded": 15429
+  },
+  {
+    "path": "assets/h1-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6851,
+    "decoded": 15510
+  },
+  {
+    "path": "assets/h1-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6837,
+    "decoded": 17012
+  },
+  {
+    "path": "assets/h2-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6773,
+    "decoded": 17329
+  },
+  {
+    "path": "assets/h2-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6610,
+    "decoded": 15235
+  },
+  {
+    "path": "assets/h2-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6634,
+    "decoded": 15367
+  },
+  {
+    "path": "assets/h2-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6694,
+    "decoded": 16149
+  },
+  {
+    "path": "assets/h2-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6752,
+    "decoded": 16876
+  },
+  {
+    "path": "assets/h2-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6600,
+    "decoded": 15233
+  },
+  {
+    "path": "assets/h2-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6661,
+    "decoded": 15367
+  },
+  {
+    "path": "assets/h2-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6646,
+    "decoded": 16538
+  },
+  {
+    "path": "assets/h3-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7121,
+    "decoded": 17062
+  },
+  {
+    "path": "assets/h3-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7220,
+    "decoded": 16506
+  },
+  {
+    "path": "assets/h3-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7144,
+    "decoded": 16584
+  },
+  {
+    "path": "assets/h3-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7182,
+    "decoded": 16524
+  },
+  {
+    "path": "assets/h3-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7139,
+    "decoded": 16648
+  },
+  {
+    "path": "assets/h3-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7182,
+    "decoded": 16386
+  },
+  {
+    "path": "assets/h3-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7106,
+    "decoded": 16585
+  },
+  {
+    "path": "assets/h3-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7153,
+    "decoded": 16875
+  },
+  {
+    "path": "assets/h4-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6888,
+    "decoded": 15355
+  },
+  {
+    "path": "assets/h4-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6840,
+    "decoded": 15147
+  },
+  {
+    "path": "assets/h4-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6856,
+    "decoded": 14893
+  },
+  {
+    "path": "assets/h4-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6874,
+    "decoded": 15121
+  },
+  {
+    "path": "assets/h4-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6841,
+    "decoded": 15001
+  },
+  {
+    "path": "assets/h4-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6888,
+    "decoded": 14928
+  },
+  {
+    "path": "assets/h4-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6834,
+    "decoded": 15111
+  },
+  {
+    "path": "assets/h4-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6862,
+    "decoded": 15454
+  },
+  {
+    "path": "assets/h5-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7732,
+    "decoded": 17589
+  },
+  {
+    "path": "assets/h5-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7661,
+    "decoded": 15694
+  },
+  {
+    "path": "assets/h5-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7705,
+    "decoded": 14984
+  },
+  {
+    "path": "assets/h5-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7757,
+    "decoded": 16815
+  },
+  {
+    "path": "assets/h5-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7766,
+    "decoded": 17119
+  },
+  {
+    "path": "assets/h5-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7635,
+    "decoded": 15483
+  },
+  {
+    "path": "assets/h5-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7680,
+    "decoded": 15145
+  },
+  {
+    "path": "assets/h5-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 7703,
+    "decoded": 17276
+  },
+  {
+    "path": "assets/h6-00.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6790,
+    "decoded": 16017
+  },
+  {
+    "path": "assets/h6-01.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6747,
+    "decoded": 15540
+  },
+  {
+    "path": "assets/h6-02.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6738,
+    "decoded": 15270
+  },
+  {
+    "path": "assets/h6-03.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6801,
+    "decoded": 15839
+  },
+  {
+    "path": "assets/h6-04.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6784,
+    "decoded": 15690
+  },
+  {
+    "path": "assets/h6-05.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6745,
+    "decoded": 15364
+  },
+  {
+    "path": "assets/h6-06.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6745,
+    "decoded": 15368
+  },
+  {
+    "path": "assets/h6-07.png",
+    "width": 172,
+    "height": 172,
+    "stored": 6807,
+    "decoded": 16170
+  },
+  {
+    "path": "assets/imp.png",
+    "width": 288,
+    "height": 72,
+    "stored": 9963,
+    "decoded": 17846
+  },
+  {
+    "path": "assets/moth.png",
+    "width": 384,
+    "height": 96,
+    "stored": 15229,
+    "decoded": 26929
+  },
+  {
+    "path": "assets/rocks.png",
+    "width": 144,
+    "height": 144,
+    "stored": 4206,
+    "decoded": 9506
+  },
+  {
+    "path": "assets/scene0.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2524,
+    "decoded": 57935
+  },
+  {
+    "path": "assets/scene1.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2845,
+    "decoded": 81428
+  },
+  {
+    "path": "assets/scene10.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2369,
+    "decoded": 61754
+  },
+  {
+    "path": "assets/scene11.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2597,
+    "decoded": 68870
+  },
+  {
+    "path": "assets/scene12.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2489,
+    "decoded": 62763
+  },
+  {
+    "path": "assets/scene13.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2697,
+    "decoded": 78150
+  },
+  {
+    "path": "assets/scene14.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2529,
+    "decoded": 58991
+  },
+  {
+    "path": "assets/scene15.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2648,
+    "decoded": 78118
+  },
+  {
+    "path": "assets/scene16.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2499,
+    "decoded": 58959
+  },
+  {
+    "path": "assets/scene17.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2850,
+    "decoded": 92678
+  },
+  {
+    "path": "assets/scene2.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2477,
+    "decoded": 74030
+  },
+  {
+    "path": "assets/scene3.png",
+    "width": 544,
+    "height": 340,
+    "stored": 3009,
+    "decoded": 81382
+  },
+  {
+    "path": "assets/scene4.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2651,
+    "decoded": 74124
+  },
+  {
+    "path": "assets/scene5.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2584,
+    "decoded": 68200
+  },
+  {
+    "path": "assets/scene6.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2551,
+    "decoded": 74030
+  },
+  {
+    "path": "assets/scene7.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2539,
+    "decoded": 68060
+  },
+  {
+    "path": "assets/scene8.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2513,
+    "decoded": 61707
+  },
+  {
+    "path": "assets/scene9.png",
+    "width": 544,
+    "height": 340,
+    "stored": 2391,
+    "decoded": 68200
+  },
+  {
+    "path": "assets/scorpion.png",
+    "width": 384,
+    "height": 96,
+    "stored": 14501,
+    "decoded": 28774
+  },
+  {
+    "path": "assets/slime.png",
+    "width": 144,
+    "height": 144,
+    "stored": 4161,
+    "decoded": 10311
+  },
+  {
+    "path": "assets/snail.png",
+    "width": 288,
+    "height": 72,
+    "stored": 8429,
+    "decoded": 13964
+  },
+  {
+    "path": "assets/snowpuff.png",
+    "width": 288,
+    "height": 72,
+    "stored": 7825,
+    "decoded": 16405
+  },
+  {
+    "path": "assets/spawn.png",
+    "width": 80,
+    "height": 78,
+    "stored": 1895,
+    "decoded": 3265
+  },
+  {
+    "path": "assets/spiky.png",
+    "width": 288,
+    "height": 72,
+    "stored": 8809,
+    "decoded": 16380
+  },
+  {
+    "path": "assets/title.png",
+    "width": 480,
+    "height": 129,
+    "stored": 13093,
+    "decoded": 54283
+  },
+  {
+    "path": "assets/ui/bars.png",
+    "width": 823,
+    "height": 36,
+    "stored": 5896,
+    "decoded": 24723
+  },
+  {
+    "path": "assets/ui/bodies.png",
+    "width": 1224,
+    "height": 68,
+    "stored": 39129,
+    "decoded": 73545
+  },
+  {
+    "path": "assets/ui/c0.png",
+    "width": 737,
+    "height": 68,
+    "stored": 17940,
+    "decoded": 43596
+  },
+  {
+    "path": "assets/ui/c1.png",
+    "width": 739,
+    "height": 68,
+    "stored": 18901,
+    "decoded": 43475
+  },
+  {
+    "path": "assets/ui/c2.png",
+    "width": 611,
+    "height": 68,
+    "stored": 16396,
+    "decoded": 38360
+  },
+  {
+    "path": "assets/ui/c3.png",
+    "width": 513,
+    "height": 68,
+    "stored": 12758,
+    "decoded": 30502
+  },
+  {
+    "path": "assets/ui/c4.png",
+    "width": 627,
+    "height": 68,
+    "stored": 14960,
+    "decoded": 37048
+  },
+  {
+    "path": "assets/ui/c5.png",
+    "width": 734,
+    "height": 68,
+    "stored": 16208,
+    "decoded": 43042
+  },
+  {
+    "path": "assets/ui/c6.png",
+    "width": 671,
+    "height": 68,
+    "stored": 15469,
+    "decoded": 36359
+  },
+  {
+    "path": "assets/ui/c7.png",
+    "width": 1173,
+    "height": 68,
+    "stored": 25441,
+    "decoded": 60991
+  },
+  {
+    "path": "assets/ui/c8.png",
+    "width": 1000,
+    "height": 68,
+    "stored": 20365,
+    "decoded": 52538
+  },
+  {
+    "path": "assets/ui/c9.png",
+    "width": 195,
+    "height": 68,
+    "stored": 5675,
+    "decoded": 11691
+  },
+  {
+    "path": "assets/ui/creatures.png",
+    "width": 276,
+    "height": 108,
+    "stored": 8651,
+    "decoded": 18710
+  },
+  {
+    "path": "assets/ui/d0.png",
+    "width": 622,
+    "height": 44,
+    "stored": 12403,
+    "decoded": 23262
+  },
+  {
+    "path": "assets/ui/d1.png",
+    "width": 621,
+    "height": 44,
+    "stored": 12070,
+    "decoded": 23181
+  },
+  {
+    "path": "assets/ui/d2.png",
+    "width": 393,
+    "height": 44,
+    "stored": 7842,
+    "decoded": 15440
+  },
+  {
+    "path": "assets/ui/d3.png",
+    "width": 390,
+    "height": 44,
+    "stored": 7760,
+    "decoded": 15419
+  },
+  {
+    "path": "assets/ui/digits.png",
+    "width": 984,
+    "height": 84,
+    "stored": 12671,
+    "decoded": 57450
+  },
+  {
+    "path": "assets/ui/e0.png",
+    "width": 457,
+    "height": 44,
+    "stored": 10000,
+    "decoded": 18276
+  },
+  {
+    "path": "assets/ui/e1.png",
+    "width": 426,
+    "height": 44,
+    "stored": 8977,
+    "decoded": 16964
+  },
+  {
+    "path": "assets/ui/e2.png",
+    "width": 445,
+    "height": 44,
+    "stored": 9576,
+    "decoded": 17831
+  },
+  {
+    "path": "assets/ui/e3.png",
+    "width": 453,
+    "height": 44,
+    "stored": 9656,
+    "decoded": 17957
+  },
+  {
+    "path": "assets/ui/e4.png",
+    "width": 419,
+    "height": 44,
+    "stored": 8626,
+    "decoded": 16819
+  },
+  {
+    "path": "assets/ui/e5.png",
+    "width": 695,
+    "height": 44,
+    "stored": 14779,
+    "decoded": 25759
+  },
+  {
+    "path": "assets/ui/icons.png",
+    "width": 600,
+    "height": 100,
+    "stored": 11907,
+    "decoded": 32049
+  },
+  {
+    "path": "assets/ui/p0.png",
+    "width": 136,
+    "height": 56,
+    "stored": 4711,
+    "decoded": 7190
+  },
+  {
+    "path": "assets/ui/p1.png",
+    "width": 136,
+    "height": 61,
+    "stored": 4959,
+    "decoded": 7516
+  },
+  {
+    "path": "assets/ui/p2.png",
+    "width": 136,
+    "height": 68,
+    "stored": 4842,
+    "decoded": 7682
+  },
+  {
+    "path": "assets/ui/p3.png",
+    "width": 136,
+    "height": 67,
+    "stored": 4591,
+    "decoded": 7815
+  },
+  {
+    "path": "assets/ui/p4.png",
+    "width": 136,
+    "height": 62,
+    "stored": 4665,
+    "decoded": 7785
+  },
+  {
+    "path": "assets/ui/p5.png",
+    "width": 130,
+    "height": 68,
+    "stored": 5227,
+    "decoded": 7577
+  },
+  {
+    "path": "assets/ui/s0.png",
+    "width": 113,
+    "height": 44,
+    "stored": 1286,
+    "decoded": 5858
+  },
+  {
+    "path": "assets/ui/s1.png",
+    "width": 113,
+    "height": 44,
+    "stored": 1326,
+    "decoded": 5858
+  },
+  {
+    "path": "assets/ui/s2.png",
+    "width": 113,
+    "height": 44,
+    "stored": 1393,
+    "decoded": 5858
+  },
+  {
+    "path": "assets/ui/s3.png",
+    "width": 112,
+    "height": 44,
+    "stored": 1222,
+    "decoded": 5823
+  },
+  {
+    "path": "assets/ui/s4.png",
+    "width": 106,
+    "height": 44,
+    "stored": 1081,
+    "decoded": 5607
+  },
+  {
+    "path": "assets/ui/s5.png",
+    "width": 96,
+    "height": 83,
+    "stored": 1701,
+    "decoded": 9185
+  },
+  {
+    "path": "assets/ui/stars.png",
+    "width": 152,
+    "height": 72,
+    "stored": 2954,
+    "decoded": 9585
+  },
+  {
+    "path": "assets/ui/walk.png",
+    "width": 336,
+    "height": 84,
+    "stored": 6371,
+    "decoded": 16123
+  },
+  {
+    "path": "assets/world0.png",
+    "width": 480,
+    "height": 480,
+    "stored": 134407,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/world1.png",
+    "width": 480,
+    "height": 480,
+    "stored": 99712,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/world2.png",
+    "width": 480,
+    "height": 480,
+    "stored": 123917,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/world3.png",
+    "width": 480,
+    "height": 480,
+    "stored": 149368,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/world4.png",
+    "width": 480,
+    "height": 480,
+    "stored": 146300,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/world5.png",
+    "width": 480,
+    "height": 480,
+    "stored": 136522,
+    "decoded": 235264
+  },
+  {
+    "path": "assets/yeti.png",
+    "width": 384,
+    "height": 96,
+    "stored": 16043,
+    "decoded": 29531
+  }
+]

@@ -53,6 +53,21 @@ int main(){
   check_label(r,r,{17,19,65,29},"保存并返回指挥部",15);
   check_label(r,r,{17,19,80,17},"已保存",15);
  }
+ // ESPP4-A draws the battle HUD directly into its 2x mapped surface.
+ auto native_plan=DisplayPlan::fit(854,480,98304);
+ assert(!native_plan.wide&&native_plan.scale==2&&native_plan.width==427&&native_plan.height==240);
+ CompactHudLayout battle(240,480,427,1.5f);
+ NativeText mapped_text;
+ mapped_text.reset(427,240,427,240,native_plan.text_scale(427),native_plan.minimum_text_scale());
+ std::vector<uint16_t> mapped_pixels(427*240);
+ Raster mapped(mapped_pixels.data(),427,240,427);
+ mapped.native_text=&mapped_text;
+ assert(battle.status_height*2>=72&&battle.row*2>=44);
+ assert(battle.map().w*2==120&&battle.overlay(DockPanel::buildings).y>battle.status_height);
+ check_label(mapped,mapped,battle.command(0),"生产",15,1,1);
+ check_label(mapped,mapped,battle.command(1),"建造",15,1,1);
+ check_label(mapped,mapped,battle.command(3),"停止",15,1,1);
+ check_label(mapped,mapped,battle.name(0,DockPanel::buildings),"电站",12,1,1);
  auto normal=DisplayPlan::fit(480,480);assert(normal.text_scale(480)==1&&normal.minimum_text_scale()==1);
  for(auto [width,height]:{std::pair{296,240},std::pair{800,480}}){
   auto plan=DisplayPlan::fit(width,height);

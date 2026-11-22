@@ -39,18 +39,21 @@ constexpr Rect wideMap{8,42,368,177};
 
 enum class Page {home, choose, map, deploy, battle, report, help, ending, replace, council, roster,
                  cityDesk, dispatch, forces, gear, captive, gazetteer, seasonCouncil, regions, search,
-                 soundSettings};
+                 soundSettings, alliedOffensive, fiefs};
 enum class Command {resume, newGame, guide, back, side, seat, work, march, season, select,
                     engage, shift, skill, pause, retreat, accept, home, replace, zoom, council,
-                    roster, officer, hire, chooseOfficer, treat, market, militia, skipMarch, atlas,
+                    roster, officer, hire, chooseOfficer, treat, ally, market, militia, skipMarch, atlas,
                     chapter, difficulty, cityDesk, survey, forces, chooseSize, approach, send, recall,
-                    rosterPage, gear, pickGear, equip, drill, orders, maneuver, duel, duelMove,
+                    rosterPage, gear, pickGear, equip, drill, orders, previewOrder, cancelOrder, maneuver, duel, duelMove,
                     captiveChoice, gazetteer, browseCity, choosePlan, advanceSeason, inspectThreat,
                     regions, chooseRegion, locateRegionCity, claimRegion,
                     openSearch, searchOfficer, welcomeTalent, audioMenu, audioToggle, origin,
                     battleRank, rankSupport, clearRank,
                     confirmRetreat, centerMap, mapNames, pickTroop, pickWeapon, moveGeneral, strike,
-                    battleView,deployTab,deployLane,pickEngine,cycleEngineLane,fireEngine};
+                    battleView,deployTab,deployLane,pickEngine,cycleEngineLane,fireEngine,rankAssist,
+                    prisonCamp,prisonTab,prisonPage,launchOrders,anchorArmy,
+                    gearCategory,buyGear,unequip,alliedOffensive,requestAllied,cancelAllied,
+                    fiefs,fiefPage,fiefDesk,cityPolicy};
 struct Control {
     Rect box;
     Command command;
@@ -68,6 +71,7 @@ constexpr UiIcon weaponIcons[]={spearIcon,bladeIcon,bowIcon};
 inline constexpr const char* seasons[]={"春","夏","秋","冬"};
 inline constexpr const char* rankNames[]={"上路","中路","下路"};
 inline constexpr const char* troopMarks[]={"枪","弓","骑","盾","弩","重"};
+inline constexpr const char* cityPolicies[]={"手动","民生","守备"};
 inline constexpr const char* difficultyNames[]={"入门","常规","群雄"};
 inline constexpr const char* difficultyHints[]={
     "开局钱粮更多，前四季可安心备战",
@@ -75,7 +79,7 @@ inline constexpr const char* difficultyHints[]={
     "敌军更早出击，攻城粮耗更高",
 };
 enum class Notice {none, recruited, cultivated, fortified, moved, income, saved, saveError, treaty, supplies, levies,
-                    civic, encamped, withdrawn, goal};
+                    civic, encamped, withdrawn, routeBlocked, allied, goal, prisonNews};
 
 struct App {
     pxa::Context* context = nullptr;
@@ -109,15 +113,22 @@ struct App {
     SansText sans;
     Page page = Page::home, helpFrom = Page::home;
     Page audioFrom=Page::home;
+    Page alliedFrom=Page::map;
     GameAudio audio;
     Notice notice = Notice::none;
     Campaign campaign;
     Battle battle;
     Order departure;
     int chosenChapter=0, dispatchLead=-1, defenseLeader=-1, arrivingColumn=-1, gearCursor=0;
+    int alliedTarget=-1;
+    int fiefsPage=0, deskMapOrigin=-1;
+    static constexpr int fiefRows=4;
+    GearSlot gearCategory=armsSlot;
+    bool personalArt=true;
     Difficulty chosenDifficulty=Difficulty::standard;
     bool stageSiege=false, tacticsOpen=false, retreatPrompt=false;
     int tacticsRank=-1;
+    std::optional<Maneuver> proposedOrder;
     static constexpr int fieldPanLimit=Battle::fieldLength-sceneWidth;
     float battleCamera=0;
     bool followBattle=true,battleDragging=false;
@@ -129,17 +140,29 @@ struct App {
     SeasonPlan seasonPlan=SeasonPlan::regular;
     Discovery discovery{};
     Settlement aftermath{};
+    PrisonNews prisonNews{};
+    int prisonTab=0,prisonIndex=-1;
+    Page prisonFrom=Page::map;
+    const char* prisonMessage=nullptr;
     float mapCenterX=worldWidth/2.f, mapCenterY=worldHeight/2.f;
     float mapZoom=0;
     int officerSlot=0;
     Page rosterFrom=Page::council;
     std::array<Order,ownerCount> marching{};
-    Order playerMarch{};
+    MarchRoute playerRoute{};
     bool seasonMarch=false, mapDragging=false, dragMoved=false;
     int marchingMs=0;
     float dragX=0, dragY=0;
     static constexpr int marchDuration=2500;
-    bool isMarching() const {return seasonMarch || bool(playerMarch);}
+    bool isMarching() const {return seasonMarch || bool(playerRoute);}
+    int travelDuration() const {
+        return marchDuration+(playerRoute?std::min(3500,900*(playerRoute.legs()-1)):0);
+    }
+    std::pair<Order,float> playerMarchLeg() const {
+        const float progress=std::clamp(float(marchingMs)/travelDuration(),0.f,1.f)*playerRoute.legs();
+        const int leg=std::min(playerRoute.legs()-1,int(progress));
+        return {playerRoute.leg(leg),progress-leg};
+    }
 
     bool hasSave = false, saving = false, saveQueued = false, damagedSave = false;
     bool ready = false, dirty = true, resize = false, controllerMode = false;
@@ -283,6 +306,17 @@ struct App {
     }
 
     bool detailedArt=false;
+    static int portraitSignature(int portrait) {
+        constexpr int portraits[]={0,6,7,8,3,1,2,5,9,4,10,17};
+        static_assert(std::size(portraits)==std::size(art::signatureLeaders));
+        for (int i=0;i<int(std::size(portraits));++i)
+            if (portrait==portraits[i]) return i;
+        return -1;
+    }
+    int signatureFor(const Officer* actor) const {
+        return personalArt && actor?portraitSignature(actor->portrait):-1;
+    }
+    const art::Tile* battleGauges() const {return sansText?art::hudBars:art::compactHudBars;}
     art::Backdrop backdropTiles(art::Tile image) const {
         if (detailedArt && sansText)
             for (const auto& backdrop:art::detailedBackdrops)
@@ -295,10 +329,6 @@ struct App {
     }
 
     using Pages=std::array<bool,art::pageCount>;
-    bool hasColumns() const {
-        for (const auto& unit:campaign.columns) if (unit) return true;
-        return false;
-    }
     static bool usesClassicTroops(const Lineup& lineup) {
         return std::any_of(lineup.begin(),lineup.end(),[](Troop troop){return troop<shields;});
     }
@@ -310,7 +340,7 @@ struct App {
     }
     pxa::Task<void> warmArt(Page source,std::array<art::Tile,4> tiles) {
         for (auto tile:tiles) {
-            if (page!=source || (source==Page::battle && !tacticsOpen)) break;
+            if (page!=source || (source==Page::battle && (!tacticsOpen || tacticsRank>=0 || proposedOrder))) break;
             if (!tile.w || slots[tile.page]>=0) continue;
             char name[48];
             atlasPath(name,tile.page);
@@ -326,9 +356,10 @@ struct App {
             const auto& city=campaign.cities[departure.to];
             const bool ownLegacy=usesClassicTroops(deployment.lineup);
             tiles={city.fort>=3?art::siege:art::battlefields[sites[departure.to].terrain],
-                   art::troops[1][0][0],ownLegacy?art::tacticTroops[0][0][0]:art::Tile{},
-                   art::tacticTroops[1][0][0]};
-        } else if (page==Page::battle && tacticsOpen && battle.mayDuel()) {
+                   sansText?art::detailTroops[1][0][0]:art::troops[1][0][0],
+                   ownLegacy?(sansText?art::detailTroops[0][0][0]:art::troops[0][0][0]):art::Tile{},
+                   battleGauges()[0]};
+        } else if (page==Page::battle && sansText && tacticsOpen && tacticsRank<0 && !proposedOrder && battle.mayDuel()) {
             tiles={art::siege,art::duelFrames[0][0],art::duelFrames[1][0]};
         } else return;
         const auto backdrop=backdropTiles(tiles[0]);
@@ -370,10 +401,12 @@ struct App {
                 room();
                 // Keep the tiles resident while panning across quadrant seams.
                 for (int n=0;n<4;++n) require(mapTile(n));
-                if (isMarching() || hasColumns()) require(art::marchers[0][0][0]);
+                if (isMarching()) require(art::marchers[0][0][0]);
                 break;
             case Page::gazetteer:
             case Page::seasonCouncil:
+            case Page::alliedOffensive:
+            case Page::fiefs:
             case Page::soundSettings:
             case Page::regions:room();break;
             case Page::dispatch:room();actor(dispatchLead);break;
@@ -388,14 +421,17 @@ struct App {
                 room();
                 actor(plannedLeader());
                 const int enemy=campaign.cities[battle.defending?departure.from:departure.to].owner;
-                if (enemy<3) require(art::portraits[officers[enemy][campaign.enemyOfficer(enemy,departure.to)].portrait]);
+                const int foe=enemy<3?campaign.enemyOfficer(enemy,departure.to):-1;
+                if (foe>=0) require(art::portraits[officers[enemy][foe].portrait]);
                 require(art::troops[0][0][0]);
                 break;
             }
             case Page::battle:
                 require(art::portraits[battle.officer().portrait]);
                 if (auto* foe=battle.opponent()) require(art::portraits[foe->portrait]);
-                require(art::windows[0]);require(art::hudBars[0]);
+                require(art::windows[0]);require(battleGauges()[0]);
+                for (const auto* actor:{battle.commander>=0?&battle.officer():nullptr,battle.opponent()})
+                    if (const int id=signatureFor(actor);id>=0) require(art::signatureLeaders[id][0][0]);
                 if (battle.duel.visible()) {
                     backdrop(art::siege);
                     require(art::duelFrames[0][0]);require(art::duelFrames[1][0]);
@@ -403,8 +439,7 @@ struct App {
                     backdrop(battlefield());
                     for (int side=0;side<2;++side)
                         if (usesClassicTroops(side?battle.enemyLineup:battle.plan.lineup)) {
-                            require(art::troops[side][0][0]);
-                            require(art::tacticTroops[side][0][0]);
+                            require(sansText?art::detailTroops[side][0][0]:art::troops[side][0][0]);
                         }
                 }
                 break;
@@ -412,11 +447,11 @@ struct App {
                 require(art::windows[0]);require(art::outcomes[reportWinner>0?0:1]);
                 backdrop(reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);break;
             case Page::gear:
+                room();require(art::equipment[0]);require(art::equipment[legacyGearCount]);break;
             case Page::forces:room();require(art::equipment[0]);break;
             case Page::captive:
                 room();
-                if (campaign.prisoner)
-                    require(art::portraits[officers[campaign.prisoner.side][campaign.prisoner.officer].portrait]);
+                if (const auto* person=prisonOfficer()) require(art::portraits[person->portrait]);
                 break;
             case Page::help:
             case Page::council:room();break;
@@ -454,11 +489,16 @@ struct App {
                 if (status) {slots[i]=slot;*empty=true;}
             }
             if (!status) {
-                if (i>=art::firstDetailedPage &&
-                    (status.error()==pxa::Error::quota_exceeded || status.error()==pxa::Error::resource_limit)) {
+                const bool budget=status.error()==pxa::Error::quota_exceeded || status.error()==pxa::Error::resource_limit;
+                if (budget && i>=art::firstDetailedPage && i<art::pastDetailedPage) {
                     detailedArt=false;
                     status={};
                     info("han-banners using compact backgrounds");
+                } else if (budget && personalArt && i>=art::firstSignaturePage &&
+                           i<art::firstSignaturePage+std::size(art::signatureLeaders)) {
+                    personalArt=false;
+                    status={};
+                    info("han-banners using shared commander frames");
                 } else info(name);
                 break;
             }
@@ -472,7 +512,7 @@ struct App {
         while (saveQueued) {
             saveQueued = false;
             auto data = encode(campaign);
-            // The v7 roster makes the payload larger than the default 512-byte request.
+            // The campaign payload is larger than the default storage request buffer.
             std::array<std::byte,8+std::string_view(saveKey).size()+Save{}.size()> packet;
             auto written = co_await context->storage().set(saveKey,data,packet);
             if (!written) {
@@ -642,13 +682,13 @@ struct App {
     void gauge(pxa::game::Frame& f,Rect area,int value,int maximum,GaugeTone tone,bool reverse=false) const {
         const Rect p=toPixels(area);
         const bool marching=tone>=blueMarchGauge;
-        drawStrip(f,marching?art::marchBars[0]:art::hudBars[0],p);
+        drawStrip(f,marching?art::marchBars[0]:battleGauges()[0],p);
         const int border=std::max(1,p.h/6);
         const int room=p.w-2*border;
         if (value<=0 || maximum<=0 || room<=0 || p.h<=2*border) return;
         const int amount=std::max(1,room*std::min(value,maximum)/maximum);
         const int x=reverse?p.x+p.w-border-amount:p.x+border;
-        const auto fill=marching?art::marchBars[1+tone-blueMarchGauge]:art::hudBars[tone];
+        const auto fill=marching?art::marchBars[1+tone-blueMarchGauge]:battleGauges()[tone];
         drawStrip(f,fill,{x,p.y+border,amount,p.h-2*border});
     }
     static uint32_t next(std::string_view& s) {
@@ -1081,12 +1121,11 @@ struct App {
         }
         return line.points[line.count-1];
     }
-    void armyOnMap(pxa::game::Frame& f,Order order,bool own) {
+    void armyOnMap(pxa::game::Frame& f,Order order,bool own,float t) {
         if (!order) return;
         const auto* road=findRoad(order);
         const bool atSea=road && road->coastal;
         if (road) path(f,*road,own?(atSea?seaRouteActive:mint):coral,2);
-        const float t=std::clamp(float(marchingMs)/marchDuration,0.f,1.f);
         auto [u,v]=marchPosition(order,t);
         int x=mapX(u),y=mapY(v);
         if (!mapWindow.contains(x-15,y-25)||!mapWindow.contains(x+15,y+9)) return;
@@ -1102,7 +1141,7 @@ struct App {
         uint16_t flag=own?mint:coral;
         block(f,{x-7,y-24-motion,1,11},ivory);
         block(f,{x-6,y-24-motion,10,5},flag);
-        gauge(f,{x-13,y+4,26,5},marchingMs,marchDuration,own?blueMarchGauge:redMarchGauge);
+        gauge(f,{x-13,y+4,26,5},marchingMs,travelDuration(),own?blueMarchGauge:redMarchGauge);
     }
     static constexpr int mapLabelSize=12;
     static constexpr Rect cityMarker{-8,-7,17,15};
@@ -1216,7 +1255,7 @@ struct App {
         if (!name.w) return;
         text(f,cityName(i),name.cx(),name.cy()-mapLabelSize/2,mapLabelSize,emph?ivory:active?gold:ivory,1,ink);
     }
-    void drawCityPanel(pxa::game::Frame& f) {
+    void drawCityPanel(pxa::game::Frame& f,const MarchRoute& route) {
         char buf[64];
         int inspected=destination<0?selected:destination;
         auto city=campaign.cities[inspected];
@@ -1237,21 +1276,36 @@ struct App {
             button(f,{286,158,83,24},"屯田 95",Command::work,farm,editable&&campaign.canWork(selected,farm),false,farmIcon);
             button(f,{286,185,55,24},"内政",Command::cityDesk,0,editable);
         } else {
-            const bool local=adjacent(selected,inspected);
             const bool transfer=city.owner==campaign.player;
-            if (local) {
-                std::snprintf(buf,sizeof buf,"可派 %d",campaign.own(selected)?campaign.dispatch(selected):0);
+            const bool ally=campaign.allied(city.owner);
+            if (route) {
+                std::snprintf(buf,sizeof buf,"可派 %d",campaign.own(selected)?campaign.dispatchTo(selected,inspected):0);
                 boxText(f,buf,{287,132,81,15},13,dim,1);
-                const auto* road=findRoad({selected,inspected});
-                boxText(f,road && road->name?road->name:"区域通路",{287,147,81,15},12,
-                        road && road->coastal?seaRouteActive:gold,1);
-            } else if (!transfer) boxText(f,"非相邻城池",{287,137,81,20},12,dim,1);
+                if (route.legs()>1) {
+                    const int via=campaign.alliedWaypoint(route);
+                    std::snprintf(buf,sizeof buf,"经%s",cityName(via>=0?via:route.cities[1]));
+                    boxText(f,buf,{287,147,81,15},12,mint,1);
+                } else if (const auto* road=findRoad(route.leg(0))) {
+                    boxText(f,road->name?road->name:"区域通路",{287,147,81,15},12,
+                            road->coastal?seaRouteActive:gold,1);
+                }
+            } else if (ally) boxText(f,"可借道通行",{287,137,81,20},12,mint,1);
+            else if (!transfer && !campaign.ceasefire(city.owner))
+                boxText(f,"道路不通",{287,137,81,20},12,dim,1);
             if (transfer)
                 button(f,{286,163,83,20},"设为起点",Command::origin,inspected,editable);
-            if (!transfer && campaign.ceasefire(city.owner))
-                boxText(f,"盟约生效",{287,165,81,17},12,gold,1);
-            button(f,{286,185,55,24},transfer?"调兵":"出征",Command::march,inspected,
-                   editable&&campaign.canMarch(selected,inspected),true);
+            else if (campaign.ceasefire(city.owner)) {
+                std::snprintf(buf,sizeof buf,"%s%d季",ally?"结盟":"休战",
+                              ally?campaign.alliance[city.owner]:campaign.truce[city.owner]);
+                boxText(f,buf,{287,165,81,17},12,gold,1);
+            } else if (campaign.canAskAlly(inspected)) {
+                const bool planned=campaign.alliedRequest.target==inspected;
+                button(f,{286,163,83,20},planned?"盟军待发":"请盟出兵",
+                       Command::alliedOffensive,inspected,editable,planned);
+            }
+            if (!campaign.ceasefire(city.owner))
+                button(f,{286,185,55,24},transfer?"调兵":"出征",Command::march,inspected,
+                       editable&&campaign.routeLeader(route)>=0,true);
         }
         button(f,{344,185,25,24},"志",Command::gazetteer,inspected,editable);
     }
@@ -1271,6 +1325,9 @@ struct App {
         resourcePlate(f,{295,6,81,28},orderIcon,buf,mint);
 
         const auto threat=isMarching()?Order{}:campaign.nextAttack();
+        const auto alliedOrder=campaign.alliedOrder();
+        const auto route=playerRoute?playerRoute:!isMarching() && destination>=0?
+            campaign.marchRoute(selected,destination):MarchRoute{};
         mapArt(f);
         for (const auto& r:roads) {
             const bool near=selected==r.from || selected==r.to;
@@ -1278,6 +1335,11 @@ struct App {
             const auto color=r.coastal?(near?seaRouteActive:seaRoute):(near?gold:rgb(129,121,81));
             path(f,r,color,1);
         }
+        if (route.legs()>1)
+            for (int i=0;i<route.legs();++i)
+                if (const auto* road=findRoad(route.leg(i))) path(f,*road,mint,2);
+        if (alliedOrder)
+            if (const auto* road=findRoad(alliedOrder)) path(f,*road,mint,2);
         if (threat) {
             for (int j=1;j<6;++j) {
                 auto [a,b]=marchPosition(threat,j/6.f);
@@ -1301,29 +1363,41 @@ struct App {
         if (islandLabel.w && !islandLabel.overlaps(mapCompass)) text(f,"台湾岛",islandLabel.cx(),islandLabel.cy()-6,12,dim,1,ink);
         for (const auto& unit:campaign.columns) {
             if (!unit || !unit.eta) continue;
-            auto [u,v]=marchPosition(unit.road,.45f);
+            const auto route=campaign.marchRoute(unit.road.from,unit.road.to);
+            if (!route) continue;
+            auto [u,v]=marchPosition(route.leg(route.legs()-1),.65f);
             const int x=mapX(u),y=mapY(v);
             const Rect camp{x-9,y-12,19,17};
             if (!insideMap(camp)) continue;
             frame(f,camp,mint,ink);
             contain(f,art::mapProps[armyTent],{camp.x+2,camp.y+1,camp.w-4,camp.h-2},true);
         }
-        if (isMarching()) {
-            for (auto column:marching) armyOnMap(f,column,false);
-            armyOnMap(f,playerMarch,true);
+        if (playerRoute) {
+            const auto [leg,progress]=playerMarchLeg();
+            armyOnMap(f,leg,true,progress);
+        } else if (seasonMarch) {
+            const float progress=float(marchingMs)/travelDuration();
+            for (auto column:marching) if (column)
+                armyOnMap(f,column,campaign.allied(campaign.cities[column.from].owner),progress);
         }
         drawCompass(f);
-        if (mapWindow.w==standardMap.w) drawCityPanel(f);
+        if (mapWindow.w==standardMap.w) drawCityPanel(f,route);
 
         battlePanel(f,{8,220,368,21});
         if (isMarching()) {
             count=0;
             focus=0;
-            if (playerMarch) std::snprintf(buf,sizeof buf,"%s → %s",
-                                         cityName(playerMarch.from),cityName(playerMarch.to));
+            if (playerRoute) {
+                const auto [from,to]=playerRoute.endpoints();
+                if (const int via=campaign.alliedWaypoint(playerRoute);via>=0)
+                    std::snprintf(buf,sizeof buf,"%s → %s · 经%s",cityName(from),cityName(to),cityName(via));
+                else std::snprintf(buf,sizeof buf,"%s → %s",cityName(from),cityName(to));
+            }
+            else if (alliedOrder)
+                std::snprintf(buf,sizeof buf,"盟军出击   %s → %s",cityName(alliedOrder.from),cityName(alliedOrder.to));
             else std::snprintf(buf,sizeof buf,"诸军正在进发");
-            boxText(f,buf,{17,222,350,17},12,playerMarch?mint:coral);
-            gauge(f,{12,248,253,9},marchingMs,marchDuration,blueMarchGauge);
+            boxText(f,buf,{17,222,350,17},12,playerRoute||alliedOrder?mint:coral);
+            gauge(f,{12,248,253,9},marchingMs,travelDuration(),blueMarchGauge);
             button(f,{274,243,102,19},"加速抵达",Command::skipMarch,0,true,true,horseIcon);
             return;
         }
@@ -1338,13 +1412,37 @@ struct App {
             case Notice::saved: status="战役已续上"; break;
             case Notice::saveError: status="存档写入失败"; tone=coral; break;
             case Notice::treaty: status="休战约定已立"; break;
+            case Notice::allied: status="盟约已立，可借道通行";tone=mint;break;
             case Notice::supplies: status="商粮已入库"; break;
             case Notice::levies: status="边城乡勇已归队"; break;
             case Notice::civic: status="城中内政已更新"; break;
             case Notice::encamped: status="军队已扎营，次季抵达"; tone=mint; break;
             case Notice::withdrawn: status="围城军已撤回"; break;
+            case Notice::routeBlocked: status="道路不通，军队已撤回";tone=coral;break;
             case Notice::goal: status="剧本悬赏已达成"; tone=gold; break;
+            case Notice::prisonNews:
+                std::snprintf(buf,sizeof buf,"敌逃%d将%d兵  我归%d将%d兵",prisonNews.escaped,prisonNews.enemiesFled,
+                              prisonNews.returned,prisonNews.troopsReturned);
+                status=buf; tone=gold; break;
             case Notice::none: break;
+        }
+        if (notice==Notice::none || notice==Notice::income) {
+            if (const auto request=campaign.alliedRequest;request) {
+                if (alliedOrder)
+                    std::snprintf(buf,sizeof buf,"%s将攻%s",factions[request.side].title,cityName(request.target));
+                else std::snprintf(buf,sizeof buf,"盟军暂缓出击%s",cityName(request.target));
+                status=buf;
+                tone=alliedOrder?mint:dim;
+            } else if (const auto report=campaign.alliedReport;report.request) {
+                const char* target=cityName(report.request.target);
+                if (report.outcome==AlliedOutcome::captured)
+                    std::snprintf(buf,sizeof buf,"%s攻取%s",factions[report.request.side].title,target);
+                else if (report.outcome==AlliedOutcome::repelled)
+                    std::snprintf(buf,sizeof buf,"盟军攻%s受挫",target);
+                else std::snprintf(buf,sizeof buf,"盟军取消出兵，粮草已退");
+                status=buf;
+                tone=report.outcome==AlliedOutcome::captured?mint:gold;
+            }
         }
         if (status) boxText(f,status,{17,222,threat?244:350,17},12,tone);
         else {
@@ -1386,13 +1484,18 @@ struct App {
         const auto destinationCity=campaign.cities[departure.to];
         const int enemy=campaign.cities[battle.defending?departure.from:departure.to].owner;
         const int lead=plannedLeader();
+        const bool adviser=lead>=0 && battleRole(campaign.leader(lead))==Role::strategist;
+        const auto* kit=lead>=0?&campaign.generals[lead].kit:nullptr;
+        const Gear namedWeapon=kit?(*kit)[armsSlot]:noGear;
         header(f,battle.defending?"守城布阵":"出征布阵",cityName(departure.to));
         plaque(f,{12,39,360,38});
         if (lead>=0) portrait(f,campaign.leader(lead).portrait,{18,42,31,31});
         const int nameLeft=lead>=0?55:21;
         boxText(f,lead>=0?campaign.leader(lead).name:"城中守备",{nameLeft,42,125-nameLeft,17},14,mint);
         number(f,battle.defending?destinationCity.troops:campaign.columns[arrivingColumn].troops,nameLeft,60,13);
-        const auto* foe=enemy<3?&officers[enemy][campaign.enemyOfficer(enemy,departure.to)]:nullptr;
+        if (lead>=0) boxText(f,roleNames[int(battleRole(campaign.leader(lead)))],{91,59,35,16},12,dim,2);
+        const int foeIndex=enemy<3?campaign.enemyOfficer(enemy,departure.to):-1;
+        const auto* foe=foeIndex>=0?&officers[enemy][foeIndex]:nullptr;
         if (foe) portrait(f,foe->portrait,{336,42,31,31});
         const int nameRight=foe?330:361;
         boxText(f,foe?foe->name:ownerName(enemy),{257,42,nameRight-257,17},14,coral,2);
@@ -1408,7 +1511,7 @@ struct App {
         std::snprintf(desc,sizeof desc,"敌 %s / %s / %s",troopMarks[enemyForces[0]],
                       troopMarks[enemyForces[1]],troopMarks[enemyForces[2]]);
         boxText(f,desc,{128,42,128,17},14,coral,1);
-        std::snprintf(desc,sizeof desc,"%s · %s%d",terrains[sites[departure.to].terrain],
+        std::snprintf(desc,sizeof desc,"%s · %s%d级",terrains[sites[departure.to].terrain],
                       siege?"有效城防":"城防",std::max(0,destinationCity.fort-(siege?2:0)));
         boxText(f,desc,{128,59,128,16},12,dim,1);
 
@@ -1449,10 +1552,26 @@ struct App {
                 button(f,{12+121*i,124,117,21},formations[i],Command::shift,i,true,
                        i==deployment.formation,formationIcons[i]);
             boxText(f,"武将兵器",{17,146,100,16},12,gold);
-            boxText(f,lead>=0?weaponHints[deployment.weapon]:"没有领军武将",{148,146,218,16},12,dim,2);
-            for (int i=0;i<3;++i)
-                button(f,{12+121*i,162,117,21},weaponNames[i],Command::pickWeapon,i,lead>=0,
-                       i==deployment.weapon,weaponIcons[i]);
+            char loadout[64]{};
+            size_t used=0;
+            for (const auto category:{armorSlot,mountSlot,strategySlot}) {
+                if (!kit || (*kit)[category]==noGear) continue;
+                const auto& item=gearSpecs[(*kit)[category]];
+                const int written=std::snprintf(loadout+used,sizeof loadout-used,"%s%s",used?" · ":"",item.name);
+                if (written<0 || size_t(written)>=sizeof loadout-used) break;
+                used+=size_t(written);
+            }
+            const auto* weaponHint=lead<0?"没有领军武将":adviser?"军师可远射，后阵施策":weaponHints[deployment.weapon];
+            boxText(f,namedWeapon==noGear && used?loadout:weaponHint,{125,146,241,16},12,dim,2);
+            if (namedWeapon==noGear) {
+                for (int i=0;i<3;++i)
+                    button(f,{12+121*i,162,117,21},weaponNames[i],Command::pickWeapon,i,lead>=0 && (!adviser || i==longbow),
+                           i==deployment.weapon,weaponIcons[i]);
+            } else {
+                battlePanel(f,{12,162,359,21},jadePlaque);
+                boxText(f,gearSpecs[namedWeapon].name,{18,164,110,17},13,gold);
+                boxText(f,used?loadout:"已装备 · 可在名册更换",{128,164,234,17},12,mint,2);
+            }
             boxText(f,"攻城器械",{17,184,100,16},12,gold);
             const char* hint=!engineAvailable?"攻城且仍有城防时可带":
                 deployment.engine==ram?"近城可撞两次 · 每次击破两格":
@@ -1471,7 +1590,7 @@ struct App {
         std::snprintf(desc,sizeof desc,"%d / %d / %d",lines[0],lines[1],lines[2]);
         battlePanel(f,{107,233,131,25});
         boxText(f,desc,{114,235,117,21},12,mint,1);
-        button(f,{241,231,130,28},"击鼓开战",Command::engage,0,true,true);
+        button(f,{241,231,130,28},"入场列阵",Command::engage,0,true,true);
     }
 
     int fieldX(int x) const {return x-int(std::round(battleCamera));}
@@ -1496,6 +1615,62 @@ struct App {
                 age<5?ivory:gold;
             block(f,{px,py,size,size},color);
         }
+    }
+    void officerEffect(pxa::game::Frame& f,const Officer& actor,int side,int lane,int age) {
+        const int direction=side?-1:1;
+        const int origin=fieldX(side?battle.fronts[side][lane]+46:battle.generalPosition(lane,battle.atFront));
+        const int target=fieldX(battle.fronts[1-side][lane]);
+        const int y=groundY(lane)-27;
+        const int wave=std::min(18,age);
+        if (actor.power==crescentStrike) {
+            const int x=origin+direction*std::min(76,12+age*6);
+            line(f,x,y-30,x+direction*13,y-17,mint,3);
+            line(f,x+direction*13,y-17,x+direction*17,y+3,ivory,4);
+            line(f,x+direction*17,y+3,x+direction*7,y+17,mint,3);
+            if (age>5) sparks(f,target,y,age-6,12);
+        } else if (actor.power==bridgeRoar) {
+            for (int i=0;i<3;++i) {
+                const int x=origin+direction*(15+((age+i*7)%25)*5);
+                line(f,x,y-25-i*3,x+11*direction,y,coral,2);
+                line(f,x+11*direction,y,x,y+25+i*3,coral,2);
+            }
+        } else if (actor.power==eightArray || actor.power==rallyOath ||
+                   actor.power==rallyGuard || actor.power==tigerBanner ||
+                   actor.power==ironCommand || actor.power==eyeValor) {
+            constexpr int around[][2]={{-2,0},{-2,-1},{-1,-2},{1,-2},{2,-1},{2,0},{1,1},{-1,1}};
+            const uint16_t color=actor.power==eightArray?mint:
+                actor.power==tigerBanner || actor.power==eyeValor?coral:gold;
+            for (int row=0;row<Battle::rankCount;++row) {
+                const int center=fieldX(battle.fronts[side][row]);
+                if (!battle.ranks[side][row] || !fieldVisible(center,30)) continue;
+                const int foot=groundY(row);
+                if (actor.power==eightArray) {
+                    for (int i=0;i<8;++i)
+                        block(f,{center+around[i][0]*(6+wave/3),foot-13+around[i][1]*(3+wave/5),4,3},i%2?ivory:color);
+                } else if (actor.power==tigerBanner || actor.power==ironCommand) {
+                    const int top=foot-13-wave;
+                    line(f,center,foot-4,center,top,ivory,2);
+                    line(f,center,top,center+direction*(10+wave/3),top+4,color,4);
+                } else {
+                    line(f,center-8-wave,foot-4,center+8+wave,foot-4,color,2);
+                    sparks(f,center,foot-12,age/2,6);
+                }
+            }
+        } else if (actor.power==whiteSpear || actor.power==charge ||
+                   actor.power==markVolley || actor.power==suddenRaid) {
+            const int head=origin+(target-origin)*wave/18;
+            const uint16_t color=actor.power==whiteSpear?ivory:actor.power==suddenRaid?coral:
+                actor.power==markVolley || actor.portrait%2?gold:mint;
+            for (int i=-1;i<=1;++i)
+                line(f,head-direction*(25-i*5),y+i*8,head+direction*9,y+i*5,color,2);
+            if (age>=14) sparks(f,target,y,age-14,7);
+        } else if (actor.power==wildfire || actor.power==brushFire) {
+            for (int i=0;i<8;++i) {
+                const auto x=target+(i-4)*7+((age+i*2)%5);
+                const int height=6+(age+i*7)%19;
+                line(f,x,y+15,x+3,y+15-height,i%3?coral:gold,2);
+            }
+        } else sparks(f,origin,y,age/2,8+actor.portrait%5);
     }
     int battleCameraTarget() const {
         int left=Battle::fieldMargin,right=Battle::fieldLength-Battle::fieldMargin;
@@ -1525,6 +1700,17 @@ struct App {
         block(f,track,rgb(36,28,23));
         block(f,{windowLeft,track.y,windowRight-windowLeft,track.h},rgb(78,60,38));
         block(f,{windowLeft,track.y,windowRight-windowLeft,1},gold);
+        if (battle.plan.engine!=noEngine && battle.wallPoints) {
+            const int gate=markerX(Battle::gatePosition);
+            const int first=markerX(Battle::gatePosition-battle.engineRange());
+            block(f,{first,track.y+15,gate-first+1,1},battle.mayFireEngine()?gold:edge);
+            block(f,{gate,track.y+2,2,14},gold);
+        }
+        for (int side=0;side<2;++side) if (battle.coordinating(side)) {
+            const auto& support=battle.coordination(side);
+            line(f,markerX(battle.fronts[side][support.source])+1,track.y+4+4*support.source,
+                 markerX(battle.fronts[side][support.target])+1,track.y+4+4*support.target,side?coral:gold);
+        }
         for (int lane=0;lane<Battle::rankCount;++lane)
             for (int side=0;side<2;++side)
                 if (battle.ranks[side][lane])
@@ -1551,11 +1737,12 @@ struct App {
         for (int i=n-1;i>=0;--i) {
             const int x=lead-direction*i*gap;
             if (!fieldVisible(x,24)) continue;
-            const int extraStep=troop>=shields && maneuver!=hold?(battle.ticks/3+i)%3:0;
+            const bool moving=battle.walking[who][lane];
+            const int extraStep=troop>=shields && moving?(battle.ticks/3+i)%3:0;
             const int foot=groundY(lane)-i%2*3;
             const int y=foot-extraStep;
             const int stagger=(i*7+lane*4+who*3)%12;
-            int animation=maneuver==hold?0:1+(battle.ticks/4+stagger)%2;
+            int animation=moving?1+(battle.ticks/4+stagger)%2:0;
             if (engaged) {
                 const int action=(battle.roundClock+stagger)%Battle::period;
                 animation=0;
@@ -1570,10 +1757,10 @@ struct App {
                 }
             }
             block(f,{x-11,foot-1,22,3},rgb(57,46,31));
-            auto sprite=troopTile(who,troop,animation);
-            if (troop<shields && (engaged || maneuver==hold || maneuver==fallBack || maneuver==press)) {
+            auto sprite=sansText && troop<shields?art::detailTroops[who][troop][animation]:troopTile(who,troop,animation);
+            if (sansText && troop<shields && (engaged || maneuver==hold || maneuver==fallBack || maneuver==press)) {
                 const int phase=(engaged?battle.roundClock+stagger:battle.ticks*2+stagger)%Battle::period;
-                if (battle.morale[who]<24) sprite=art::tacticTroops[who][troop][phase<18?4:5];
+                if (battle.routed[who][lane]) sprite=art::tacticTroops[who][troop][phase<28?4:5];
                 else if (maneuver==hold || maneuver==fallBack) sprite=art::tacticTroops[who][troop][phase<10?1:0];
                 else if (maneuver==press) sprite=art::tacticTroops[who][troop][phase<11?3:2];
                 else if (battle.round && phase<8 && battle.rankLosses[who][lane]>battle.rankLosses[1-who][lane]*2)
@@ -1581,7 +1768,7 @@ struct App {
             }
             tile(f,sprite,{x-21,y-41,42,42},true);
         }
-        if (fieldVisible(lead,18) && !engaged && maneuver!=hold)
+        if (fieldVisible(lead,18) && battle.walking[who][lane] && !engaged)
             dust(f,lead-direction*15,groundY(lane),direction,battle.ticks+lane*4);
     }
     void drawSiegeField(pxa::game::Frame& f) {
@@ -1600,12 +1787,28 @@ struct App {
             if (fieldVisible(rock,4)) block(f,{rock-3,height-3,6,6},ivory);
         } else sparks(f,gate-10,171,battle.plan.engine==ram?(23-battle.siegeTicks)/2:7-battle.siegeTicks,9,true);
     }
-    void drawFieldGeneral(pxa::game::Frame& f) {
-        if (battle.commander<0 || !battle.generalHealth) return;
-        const int x=fieldX(battle.generalPosition(battle.generalLane,battle.atFront));
-        if (!fieldVisible(x,24)) return;
-        const int y=groundY(battle.generalLane)-27;
-        if (battle.strikeTicks) {
+    void drawFieldGeneral(pxa::game::Frame& f,int side) {
+        const auto* person=side?battle.opponent():battle.commander>=0 && battle.generalHealth?&battle.officer():nullptr;
+        if (!person) return;
+        const int lane=side?Battle::nearestRank(battle.ranks[1],1):battle.generalLane;
+        if (lane<0) return;
+        const int x=fieldX(side?battle.fronts[1][lane]+46:battle.generalPosition(lane,battle.atFront));
+        if (!fieldVisible(x,23)) return;
+        const int foot=groundY(lane)-1;
+        const int y=foot-27;
+        const auto job=battleRole(*person);
+        const int portraitIndex=person->portrait-39;
+        const int row=portraitIndex>=0 && portraitIndex<3?portraitIndex:
+            job==Role::strategist?0:ranged(person->favored) && job==Role::vanguard?2:1;
+        const bool action=side?battle.enemySkillTicks>0:battle.strikeTicks>0 || battle.effects>0;
+        const int pose=action?3:battle.walking[side][lane]?1+(battle.ticks/5)%2:0;
+        block(f,{x-11,foot,22,3},rgb(50,37,25));
+        const int signature=signatureFor(person);
+        const auto sprite=signature>=0?art::signatureLeaders[signature][side][pose]:
+            (sansText?art::fieldLeaders:art::compactFieldLeaders)[side][row][pose];
+        const int size=signature>=0?54:46;
+        tile(f,sprite,{x-size/2,foot-size+1,size,size},true);
+        if (!side && battle.strikeTicks) {
             const int travel=15-battle.strikeTicks;
             if (battle.plan.weapon==longbow) {
                 const int target=fieldX(battle.fronts[1][battle.lastStrikeLane]);
@@ -1614,8 +1817,7 @@ struct App {
                 line(f,flight,height+2,flight+19,height+4,gold,2);
             } else line(f,x+12+travel,y+12,x+32+travel,y-6,gold,3);
         }
-        portrait(f,battle.officer().portrait,{x-12,y-12,24,24});
-        gauge(f,{x-12,y+12,24,5},battle.generalHealth,100,jadeGauge);
+        if (!side) gauge(f,{x-13,foot+3,26,5},battle.generalHealth,100,jadeGauge);
     }
     void generalControls(pxa::game::Frame& f) {
         if (!battle.canMoveGeneral()) return;
@@ -1635,12 +1837,15 @@ struct App {
             const int y=124+27*lane;
             const Rect own{8,y,60,24}, foe{316,y,60,24};
             const bool marked=registerControl(own,Command::battleRank,lane,!battle.result);
-            battlePanel(f,own,marked||battle.rankOrders[lane].rounds?jadePlaque:bronzePlaque);
-            battlePanel(f,foe,battle.enemyRank==lane?vermilionPlaque:bronzePlaque);
+            const bool assisted=battle.coordinating() && battle.aid.target==lane;
+            battlePanel(f,own,marked||assisted||battle.rankOrders[lane].rounds?jadePlaque:bronzePlaque);
+            const bool enemyAid=battle.coordinating(1) && battle.enemyAid.target==lane;
+            battlePanel(f,foe,battle.enemyRank==lane||enemyAid?vermilionPlaque:bronzePlaque);
             char count[12];
             for (int side=0;side<2;++side) {
                 const auto card=side?foe:own;
-                boxText(f,troopMarks[battle.troopFor(side,lane)],{card.x+5,y+4,17,16},12,dim,1);
+                const bool broken=battle.routed[side][lane] && battle.ranks[side][lane]>0;
+                boxText(f,broken?"溃":troopMarks[battle.troopFor(side,lane)],{card.x+5,y+4,17,16},12,broken?coral:dim,1);
                 std::snprintf(count,sizeof count,"%d",battle.ranks[side][lane]);
                 boxText(f,count,{card.x+23,y+4,31,16},12,side?coral:mint,2);
             }
@@ -1652,6 +1857,8 @@ struct App {
         battlePanel(f,{72,83,240,122});
         if (retreatPrompt) {
             boxText(f,battle.defending?"确认弃城?":"确认撤军?",{84,93,216,27},20,coral,1);
+            if (battle.exposed(0))
+                boxText(f,"军势已乱，撤退仍可能被俘",{84,120,216,18},12,coral,1);
             button(f,{87,144,101,30},"返回",Command::back,0,true,true);
             button(f,{196,144,101,30},battle.defending?"弃城":"撤军",Command::confirmRetreat,0,true,false,withdrawIcon);
             return;
@@ -1682,7 +1889,8 @@ struct App {
         boxText(f,caption,{x+(enemy||duel?0:15),card.y+33,duel?80:65,16},12,ivory,align);
     }
     void battleHud(pxa::game::Frame& f,bool duel=false) {
-        combatCard(f,{8,5,140,55},&battle.officer(),duel?battle.duel.health[0]:battle.troops[0],
+        combatCard(f,{8,5,140,55},battle.commander>=0?&battle.officer():nullptr,
+                   duel?battle.duel.health[0]:battle.troops[0],
                    duel?100:battle.initial[0],battle.morale[0],false,duel);
         combatCard(f,{236,5,140,55},battle.opponent(),duel?battle.duel.health[1]:battle.troops[1],
                    duel?100:battle.initial[1],battle.morale[1],true,duel);
@@ -1692,7 +1900,7 @@ struct App {
         if (duel)
             std::snprintf(line,sizeof line,"第%d合",std::min(3,battle.duel.round+1));
         else if (battle.plan.engine!=noEngine)
-            std::snprintf(line,sizeof line,"城防 %d",battle.wallPoints);
+            std::snprintf(line,sizeof line,"城防%d格",battle.wallPoints);
         else std::snprintf(line,sizeof line,"%s",formations[battle.enemyFormation]);
         boxText(f,line,{159,28,66,16},13,duel?dim:coral,1);
         const bool approaching=!battle.round;
@@ -1700,6 +1908,22 @@ struct App {
         const int progress=approaching?std::max(0,openingGap-battle.closestGap()):battle.roundClock;
         gauge(f,{162,47,60,7},duel?battle.duel.round:progress,
               duel?3:approaching?openingGap-std::max(battle.range(0),battle.range(1)):Battle::period,goldGauge);
+    }
+    const char* plannedEnemyOrder(char (&label)[60]) const {
+        if (battle.enemyWithdrawalQueued) return "敌军将撤";
+        if (battle.enemySkillQueued) return "敌将蓄势";
+        if (battle.enemySiegeSortie) {
+            std::snprintf(label,sizeof label,"敌%s扑向器械",rankNames[battle.enemyRank]);
+        } else if (battle.enemyManeuver!=measured) {
+            std::snprintf(label,sizeof label,"敌%s%s",battle.enemyRank<0?"军":rankNames[battle.enemyRank],
+                          maneuvers[battle.enemyManeuver]);
+        } else if (battle.coordinating(1)) {
+            const auto& support=battle.enemyAid;
+            const auto source=battle.troopFor(1,support.source);
+            const char* order=source==shields?"掩护":ranged(source)?"援射":"夹击";
+            std::snprintf(label,sizeof label,"敌%s%s%s",rankNames[support.source],order,rankNames[support.target]);
+        } else return nullptr;
+        return label;
     }
     void drawBattle(pxa::game::Frame& f) {
         if (battle.duel.visible()) {
@@ -1718,8 +1942,19 @@ struct App {
             for (int side=0;side<2;++side) for (int lane=0;lane<Battle::rankCount;++lane)
                 if (battle.rankLosses[side][lane])
                     sparks(f,fieldX(battle.fronts[side][lane]),groundY(lane)-20,battle.roundClock,4);
-        drawFieldGeneral(f);
+        drawFieldGeneral(f,1);
+        drawFieldGeneral(f,0);
         battleHud(f);
+        if (battle.awaitingOrders) {
+            count=0;
+            if (battle.paused) {drawFieldMap(f,false);drawPause(f);return;}
+            battlePanel(f,{12,207,360,51});
+            boxText(f,"双方列阵，等待发令",{24,209,336,17},13,gold,1);
+            button(f,{21,228,167,25},"下令进军",Command::launchOrders,0,true,true,horseIcon);
+            button(f,{195,228,167,25},"按兵待敌",Command::launchOrders,1,true,false,squareIcon);
+            drawFieldMap(f,true);
+            return;
+        }
         const Rect cueArea{128,93,128,22};
         const auto caption=[&](Rect box,const char* label,BattlePlaque tone,uint16_t color) {
             battlePanel(f,box,tone);
@@ -1734,7 +1969,16 @@ struct App {
         if (battle.effects) {
             const int lane=battle.generalLane;
             const int x=fieldX(battle.generalPosition(lane,battle.atFront));
-            sparks(f,x,groundY(lane)-23,(25-battle.effects)/2,10);
+            const int age=Battle::skillFrames-battle.effects;
+            officerEffect(f,battle.officer(),0,lane,age);
+            if (battle.officer().power==fireArrow && battle.fireLane>=0) {
+                const int target=fieldX(battle.fronts[1][battle.fireLane]);
+                const int flight=std::min(12,age);
+                const int arrow=x+(target-x)*flight/12;
+                const int y=groundY(lane)-27-flight*(12-flight)/3;
+                if (age<12) line(f,arrow-9,y+3,arrow+8,y,coral,3);
+                else sparks(f,target,groundY(battle.fireLane)-21,age-12,14);
+            }
             caption(cueArea,battle.officer().skill,jadePlaque,gold);
         } else if (battle.strikeTicks) {
             const int lane=battle.lastStrikeLane;
@@ -1744,20 +1988,19 @@ struct App {
             casualty(0,battle.losses[0]);
             casualty(1,battle.losses[1]);
         }
-        if (!battle.effects && (battle.enemySkillQueued || battle.enemySkillTicks ||
-                                 battle.enemyManeuver!=measured)) {
-            const char* cue=battle.enemyWithdrawalQueued?"敌军将撤":
-                            battle.enemySkillTicks?battle.opponent()->skill:
-                            battle.enemySkillQueued?"敌将蓄势":nullptr;
-            if (!cue) {
-                std::snprintf(buf,sizeof buf,"敌%s%s",battle.enemyRank<0?"军":rankNames[battle.enemyRank],
-                              maneuvers[battle.enemyManeuver]);
-                cue=buf;
+        if (!battle.effects) {
+            char order[60];
+            const bool rout=battle.routCue[0]>0 || battle.routCue[1]>0;
+            const char* cue=rout?(battle.routCue[0]?"我军有一路溃退":"敌军有一路溃退"):plannedEnemyOrder(order);
+            if (battle.enemySkillTicks && battle.opponent()) {
+                officerEffect(f,*battle.opponent(),1,1,22-battle.enemySkillTicks);
+                if (!cue) cue=battle.opponent()->skill;
             }
-            caption(cueArea,cue,vermilionPlaque,coral);
-        } else if (!battle.effects && !battle.round) {
-            std::snprintf(buf,sizeof buf,"离敌 %d 步",battle.closestGap());
-            caption(cueArea,buf,bronzePlaque,ivory);
+            if (cue) caption(cueArea,cue,vermilionPlaque,coral);
+            else if (!battle.round) {
+                std::snprintf(buf,sizeof buf,"离敌 %d 步",battle.closestGap());
+                caption(cueArea,buf,bronzePlaque,ivory);
+            }
         }
         if (tacticsOpen && !battle.paused) {
             drawFieldMap(f,false);
@@ -1768,11 +2011,18 @@ struct App {
         gauge(f,{17,218,48,9},battle.signal,100,goldGauge);
         std::snprintf(buf,sizeof buf,"令%d",battle.signal);
         boxText(f,buf,{71,214,51,17},12,gold);
-        if (battle.plan.engine!=noEngine && battle.wallPoints && battle.engineShots &&
-            battle.engineGap()>battle.engineRange())
-            std::snprintf(buf,sizeof buf,"还差%d步",battle.engineGap()-battle.engineRange());
+        if (battle.plan.engine!=noEngine && battle.wallPoints && battle.engineShots) {
+            if (!battle.ranks[0][battle.plan.engineLane]) std::snprintf(buf,sizeof buf,"器械待援");
+            else if (battle.lastShot==battle.round) std::snprintf(buf,sizeof buf,"下合再用");
+            else if (battle.engineGap()>battle.engineRange())
+                std::snprintf(buf,sizeof buf,"还差%d步",battle.engineGap()-battle.engineRange());
+            else if (battle.signal<Battle::engineCost) std::snprintf(buf,sizeof buf,"需%d令",Battle::engineCost);
+            else std::snprintf(buf,sizeof buf,"器械可用");
+        }
         else if (battle.maneuverRounds)
             std::snprintf(buf,sizeof buf,"%s %d合",maneuvers[battle.maneuver],battle.maneuverRounds);
+        else if (battle.anchored) std::snprintf(buf,sizeof buf,"全军驻守");
+        else if (battle.armament!=noGear) std::snprintf(buf,sizeof buf,"%s",gearSpecs[battle.armament].name);
         else std::snprintf(buf,sizeof buf,"%s",troopNames[battle.troopFor(0,battle.generalLane)]);
         boxText(f,buf,{128,214,81,17},12,battle.maneuverRounds?mint:dim);
         if (battle.plan.engine!=noEngine) {
@@ -1781,9 +2031,11 @@ struct App {
             else std::snprintf(buf,sizeof buf,"%s %d",battle.plan.engine==ram?"撞城":"投石",battle.engineShots);
             button(f,{216,210,99,25},buf,Command::fireEngine,0,battle.mayFireEngine());
         } else if (battle.commander>=0) {
-            const char* status=!battle.generalHealth?"武将退场":
-                battle.atFront?"阵前损体力":"点路牌分兵";
-            boxText(f,status,{212,214,93,17},12,battle.generalHealth?dim:coral,1);
+            if (battle.generalHealth)
+                std::snprintf(buf,sizeof buf,"%s%s · %d",rankNames[battle.generalLane],
+                              battle.atFront?"阵前":"后阵",battle.generalHealth);
+            else std::snprintf(buf,sizeof buf,"武将退场");
+            boxText(f,buf,{212,214,93,17},12,battle.generalHealth>30?gold:coral,1);
         }
         for (int i=0;i<3;++i)
             button(f,{8+56*i,239,54,21},formations[i],Command::shift,i,
@@ -1798,48 +2050,97 @@ struct App {
         drawFieldMap(f,!battle.paused && !battle.result);
         drawRanks(f);
         if (battle.paused) drawPause(f);
-        else generalControls(f);
+        else {
+            generalControls(f);
+            const Rect commanderCard{8,5,140,55};
+            if (battle.canMoveGeneral() && registerControl(commanderCard,Command::battleRank,battle.generalLane))
+                around(commanderCard,commanderCard.inset(2,2),[&](Rect border) {block(f,border,gold);});
+        }
     }
     void drawReport(pxa::game::Frame& f) {
         fillBackground(f,reportSiege?art::siege:art::battlefields[sites[reportCity].terrain]);
-        skinFrame(f,{39,27,306,207});
+        skinFrame(f,{39,22,306,223});
         const char* title=reportRetreat?(reportDefense?"弃城撤退":"收兵回城"):
                           reportWinner>0?(reportDefense?"守城告捷":"夺城告捷"):
                           reportDefense?"城池失守":"攻城受挫";
-        contain(f,art::outcomes[reportWinner>0?0:1],{116,42,152,54},true);
-        char heading[56];
-        std::snprintf(heading,sizeof heading,"%s · %s",cityName(reportCity),title);
-        boxText(f,heading,{59,101,266,23},14,reportWinner>0?gold:coral,1);
-        block(f,{67,123,250,1},edge);
-        text(f,"我军伤亡",78,139,15);
-        number(f,reportLoss,308,138,17,ivory,2);
-        const char* extra=reportWinner<=0?(reportLoss==battle.initial[0]?"全军覆没":"余部已撤离前线"):
-                           reportDefense?"守军留驻城内":"入城缴获 115金 95粮";
-        if (aftermath.enemyReturned) {
-            char withdrawal[64];
-            std::snprintf(withdrawal,sizeof withdrawal,"敌军 %d 人撤往%s",
-                          aftermath.enemyReturned,cityName(battle.enemyRetreatCity));
-            boxText(f,withdrawal,{60,155,264,23},14,dim,1);
-        } else text(f,extra,192,159,14,dim,1);
-        char merit[56];
-        if (aftermath.objective) std::snprintf(merit,sizeof merit,"剧本悬赏已达成");
-        else if (aftermath.level) std::snprintf(merit,sizeof merit,"领军提升至等级 %d",aftermath.level);
-        else std::snprintf(merit,sizeof merit,"领军历练 +%d",aftermath.xp);
-        if (aftermath.xp || aftermath.objective) text(f,merit,192,180,13,mint,1);
-        button(f,{121,197,142,25},aftermath.captured?"处置俘将":"返回舆图",Command::accept,0,true,true);
+        contain(f,art::outcomes[reportWinner>0?0:1],{116,29,152,52},true);
+        char line[80];
+        std::snprintf(line,sizeof line,"%s · %s",cityName(reportCity),title);
+        boxText(f,line,{59,82,266,23},15,reportWinner>0?gold:coral,1);
+        block(f,{63,107,258,1},edge);
+        int y=111;
+        auto row=[&](uint16_t color) {
+            boxText(f,line,{54,y,276,19},13,color,1);
+            y+=19;
+        };
+        std::snprintf(line,sizeof line,"我军伤亡 %d  ·  敌军伤亡 %d",reportLoss,battle.initial[1]-battle.troops[1]-battle.fled[1]);
+        row(ivory);
+        if (battle.fled[0] || battle.fled[1] || aftermath.dispersed) {
+            if (aftermath.dispersed && (battle.fled[0] || battle.fled[1]))
+                std::snprintf(line,sizeof line,"逃兵 我%d 敌%d · 我军溃散%d",battle.fled[0],battle.fled[1],aftermath.dispersed);
+            else if (aftermath.dispersed)
+                std::snprintf(line,sizeof line,"我军溃散 %d 人",aftermath.dispersed);
+            else
+                std::snprintf(line,sizeof line,"逃兵  我方 %d · 敌方 %d",battle.fled[0],battle.fled[1]);
+            row(coral);
+        }
+
+        if (aftermath.ourCaptive>=0 || aftermath.ourPrisoners) {
+            const char* actor=aftermath.ourCaptive>=0?campaign.leader(aftermath.ourCaptive).name:nullptr;
+            if (actor && aftermath.ourPrisoners) std::snprintf(line,sizeof line,"%s与%d名士兵被俘",actor,aftermath.ourPrisoners);
+            else if (actor) std::snprintf(line,sizeof line,"%s被俘",actor);
+            else std::snprintf(line,sizeof line,"我方%d名士兵被俘",aftermath.ourPrisoners);
+            row(coral);
+        }
+        if (aftermath.captive>=0 || aftermath.enemyPrisoners) {
+            const char* actor=battle.opponent()?battle.opponent()->name:nullptr;
+            if (aftermath.captive>=0 && aftermath.enemyPrisoners)
+                std::snprintf(line,sizeof line,"俘获%s与%d名敌兵",actor,aftermath.enemyPrisoners);
+            else if (aftermath.captive>=0) std::snprintf(line,sizeof line,"俘获敌将%s",actor);
+            else std::snprintf(line,sizeof line,"俘获敌兵%d人",aftermath.enemyPrisoners);
+            row(mint);
+        }
+        if (aftermath.rescuedGenerals || aftermath.rescuedTroops) {
+            std::snprintf(line,sizeof line,"救回我方武将%d人  ·  归队士兵%d人",aftermath.rescuedGenerals,aftermath.rescuedTroops);
+            row(mint);
+        } else if (aftermath.enemyReturned && aftermath.enemyDispersed) {
+            std::snprintf(line,sizeof line,"敌军撤回 %d · 敌军溃散 %d",aftermath.enemyReturned,aftermath.enemyDispersed);
+            row(dim);
+        } else if (aftermath.enemyReturned) {
+            std::snprintf(line,sizeof line,"敌军 %d 人撤往%s",aftermath.enemyReturned,
+                          cityName(reportDefense?battle.from:battle.enemyRetreatCity));
+            row(dim);
+        } else if (aftermath.enemyDispersed) {
+            std::snprintf(line,sizeof line,"敌军溃散 %d 人",aftermath.enemyDispersed);
+            row(dim);
+        } else if (reportWinner>0 && !reportDefense) {
+            std::snprintf(line,sizeof line,"入城缴获 115金 95粮");
+            row(dim);
+        }
+        if (aftermath.objective) std::snprintf(line,sizeof line,"剧本悬赏已达成");
+        else if (aftermath.level) std::snprintf(line,sizeof line,"领军提升至等级 %d",aftermath.level);
+        else std::snprintf(line,sizeof line,"领军历练 +%d",aftermath.xp);
+        if (aftermath.xp || aftermath.objective) row(mint);
+
+        const int tab=aftermath.captive>=0?0:aftermath.ourCaptive>=0?1:
+            (aftermath.enemyPrisoners || aftermath.ourPrisoners)?2:-1;
+        if (tab>=0) {
+            button(f,{65,211,123,25},"返回舆图",Command::accept);
+            button(f,{196,211,123,25},"俘虏营",Command::prisonCamp,tab,true,true);
+        } else button(f,{121,211,142,25},"返回舆图",Command::accept,0,true,true);
     }
     void drawHelp(pxa::game::Frame& f) {
         fillBackground(f,art::warHall);
         header(f,"行军用策","七十二季内一统州郡");
         constexpr const char* titles[]={"治城","进军","临阵","军令"};
         constexpr const char* a[]={"征募补兵，屯田加粮，扩地增令。",
-            "点邻城可调兵，围城次季抵达。",
-            "枪克骑，骑克弓，弓克枪。",
-            "点我方战场调将，兵器出招耗12令。"};
+            "选起点与目标，可调兵或出征。",
+            "列阵后可下令进军，也可按兵待敌。",
+            "点我方战场调将，军师可在后阵施策。"};
         constexpr const char* b[]={"城池内政可任太守、安民、搜寻。",
             "再点己城切换出发城。红线是敌袭。",
-            "战前选兵种、阵法和武将兵器。",
-            "号令控制攻守，单挑影响军心。"};
+            "号令可先看预计伤亡。军心低会溃逃。",
+            "猛将可单挑，统将的部队更能稳住战线。"};
         for (int i=0;i<4;++i) {
             int y=44+46*i;
             frame(f,{10,y,364,42});
@@ -1881,26 +2182,35 @@ struct App {
         skinFrame(f,{10,70,178,148});
         skinFrame(f,{196,70,178,148});
         text(f,"筹粮练兵",20,79,16,gold);
-        text(f,"使节议和",206,79,16,gold);
+        button(f,{110,75,69,23},"领地",Command::fiefs);
+        text(f,"外交",206,79,16,gold);
         text(f,"花金120，购粮330",20,98,13,dim);
         button(f,{19,118,160,27},"通商购粮",Command::market,0,campaign.actions&&campaign.gold>=120);
         text(f,"边城各补105兵",20,151,12,dim);
         text(f,"金150  粮95",20,168,12,dim);
         button(f,{19,183,160,26},"巡边募兵",Command::militia,0,
                campaign.actions&&campaign.gold>=150&&campaign.grain>=95);
-        text(f,"金180 · 停战三季",206,98,13,dim);
+        boxText(f,"结盟四季 · 可借道",{205,97,160,17},12,dim);
         int n=0;
         for (int side=0;side<3;++side) {
             if (side==campaign.player) continue;
-            if (campaign.ceasefire(side)) std::snprintf(state,sizeof state,"%s 休战%d季",
+            const int y=117+46*n++;
+            if (campaign.allied(side)) std::snprintf(state,sizeof state,"%s 结盟%d季",
+                factions[side].title,campaign.alliance[side]);
+            else if (campaign.ceasefire(side)) std::snprintf(state,sizeof state,"%s 休战%d季",
                 factions[side].title,campaign.truce[side]);
-            else std::snprintf(state,sizeof state,"与%s议和",factions[side].title);
-            button(f,{205,118+40*n++,160,28},state,Command::treat,side,campaign.mayTreat(side));
+            else std::snprintf(state,sizeof state,"%s",factions[side].title);
+            boxText(f,state,{205,y,160,16},13,campaign.allied(side)?mint:ivory);
+            std::snprintf(state,sizeof state,"议和%d金",truceCost);
+            button(f,{205,y+17,77,25},state,Command::treat,side,campaign.mayTreat(side));
+            std::snprintf(state,sizeof state,"%s%d金",campaign.allied(side)?"续盟":"结盟",allianceCost);
+            button(f,{288,y+17,77,25},state,Command::ally,side,campaign.mayAlly(side));
         }
         button(f,{10,230,75,26},"返回",Command::back);
-        button(f,{91,230,75,26},"军情",Command::forces);
-        button(f,{172,230,95,26},"州郡军略",Command::regions);
-        button(f,{273,230,101,26},"武将名册",Command::roster,0,true,true);
+        button(f,{91,230,57,26},"军情",Command::forces);
+        button(f,{154,230,70,26},"俘虏营",Command::prisonCamp);
+        button(f,{230,230,64,26},"州郡",Command::regions);
+        button(f,{300,230,74,26},"武将",Command::roster,0,true,true);
     }
 #include "expansion_ui.inc"
 
@@ -1934,9 +2244,11 @@ struct App {
             case Page::soundSettings: drawSoundSettings(f);break;
             case Page::gazetteer: drawGazetteer(f);break;
             case Page::seasonCouncil: drawSeasonCouncil(f);break;
+            case Page::alliedOffensive: drawAlliedOffensive(f);break;
             case Page::regions: drawRegions(f);break;
             case Page::dispatch: drawDispatch(f);break;
             case Page::forces: drawForces(f);break;
+            case Page::fiefs: drawFiefs(f);break;
             case Page::gear: drawGear(f);break;
             case Page::captive: drawCaptive(f);break;
         }
@@ -1966,17 +2278,17 @@ struct App {
             ((nextPage==Page::battle || (nextPage==Page::soundSettings && audioFrom==Page::battle)) &&
             battle.paused));
     }
-    void beginMarch(Order order) {
-        playerMarch=order;
+    void beginMarch(const MarchRoute& route) {
+        playerRoute=route;
         marchingMs=0;
         previousTick=0;
         focus=0;
         if (!mapZoom) mapZoom=1;
-        auto [x,y]=marchPosition(order,.5f);
+        auto [x,y]=marchPosition(route.leg(0),route.legs()==1?.5f:0.f);
         mapCenterX=x;
         mapCenterY=y;
         clampCamera();
-        logState("march");
+        logState(campaign.alliedWaypoint(route)>=0?"march-allied":"march");
         audio.cue(marchSound);
     }
     void beginSeason() {
@@ -2006,25 +2318,26 @@ struct App {
         else {logState("enemy-march");audio.cue(marchSound);}
     }
     void finishMarch() {
-        const Order order=playerMarch;
+        const Order order=playerRoute.endpoints();
         const bool season=seasonMarch;
-        playerMarch={};
+        playerRoute={};
         marching={};
         seasonMarch=false;
         if (season) {
-            campaign.advance(seasonPlan);
+            prisonNews=campaign.advance(seasonPlan);
             seasonPlan=SeasonPlan::regular;
-            notice=Notice::income;
+            notice=prisonNews?Notice::prisonNews:Notice::income;
             checkpoint();
             enterMap();
             logState("season");
         } else if (order && arrivingColumn>=0 && campaign.columns[arrivingColumn]) {
             if (campaign.own(order.to)) {
                 campaign.arriveFriendly(arrivingColumn);
-                selected=order.to;
+                selected=campaign.own(campaign.marchBase)?campaign.marchBase:order.to;
                 notice=Notice::moved;
                 checkpoint();
                 enterMap();
+                if (page==Page::map && !isMarching() && selected!=order.to) destination=order.to;
                 logState("reinforce");
             } else if (campaign.ceasefire(campaign.cities[order.to].owner)) {
                 campaign.recall(arrivingColumn);
@@ -2045,31 +2358,36 @@ struct App {
         const int lead=plannedLeader();
         const auto troop=sites[order.to].terrain==river?bow:lead>=0?campaign.leader(lead).favored:spear;
         deployment={troop,square,preferredWeapon(troop)};
+        if (lead>=0 && battleRole(campaign.leader(lead))==Role::strategist) deployment.weapon=longbow;
         deploymentLane=1;
         deploymentKit=false;
         show(Page::deploy,3);
     }
     void enterMap() {
         if (campaign.won) {show(Page::ending);return;}
-        if (campaign.prisoner) {show(Page::captive);return;}
         if (campaign.defense) {
             selected=campaign.defense.to;
             deploy(campaign.defense,true);
             logState("defend");
             return;
         }
-        arrivingColumn=campaign.readyColumn();
-        if (arrivingColumn>=0) {
+        for (arrivingColumn=campaign.readyColumn();arrivingColumn>=0;arrivingColumn=campaign.readyColumn()) {
             const Order order=campaign.columns[arrivingColumn].road;
+            const auto route=campaign.marchRoute(order.from,order.to);
+            if (!route) {
+                campaign.recall(arrivingColumn);
+                notice=Notice::routeBlocked;
+                checkpoint();
+                logState("march-route-blocked");
+                continue;
+            }
             selected=order.from;
             destination=order.to;
             show(Page::map);
-            beginMarch(order);
+            beginMarch(route);
             return;
         }
-        if (!campaign.own(selected)) {
-            for (int i=0;i<cityCount;++i) if (campaign.own(i)) {selected=i;break;}
-        }
+        if (!campaign.own(selected)) selected=campaign.preferredOrigin();
         destination=-1;
         show(Page::map,-1);
     }
@@ -2080,28 +2398,33 @@ struct App {
         reportRetreat=retreat;
         reportSiege=battle.walls>=3;
         aftermath=battle.settle(campaign);
-        reportLoss=battle.initial[0]-battle.troops[0]+aftermath.dispersed;
-        if (!battle.defending && battle.result>0) selected=battle.to;
-        notice=aftermath.objective?Notice::goal:Notice::none;
+        reportLoss=battle.initial[0]-battle.troops[0]-battle.fled[0];
+        if (!battle.defending && battle.result>0)
+            selected=campaign.own(campaign.marchBase)?campaign.marchBase:battle.to;
+        if (notice!=Notice::prisonNews) notice=aftermath.objective?Notice::goal:Notice::none;
         checkpoint();
         show(Page::report);
         audio.cue(battle.result>0?victorySound:defeatSound);
         audio.cue(battle.result>0?victoryVoice:defeatVoice);
-        logState(aftermath.enemyReturned?"enemy-withdrew":battle.result>0?"victory":"defeat");
+        logState(battle.enemyWithdrew?"enemy-withdrew":battle.result>0?"victory":"defeat");
+        if (aftermath.ourCaptive>=0 || aftermath.ourPrisoners) logState("our-captured");
+        if (aftermath.captive>=0 || aftermath.enemyPrisoners) logState("enemy-captured");
     }
     void openOrders(int rank) {
         tacticsRank=rank;
+        proposedOrder.reset();
         tacticsOpen=true;
-        lookaheadDone=false;
         focus=rank+1;
         previousTick=0;
     }
     void closeOrders() {
+        proposedOrder.reset();
         tacticsOpen=false;
         focus=battle.plan.formation;
         previousTick=0;
     }
     void pauseBattle() {
+        proposedOrder.reset();
         tacticsOpen=false;
         retreatPrompt=false;
         battle.paused=!battle.paused;
@@ -2132,9 +2455,17 @@ struct App {
             case Page::council:
             case Page::dispatch:
             case Page::gazetteer:
-            case Page::seasonCouncil:
-            case Page::cityDesk:show(Page::map,-1);break;
+            case Page::seasonCouncil:show(Page::map,-1);break;
+            case Page::cityDesk:
+                if (deskMapOrigin>=0) {
+                    selected=deskMapOrigin;
+                    deskMapOrigin=-1;
+                    show(Page::fiefs,-1);
+                } else show(Page::map,-1);
+                break;
             case Page::regions:show(Page::council);break;
+            case Page::fiefs:show(Page::council);break;
+            case Page::alliedOffensive:show(alliedFrom,-1);break;
             case Page::forces:show(Page::council);break;
             case Page::gear:show(Page::roster,rosterPosition()-rosterStart());break;
             case Page::search:show(Page::cityDesk);break;
@@ -2146,11 +2477,18 @@ struct App {
                 break;
             case Page::battle:
                 if (retreatPrompt) {retreatPrompt=false;focus=0;dirty=true;}
-                else if (tacticsOpen) {closeOrders();dirty=true;}
+                else if (tacticsOpen) {
+                    if (proposedOrder) {proposedOrder.reset();focus=tacticsRank+1;}
+                    else closeOrders();
+                    dirty=true;
+                }
                 else pauseBattle();
                 break;
             case Page::report:enterMap();break;
-            case Page::captive:show(Page::home);break;
+            case Page::captive:
+                if (prisonFrom==Page::map) enterMap();
+                else show(prisonFrom);
+                break;
             case Page::help:show(helpFrom,helpFrom==Page::map?-1:0);break;
         }
         return pxa::BackAction::stay;
@@ -2161,8 +2499,9 @@ struct App {
         dirty=true;
         switch (control.command) {
             case Command::resume:
-                selected=campaign.capital();
-                notice=Notice::saved;
+                selected=campaign.preferredOrigin();
+                if (selected>=0) focusCamera(selected);
+                notice=campaign.alliedRequest||campaign.alliedReport.request?Notice::none:Notice::saved;
                 enterMap();
                 break;
             case Command::newGame:
@@ -2199,7 +2538,11 @@ struct App {
             case Command::select: {
                 int target=-1;
                 if (arg!=selected && !(arg==destination && campaign.own(arg))) target=arg;
-                if (arg==destination && campaign.own(arg)) selected=arg;
+                if (arg==destination && campaign.own(arg)) {
+                    selected=arg;
+                    if (campaign.setOrigin(arg)) checkpoint();
+                    logState("march-origin");
+                }
                 destination=target;
                 notice=Notice::none;
                 break;
@@ -2210,7 +2553,11 @@ struct App {
                     destination=-1;
                     notice=Notice::none;
                     focus=-1;
+                    if (campaign.setOrigin(arg)) checkpoint();
+                    focusCamera(arg);
+                    if (page==Page::fiefs) show(Page::map,-1);
                     audio.cue(confirmSound);
+                    logState("march-origin");
                 }
                 break;
             case Command::work:
@@ -2223,7 +2570,31 @@ struct App {
                     logState("work");
                 }
                 break;
-            case Command::cityDesk:show(Page::cityDesk);break;
+            case Command::cityDesk:
+                deskMapOrigin=-1;
+                show(Page::cityDesk);
+                break;
+            case Command::fiefs:
+                fiefsPage=0;
+                show(Page::fiefs);
+                break;
+            case Command::fiefPage:
+                fiefsPage=std::clamp(fiefsPage+arg,0,(campaign.holdings(campaign.player)-1)/fiefRows);
+                break;
+            case Command::fiefDesk:
+                if (campaign.own(arg)) {
+                    deskMapOrigin=selected;
+                    selected=arg;
+                    show(Page::cityDesk);
+                }
+                break;
+            case Command::cityPolicy:
+                if (campaign.setPolicy(selected,CityPolicy(arg))) {
+                    checkpoint();
+                    audio.cue(confirmSound);
+                    logState("city-policy");
+                }
+                break;
             case Command::gazetteer:gazetteerCity=arg;show(Page::gazetteer);break;
             case Command::browseCity:gazetteerCity=(gazetteerCity+arg+cityCount)%cityCount;break;
             case Command::openSearch:
@@ -2245,23 +2616,25 @@ struct App {
                 }
                 break;
             case Command::welcomeTalent:
-                if (campaign.welcome(selected,arg)) {
+                if (const auto result=campaign.welcome(selected,arg);result!=Offer::unavailable) {
                     checkpoint();
-                    audio.cue(confirmSound);
-                    logState("talent-recruited");
+                    if (result==Offer::joined) audio.cue(confirmSound);
+                    logState(result==Offer::joined?"talent-recruited":"talent-refused");
                 }
                 break;
-            case Command::march:
-                if (campaign.canMarch(selected,arg)) {
+            case Command::march: {
+                const auto route=campaign.marchRoute(selected,arg);
+                if (const int lead=campaign.routeLeader(route);lead>=0) {
                     departure={selected,arg};
-                    dispatchLead=campaign.routeLeader(selected,arg);
+                    dispatchLead=lead;
                     dispatchSize=legion;
-                    if (!campaign.canSend(selected,arg,dispatchSize,dispatchLead)) dispatchSize=division;
-                    if (!campaign.canSend(selected,arg,dispatchSize,dispatchLead)) dispatchSize=vanguard;
+                    if (!campaign.canSend(route,dispatchSize,lead)) dispatchSize=division;
+                    if (!campaign.canSend(route,dispatchSize,lead)) dispatchSize=vanguard;
                     stageSiege=false;
                     show(Page::dispatch,1+dispatchSize);
                 }
                 break;
+            }
             case Command::chooseSize:dispatchSize=DispatchSize(arg);break;
             case Command::approach:stageSiege=bool(arg);break;
             case Command::send:
@@ -2345,12 +2718,19 @@ struct App {
                 focus=0;
                 break;
             case Command::hire:
-                if (campaign.hire(arg)) {checkpoint();logState("hire");}
+                if (const auto result=campaign.hire(arg);result!=Offer::unavailable) {
+                    checkpoint();
+                    if (result==Offer::joined) audio.cue(confirmSound);
+                    logState(result==Offer::joined?"hire":"hire-refused");
+                }
                 break;
             case Command::chooseOfficer:
                 if (eligibleOfficer(arg)) {
                     if (rosterFrom==Page::dispatch) dispatchLead=arg;
-                    else if (rosterFrom==Page::deploy) defenseLeader=arg;
+                    else if (rosterFrom==Page::deploy) {
+                        defenseLeader=arg;
+                        if (battleRole(campaign.leader(arg))==Role::strategist) deployment.weapon=longbow;
+                    }
                     else if (rosterFrom==Page::search) searchingOfficer=arg;
                     else {
                         if (rosterFrom==Page::cityDesk) campaign.assign(selected,arg);
@@ -2362,18 +2742,55 @@ struct App {
                 }
                 break;
             case Command::gear:
-                gearCursor=campaign.generals[officerSlot].gear==noGear?0:campaign.generals[officerSlot].gear;
-                show(Page::gear,gearCursor);
+                chooseGearCategory(armsSlot);
+                show(Page::gear);
                 break;
+            case Command::gearCategory:chooseGearCategory(GearSlot(arg));break;
             case Command::pickGear:gearCursor=arg;break;
             case Command::equip:
                 if (campaign.equip(officerSlot,Gear(arg))) {checkpoint();logState("equip");}
+                break;
+            case Command::unequip:
+                if (campaign.unequip(officerSlot,GearSlot(arg))) {checkpoint();logState("unequip");}
+                break;
+            case Command::buyGear:
+                if (campaign.buyGear(Gear(arg))) {checkpoint();logState("gear-bought");}
                 break;
             case Command::drill:
                 if (campaign.drill(arg)) {checkpoint();logState("drill");}
                 break;
             case Command::treat:
                 if (campaign.treat(arg)) {notice=Notice::treaty;checkpoint();logState("treaty");}
+                break;
+            case Command::ally:
+                if (campaign.ally(arg)) {
+                    notice=Notice::allied;
+                    checkpoint();
+                    audio.cue(confirmSound);
+                    logState("alliance");
+                }
+                break;
+            case Command::alliedOffensive:
+                if (campaign.canAskAlly(arg) || (campaign.alliedRequest && campaign.alliedRequest.target==arg)) {
+                    alliedTarget=arg;
+                    alliedFrom=page;
+                    show(Page::alliedOffensive,-1);
+                }
+                break;
+            case Command::requestAllied:
+                if (campaign.requestAlliedAttack(arg,alliedTarget)) {
+                    notice=Notice::none;
+                    checkpoint();
+                    audio.cue(confirmSound);
+                    logState("allied-offensive");
+                }
+                break;
+            case Command::cancelAllied:
+                if (campaign.cancelAlliedAttack()) {
+                    checkpoint();
+                    audio.cue(confirmSound);
+                    logState("allied-cancel");
+                }
                 break;
             case Command::market:
                 if (campaign.market()) {notice=Notice::supplies;checkpoint();logState("market");}
@@ -2383,15 +2800,30 @@ struct App {
                 break;
             case Command::engage:
                 battle.start(campaign,departure,arrivingColumn,deployment,defenseLeader);
+                battle.prepare();
                 followBattle=true;
                 battleCamera=float(battleCameraTarget());
                 elapsed=0;
                 tacticsOpen=false;
                 retreatPrompt=false;
-                show(Page::battle,deployment.formation);
+                show(Page::battle);
                 audio.cue(drumSound);
-                audio.cue(battle.defending?holdVoice:chargeVoice);
                 logState("battle");
+                break;
+            case Command::launchOrders:
+                if (battle.launch(bool(arg))) {
+                    previousTick=0;
+                    focus=battle.plan.formation;
+                    audio.cue(arg?holdVoice:chargeVoice);
+                    logState(arg?"battle-stand":"battle-advance");
+                }
+                break;
+            case Command::anchorArmy:
+                if (battle.anchor()) {
+                    closeOrders();
+                    audio.cue(holdVoice);
+                    logState("battle-anchor");
+                }
                 break;
             case Command::deployTab:deploymentKit=bool(arg);break;
             case Command::deployLane:deploymentLane=arg;break;
@@ -2433,7 +2865,8 @@ struct App {
             case Command::skill:
                 if (battle.rally()) {
                     const auto power=battle.officer().power;
-                    audio.cue(power==charge?breakVoice:power==guard || power==inspire?rallyVoice:skillVoice);
+                    audio.cue(power==charge || power==whiteSpear || power==crescentStrike?breakVoice:
+                              Battle::supportPower(power)?rallyVoice:skillVoice);
                     audio.cue(ranged(battle.troopFor(0,battle.generalLane))?arrowSound:clashSound);
                     info("han-banners skill");
                 }
@@ -2462,11 +2895,25 @@ struct App {
                     logState("rank-support");
                 }
                 break;
+            case Command::rankAssist:
+                if (battle.directAid(arg,tacticsRank)) {
+                    audio.cue(confirmSound);
+                    logState("rank-assist");
+                }
+                break;
             case Command::clearRank:
                 if (battle.clearRankOrder(tacticsRank)) closeOrders();
                 break;
+            case Command::previewOrder:
+                proposedOrder=Maneuver(arg);
+                logState("order-preview");
+                break;
+            case Command::cancelOrder:
+                proposedOrder.reset();
+                focus=tacticsRank+1;
+                break;
             case Command::maneuver:
-                if (tacticsRank<0?battle.direct(Maneuver(arg)):battle.directRank(tacticsRank,Maneuver(arg))) {
+                if (battle.issueOrder(tacticsRank,Maneuver(arg))) {
                     closeOrders();
                     constexpr Clip calls[]={noClip,chargeVoice,holdVoice,flankVoice,holdVoice};
                     if (tacticsRank<0 && arg!=measured) {
@@ -2503,12 +2950,20 @@ struct App {
                 conclude(true);
                 break;
             case Command::accept:enterMap();break;
+            case Command::prisonCamp:
+                openPrison(arg);
+                break;
+            case Command::prisonTab:
+                prisonMessage=nullptr;
+                prisonTab=arg;
+                prisonIndex=nextPrisoner(-1,1);
+                break;
+            case Command::prisonPage:
+                prisonMessage=nullptr;
+                prisonIndex=nextPrisoner(prisonIndex,arg);
+                break;
             case Command::captiveChoice:
-                if (arg==2 && !campaign.admit()) break;
-                if (arg!=2) campaign.disposeCaptive(arg==1);
-                checkpoint();
-                logState(arg==2?"guest":"captive");
-                enterMap();
+                actOnPrisoner(arg);
                 break;
             case Command::home:show(Page::home);break;
         }
@@ -2752,17 +3207,26 @@ struct App {
         warmNextScene();
         if (page==Page::map && isMarching()) {
             auto now=tick->timestamp_us;
+            const int duration=travelDuration();
             if (previousTick && now>previousTick)
-                marchingMs=std::min(marchDuration,marchingMs+int(std::min<uint64_t>((now-previousTick)/1000,100)));
+                marchingMs=std::min(duration,marchingMs+int(std::min<uint64_t>((now-previousTick)/1000,100)));
             previousTick=now;
-            if (marchingMs>=marchDuration) finishMarch();
+            if (marchingMs>=duration) finishMarch();
+            else if (playerRoute.legs()>1) {
+                const auto [leg,progress]=playerMarchLeg();
+                const auto [x,y]=marchPosition(leg,progress);
+                mapCenterX=x;
+                mapCenterY=y;
+                clampCamera();
+            }
             dirty=true;
         }
-        if (page==Page::battle && !battle.paused && !tacticsOpen) {
+        if (page==Page::battle && !battle.paused && !tacticsOpen && !battle.awaitingOrders) {
             auto now=tick->timestamp_us;
             if (previousTick && now>previousTick) elapsed+=unsigned(std::min<uint64_t>(now-previousTick,100000));
             previousTick=now;
             const int round=battle.round;
+            const int fled=battle.fled[0]+battle.fled[1];
             const bool animated=!battle.duel.ready() && elapsed>=33333;
             while (elapsed>=33333 && (!battle.result || battle.duel.visible() || battle.effects ||
                                       battle.strikeTicks || battle.siegeTicks)) {
@@ -2774,7 +3238,10 @@ struct App {
             if (battle.result && !battle.duel.visible() && !battle.effects && !battle.strikeTicks &&
                 !battle.siegeTicks) conclude();
             else if (battle.round!=round && !battle.duel.visible()) {
+                if (fled!=battle.fled[0]+battle.fled[1]) logState("battle-rout");
                 if (!round) logState("battle-contact");
+                if (battle.enemySiegeSortie) logState("enemy-sortie");
+                if (battle.enemyAid.rounds==2) logState("enemy-assist");
                 bool arrows=false;
                 for (int side=0;side<2;++side) for (int lane=0;lane<Battle::rankCount;++lane)
                     arrows|=ranged(battle.troopFor(side,lane)) && battle.canReach(side,lane);

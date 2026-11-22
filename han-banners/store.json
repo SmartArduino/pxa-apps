@@ -3,7 +3,7 @@
   "kind": "game",
   "category": "strategy",
   "language": "zh-CN",
-  "summary": "六类兵种分路混编，率军横越长战场，用冲车或投石车攻破城防，争夺五十六处城关。",
+  "summary": "任命太守治理城池，与盟友借道或约定出兵，率三路混编军队争夺城关。",
   "tags": [
     "三国",
     "策略",
@@ -12,8 +12,8 @@
     "触屏",
     "手柄"
   ],
-  "description": "新建战役后即可选择刘备、曹操或孙权。默认从赤壁前夕起兵，也可在同一屏切换到益州攻守或襄樊相持。地图上的部队沿道路行军，可以急行攻城、跨季围城或出兵增援。\n\n经营田产和市集，任命太守，培养武将并配置军械。季末查阅敌情和钱粮，选择抚民或整训。沿八项州郡军略夺取目标城池，稳住民心后领取悬赏。还可在城中搜寻钱粮、军械与六位在野人才，延揽后利用各自的将技与专长。上、中、下三路可分别配备枪兵、弓兵、骑兵、盾兵、弩兵或重骑。横拖战场能观察远端敌阵，弓弩部队可以先开火或支援相邻一路。攻城时可让冲车随步卒靠近城防，或让投石车在外线削弱守军。会战中可下达分路命令、调动武将出招，也可发起三合单挑。\n\n适配触屏和手柄。小屏使用整数倍像素字，大屏自动使用多字号黑体。\n\n五十六处城关覆盖中原、巴蜀、江东、岭南、闽地和交趾。军队沿河谷、古道和沿海水路进发。点城池志可查古城地望、开局的史载官员与出处。\n\n原创古风配乐随标题、舆图和会战切换。冲锋、将技和单挑有普通话语音，各类声音可单独开关。",
+  "description": "选择刘备、曹操或孙权，在赤壁前夕、益州攻守和襄樊相持三个剧本中争夺五十六处城关。从领地总览查看各城兵力和告急消息，任命太守发展民生或补充守军。保存出发点，沿道路调兵或借道盟城，也可请盟友在季末出兵攻打指定敌城。\n\n会战可按兵待敌或下令进军。上、中、下三路独立编队，可以驻守、迂回、协战和增援。确认号令前可比较双方预计伤亡和军令消耗。军心低落时，受压的战线可能先溃退。刘备、关羽、张飞和诸葛亮等十五位人物拥有独立的战场动画。\n\n在武将名册配置兵器、盔甲、坐骑和军策。双方都可能在战后俘获将士。可以尝试招降敌将、整编俘兵，也能赎回我将或攻占关押城救出将士。触屏可双指缩放舆图，亦支持手柄。音乐、音效和语音可分别开关。",
   "icon": "art/store-icon.png",
   "cover": "art/store-cover.png",
-  "changelog": "加入可横向探索的长战场。上、中、下路可从六类兵种中分别选兵，盾兵抵御箭雨，弩兵可远射破甲，重骑擅长冲阵。攻城可携带冲车或投石车，按射程和军令操作器械，逐步破除城防。整齐收纳战场文字，加入行军扬尘、兵器火星和攻城碎屑。\n\nPan across a longer battlefield and mix six troop types across three independent lanes. Shield infantry resist arrows, crossbows reach farther, and heavy cavalry break shield lines. Bring a ram or stone thrower to breach city defenses. Battle labels stay inside their panels, with dust and impact particles."
+  "changelog": "新增领地总览和太守自治，可按城设置民生或守备。出发点随存档保留，调兵会显示出发城留守、目标城余位和实际粮耗。可结盟借道或请盟友在季末攻城，攻下的城归出兵盟友。全军和分路号令可先预览伤亡与军令消耗，再确认下令。群雄难度的敌军在兵力充足时更重视对手的最后据点。支持读取旧战役存档。\n\nManage your cities from the holdings overview and assign governors to improve livelihoods or replenish garrisons. Save a departure city and review transfers against destination capacity and supply costs. March through allied territory or request a seasonal attack. Allies keep the cities they capture. Preview casualties and command costs before issuing battlefield orders. Veteran AI puts more weight on an opponent’s last city when its troops can afford the attack. Existing campaign saves carry forward."
 }

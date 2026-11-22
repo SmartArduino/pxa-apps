@@ -1,0 +1,16 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "assets": {
+    "ui-digits-v2.png": "4 by 4 atlas: 0 1 2 3 / 4 5 6 7 / 8 9 slash plus / multiplication minus exclamation period. Clear rounded ivory numerals, crisp caramel contour, same cap height and baseline, spacious counters, no roughness or cropped strokes.",
+    "ui-kit-v1.png": "4 columns by 2 rows: sage green, honey gold, aqua blue, apricot coral rounded buttons; ivory HUD plate; ivory panel; filled gold and muted empty classic five-point stars. Caramel rims, subtle lower shadow, plain centers for scalable frames. No white top bar, glaring highlight, text or decorations.",
+    "ui-controls-v2.png": "4 columns by 5 rows, row-major: 开始冒险,选择关卡,玩法指南,继续游戏;重新挑战,返回地图,升级,出售;开始波次,冰封,准备布阵,守护成功;再试一次,音效,暂停,下一关;已满级,金币不足,集火清障,关闭. Open rounded CJK lettering, warm ivory fill, thin caramel outline, distinct non-touching characters.",
+    "ui-help-v2.png": "3 columns by 2 rows, row-major: 点击空地建造炮塔;击败怪物赚金币;升级炮塔提升火力;点击障碍集火清除;冰晶减速 烟花范围;守住萝卜赢得星星. Clear rounded Chinese, modest thin caramel contours, open counters, separate complete glyphs.",
+    "ui-tower-names-v3.png": "Three centered labels: 糖果炮,冰晶塔,烟花炮. Same clear ivory/caramel rounded lettering, open counters and separated complete glyphs."
+  },
+  "production_layout": {
+    "digits": "Detect real empty row boundaries instead of assuming an exact generated grid. Normalize full glyph cap heights, baselines and transparent margins.",
+    "guide": "Reposition generated Chinese glyphs without deforming them; moderate tracking around 5.5% of cap height, wider word break in the tower-combination row.",
+    "skins": "Nine-slice generated artwork, continuous underlay and overlapping clips to prevent fractional-density seams."
+  }
+}

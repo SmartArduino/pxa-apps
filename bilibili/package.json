@@ -1,0 +1,105 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-bilibili",
+  "version": "0.4.0",
+  "release_sequence": 12,
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "name": "billy",
+  "localizations": {
+    "en": {
+      "name": "billy"
+    }
+  },
+  "description": "扫码登录、热门推荐、关注动态、云端历史与收藏、选集和评论，默认 360p 播放。",
+  "publisher": {
+    "handle": "lucinhu",
+    "display_name": "lucinhu"
+  },
+  "icon": "assets/icon.png",
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {
+      "maximum_bytes": 8388608,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "ui",
+        "clock",
+        "window",
+        "permission",
+        "log",
+        "net",
+        "audio",
+        "surface",
+        {
+          "name": "video",
+          "min_version": [
+            0,
+            2
+          ],
+          "max_version": [
+            0,
+            3
+          ]
+        },
+        "storage",
+        "assets",
+        "fs"
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "scope": "media",
+      "required": false
+    },
+    {
+      "name": "net.client",
+      "scope": "web",
+      "required": false
+    }
+  ],
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "contacts": 1,
+        "requires": {
+          "tap": "tap"
+        },
+        "min_width": 320,
+        "min_height": 320
+      }
+    ]
+  }
+}

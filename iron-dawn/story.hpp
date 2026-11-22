@@ -2,6 +2,17 @@
 #pragma once
 #include <array>
 namespace iron {
+inline constexpr std::array<const char*,3> defense_briefings[]={
+ {"补给队要借这里过河，前哨得撑住。敌军会从不同的渡口来。",
+  "让坦克守桥，留一队保护矿车。别把所有部队放在同一个渡口。",
+  "击退一波后有短暂的整备时间，可以补充部队和维修。"},
+ {"东岸码头还在运补给，陆军可以走堤道，敌艇也会从水面接近。",
+  "给船坞留一支巡逻队。第二波就有敌艇，之后它们还会回来。",
+  "用机坪补充空军，把岸防和水上的部队都调到来敌方向。"},
+ {"这座矿场还在供矿。山脊把北边的来路分成了几条。",
+  "第二波起敌军会带火炮。让火炮掩护山路，派机动部队去找对方炮兵。",
+  "矿车在南边工作。前线往北推进时，记得留人看守矿线。"}
+};
 struct ChapterScript {const char* name;const char* place;const char* map;unsigned speaker;std::array<const char*,3> briefing;const char* ending;};
 inline constexpr ChapterScript chapters[]={
  {"灰烬里的电台","01 / 矿区 · 赤砂前哨","36×36 / 赤砂峡谷",0,

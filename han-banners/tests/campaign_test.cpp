@@ -7,7 +7,8 @@ using namespace han;
 
 static BattlePlan planFor(const Campaign& c,Order order,int column) {
     const int enemy=c.cities[column<0?order.from:order.to].owner;
-    const Officer* lead=enemy<3?&officers[enemy][c.enemyOfficer(enemy,order.to)]:nullptr;
+    const int foe=enemy<3?c.enemyOfficer(enemy,order.to):-1;
+    const Officer* lead=foe>=0?&officers[enemy][foe]:nullptr;
     const auto core=Battle::enemyUnit(order.to,enemy,lead);
     const auto foes=Battle::enemyDeployment(order.to,c.cities[order.to].fort,column<0,core,c.difficulty);
     BattlePlan plan{spear,wedge,longbow};
@@ -53,10 +54,12 @@ static Campaign play(int side,int chapter,Difficulty difficulty=Difficulty::stan
     c.start(side,chapter,difficulty);
     assert(c.own(c.capital()) && c.year()==chapters[chapter].year);
     for (int attempt=0;!c.won && attempt<24*lastTurn;++attempt) {
-        if (c.prisoner) {
-            if (c.mayAdmit()) assert(c.admit());
-            else c.disposeCaptive(true);
+        for (int index=0;index<int(c.prisoners.size());++index) if (c.prisoners[index]) {
+            if (c.mayAdmit(index) && c.admit(index)==Offer::joined) continue;
+            c.disposeCaptive(index,c.mayRansom(index));
         }
+        for (int slot=0;slot<commanderSlots;++slot)
+            if (c.gold>=280 && c.held(slot)) assert(c.ransomGeneral(slot));
         if (c.defense) {
             resolve(c,c.defense,-1);
             continue;
@@ -146,7 +149,7 @@ static void checkMigration() {
     const auto writeLegacy=[&](auto& older,int version,int cities) {
         constexpr size_t baseHeader=18*2;
         constexpr size_t newHeader=baseHeader+4;
-        const size_t header=baseHeader+(version>=4?2:0);
+        const size_t header=version>=8?newHeader:baseHeader+(version>=4?2:0);
         std::copy_n(newest.begin(),header,older.begin());
         older[2]=std::byte(version);
         std::copy_n(newest.begin()+newHeader,cities*6,older.begin()+header);
@@ -156,6 +159,20 @@ static void checkMigration() {
         older[older.size()-2]=std::byte(sum&255);
         older.back()=std::byte(sum>>8);
     };
+    FourteenthSave fourteenth{};
+    writeLegacy(fourteenth,14,cityCount);
+    assert(migrate(fourteenth,c) && c.preferredOrigin()==current.capital() &&
+           c.cities[current.capital()].policy==CityPolicy::manual);
+    ThirteenthSave thirteenth{};
+    current.alliance[2]=allianceSeasons;
+    newest=encode(current);
+    writeLegacy(thirteenth,13,cityCount);
+    assert(migrate(thirteenth,c) && c.allied(2) && !c.alliedRequest && !c.alliedReport.request);
+    current.alliance[2]=0;
+    newest=encode(current);
+    TwelfthSave twelfth{};
+    writeLegacy(twelfth,12,cityCount);
+    assert(migrate(twelfth,c) && c.chapter==2 && (c.alliance==std::array<int,3>{}));
     writeLegacy(third,3,oldCityCount);
     assert(migrate(third,c) && c.chapter==2 && c.own(32) && c.cities[37].owner==7 &&
            c.surveyed==(uint64_t(1)<<31));
@@ -183,6 +200,27 @@ static void checkMigration() {
     assert(!restoreSave(stored,fifth.size()-1,c));
     assert(restoreSave(stored,fifth.size(),c) && c.regionalRewards==0 && c.own(47) && c.cities[37].troops==432 &&
            c.surveyed==((uint64_t(1)<<37)|(uint64_t(1)<<47)));
+
+    NinthSave ninth{};
+    writeLegacy(ninth,9,cityCount);
+    assert(migrate(ninth,c) && c.difficulty==Difficulty::standard && c.own(47));
+    assert(!c.held(c.commander) && !c.prisoners[0] && !c.cities[c.capital()].prisoners);
+    const auto priorFixture=newest;
+    current.guests[1]={1,2,-1};
+    current.commander=guestCommand(1);
+    current.holdTroops(current.capital(),47);
+    newest=encode(current);
+    TenthSave tenth{};
+    writeLegacy(tenth,10,cityCount);
+    assert(migrate(tenth,c) && c.commander==guestCommand(1) && &c.leader(c.commander)==&officers[1][2]);
+    assert(c.cities[c.capital()].prisoners==47 && !c.unlocked(talentSlot(previousTalentCount)));
+    current.generals[0].kit[armorSlot]=armor;
+    newest=encode(current);
+    EleventhSave eleventh{};
+    writeLegacy(eleventh,11,cityCount);
+    assert(migrate(eleventh,c) && c.unlocked(rulerSlot) && c.generals[0].kit[armorSlot]==armor);
+    assert(c.generals[0].kit[mountSlot]==noGear && c.generals[rulerSlot].kit[armsSlot]==twinJian);
+    newest=priorFixture;
 
     SixthSave sixth{};
     writeLegacy(sixth,6,seventhCityCount);
@@ -264,6 +302,137 @@ static void checkSeasonAndRegionalGoals() {
     assert(drilled.generals[3].xp==0 && !drilled.canAdvance(SeasonPlan::regular));
 }
 
+static void checkAlliedTransit() {
+    constexpr int xiakou=10, chaisang=9, hefei=23, panyu=29, wu=2;
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    assert(adjacent(xiakou,chaisang) && adjacent(chaisang,hefei) && !adjacent(xiakou,hefei));
+    assert(!campaign.canMarch(xiakou,hefei));
+    auto truce=campaign;
+    assert(truce.treat(wu) && truce.ceasefire(wu) && !truce.allied(wu));
+    assert(!truce.canMarch(xiakou,hefei) && !truce.canMarch(xiakou,chaisang));
+    truce.gold=allianceCost;
+    assert(truce.ally(wu) && !truce.truce[wu] && truce.alliance[wu]==allianceSeasons);
+
+    auto besieger=campaign;
+    assert(besieger.send(xiakou,chaisang,vanguard,0,true)>=0 && !besieger.mayAlly(wu));
+    const int gold=campaign.gold, orders=campaign.actions;
+    assert(campaign.ally(wu) && campaign.gold==gold-allianceCost && campaign.actions==orders-1);
+    assert(!campaign.mayAlly(wu) && !campaign.mayTreat(wu) && !campaign.validOrder({chaisang,xiakou},wu));
+    assert(!campaign.canMarch(chaisang,hefei) && !campaign.canMarch(xiakou,chaisang));
+    const auto route=campaign.marchRoute(xiakou,hefei);
+    assert(route.legs()==2 && route.cities[1]==chaisang && campaign.alliedWaypoint(route)==chaisang);
+    const auto longer=campaign.marchRoute(xiakou,panyu);
+    assert(longer.legs()==3);
+    for (int i=0;i<longer.legs();++i)
+        assert(adjacent(longer.leg(i).from,longer.leg(i).to));
+    const int standing=campaign.cities[chaisang].troops;
+    const int food=campaign.grain, cost=campaign.supplyCost(route,vanguard,0,false);
+    const int base=campaign.marchCost(campaign.dispatch(xiakou,vanguard));
+    assert(cost==base+base/2);
+    campaign.grain=cost-1;
+    assert(!campaign.canSend(xiakou,hefei,vanguard,0));
+    campaign.grain=food;
+
+    auto transfer=campaign;
+    transfer.cities[hefei].owner=transfer.player;
+    assert(!transfer.canSend(xiakou,hefei,vanguard,0,true));
+    const int atDestination=transfer.cities[hefei].troops;
+    const int reinforcements=transfer.dispatch(xiakou,vanguard);
+    const int moving=transfer.send(xiakou,hefei,vanguard,0,false);
+    assert(moving>=0 && !transfer.canSend(xiakou,hefei,vanguard,1,false));
+    transfer.arriveFriendly(moving);
+    assert(transfer.cities[hefei].troops==atDestination+reinforcements &&
+           transfer.cities[chaisang].owner==wu && transfer.cities[chaisang].troops==standing);
+
+    const int marching=campaign.send(xiakou,hefei,vanguard,0,true);
+    assert(marching>=0 && campaign.cities[chaisang].troops==standing);
+    checkSave(campaign);
+    Campaign restored;
+    assert(decode(encode(campaign),restored) && restored.alliedWaypoint(restored.marchRoute(xiakou,hefei))==chaisang);
+    restored.gold=allianceCost;
+    restored.alliance[wu]=1;
+    restored.actions=1;
+    auto renewed=restored;
+    assert(renewed.ally(wu) && renewed.alliance[wu]==allianceSeasons);
+    restored.advance();
+    assert(!restored.allied(wu) && restored.readyColumn()==marching && !restored.marchRoute(xiakou,hefei));
+    checkSave(restored);
+    assert(restored.recall(marching) && !restored.columns[marching] && restored.cities[chaisang].owner==wu);
+}
+
+static void checkAlliedOffensive() {
+    constexpr int chaisang=9, hefei=23, wu=2;
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    assert(!campaign.requestAlliedAttack(wu,hefei));
+    assert(campaign.ally(wu) && !campaign.requestAlliedAttack(wu,chaisang));
+    const auto forecast=campaign.alliedForecast(wu,hefei,campaign.borderPressure());
+    assert(forecast.road.from==chaisang && forecast.road.to==hefei && forecast.attackers>forecast.defenders);
+    auto fronts=campaign.borderPressure();
+    fronts.fill(armyLimit);
+    assert(!campaign.alliedForecast(wu,hefei,fronts).road);
+    const int troops=campaign.cities[chaisang].troops;
+    const int food=campaign.grain, orders=campaign.actions;
+    assert(campaign.requestAlliedAttack(wu,hefei) && !campaign.requestAlliedAttack(wu,hefei));
+    assert(campaign.grain==food-alliedAttackFood && campaign.actions==orders-1 &&
+           campaign.cities[chaisang].troops==troops && campaign.alliedOrder().to==hefei);
+    for (int side=0;side<ownerCount;++side)
+        if (side!=wu) assert(campaign.orders[side].to!=hefei);
+    checkSave(campaign);
+
+    auto canceled=campaign;
+    assert(canceled.cancelAlliedAttack() && !canceled.cancelAlliedAttack());
+    assert(canceled.grain==food && canceled.actions==orders-1 && !canceled.alliedOrder());
+
+    auto blocked=campaign;
+    blocked.cities[hefei].owner=blocked.player;
+    blocked.makeOrders();
+    assert(!blocked.alliedOrder());
+    checkSave(blocked);
+    const int before=blocked.grain;
+    const int income=blocked.seasonAccounts(SeasonPlan::regular).grain;
+    blocked.advance();
+    assert(blocked.own(hefei) && !blocked.alliedRequest && blocked.alliedReport.outcome==AlliedOutcome::canceled);
+    assert(blocked.grain==before+income+alliedAttackFood);
+    checkSave(blocked);
+
+    auto repelled=campaign;
+    repelled.orders={};
+    for (auto& city:repelled.cities)
+        if (city.owner!=repelled.player) city.troops=120;
+    repelled.cities[chaisang].troops=1000;
+    repelled.cities[chaisang].fort=3;
+    repelled.cities[hefei].troops=680;
+    const auto risky=repelled.alliedForecast(wu,hefei,repelled.borderPressure());
+    assert(risky.road && risky.attackers<=risky.defenders+140);
+    repelled.advance();
+    assert(repelled.alliedReport.outcome==AlliedOutcome::repelled && repelled.cities[hefei].owner!=wu);
+
+    Campaign restored;
+    assert(decode(encode(campaign),restored) && restored.alliedOrder().from==chaisang);
+    restored.advance();
+    assert(restored.cities[hefei].owner==wu && !restored.alliedRequest &&
+           restored.alliedReport.outcome==AlliedOutcome::captured && restored.alliedReport.request.target==hefei);
+    checkSave(restored);
+}
+
+static void checkDecisiveAssault() {
+    Campaign game;
+    game.start(2,0,Difficulty::veteran);
+    for (auto& city:game.cities) city={3,2000,2,4};
+    game.turn=6;
+    game.cities[30]={2,1300,2,2};
+    game.cities[9]={0,1600,1,2};
+    game.cities[10]={1,490,1,2};
+    game.cities[23]={3,550,1,2};
+    game.makeOrders();
+    assert(game.orders[0].from==9 && game.orders[0].to==10);
+    game.cities[55].owner=1;
+    game.makeOrders();
+    assert(game.orders[0].from==9 && game.orders[0].to==23);
+}
+
 static void checkCivicAndColumns() {
     Campaign c;
     c.start(0);
@@ -309,6 +478,60 @@ static void checkCivicAndColumns() {
     assert(wide.available(1) && !wide.available(0));
 }
 
+static void checkFiefManagement() {
+    constexpr int xiakou=10, jiangling=7;
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    campaign.cities[jiangling].owner=campaign.player;
+    assert(campaign.preferredOrigin()==xiakou && !campaign.setOrigin(9));
+    assert(campaign.setOrigin(jiangling) && campaign.preferredOrigin()==jiangling);
+    assert(!campaign.setPolicy(xiakou,CityPolicy::livelihoods));
+    assert(campaign.assign(xiakou,0) && campaign.assign(jiangling,1));
+    auto manual=campaign;
+    assert(campaign.setPolicy(xiakou,CityPolicy::livelihoods) &&
+           campaign.setPolicy(jiangling,CityPolicy::garrison) && campaign.actions==manual.actions);
+    const auto civilian=campaign.stewardship(xiakou,0);
+    const auto defensive=campaign.stewardship(jiangling,1);
+    assert(civilian.order>0 && civilian.gold>0 && civilian.grain>0 && !civilian.troops);
+    assert(defensive.troops>0 && !defensive.order && !defensive.gold && !defensive.grain);
+    assert(campaign.income(false)==manual.income(false)+civilian.gold);
+    assert(campaign.income(true)>manual.income(true));
+    const int targetOrder=campaign.orderAfterSeason(xiakou,SeasonPlan::regular);
+    const int targetTroops=campaign.troopsAfterSeason(jiangling,campaign.cities[jiangling].order);
+    assert(targetOrder==manual.orderAfterSeason(xiakou,SeasonPlan::regular)+civilian.order);
+    assert(targetTroops==manual.troopsAfterSeason(jiangling,campaign.cities[jiangling].order)+defensive.troops);
+
+    auto paused=campaign;
+    paused.relieve(jiangling);
+    assert(paused.cities[jiangling].policy==CityPolicy::garrison &&
+           !paused.stewardship(jiangling,paused.governor(jiangling)).troops);
+    checkSave(paused);
+    assert(paused.assign(jiangling,1) && paused.stewardship(jiangling,1).troops==defensive.troops);
+    auto lost=campaign;
+    lost.cities[jiangling].owner=1;
+    assert(lost.preferredOrigin()==xiakou);
+    checkSave(campaign);
+    campaign.advance();
+    assert(campaign.cities[xiakou].order==targetOrder && campaign.cities[jiangling].troops>=targetTroops);
+
+    campaign.cities[jiangling].troops=armyLimit-150;
+    assert(!campaign.canSend(xiakou,jiangling,legion,2));
+    campaign.cities[jiangling].troops=armyLimit-320;
+    const int originBefore=campaign.cities[xiakou].troops;
+    const int food=campaign.grain;
+    const int cost=campaign.supplyCost(xiakou,jiangling,legion,2,false);
+    const int transfer=campaign.send(xiakou,jiangling,legion,2,false);
+    assert(transfer>=0 && campaign.columns[transfer].troops==320 && campaign.grain==food-cost);
+    checkSave(campaign);
+    campaign.arriveFriendly(transfer);
+    assert(campaign.cities[xiakou].troops==originBefore-320 && campaign.cities[jiangling].troops==armyLimit);
+
+    for (int owned:{1,4,5,12,13,cityCount}) {
+        for (int i=0;i<cityCount;++i) campaign.cities[i].owner=i<owned?campaign.player:1;
+        assert(campaign.actionCapacity()==(owned<5?2:owned<13?3:4));
+    }
+}
+
 static void checkBattleAndCaptive() {
     assert(Battle::advantage(spear,horse)>100 && Battle::advantage(horse,bow)>100 &&
            Battle::advantage(bow,spear)>100);
@@ -335,10 +558,12 @@ static void checkBattleAndCaptive() {
     }
     assert(b.result==1);
     auto r=b.settle(c);
-    assert(c.own(7) && r.captured && c.prisoner && c.prisoner.side==1);
-    assert(c.admit() && c.unlocked(guestSlot) && c.available(guestSlot));
+    assert(c.own(7) && r.captive==0 && c.prisoners[0].side==1);
+    assert(c.enemyOfficer(1,7)!=b.enemyIndex);
+    while (c.roll(8+b.enemyIndex,1)>=c.admitChance(0)) ++c.turn;
+    assert(c.admit(0)==Offer::joined && c.unlocked(guestSlot) && c.available(guestSlot));
     c.commander=guestSlot;
-    assert(c.leader(guestSlot).name==officers[c.guest.side][c.guest.officer].name);
+    assert(&c.leader(guestSlot)==&officers[1][b.enemyIndex]);
     checkSave(c);
 
     Campaign defended;
@@ -369,9 +594,11 @@ static void checkSearchAndTalents() {
             checkSave(opening);
             Campaign restored;
             assert(decode(encode(opening),restored) && restored.canWelcome(city,side));
-            assert(restored.welcome(city,side) && !restored.welcome(city,side));
-            assert(restored.gold==opening.gold-talents[side].fee && restored.actions==opening.actions);
-            assert(restored.unlocked(talentFirst+side));
+            const auto result=restored.welcome(city,side);
+            assert(result!=Offer::unavailable && restored.welcome(city,side)==Offer::unavailable);
+            const bool joined=result==Offer::joined;
+            assert(restored.gold==opening.gold-talents[side].fee/(joined?1:4) && restored.actions==opening.actions);
+            assert(restored.unlocked(talentFirst+side)==joined);
             checkSave(restored);
             const auto nextTurn=restored.turn+1;
             restored.advance();
@@ -440,6 +667,34 @@ static void checkBattleOrders() {
     const int position=b.fronts[0][1];
     fightUntilRound(b,b.round+1);
     assert(b.fronts[0][1]<position && b.generalHealth>health);
+}
+
+static void checkOrderPreview() {
+    Campaign campaign;
+    campaign.start(0,0,Difficulty::story);
+    const int column=campaign.send(10,7,legion,0,false);
+    assert(column>=0);
+    Battle battle;
+    battle.start(campaign,campaign.columns[column].road,column,{spear,square,longspear});
+    const int initialSignal=battle.signal;
+    const auto initialFronts=battle.fronts[0];
+    const auto baseline=battle.previewClash();
+    const auto global=battle.previewOrder(-1,press);
+    const auto local=battle.previewOrder(0,hold);
+    assert(global && global->cost==Battle::tacticsCost);
+    assert(local && local->cost==Battle::rankOrderCost);
+    assert(!battle.previewOrder(0,flank));
+    assert(!battle.previewOrder(Battle::rankCount,press));
+    assert(battle.signal==initialSignal && battle.fronts[0]==initialFronts && !battle.ticks);
+    assert(battle.stance(0,0)==measured && battle.previewClash()==baseline);
+
+    auto other=battle;
+    assert(other.issueOrder(-1,press) && other.previewClash()==global->losses);
+    assert(battle.issueOrder(0,hold) && battle.signal==initialSignal-local->cost);
+    fightUntilRound(battle,1);
+    assert(battle.rankLosses[0]==local->losses[0] && battle.rankLosses[1]==local->losses[1]);
+    battle.paused=true;
+    assert(!battle.previewOrder(-1,fallBack) && !battle.previewOrder(1,press));
 }
 
 static void checkDifficultyAndAI() {
@@ -561,7 +816,7 @@ static void checkScoutingAndWithdrawal() {
     const int attackingCity=frontier.cities[43].troops;
     const auto defenders=defense.settle(frontier);
     assert(!frontier.defense && frontier.cities[43].troops==attackingCity-defense.initial[1]+defense.troops[1]);
-    assert(defenders.enemyReturned==defense.troops[1] && !frontier.prisoner);
+    assert(defenders.enemyReturned==defense.troops[1] && defenders.captive<0);
 
     Campaign siege;
     siege.start(0,0,Difficulty::veteran);
@@ -585,7 +840,7 @@ static void checkScoutingAndWithdrawal() {
     assert(!trapped.enemyWithdrawalQueued);
     lastExchange(attack);
     const auto captured=attack.settle(siege);
-    assert(siege.own(43) && !siege.prisoner && !siege.columns[column]);
+    assert(siege.own(43) && captured.captive<0 && !siege.columns[column]);
     assert(captured.enemyReturned==attack.troops[1] && siege.cities[9].troops==340+attack.troops[1]);
     checkSave(siege);
 }
@@ -760,19 +1015,384 @@ static void checkMixedForcesAndSiege() {
     assert(!Battle::mayBringEngine(2,false,true));
 }
 
+static void checkCoordinateLanes() {
+    Battle battle;
+    battle.to=1;
+    battle.signal=52;
+    battle.plan.lineup={shields,crossbow,horse};
+    battle.enemyLineup={bow,bow,bow};
+    battle.fronts[0]={400,400,400};
+    battle.fronts[1]={447,447,447};
+    battle.ranks[0]={300,300,300};
+    battle.ranks[1]={300,300,300};
+    battle.troops[0]=battle.initial[0]=900;
+    battle.troops[1]=battle.initial[1]=900;
+    const auto ordinary=battle.forecastClash();
+
+    auto covered=battle;
+    assert(covered.directAid(0,1) && covered.shieldCover() && covered.aid.rounds==2);
+    assert(covered.signal==52-Battle::supportCost && covered.ranks[0]==battle.ranks[0]);
+    assert(!covered.mayAid(2,1) && !covered.supportRank(1));
+    const auto guarded=covered.forecastClash();
+    assert(guarded[0][1]<ordinary[0][1] && guarded[0][0]==ordinary[0][0]);
+    assert(guarded[1][0]<ordinary[1][0]);
+    const auto projected=covered.previewClash();
+    fightUntilRound(covered,1);
+    assert(covered.rankLosses[0]==projected[0] && covered.aid.rounds==1);
+    fightUntilRound(covered,2);
+    assert(!covered.coordinating() && covered.aid.source==-1);
+
+    assert(!battle.mayAid(0,2) && !battle.mayAid(1,1));
+    assert(battle.attackTarget(0,1)==1 && battle.directAid(1,0));
+    assert(battle.attackTarget(0,1)==0);
+    const auto focused=battle.forecastClash();
+    assert(focused[1][0]>ordinary[1][0] && focused[1][1]<ordinary[1][1]);
+    battle.fronts[0][0]=140;
+    assert(!battle.coordinating() && battle.attackTarget(0,1)==1);
+}
+
+static void checkEnemyCoordinationAndSortie() {
+    Battle field;
+    field.to=1;
+    field.round=1;
+    field.plan.lineup={bow,horse,spear};
+    field.enemyLineup={shields,bow,spear};
+    field.fronts[0]={400,400,400};
+    field.fronts[1]={447,447,447};
+    field.ranks[0]={300,300,300};
+    field.ranks[1]={350,150,300};
+    field.troops[0]=field.initial[0]=900;
+    field.troops[1]=field.initial[1]=800;
+    auto novice=field;
+    novice.difficulty=Difficulty::story;
+    novice.planEnemyOrder();
+    assert(!novice.enemyAid.rounds && novice.enemyManeuver==measured);
+
+    field.difficulty=Difficulty::veteran;
+    const auto before=field.previewClash();
+    field.planEnemyOrder();
+    assert(field.shieldCover(1) && field.enemyAid.source==0 && field.enemyAid.target==1);
+    assert(field.enemySignal==22-Battle::supportCost && field.nextEnemyOrder==3);
+    const auto covered=field.previewClash();
+    assert(covered[1][1]<before[1][1] && covered[1][2]==before[1][2]);
+    fightUntilRound(field,2);
+    assert(field.rankLosses[1]==covered[1] && field.enemyAid.rounds==1);
+
+    auto siege=novice;
+    siege.difficulty=Difficulty::veteran;
+    siege.plan.engine=stoneThrower;
+    siege.plan.engineLane=1;
+    siege.plan.lineup[1]=spear;
+    siege.enemyLineup[1]=spear;
+    siege.engineShots=3;
+    siege.wallPoints=4;
+    siege.ranks[1]={250,300,250};
+    siege.fronts[0]={570,570,570};
+    siege.fronts[1]={642,642,642};
+    auto ordinary=siege;
+    ordinary.difficulty=Difficulty::standard;
+    ordinary.planEnemyOrder();
+    assert(!ordinary.enemySiegeSortie);
+    auto depleted=siege;
+    depleted.engineShots=0;
+    depleted.planEnemyOrder();
+    assert(!depleted.enemySiegeSortie);
+    siege.planEnemyOrder();
+    assert(siege.enemySiegeSortie && siege.enemyRank==1);
+    assert(siege.stance(1,1)==press && siege.stance(1,0)==measured);
+    const int position=siege.fronts[1][1];
+    siege.step();
+    assert(siege.fronts[1][1]<position);
+}
+
+static void checkPrisonCamps() {
+    Campaign c;
+    c.start(0);
+    c.gold=c.grain=1000;
+    c.tours=3;
+    const int source=c.capital(), target=7;
+    const int deployed=c.send(source,target,legion,0,false);
+    assert(deployed>=0);
+    Battle lost;
+    lost.start(c,{source,target},deployed,{});
+    lost.result=-1;
+    auto safeRetreat=c;
+    auto limited=lost.settle(safeRetreat);
+    assert(!limited.ourPrisoners && limited.ourCaptive<0 && !limited.dispersed);
+    lost.troops[0]=320;
+    lost.morale[0]=10;
+    const auto defeat=lost.settle(c);
+    assert(defeat.ourPrisoners==160 && defeat.ourCaptive==0 && !defeat.dispersed);
+    assert(c.cities[target].prisoners==160 && c.held(0) && c.commander!=0);
+    assert(!c.available(0) && !c.assign(source,0) && !c.drill(0));
+    checkSave(c);
+
+    auto bailed=c;
+    const int fee=bailed.gold;
+    assert(bailed.ransomGeneral(0) && !bailed.held(0));
+    assert(bailed.gold==fee-Campaign::friendlyRansom && bailed.cities[target].prisoners==160);
+    checkSave(bailed);
+
+    auto breakout=c;
+    breakout.turn+=4;
+    assert(breakout.updatePrisoners().returned==1 && !breakout.held(0));
+    auto fleeing=c;
+    while (fleeing.roll(target,5)>=5) ++fleeing.turn;
+    const auto troopNews=fleeing.updatePrisoners();
+    assert(troopNews.troopsReturned==32 && fleeing.cities[target].prisoners==128);
+    const int relief=c.send(source,target,legion,c.commander,false);
+    assert(relief>=0);
+    Battle won;
+    won.start(c,{source,target},relief,{});
+    won.result=1;
+    won.troops[1]=240;
+    won.morale[1]=0;
+    const auto victory=won.settle(c);
+    assert(victory.rescuedGenerals==1 && victory.rescuedTroops==160 && !c.held(0));
+    assert(victory.enemyPrisoners==120 && victory.captive==0 && c.cities[target].prisoners==120);
+    const int second=c.capture(1,(won.enemyIndex+1)%officerCount,target);
+    assert(second==1 && c.capture(1,won.enemyIndex,target)<0);
+    checkSave(c);
+    c.actions=2;
+    const int troops=c.cities[target].troops, grain=c.grain;
+    assert(c.enlistPrisoners(target));
+    assert(c.cities[target].troops==troops+120 && !c.cities[target].prisoners && c.grain==grain-60);
+    assert(c.holdTroops(target,67)==67 && c.releasePrisoners(target) && !c.cities[target].prisoners);
+
+    while (c.roll(8+won.enemyIndex,1)<c.admitChance(0)) ++c.turn;
+    const int offerGold=c.gold;
+    assert(c.admit(0)==Offer::refused && c.gold==offerGold-55 && c.prisoners[0]);
+    assert(c.admit(0)==Offer::unavailable);
+    Campaign restored;
+    assert(decode(encode(c),restored) && !restored.mayAdmit(0));
+    auto weak=c,strong=c;
+    weak.cities[target].fort=1;
+    weak.cities[target].order=30;
+    strong.cities[target].fort=4;
+    strong.cities[target].order=100;
+    assert(weak.escapeChance(0)>strong.escapeChance(0));
+    while (weak.roll(8+won.enemyIndex,2)>=weak.escapeChance(0)) ++weak.turn;
+    assert(weak.updatePrisoners().escaped>=1 && !weak.prisoners[0]);
+    for (int n=0;n<guestCount;++n) {
+        const int index=n<2?n:c.capture(2,0,target);
+        auto& captive=c.prisoners[index];
+        while (captive.offered==c.turn || c.roll(captive.side*officerCount+captive.officer,1)>=c.admitChance(index))
+            ++c.turn;
+        assert(c.admit(index)==Offer::joined && c.unlocked(guestCommand(n)));
+    }
+    assert(c.freeGuest()==-1);
+    checkSave(c);
+
+    Campaign scouts;
+    scouts.start(0);
+    scouts.tours=2;
+    scouts.gold=2000;
+    const int home=talents[legacyTalentCount].city[0];
+    scouts.cities[home].owner=0;
+    assert(scouts.search(home,0).value==legacyTalentCount);
+    const int id=legacyTalentCount;
+    while (scouts.roll(id,4)<scouts.welcomeChance(home,id)) ++scouts.turn;
+    assert(scouts.welcome(home,id)==Offer::refused && !scouts.canWelcome(home,id));
+    while (scouts.roll(3,0)<scouts.hireChance(3)) ++scouts.turn;
+    assert(scouts.hire(3)==Offer::refused && !scouts.mayHire(3));
+    checkSave(scouts);
+    scouts.orders={};
+    scouts.advance();
+    assert(scouts.canWelcome(home,id) && scouts.mayHire(3));
+    while (scouts.roll(id,4)>=scouts.welcomeChance(home,id)) ++scouts.turn;
+    assert(scouts.welcome(home,id)==Offer::joined && scouts.available(talentFirst+id));
+    checkSave(scouts);
+}
+
+static void checkOpeningAndRoles() {
+    Campaign c;
+    c.start(0);
+    c.talentSeen=c.talentHired=7u<<previousTalentCount;
+    const int strategistSlot=talentSlot(12), guardSlot=talentSlot(13), archerSlot=talentSlot(14);
+    assert(battleRole(c.leader(strategistSlot))==Role::strategist);
+    assert(battleRole(c.leader(guardSlot))==Role::marshal);
+    assert(battleRole(c.leader(archerSlot))==Role::vanguard);
+    assert(guestIndex(strategistSlot)<0 && talentAtSlot(guestCommand(2))==nullptr);
+    c.commander=archerSlot;
+    c.generals[archerSlot].xp=135;
+    checkSave(c);
+    const int column=c.send(10,7,legion,strategistSlot,false);
+    assert(column>=0);
+    Battle opening;
+    opening.start(c,{10,7},column,{bow,square,longbow});
+    opening.prepare();
+    const auto ours=opening.fronts[0], theirs=opening.fronts[1];
+    const auto initialSignal=opening.signal;
+    for (int i=0;i<120;++i) opening.step();
+    assert(!opening.ticks && !opening.round && opening.fronts[0]==ours &&
+           opening.fronts[1]==theirs && opening.signal==initialSignal && !opening.mayRally());
+    assert(opening.launch(true) && !opening.launch(false));
+    for (int i=0;i<40;++i) opening.step();
+    assert(opening.fronts[0]==ours && opening.fronts[1][1]<theirs[1]);
+    assert(opening.direct(measured) && !opening.anchored);
+    opening.step();
+    assert(opening.fronts[0][1]>ours[1] && opening.anchor());
+
+    opening.fronts[0]={410,410,410};
+    opening.fronts[1]={502,502,502};
+    opening.enemyLineup={bow,bow,bow};
+    opening.enemyAid={1,0,2};
+    opening.round=2;
+    opening.signal=100;
+    opening.atFront=true;
+    auto original=opening;
+    opening.plan.weapon=saber;
+    assert(!opening.mayDuel() && !opening.mayStrike());
+    opening.plan.weapon=longbow;
+    assert(opening.mayStrike() && opening.rally() && opening.suppressRounds==2 && !opening.enemyAid.rounds);
+    const auto weakened=opening.forecastClash()[0];
+    const auto previous=original.forecastClash()[0];
+    assert(weakened[0]+weakened[1]+weakened[2]<previous[0]+previous[1]+previous[2]);
+
+    opening.general=&c.leader(guardSlot);
+    opening.usedSkill=false;
+    opening.morale[0]=17;
+    opening.ranks[0]={70,400,410};
+    opening.troops[0]=880;
+    opening.resolveRouts(0);
+    assert(opening.routed[0][0] && !opening.routed[0][1] &&
+           opening.fled[0]==10 && opening.troops[0]==870);
+    assert(opening.attackTarget(0,0)<0 && !opening.mayDirectRank(0,press));
+    const int wing=opening.fronts[0][0];
+    opening.marchRanks();
+    assert(opening.fronts[0][0]<wing);
+    assert(opening.rally() && !opening.routed[0][0] && opening.morale[0]>=42 && opening.shield==2);
+    assert(opening.fled[0]==10 && opening.troops[0]==870);
+
+    opening.general=&c.leader(archerSlot);
+    opening.usedSkill=false;
+    opening.signal=100;
+    opening.generalLane=2;
+    const auto before=opening.ranks[1];
+    assert(opening.rally() && opening.fireLane==2 && opening.fireRounds==2);
+    assert(opening.ranks[1][0]==before[0] && opening.ranks[1][1]==before[1] &&
+           before[2]-opening.ranks[1][2]==170);
+}
+
+static void checkSignatureEquipment() {
+    Campaign c;
+    c.start(0);
+    assert(c.unlocked(rulerSlot) && &c.leader(rulerSlot)==&rulers[0]);
+    assert(c.generals[1].kit[armsSlot]==dragonBlade && c.generals[2].kit[armsSlot]==snakeSpear);
+    c.gold=1800;
+    c.actions=4;
+    const int total=c.gold;
+    assert(c.buyGear(scaleArmor) && c.buyGear(redHare) && c.buyGear(featherFan));
+    assert(c.actions==1 && c.gold==total-gearSpecs[scaleArmor].price-gearSpecs[redHare].price-
+           gearSpecs[featherFan].price);
+    for (const auto item:{scaleArmor,redHare,featherFan}) assert(c.equip(rulerSlot,item));
+    const auto& kit=c.generals[rulerSlot].kit;
+    assert(kit[armsSlot]==twinJian && kit[armorSlot]==scaleArmor &&
+           kit[mountSlot]==redHare && kit[strategySlot]==featherFan);
+    auto removed=c;
+    assert(removed.unequip(rulerSlot,armorSlot) && removed.stock[scaleArmor]==1 &&
+           removed.generals[rulerSlot].kit[armsSlot]==twinJian);
+    assert(c.supplyCost(10,7,legion,rulerSlot,false)<removed.supplyCost(10,7,legion,0,false));
+    c.commander=rulerSlot;
+    checkSave(c);
+    const int column=c.send(10,7,legion,rulerSlot,false);
+    assert(column>=0 && !c.unequip(rulerSlot,mountSlot));
+    Battle oath;
+    oath.start(c,{10,7},column,{bow,square,longbow});
+    assert(oath.plan.weapon==saber && oath.personalSkillCost()==40 && oath.signal==64);
+    oath.morale[0]=19;
+    oath.routed[0][0]=true;
+    assert(oath.rally() && oath.morale[0]==46 && !oath.routed[0][0] && oath.shield==1);
+    oath.fronts[0]={370,370,370};
+    oath.fronts[1]={505,505,505};
+    oath.enemyLineup={bow,bow,bow};
+    oath.shield=0;
+    const auto protectedRanks=oath.forecastClash()[0];
+    oath.bodyArmor=noGear;
+    const auto unprotected=oath.forecastClash()[0];
+    assert(protectedRanks[1]<unprotected[1]);
+    oath.atFront=true;
+    oath.signal=100;
+    assert(oath.direct(press));
+    auto onFoot=oath;
+    onFoot.mount=noGear;
+    onFoot.marchRanks();
+    oath.marchRanks();
+    assert(oath.fronts[0][1]==onFoot.fronts[0][1]+1 && oath.fronts[0][0]==onFoot.fronts[0][0]);
+
+    oath.general=&officers[0][1];
+    oath.usedSkill=false;
+    oath.signal=100;
+    oath.fronts[0]={449,449,449};
+    oath.fronts[1]={503,503,503};
+    const auto enemy=oath.ranks[1];
+    assert(oath.rally() && oath.ranks[1][0]<enemy[0] &&
+           oath.ranks[1][1]<enemy[1] && oath.ranks[1][2]<enemy[2]);
+    oath.general=&officers[0][3];
+    oath.usedSkill=false;
+    oath.signal=70;
+    oath.enemyAid={1,0,2};
+    assert(oath.rally() && oath.shield==2 && !oath.enemyAid.rounds && oath.nextEnemyOrder>=2);
+}
+
+static void checkRetreatAccounting() {
+    Campaign campaign;
+    campaign.start(0);
+    constexpr int from=10,to=7,refuge=9;
+    const int column=campaign.send(from,to,legion,0,false);
+    assert(column>=0);
+    Battle battle;
+    battle.start(campaign,{from,to},column,{});
+    battle.result=1;
+    battle.troops[1]=340;
+    battle.fled[1]=75;
+    const auto cutOff=battle;
+    battle.enemyRetreatCity=refuge;
+
+    auto emptyCamp=campaign;
+    emptyCamp.cities[refuge].owner=battle.enemy;
+    emptyCamp.cities[refuge].troops=armyLimit-370;
+    const auto ample=battle.settle(emptyCamp);
+    assert(ample.enemyReturned==340 && !ample.enemyDispersed && emptyCamp.cities[refuge].troops==armyLimit);
+
+    campaign.cities[refuge].owner=battle.enemy;
+    campaign.cities[refuge].troops=armyLimit-120;
+    auto noRefuge=campaign;
+    noRefuge.cities[refuge].owner=campaign.player;
+    auto isolated=cutOff;
+    isolated.enemyRetreatCity=-1;
+    const auto isolatedResult=isolated.settle(noRefuge);
+    assert(!isolatedResult.enemyReturned && isolatedResult.enemyDispersed==340);
+
+    const auto crowded=battle.settle(campaign);
+    assert(crowded.enemyReturned==120 && crowded.enemyDispersed==220);
+    assert(campaign.cities[refuge].troops==armyLimit);
+}
+
 int main() {
     checkMigration();
     checkSearchAndTalents();
     checkSeasonAndRegionalGoals();
+    checkAlliedTransit();
+    checkAlliedOffensive();
+    checkDecisiveAssault();
     checkCivicAndColumns();
+    checkFiefManagement();
     checkBattleAndCaptive();
+    checkPrisonCamps();
     checkBattleOrders();
+    checkOrderPreview();
     checkDifficultyAndAI();
     checkScoutingAndWithdrawal();
     checkRankCommands();
     checkBreakthrough();
     checkLongField();
     checkMixedForcesAndSiege();
+    checkCoordinateLanes();
+    checkEnemyCoordinationAndSortie();
+    checkOpeningAndRoles();
+    checkSignatureEquipment();
+    checkRetreatAccounting();
     for (auto difficulty:{Difficulty::story,Difficulty::standard,Difficulty::veteran})
         for (int chapter=0;chapter<chapterCount;++chapter)
             for (int side=0;side<3;++side) {

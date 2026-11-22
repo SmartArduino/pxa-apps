@@ -6,7 +6,7 @@
   Skin::icon(r,UiIcon::ore,16,l.top/2-7,gold);std::snprintf(text,sizeof text,"矿石  %d",world.credits);r.label({34,4,slot-32,l.top-10},text,gold,14,0);
   Skin::icon(r,UiIcon::power,21+slot,l.top/2-7,world.power_net<0?red:cyan);std::snprintf(text,sizeof text,"电力  %+d",world.power_net);r.label({39+slot,4,slot-32,l.top-10},text,world.power_net<0?red:cyan,14,0);
   std::snprintf(text,sizeof text,save_flash>0?"%02u:%02u  已保存":"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({22+2*slot,4,slot-8,l.top-10},text,cream,14);
-  button(r,{w-pause_w-8,4,pause_w,l.top-10},pausing,"暂停");
+  button(r,{w-pause_w-8,4,pause_w,l.top-10},pausing,online()?"菜单":"暂停");
  }
  void large_hud(Raster& r){
   auto l=large_layout();char text[160];large_topbar(r,l);Skin::panel_frame(r,l.sidebar(),navy,edge);r.rect(l.world_width,l.top,2,h-l.top,edge);draw_minimap(r);

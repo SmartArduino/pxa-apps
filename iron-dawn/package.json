@@ -1,10 +1,10 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-iron-dawn",
-  "version": "1.10.0",
-  "release_sequence": 15,
+  "version": "1.13.3",
+  "release_sequence": 22,
   "name": "钢铁黎明",
-  "description": "原创像素即时战略。北境联军与灰塔守备军拥有不同装甲、空军和建筑，包含八章战役与双阵营无尽守备。",
+  "description": "原创像素即时战略。北境联军与灰塔守备军拥有不同装甲、空军和建筑，包含八章战役与双阵营无尽守备，含河谷、海防和山岭三张守备战场，支持双人局域网合作守备。",
   "publisher": {
     "handle": "lucinhu",
     "display_name": "lucinhu"
@@ -46,7 +46,8 @@
         "audio",
         "permission",
         "fs",
-        "assets"
+        "assets",
+        "net"
       ],
       "wasi": {
         "version": "preview1",
@@ -63,6 +64,16 @@
       "name": "audio.playback",
       "required": false,
       "scope": "media"
+    },
+    {
+      "name": "net.listen",
+      "required": false,
+      "scope": "local-network"
+    },
+    {
+      "name": "net.socket",
+      "required": false,
+      "scope": "outbound"
     }
   ]
 }

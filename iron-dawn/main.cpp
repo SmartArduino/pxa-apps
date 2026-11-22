@@ -16,20 +16,24 @@
 #include "profile.hpp"
 #endif
 #include "game_audio.hpp"
+#include "lan_link.hpp"
+#include <memory>
 #include "frame_scaler.hpp"
 #include "story.hpp"
 #include "story_text.hpp"
 namespace iron {
 static_assert(std::size(chapters)==CHAPTERS&&std::size(radio_scripts)==lighthouse_radio+1);
+static_assert(std::size(defense_briefings)==defense_map_count);
 constexpr int campaign_acts=(CHAPTERS+2)/3;
-enum class Screen {home,campaign,briefing,battle,pause,result,help,research,radio,factions};
-enum Action {start=1,resume,missions,help,home,exit_game,begin,pausing,restart,next,select_army,base,units,buildings,repair,strike,zooming,cancel,save_return,sound_toggle,difficulty,box_select,stop_army,endless,research_open,research_ammo,research_armor,research_cancel,tactics_open,dock_close,campaign_prev,campaign_next,radio_continue,objective_focus,brief_next,brief_previous,help_next,help_previous,cancel_build,squads_open,tactic_escort,tactic_retreat,cancel_tactic,construction_page,hero_support,tactic_transport,north_defense,gray_defense,mission0=50,squad_recall0=70,squad_assign0=80,produce0=100};
+enum class Screen {home,campaign,briefing,battle,pause,result,help,research,radio,factions,defense_maps,lan_menu,lan_join};
+enum Action {start=1,resume,missions,help,home,exit_game,begin,pausing,restart,next,select_army,base,units,buildings,repair,strike,zooming,cancel,save_return,sound_toggle,difficulty,box_select,stop_army,endless,research_open,research_ammo,research_armor,research_cancel,tactics_open,dock_close,campaign_prev,campaign_next,radio_continue,objective_focus,brief_next,brief_previous,help_next,help_previous,cancel_build,squads_open,tactic_escort,tactic_retreat,cancel_tactic,construction_page,hero_support,tactic_transport,north_defense,gray_defense,defense_map_back,mission0=50,squad_recall0=70,squad_assign0=80,defense_map0=90,produce0=100,net_open=130,net_host,net_join,net_connect,net_delete,net_start,net_leave,net_key0=140};
 enum class TacticalMode : uint8_t {none,escort,retreat,board,land};
 struct Button {Rect r;int action;};
 struct App {
  pxa::Context* ctx=nullptr;pxa::ui::DisplayMetrics display,desired_display;bool surface_rebuild=false;std::optional<pxa::Surface> surface;std::vector<uint16_t> pixels;FrameScaler frame_scaler;NativeText native_text;unsigned clock_period=0;
  GameAudio sounds;SelectionTool selection;uint8_t pointer_owner=0;World world;Career career;Battlefield field;MinimapCache minimap_cache;DockState dock;Screen screen=Screen::home;TacticalMode tactical=TacticalMode::none;std::array<Button,32> buttons{};int button_count=0;
- DisplayPlan display_plan{480,320,1,0,0,false,1,1};int help_page=0,campaign_page=0,radio_id=0,brief_page=0,brief_pages=1,radio_page=0,radio_pages=1;int w=480,h=320,tab=0,placing=-1,focus_action=start;bool combined_page=false;bool exit_pending=false;int last_selected_id=-1;float last_tap=-10;bool ready=false,has_run=false,skirmish=false,pressing=false,dragging=false,exiting=false,saving=false,pending_save=false;uint64_t last_tick=0,frame_id=0,now=0;float clock=0,save_flash=0;int downx=0,downy=0,lastx=0,lasty=0;Vec pointer_world{};Save save_buffer{};uint32_t save_bank=0,defense_best=0;
+ DisplayPlan display_plan{480,320,1,0,0,false,1,1};int help_page=0,campaign_page=0,radio_id=0,brief_page=0,brief_pages=1,radio_page=0,radio_pages=1;int w=480,h=320,tab=0,placing=-1,focus_action=start;bool combined_page=false;bool exit_pending=false;int last_selected_id=-1;float last_tap=-10;bool ready=false,has_run=false,skirmish=false,pressing=false,dragging=false,exiting=false,saving=false,pending_save=false;uint64_t last_tick=0,frame_id=0,now=0;float clock=0,save_flash=0,zoom_level=1,viewport_scale=1;int downx=0,downy=0,lastx=0,lasty=0;Vec pointer_world{};Save save_buffer{};uint32_t save_bank=0;DefenseRecords defense_best{};DefenseMap chosen_map=DefenseMap::river;Faction lan_faction=Faction::northern;
+#include "lan_ui.inc"
  void log(std::string_view text){(void)ctx->log().write(pxa::LogLevel::info,text);}
  void set_clock(unsigned period){if(clock_period!=period&&ctx->clock().set_period(period))clock_period=period;}
  pxa::Result<void> on_start(pxa::Context& c,std::span<const std::byte> config){ctx=&c;if(auto d=pxa::ui::decode_start_display(config))display=*d;desired_display=display;(void)c.window().request_orientation(pxa::OrientationPreference::landscape);(void)c.window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);return c.tasks().start(initialize());}
@@ -43,26 +47,63 @@ struct App {
  }
  void update_display(pxa::ui::DisplayMetrics next){desired_display=next;if(!ready||surface_rebuild)return;if(next.width==display.width&&next.height==display.height&&next.density_q16==display.density_q16&&next.font_scale_q16==display.font_scale_q16){display=next;return;}surface_rebuild=true;ready=false;auto started=ctx->tasks().start(rebuild_surface());if(!started){surface_rebuild=false;log("Iron Dawn display resize failed");}}
  void on_window_changed(const pxa::WindowMetrics& metrics){auto next=desired_display;next.width=metrics.pixel_width;next.height=metrics.pixel_height;update_display(next);}
- pxa::Task<void> rebuild_surface(){Vec center=surface?field.unproject(field.width/2,(field.top+field.bottom)/2):world.deployment_view();selection.cancel();dock.close();pressing=dragging=false;last_tick=0;ready=false;
-  do{surface.reset();display=desired_display;display_plan=DisplayPlan::fit(display.width,display.height,display.density_q16,display.font_scale_q16);auto viewport=wide_ui()?GameViewport{display_plan.width,display_plan.height}:GameViewport::fit(display_plan.width,display_plan.height);w=viewport.width;h=viewport.height;if(display_plan.width==w&&display_plan.height==h)std::vector<uint16_t>{}.swap(pixels);else{size_t needed=size_t(w)*h;if(needed>pixels.capacity())std::vector<uint16_t>{}.swap(pixels);pixels.resize(needed);}frame_scaler.reset(w,h,display_plan.width,display_plan.height);
+ GameViewport menu_viewport()const{
+  return wide_ui()?GameViewport{display_plan.width,display_plan.height}:
+                   GameViewport::fit(display_plan.width,display_plan.height);
+ }
+ GameViewport screen_viewport()const{
+  // A high-density landscape display can fit the compact battle HUD in its
+  // mapped frame. Menus retain their larger canvas for text and keypads.
+  if(screen==Screen::battle&&readable_ui()&&display_plan.scale>1&&
+     display_plan.width>=400&&display_plan.height>=230)
+   return {display_plan.width,display_plan.height};
+  return menu_viewport();
+ }
+ Vec view_center()const{return field.view_center();}
+ void focus_with_zoom(Vec center){
+  field.zoom=zoom_level*viewport_scale;
+  field.focus(center);
+ }
+ void layout_viewport(GameViewport view,Vec center){
+  auto menu=menu_viewport();
+  w=view.width;h=view.height;
+  viewport_scale=std::min(float(w)/menu.width,float(h)/menu.height);
+  field.width=wide_ui()?large_layout().world_width:w;
+  field.height=h;
+  field.top=wide_ui()?large_layout().top:readable_ui()?compact_layout().status_height:50;
+  field.bottom=wide_ui()?large_layout().bottom:compact_ui()?compact_layout().top:HudLayout(h).top;
+  field.ground.valid=false;
+  focus_with_zoom(center);
+ }
+ pxa::Task<void> rebuild_surface(){Vec center=surface?view_center():world.deployment_view();selection.cancel();dock.close();pressing=dragging=false;last_tick=0;ready=false;
+  do{surface.reset();display=desired_display;display_plan=DisplayPlan::fit(display.width,display.height,display.density_q16,display.font_scale_q16);
+   auto menu=menu_viewport();
+   if(display_plan.width==menu.width&&display_plan.height==menu.height)std::vector<uint16_t>{}.swap(pixels);
+   else{size_t needed=size_t(menu.width)*menu.height;if(needed>pixels.capacity())std::vector<uint16_t>{}.swap(pixels);pixels.resize(needed);}
+   frame_scaler.reset(menu.width,menu.height,display_plan.width,display_plan.height);
    auto created=co_await ctx->surface().create_mapped({uint16_t(display_plan.width),uint16_t(display_plan.height),2,true,2097152});if(!created){surface_rebuild=false;log("Iron Dawn surface create error");co_return std::unexpected(created.error());}surface.emplace(std::move(*created));auto configured=co_await surface->configure({0,0,uint16_t(display_plan.width),uint16_t(display_plan.height),0,true});if(!configured){surface_rebuild=false;co_return configured;}
   }while(display.width!=desired_display.width||display.height!=desired_display.height||display.density_q16!=desired_display.density_q16||display.font_scale_q16!=desired_display.font_scale_q16);
-  display=desired_display;field.width=wide_ui()?large_layout().world_width:w;field.height=h;field.top=wide_ui()?large_layout().top:readable_ui()?compact_layout().status_height:50;field.bottom=wide_ui()?large_layout().bottom:compact_ui()?compact_layout().top:HudLayout(h).top;field.ground.valid=false;field.focus(center);ready=true;surface_rebuild=false;set_clock(screen==Screen::battle||screen==Screen::research?33:100);char message[220];std::snprintf(message,sizeof message,"Iron Dawn display %ux%u canvas=%dx%d wide=%d world=%d top=%d bottom=%d scale=%d dpi=%u font=%u",display.width,display.height,w,h,wide_ui(),field.width,field.top,field.bottom,display_plan.scale,display.density_q16,display.font_scale_q16);log(message);render();co_return pxa::Result<void>{};
+  display=desired_display;layout_viewport(screen_viewport(),center);ready=true;surface_rebuild=false;set_clock(screen==Screen::battle||screen==Screen::research?33:100);char message[220];std::snprintf(message,sizeof message,"Iron Dawn display %ux%u canvas=%dx%d wide=%d world=%d top=%d bottom=%d scale=%d dpi=%u font=%u",display.width,display.height,w,h,wide_ui(),field.width,field.top,field.bottom,display_plan.scale,display.density_q16,display.font_scale_q16);log(message);render();co_return pxa::Result<void>{};
  }
- void save(){pending_save=true;if(!saving){saving=true;if(!ctx->tasks().start(persist()))saving=false;}}
- pxa::Task<void> persist(){while(pending_save){pending_save=false;new(&save_buffer) Save{};save_buffer.career=career;save_buffer.has_run=has_run;save_buffer.world=world;save_buffer.defense_best=defense_best;save_buffer.generation=save_bank+1;save_buffer.checksum=checksum(save_buffer);auto bytes=std::as_bytes(std::span{&save_buffer,1});
+ void save(){if(online())return;pending_save=true;if(!saving){saving=true;if(!ctx->tasks().start(persist()))saving=false;}}
+ pxa::Task<void> persist(){while(pending_save){pending_save=false;new(&save_buffer) Save{};save_buffer.career=career;save_buffer.has_run=has_run;save_buffer.world=online()?*net.solo:world;save_buffer.defense_best=defense_best;save_buffer.generation=save_bank+1;save_buffer.checksum=checksum(save_buffer);auto bytes=std::as_bytes(std::span{&save_buffer,1});
    auto opened=co_await ctx->fs().open("iron-dawn.tmp",pxa::OpenMode::write|pxa::OpenMode::create|pxa::OpenMode::truncate);if(!opened){log("Iron Dawn save open failed");break;}size_t at=0;
    while(at<bytes.size()){auto wrote=opened->write(bytes.subspan(at,std::min(size_t(4096),bytes.size()-at)));if(!wrote||!*wrote)break;at+=*wrote;}auto closed=opened->close();
    if(at==bytes.size()&&closed){auto committed=co_await ctx->fs().replace("iron-dawn.tmp",save_buffer.generation%2?"iron-dawn-1.save":"iron-dawn-0.save");if(committed){save_bank=save_buffer.generation;save_flash=1.5f;log("Iron Dawn saved");}else log("Iron Dawn save publish failed");}else log("Iron Dawn save write failed");
   }saving=false;co_return pxa::Result<void>{};}
 
  void new_mission(int ch){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init(ch,career.harbor_plan);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=false;set_clock(100);save();}
- void new_defense(uint32_t seed=0,Faction faction=Faction::northern){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init_defense(seed?seed:uint32_t(now)^0x51d39f17u,faction);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=true;selection.cancel();save();}
+ void new_defense(uint32_t seed,Faction faction,DefenseMap map){field.ground.release();brief_page=0;combined_page=false;dock.close();world.init_defense(seed?seed:uint32_t(now)^0x51d39f17u,faction,map);if(career.easy){world.credits+=600;for(auto& a:world.e)if(a.hp>0&&a.team==0)a.hp*=1.35f;}field.focus(world.deployment_view());placing=-1;tab=0;screen=Screen::briefing;has_run=true;skirmish=true;selection.cancel();save();}
  void report(){char s[200];std::snprintf(s,sizeof s,"Iron Dawn state chapter=%d screen=%d time=%u credits=%d army=%d enemy=%d queue=%d power=%d selected=%d won=%d defeated=%d",world.chapter,int(screen),unsigned(world.time),world.credits,world.army(),world.army(1),world.job_count,world.power_net,world.selected(),world.won,world.defeated);log(s);}
+ uint32_t& defense_record(){return defense_best[unsigned(world.defense_map())];}
  void finish(){
+  if(online()){
+   tactical=TacticalMode::none;dock.close();selection.cancel();pressing=dragging=false;
+   placing=-1;screen=Screen::result;focus_action=net_leave;sounds.play(motion::Cue::impact);report();return;
+  }
   tactical=TacticalMode::none;selection.cancel();pressing=false;dragging=false;screen=Screen::result;has_run=false;
   if(world.extra.mode){
-   defense_best=std::max(defense_best,world.extra.cleared);sounds.play(motion::Cue::impact);
+   defense_record()=std::max(defense_record(),world.extra.cleared);sounds.play(motion::Cue::impact);
   }else if(world.won){
    career.unlocked=std::max(career.unlocked,unsigned(std::min(CHAPTERS-1,world.chapter+1)));
    career.wins|=1u<<world.chapter;
@@ -75,16 +116,29 @@ struct App {
   placing=-1;set_clock(100);save();report();
  }
  void action(int a){
+  if(guest()&&!guest_action(a))return;
   if(a!=tactic_escort&&a!=tactic_retreat&&a!=tactic_transport&&a!=objective_focus&&a!=zooming&&a!=base)tactical=TacticalMode::none;
-  if(a!=box_select)selection.cancel();sounds.play(motion::Cue::click);if(a>=mission0&&a<mission0+CHAPTERS){if(unsigned(a-mission0)<=career.unlocked)new_mission(a-mission0);return;}
+  if(a!=box_select)selection.cancel();sounds.play(motion::Cue::click);if(lan_action(a))return;if(a>=mission0&&a<mission0+CHAPTERS){if(unsigned(a-mission0)<=career.unlocked)new_mission(a-mission0);return;}
   if(a>=squad_recall0&&a<squad_recall0+squad_count){squad_action(a-squad_recall0+1,false);return;}
   if(a>=squad_assign0&&a<squad_assign0+squad_count){squad_action(a-squad_assign0+1,true);return;}
+  if(a>=defense_map0&&a<defense_map0+int(defense_map_count)){
+   chosen_map=DefenseMap(a-defense_map0);screen=Screen::factions;focus_action=north_defense;report();return;
+  }
   if(a>=produce0&&a<produce0+int(kind_count)){production_action(a-produce0);return;}
-  switch(a){case start:new_mission(std::min(unsigned(CHAPTERS-1),career.unlocked));break;case resume:dock.close();screen=Screen::battle;placing=-1;last_tick=0;break;case missions:campaign_page=int(career.unlocked)/3;screen=Screen::campaign;break;case campaign_prev:campaign_page=std::max(0,campaign_page-1);break;case campaign_next:campaign_page=std::min(campaign_acts-1,campaign_page+1);break;case brief_next:++brief_page;break;case brief_previous:brief_page=std::max(0,brief_page-1);break;case radio_continue:if(radio_page+1<radio_pages){++radio_page;break;}world.mission.read_events|=1u<<radio_id;screen=Screen::battle;last_tick=0;save();break;case help:help_page=0;screen=Screen::help;break;case help_next:++help_page;break;case help_previous:help_page=std::max(0,help_page-1);break;case endless:screen=Screen::factions;focus_action=north_defense;report();break;case north_defense:new_defense();focus_action=begin;break;case gray_defense:new_defense(0,Faction::gray_tower);focus_action=begin;break;case research_open:screen=Screen::research;placing=-1;break;case research_ammo:case research_armor:if(world.research_start(a==research_ammo?1:2))save();break;case research_cancel:world.research_cancel();save();break;case home:screen=Screen::home;placing=-1;break;
-   case begin:minimap_cache.release();dock.close();screen=Screen::battle;world.say(world.extra.mode?"守住基地。点兵营、工厂或机坪可以生产部队。":campaign_maps[world.chapter].arrival,9);world.select_all();sounds.respond(world,UnitCue::select);save();report();break;
-   case pausing:screen=Screen::pause;placing=-1;save();report();break;case restart:if(world.extra.mode)new_defense(world.extra.seed,world.faction());else new_mission(world.chapter);break;case next:if(world.chapter<CHAPTERS-1)new_mission(world.chapter+1);else {campaign_page=world.chapter/3;screen=Screen::campaign;}break;
+  switch(a){case start:new_mission(std::min(unsigned(CHAPTERS-1),career.unlocked));break;case resume:dock.close();screen=Screen::battle;placing=-1;last_tick=0;break;case missions:campaign_page=int(career.unlocked)/3;screen=Screen::campaign;break;case campaign_prev:campaign_page=std::max(0,campaign_page-1);break;case campaign_next:campaign_page=std::min(campaign_acts-1,campaign_page+1);break;case brief_next:++brief_page;break;case brief_previous:brief_page=std::max(0,brief_page-1);break;case radio_continue:if(radio_page+1<radio_pages){++radio_page;break;}world.mission.read_events|=1u<<radio_id;screen=Screen::battle;last_tick=0;save();break;case help:help_page=0;screen=Screen::help;break;case help_next:++help_page;break;case help_previous:help_page=std::max(0,help_page-1);break;case endless:if(world.extra.mode)chosen_map=world.defense_map();[[fallthrough]];
+   case defense_map_back:screen=Screen::defense_maps;focus_action=defense_map0+int(chosen_map);report();break;
+   case north_defense:case gray_defense:{
+    auto faction=a==north_defense?Faction::northern:Faction::gray_tower;
+    if(net_setup()){lan_faction=faction;open_lan(true);}
+    else{new_defense(0,faction,chosen_map);focus_action=begin;}
+   }break;case research_open:screen=Screen::research;placing=-1;break;case research_ammo:case research_armor:if(world.research_start(a==research_ammo?1:2))save();break;case research_cancel:world.research_cancel();save();break;case home:screen=Screen::home;placing=-1;break;
+   case begin:minimap_cache.release();dock.close();screen=Screen::battle;world.say(world.extra.mode?world.arena().orders:campaign_maps[world.chapter].arrival,9);world.select_all();sounds.respond(world,UnitCue::select);save();report();break;
+   case pausing:screen=Screen::pause;if(online())focus_action=resume;placing=-1;save();report();break;case restart:if(world.extra.mode)new_defense(world.extra.seed,world.faction(),world.defense_map());else new_mission(world.chapter);break;case next:if(world.chapter<CHAPTERS-1)new_mission(world.chapter+1);else {campaign_page=world.chapter/3;screen=Screen::campaign;}break;
    case box_select:if(selection.armed){selection.cancel();world.say("框选已取消");}else {selection.armed=true;placing=-1;last_selected_id=-1;world.say("拖动框选作战单位，松手后点地面移动。",6);}break;
-   case stop_army:world.stop_selected();sounds.respond(world,UnitCue::stop);report();break;
+   case stop_army:
+    if(guest()){if(send_lan_order({},-1,true))sounds.respond(world,UnitCue::stop);}
+    else{world.stop_selected();sounds.respond(world,UnitCue::stop);}
+    report();break;
    case objective_focus:{
     auto point=world.objective_position();
     if(!world.extra.mode&&world.chapter==harbor_chapter&&world.mission.stage==harbor_choice){
@@ -97,7 +151,7 @@ struct App {
     char focus[112];std::snprintf(focus,sizeof focus,"Iron Dawn objective focus x=%.1f y=%.1f side=%d",point.x,point.y,world.side);log(focus);
     world.say("任务目标已标记；点地面下达行军指令。",5);
    }break;case select_army:world.select_all();sounds.respond(world,UnitCue::select);placing=-1;break;case base:field.focus(world.base_position());break;case units:tab=0;placing=-1;if(compact_ui())dock.toggle(DockPanel::units);break;case buildings:tab=1;placing=-1;if(compact_ui())dock.toggle(DockPanel::buildings);break;case tactics_open:dock.toggle(DockPanel::tactics);break;case dock_close:dock.close();break;case squads_open:placing=-1;dock.toggle(DockPanel::squads);break;case repair:world.repair();break;case strike:placing=99;world.say("点亮区内目标：空袭 180 / 冷却 45 秒");break;
-   case zooming:{Vec p=field.unproject(field.width/2,(field.top+field.bottom)/2);field.zoom=field.zoom>.95f?.72f:field.zoom<.8f?1.3f:1.f;field.focus(p);}break;case cancel:if(placing>=0){placing=-1;world.say("部署已取消",3);}else {world.cancel_job();save();}break;
+   case zooming:{Vec center=view_center();zoom_level=zoom_level>.95f?.72f:zoom_level<.8f?1.3f:1.f;focus_with_zoom(center);}break;case cancel:if(placing>=0){placing=-1;world.say("部署已取消",3);}else {world.cancel_job();save();}break;
    case tactic_escort:arm_tactical(TacticalMode::escort);break;
    case tactic_retreat:arm_tactical(TacticalMode::retreat);break;
    case tactic_transport:arm_transport();break;
@@ -176,29 +230,30 @@ struct App {
     if(unit_kind(world.e[id].kind)&&id==last_selected_id&&clock-last_tap<.4f){int kind=world.e[id].kind;for(auto& unit:world.e)unit.selected=deployed(unit)&&unit.team==0&&unit.kind==kind;world.say("已编组全部同型部队");}
     else {world.select_one(id);world.say(world.e[id].kind==factory?"工厂：选车辆或点空地设集结":world.e[id].kind==barracks?"兵营：选步兵或点空地设集结":world.spec(world.e[id]).name);}
     int kind=world.e[id].kind;
-    if(kind==hq){tab=1;if(compact_ui())dock.panel=DockPanel::buildings;}
-    else if(world.selected_producer()>=0){tab=0;if(compact_ui())dock.panel=DockPanel::units;}
+    if(!guest()&&kind==hq){tab=1;if(compact_ui())dock.panel=DockPanel::buildings;}
+    else if(!guest()&&world.selected_producer()>=0){tab=0;if(compact_ui())dock.panel=DockPanel::units;}
     last_selected_id=id;last_tap=clock;sounds.respond(world,UnitCue::select,id);
-   }else if(world.selected()){bool attack=id>=0&&world.e[id].team==1;world.order(pos,attack?id:-1);sounds.respond(world,attack?UnitCue::attack:UnitCue::move);}
+   }else if(world.selected()){
+    bool attack=id>=0&&world.e[id].team==1;
+    if(!guest())world.order(pos,attack?id:-1);
+    if(!guest()||send_lan_order(pos,attack?id:-1))sounds.respond(world,attack?UnitCue::attack:UnitCue::move);
+   }
    else world.say("点选己方部队，或使用框选和全军");
   }
   report();
  }
  void report_selection(){char line[512];int used=std::snprintf(line,sizeof line,"Iron Dawn selection ids=");for(int i=0;i<MAX;++i)if(world.e[i].hp>0&&world.e[i].selected&&used<int(sizeof line)-6)used+=std::snprintf(line+used,sizeof line-used,"%d,",i);log(line);}
- void clamp_camera(){
-  auto focus=field.unproject(field.width/2,(field.top+field.bottom)/2);
-  float limit=world.side-1.f;
-  field.focus({std::clamp(focus.x,1.f,limit),std::clamp(focus.y,1.f,limit)});
- }
- pxa::BackAction on_back(){if(exiting)return pxa::BackAction::close;if(screen==Screen::radio){action(radio_continue);return pxa::BackAction::stay;}if(screen==Screen::research){action(resume);return pxa::BackAction::stay;}if(screen==Screen::battle){if(dock.open()){dock.close();return pxa::BackAction::stay;}if(tactical!=TacticalMode::none){action(cancel_tactic);return pxa::BackAction::stay;}if(placing>=0){action(cancel);return pxa::BackAction::stay;}if(selection.armed||selection.tracking){selection.cancel();pressing=false;dragging=false;world.say("框选已取消");return pxa::BackAction::stay;}action(pausing);return pxa::BackAction::stay;}if(screen==Screen::pause){action(resume);return pxa::BackAction::stay;}if(screen==Screen::home){save();exit_pending=true;return pxa::BackAction::stay;}screen=Screen::home;return pxa::BackAction::stay;}
- void on_controller(pxa::Context&,const pxa::input::ControllerState& s){using namespace pxa::input;static uint32_t prior=0;uint32_t pressed=s.buttons&~prior;prior=s.buttons;if(!ready)return;if(pressed&controller_b){(void)on_back();return;}if(screen==Screen::battle){if(selection.tracking&&!(pressed&controller_start))return;if(pressed&controller_a)action(select_army);if(pressed&controller_x)action(stop_army);if(pressed&controller_start)action(pausing);if(s.buttons&controller_left)field.camx-=16;if(s.buttons&controller_right)field.camx+=16;if(s.buttons&controller_up)field.camy-=16;if(s.buttons&controller_down)field.camy+=16;clamp_camera();}else {if(pressed&controller_up)focus_action=button_count?buttons[std::max(0,button_index()-1)].action:start;if(pressed&controller_down)focus_action=button_count?buttons[std::min(button_count-1,button_index()+1)].action:start;if(pressed&controller_a)action(focus_action);}}
+ void clamp_camera(){field.clamp_camera(world.side);}
+ pxa::BackAction on_back(){if(exiting)return pxa::BackAction::close;if(screen==Screen::lan_join||(screen==Screen::result&&online())||(screen==Screen::defense_maps&&net_setup())){close_lan();return pxa::BackAction::stay;}if(screen==Screen::lan_menu){if(net.stage==LanStage::off||net.stage==LanStage::failed)action(endless);else close_lan();return pxa::BackAction::stay;}if(screen==Screen::radio){action(radio_continue);return pxa::BackAction::stay;}if(screen==Screen::factions){action(defense_map_back);return pxa::BackAction::stay;}if(screen==Screen::research){action(resume);return pxa::BackAction::stay;}if(screen==Screen::battle){if(dock.open()){dock.close();return pxa::BackAction::stay;}if(tactical!=TacticalMode::none){action(cancel_tactic);return pxa::BackAction::stay;}if(placing>=0){action(cancel);return pxa::BackAction::stay;}if(selection.armed||selection.tracking){selection.cancel();pressing=false;dragging=false;world.say("框选已取消");return pxa::BackAction::stay;}action(pausing);return pxa::BackAction::stay;}if(screen==Screen::pause){action(resume);return pxa::BackAction::stay;}if(screen==Screen::home){save();exit_pending=true;return pxa::BackAction::stay;}screen=Screen::home;return pxa::BackAction::stay;}
+ void on_controller(pxa::Context&,const pxa::input::ControllerState& s){using namespace pxa::input;static uint32_t prior=0;uint32_t pressed=s.buttons&~prior;prior=s.buttons;if(!ready)return;if(pressed&controller_b){(void)on_back();return;}if(screen==Screen::battle){if(selection.tracking&&!(pressed&controller_start))return;if(pressed&controller_a)action(select_army);if(pressed&controller_x)action(stop_army);if(pressed&controller_start)action(pausing);if(s.buttons&controller_left)field.camx-=16;if(s.buttons&controller_right)field.camx+=16;if(s.buttons&controller_up)field.camy-=16;if(s.buttons&controller_down)field.camy+=16;clamp_camera();}else {if(pressed&controller_up)focus_action=button_count?buttons[std::max(0,button_index()-1)].action:start;if(pressed&controller_down)focus_action=button_count?buttons[std::min(button_count-1,button_index()+1)].action:start;if((pressed&controller_a)&&button_count)action(buttons[button_index()].action);}}
  int button_index()const{for(int i=0;i<button_count;++i)if(buttons[i].action==focus_action)return i;return 0;}
- pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& e){sounds.event(e);if(auto metrics=pxa::ui::decode_display_metrics(e)){update_display(*metrics);return true;}auto tick=pxa::decode_clock_tick(e);if(!tick)return false;now=tick->timestamp_us;float dt=last_tick?std::clamp(float(now-last_tick)*1e-6f,0.f,.25f):.05f;last_tick=now;if(!ready||!ctx->foreground())return true;set_clock(screen==Screen::battle||screen==Screen::research?33:100);clock+=dt;field.clock=clock;save_flash=std::max(0.f,save_flash-dt);sounds.tick(now,dt,screen==Screen::battle||screen==Screen::research,screen==Screen::pause||screen==Screen::radio);
-  if(screen==Screen::battle||screen==Screen::research){auto before=UnitVoice::roster(world);for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));for(int i=0;i<MAX;++i)if(!before[i]&&world.e[i].hp>0&&world.e[i].team==0&&world.e[i].kind<hq)sounds.unit_ready(world.e[i].kind,world.faction());if(world.sound){sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode)defense_best=std::max(defense_best,world.extra.cleared);if(world.won||world.defeated)finish();else if(!world.extra.mode){unsigned pending=world.mission.events&~world.mission.read_events;for(unsigned id=0;id<std::size(radio_scripts);++id)if(pending&(1u<<id)){radio_id=int(id);radio_page=0;screen=Screen::radio;tactical=TacticalMode::none;selection.cancel();dock.close();save();break;}}if(world.autosave>=12){world.autosave=0;save();report();}}
+ pxa::Result<bool> on_event(pxa::Context&,const pxa::Event& e){sounds.event(e);if(auto metrics=pxa::ui::decode_display_metrics(e)){update_display(*metrics);return true;}auto tick=pxa::decode_clock_tick(e);if(!tick)return false;now=tick->timestamp_us;float dt=last_tick?std::clamp(float(now-last_tick)*1e-6f,0.f,.25f):.05f;last_tick=now;if(!ready||!ctx->foreground())return true;set_clock(screen==Screen::battle||screen==Screen::research?33:100);clock+=dt;field.clock=clock;save_flash=std::max(0.f,save_flash-dt);update_lan();if(guest())world.notice_time=std::max(0.f,world.notice_time-dt);sounds.tick(now,dt,screen==Screen::battle||screen==Screen::research,(screen==Screen::pause&&!online())||screen==Screen::radio);
+  if(!guest()&&(screen==Screen::battle||screen==Screen::research||(online()&&screen==Screen::pause))){auto before=UnitVoice::roster(world);for(float left=dt;left>.001f;left-=.05f)world.tick(std::min(left,.05f));for(int i=0;i<MAX;++i)if(!before[i]&&world.e[i].hp>0&&world.e[i].team==0&&world.e[i].kind<hq)sounds.unit_ready(world.e[i].kind,world.faction());if(world.sound){if(online()&&(net.cue<12||world.sound==12))net.cue=uint8_t(world.sound);sounds.play_event(world.sound);world.sound=0;}if(world.extra.mode&&!online())defense_record()=std::max(defense_record(),world.extra.cleared);if(world.won||world.defeated)finish();else if(!world.extra.mode){unsigned pending=world.mission.events&~world.mission.read_events;for(unsigned id=0;id<std::size(radio_scripts);++id)if(pending&(1u<<id)){radio_id=int(id);radio_page=0;screen=Screen::radio;tactical=TacticalMode::none;selection.cancel();dock.close();save();break;}}if(!online()&&world.autosave>=12){world.autosave=0;save();report();}}
   render();if(exit_pending&&!saving&&sounds.shutdown()){exiting=true;(void)ctx->window().request_back();}return true;}
- void on_background(pxa::Context&){tactical=TacticalMode::none;dock.close();selection.cancel();pressing=false;dragging=false;if(screen==Screen::battle||screen==Screen::research)screen=Screen::pause;sounds.suspend();save();set_clock(0);last_tick=0;}
+ void on_background(pxa::Context&){if(online()||net.link||net.listener)close_lan("已退出联机房间。");tactical=TacticalMode::none;dock.close();selection.cancel();pressing=false;dragging=false;if(screen==Screen::battle||screen==Screen::research)screen=Screen::pause;sounds.suspend();save();set_clock(0);last_tick=0;}
  void on_foreground(pxa::Context&){sounds.resume();(void)ctx->window().request_orientation(pxa::OrientationPreference::landscape);(void)ctx->window().fullscreen(pxa::WindowBarMode::hidden,pxa::WindowBarMode::hidden);last_tick=0;if(ready)set_clock(screen==Screen::battle||screen==Screen::research?33:100);}
  void button(Raster& r,Rect area,int a,std::string_view label,bool primary=false,bool enabled=true){
+  if(guest()&&!guest_action(a))enabled=false;
   if(button_count<int(buttons.size())&&enabled)buttons[button_count++]={area,a};bool held=pressing&&!dragging&&area.has(downx,downy);Skin::button(r,area,primary,held,enabled);
   UiIcon icon=UiIcon::none;if(display.width>=480)switch(a){case pausing:icon=UiIcon::pause;break;case stop_army:icon=UiIcon::stop;break;case repair:icon=UiIcon::repair;break;case strike:icon=UiIcon::air;break;case zooming:icon=UiIcon::zoom;break;case cancel:icon=UiIcon::cancel;break;case units:icon=UiIcon::units;break;case buildings:icon=UiIcon::buildings;break;case select_army:icon=UiIcon::all;break;case base:icon=UiIcon::base;break;case box_select:icon=UiIcon::box;break;default:break;}
   auto color=enabled?(primary?cyan:cream):muted;
@@ -221,12 +276,12 @@ struct App {
    int top=field.top,line=compact_layout().line,pause=88,available=w-pause-26,ore=available*38/100,power=available*30/100,time=available-ore-power;char text[64];
    r.rect(0,0,w,top,navy);r.rect(0,top-2,w,2,edge);int x=6;
    for(int i=0;i<3;++i){int width=i==0?ore:i==1?power:time;Skin::panel_frame(r,{x,3,width-4,top-8});const char* label=i==0?"矿石":i==1?(world.power_net<0?"缺电":"电力"):save_flash>0?"已保存":"时间";r.label({x+4,5,width-12,line},label,muted,12);if(i==0)std::snprintf(text,sizeof text,"%d",world.credits);else if(i==1)std::snprintf(text,sizeof text,"%+d",world.power_net);else std::snprintf(text,sizeof text,"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({x+4,5+line,width-12,line},text,i==0?gold:i==1?(world.power_net<0?red:cyan):cream,12);x+=width;}
-   button(r,{w-pause-6,4,pause,top-10},pausing,"暂停");return;
+   button(r,{w-pause-6,4,pause,top-10},pausing,online()?"菜单":"暂停");return;
   }
   r.rect(0,0,w,50,navy);r.rect(0,48,w,2,edge);int available=w-102,ore_width=available*36/100,power_width=available*29/100,power_x=14+ore_width,time_x=power_x+power_width+6,time_width=w-82-time_x;char b[80];
   Skin::panel_frame(r,{8,3,ore_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::ore,14,14,gold);if(world.credits>=10000)std::snprintf(b,sizeof b,"%dk",world.credits/1000);else std::snprintf(b,sizeof b,"%04d",world.credits);r.label({31,5,ore_width-28,22},b,gold,20,0);r.label({31,27,ore_width-28,15},"矿石",muted,10,0);
   Skin::panel_frame(r,{power_x,3,power_width,42},rgb(22,35,38));Skin::icon(r,UiIcon::power,power_x+6,14,world.power_net<0?red:cyan);std::snprintf(b,sizeof b,"%+d",world.power_net);r.label({power_x+23,5,power_width-28,22},b,world.power_net<0?red:cyan,18,0);r.label({power_x+23,27,power_width-28,15},world.power_net<0?"缺电":"电力",muted,10,0);
-  Skin::panel_frame(r,{time_x,3,time_width,42},rgb(22,35,38));std::snprintf(b,sizeof b,"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({time_x+4,5,time_width-8,save_flash>0?22:38},b,cream,16);if(save_flash>0)r.label({time_x+4,27,time_width-8,15},"已保存",cyan,10);button(r,{w-76,4,68,42},pausing,"暂停");
+  Skin::panel_frame(r,{time_x,3,time_width,42},rgb(22,35,38));std::snprintf(b,sizeof b,"%02u:%02u",unsigned(world.time)/60,unsigned(world.time)%60);r.label({time_x+4,5,time_width-8,save_flash>0?22:38},b,cream,16);if(save_flash>0)r.label({time_x+4,27,time_width-8,15},"已保存",cyan,10);button(r,{w-76,4,68,42},pausing,online()?"菜单":"暂停");
  }
  void draw_minimap(Raster& r){
   auto m=minimap();
@@ -254,6 +309,10 @@ struct App {
     auto p=point(world.wave_entry(wave+i));
     r.ring(p.x,p.y,3+int(world.time*3)%3,3+int(world.time*3)%3,red);
    }
+   if(world.naval_raid(wave)){
+    auto p=point(world.naval_entry(wave));
+    r.ring(p.x,p.y,4,4,gold);
+   }
   }
   if(world.chapter==4&&!world.extra.mode){
    auto p=point(world.convoy_stop(3));
@@ -276,7 +335,8 @@ struct App {
   int bottom=visible_bottom(),battle_width=field.width;
   char b[160];
   std::snprintf(b,sizeof b,"%s",world.active_objective());
-  if(world.extra.mode)std::snprintf(b,sizeof b,"守备 %u 波 · 纪录 %u",world.extra.cleared,defense_best);
+  if(online())std::snprintf(b,sizeof b,"双人守备 %u 波 · %s",world.extra.cleared,net.host?"房主":"队友");
+  else if(world.extra.mode)std::snprintf(b,sizeof b,"守备 %u 波 · 纪录 %u",world.extra.cleared,defense_record());
   else if(world.chapter==3&&!world.mission.stage)std::snprintf(b,sizeof b,"占领电台 %d / 2",world.captured_nodes());
   else if(world.chapter==4&&world.mission.stage==2)std::snprintf(b,sizeof b,"补给车到达 %u / 2",unsigned(__builtin_popcount(world.mission.delivered)));
   else if(world.chapter==5&&!world.mission.stage)std::snprintf(b,sizeof b,"占领调度站 %d / 3",world.captured_nodes());
@@ -434,11 +494,39 @@ struct App {
    int left=x+24+buttons*i/4,right=x+24+buttons*(i+1)/4-8;
    button(r,{left,y+row+gap,right-left,small_row},actions[i],labels[i]);
   }
-  if(!readable_ui())r.text(w-18,h-17,"1.10.0",muted,10,2);
+  if(!readable_ui())r.text(w-18,h-17,"1.13.0",muted,10,2);
+ }
+ void defense_map_screen(Raster& r){
+  r.native_text=&native_text;
+  page_header(r,net_setup()?"联机守备":"无尽守备","先选战场，再选阵营");
+  const auto column=page_column(w,h);
+  int top=readable_ui()?page_top(r)+8:74;
+  int row=display.width<400?small_dialog_row():page_row(r),footer=h-row-12;
+  int step=std::min(122,(footer-top-12)/int(defense_map_count));
+  constexpr int preview_units[]={tank,patrol_boat,artillery};
+  for(unsigned i=0;i<defense_map_count;++i){
+   const auto& arena=defense_arenas[i];
+   Rect card{column.x,top+int(i)*step,column.w,step-8};
+   int action_id=defense_map0+int(i);
+   bool highlighted=focus_action==action_id||(pressing&&card.has(downx,downy));
+   Skin::panel_frame(r,card,navy,highlighted?cyan:edge);
+   buttons[button_count++]={card,action_id};
+   int icon=std::min(104,card.h+6),left=card.x+icon+14;
+   Skin::picture(r,preview_units[i],{card.x+8,card.y+6,icon,card.h-12});
+   int line=std::min(r.text_height("中",15)+4,(card.h-8)/2),y=card.y+(card.h-2*line)/2;
+   r.label({left,y,card.x+card.w-left-10,line},arena.title,cream,15,0);
+   char label[80];
+   if(defense_best[i])std::snprintf(label,sizeof label,"%s · 纪录 %u 波",arena.terrain_note,defense_best[i]);
+   else std::snprintf(label,sizeof label,"%s · %d×%d",arena.terrain_note,arena.side,arena.side);
+   r.label({left,y+line,card.x+card.w-left-10,line},label,muted,12,0);
+  }
+  int width=(column.w-10)/2;
+  button(r,{column.x,footer,width,row},net_setup()?net_leave:home,"返回");
+  if(!net_setup())button(r,{column.x+width+10,footer,column.w-width-10,row},net_open,"局域网联机");
  }
  void faction_screen(Raster& r){
   r.native_text=&native_text;
-  page_header(r,"无尽守备","选择一支部队");
+  page_header(r,"选择阵营",defense_arenas[unsigned(chosen_map)].title);
   const auto column=page_column(w,h);
   bool side_by_side=w>=720;
   int top=readable_ui()?page_top(r)+8:74;
@@ -473,7 +561,7 @@ struct App {
     r.label(text,i?"空优截击":"旋翼支援",cream,12,0);
    }
   }
-  button(r,{column.x,footer,column.w,row},home,"返回指挥部");
+  button(r,{column.x,footer,column.w,row},defense_map_back,"返回战场选择");
  }
  void campaign_screen(Raster& r){
   constexpr const char* acts[]={"第一幕 / 矿区与河谷","第二幕 / 车队与城区","第三幕 / 雾港与白石岛"};
@@ -504,7 +592,7 @@ struct App {
   }
   int tab_y=readable_ui()?footer+4:h-83;button(r,{column.x+4,tab_y,126,readable_ui()?row:29},campaign_prev,"上一页",false,campaign_page>0);button(r,{column.x+column.w-130,tab_y,126,readable_ui()?row:29},campaign_next,"下一页",false,campaign_page<campaign_acts-1);button(r,{column.x,readable_ui()?h-row-12:h-43,column.w,row},home,"返回指挥部");
  }
- void briefing_screen(Raster& r){auto& c=chapters[world.chapter];bool gray=world.faction()==Faction::gray_tower;page_header(r,world.extra.mode?(gray?"灰塔前哨":"最后一班补给车"):c.name,world.extra.mode?(gray?"无尽守备 / 灰塔守备军":"无尽守备 / 北境联军"):c.place);Rect column=page_column(w,h);int left=column.x,right=column.x+column.w;unsigned person=world.extra.mode?1:c.speaker;bool standing=w>=720&&h>=400&&person<2,small=display.width<400;int row=page_row(r),portrait_y=readable_ui()?page_top(r)+8:76,tx=left+(standing?200:small?0:70),ty=readable_ui()?portrait_y+r.text_height("中",14)+10:small?130:104,yy=readable_ui()?h-row-136:h-143,mx=standing?left+200:left;
+ void briefing_screen(Raster& r){auto& c=chapters[world.chapter];bool gray=world.faction()==Faction::gray_tower;page_header(r,world.extra.mode?world.arena().title:c.name,world.extra.mode?(gray?"无尽守备 / 灰塔守备军":"无尽守备 / 北境联军"):c.place);Rect column=page_column(w,h);int left=column.x,right=column.x+column.w;unsigned person=world.extra.mode?1:c.speaker;bool standing=w>=720&&h>=400&&person<2,small=display.width<400;int row=page_row(r),portrait_y=readable_ui()?page_top(r)+8:76,tx=left+(standing?200:small?0:70),ty=readable_ui()?portrait_y+r.text_height("中",14)+10:small?130:104,yy=readable_ui()?h-row-136:h-143,mx=standing?left+200:left;
   if(gray){
    Rect picture{left,portrait_y,standing?176:small?44:56,standing?h-165:small?44:56};
    Skin::well(r,picture);
@@ -513,7 +601,7 @@ struct App {
   else portrait(r,left,portrait_y,small?44:56,person);
   int speaker_x=left+(standing?200:small?60:70);
   r.label({speaker_x,readable_ui()?portrait_y:78,right-speaker_x,r.text_height("中",14)},gray?"灰塔守备网":cast_names[person],gray?gold:cyan,14,0);
-  auto paragraphs=gray?std::array<const char*,3>{"边境电网失去联络，指挥堡必须撑到信号恢复。","北境联军会分路抵达。守住矿线和发电站。","重坦守住正面，截击机优先拦截敌方飞机。"}:world.extra.mode?std::array<const char*,3>{"补给车还在风雪里，前哨就是他们的路标。","守住指挥中心，击退每一波灰塔袭击。","利用科研和战地补给，把防线坚持得更久。"}:c.briefing;
+  auto paragraphs=world.extra.mode?defense_briefings[unsigned(world.defense_map())]:c.briefing;
   if(!world.extra.mode&&world.chapter==lighthouse_chapter){
    if(world.mission.harbor_plan==harbor_beacon)paragraphs[1]=island_landing_brief;
    if(world.mission.harbor_plan==harbor_shutdown)paragraphs[1]=island_bridge_brief;
@@ -541,6 +629,18 @@ struct App {
  }
  void pause_screen(Raster& r){
   field.draw(r,world);r.clip={0,0,w,h};r.shade({0,0,w,h},navy,12);r.native_text=&native_text;
+  if(online()){
+   Rect modal=page_column(w,h);int row=page_row(r),line=r.text_height("中",14)+6;
+   int height=3*row+2*line+62,y=(h-height)/2;
+   Skin::panel_frame(r,{modal.x,y,modal.w,height});
+   r.label({modal.x+12,y+12,modal.w-24,line},net.host?"联机守备 · 房主":"联机守备 · 队友",cyan,14);
+   r.label({modal.x+12,y+line+20,modal.w-24,line},"打开菜单时，战场仍在运行。",cream,13);
+   int top=y+2*line+28;
+   button(r,{modal.x+12,top,modal.w-24,row},resume,"返回战场",true);
+   button(r,{modal.x+12,top+row+8,modal.w-24,row},sound_toggle,sounds.enabled?"声音：开":"声音：关");
+   button(r,{modal.x+12,top+2*row+16,modal.w-24,row},net_leave,"离开房间");
+   return;
+  }
   bool small=display.width<400,readable=readable_ui(),expanded=small||readable;
   int row=small&&!readable?small_dialog_row():page_row(r);
   int title=r.text_height("中",26),caption=r.text_height("中",13),height=248;
@@ -613,6 +713,14 @@ struct App {
   button(r,{column.x,readable?h-row-12:h-48,column.w,row},resume,"返回战场",true);
  }
  void result_screen(Raster& r){title_background(r);r.native_text=&native_text;auto column=page_column(w,h);bool won=world.won;
+  if(online()){
+   page_header(r,"联机守备结束",world.arena().title);
+   int line=r.text_height("中",16)+10,top=page_top(r)+10,row=page_row(r);
+   char text[72];std::snprintf(text,sizeof text,"两人共击退 %u 波进攻",world.extra.cleared);
+   r.label({column.x,top,column.w,line},text,cyan,16);
+   button(r,{column.x,h-row-12,column.w,row},net_leave,"离开房间",true);
+   return;
+  }
   const char* defense_ending=world.faction()==Faction::gray_tower?
    "前哨仍在呼叫，边境电网正在恢复。":"补给信号仍在。下一班车会记得这条路。";
   const char* ending_line=world.chapter==harbor_chapter&&world.mission.stage==harbor_shutdown?
@@ -623,20 +731,22 @@ struct App {
   if(!won)ending_line=defeat_line;
   if(readable_ui()){
    int row=page_row(r),title=r.text_height("中",28),line=r.text_height("中",12);r.label({column.x,24,column.w,title},world.extra.mode?"前哨守备结束":won?"作战成功":"战线失守",won?cyan:gold,28);int y=title+40;if(!world.extra.mode){r.label({column.x,y,column.w,line},chapters[world.chapter].name,cream,12);y+=line+16;int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,y+12,12,j<stars?gold:edge);y+=32;}
-   StoryText ending(r,{world.extra.mode?defense_ending:ending_line,"",""},column.w);ending.draw(r,{column.x,y,column.w,int(ending.count)*ending.row(r)},0);y+=int(ending.count)*ending.row(r)+16;char text[120];if(world.extra.mode)std::snprintf(text,sizeof text,"击退 %u 波 · 纪录 %u 波",world.extra.cleared,defense_best);else std::snprintf(text,sizeof text,"作战 %02u:%02u · 击毁 %d · 损失 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost);r.label({column.x,y,column.w,line},text,gold,12);if(!world.extra.mode){std::snprintf(text,sizeof text,"采矿 %d",world.earned);r.label({column.x,y+line+8,column.w,line},text,gold,12);}button(r,{column.x,h-2*row-22,column.w,row},world.extra.mode?restart:won?next:restart,world.extra.mode?"再次守备":won?(world.chapter==CHAPTERS-1?"战役档案":"继续前进"):"重新部署",true);button(r,{column.x,h-row-12,column.w,row},home,"返回指挥部");return;
+   StoryText ending(r,{world.extra.mode?defense_ending:ending_line,"",""},column.w);ending.draw(r,{column.x,y,column.w,int(ending.count)*ending.row(r)},0);y+=int(ending.count)*ending.row(r)+16;char text[120];if(world.extra.mode)std::snprintf(text,sizeof text,"击退 %u 波 · 纪录 %u 波",world.extra.cleared,defense_record());else std::snprintf(text,sizeof text,"作战 %02u:%02u · 击毁 %d · 损失 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost);r.label({column.x,y,column.w,line},text,gold,12);if(!world.extra.mode){std::snprintf(text,sizeof text,"采矿 %d",world.earned);r.label({column.x,y+line+8,column.w,line},text,gold,12);}button(r,{column.x,h-2*row-22,column.w,row},world.extra.mode?restart:won?next:restart,world.extra.mode?"再次守备":won?(world.chapter==CHAPTERS-1?"战役档案":"继续前进"):"重新部署",true);button(r,{column.x,h-row-12,column.w,row},home,"返回指挥部");return;
   }
-  if(world.extra.mode){r.text(w/2,35,"前哨守备结束",gold,28,1);r.text(w/2,88,defense_ending,cream,14,1);char text[100];std::snprintf(text,sizeof text,"击退 %u 波 · 历史纪录 %u 波",world.extra.cleared,defense_best);r.label({column.x,144,column.w,40},text,cyan,20);button(r,{column.x,h-87,column.w,36},restart,"再次守备",true);button(r,{column.x,h-41,column.w,28},home,"返回指挥部");return;}r.text(w/2,29,won?"作战成功":"战线失守",won?cyan:red,34,1);r.text(w/2,82,chapters[world.chapter].name,cream,20,1);int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,130,12,j<stars?gold:edge);
+  if(world.extra.mode){r.text(w/2,35,"前哨守备结束",gold,28,1);r.text(w/2,88,defense_ending,cream,14,1);char text[100];std::snprintf(text,sizeof text,"击退 %u 波 · 历史纪录 %u 波",world.extra.cleared,defense_record());r.label({column.x,144,column.w,40},text,cyan,20);button(r,{column.x,h-87,column.w,36},restart,"再次守备",true);button(r,{column.x,h-41,column.w,28},home,"返回指挥部");return;}r.text(w/2,29,won?"作战成功":"战线失守",won?cyan:red,34,1);r.text(w/2,82,chapters[world.chapter].name,cream,20,1);int stars=won?(world.lost<4?3:world.lost<10?2:1):0;for(int j=0;j<3;++j)insignia(r,w/2+(j-1)*40,130,12,j<stars?gold:edge);
   StoryText ending(r,{ending_line,"",""},column.w);
   int ending_height=int(ending.count)*ending.row(r);
   ending.draw(r,{column.x,153,column.w,ending_height},0);
   int stats_y=std::max(194,153+ending_height+4);
   char b[120];std::snprintf(b,sizeof b,"作战 %02u:%02u    击毁 %d    损失 %d    采矿 %d",unsigned(world.time)/60,unsigned(world.time)%60,world.killed,world.lost,world.earned);r.label({column.x,stats_y,column.w,std::min(27,h-87-stats_y)},b,gold,14);button(r,{column.x,h-87,column.w,36},won?next:restart,won?(world.chapter==CHAPTERS-1?"战役档案":"下一章 / 继续前进"):"重新部署",true);button(r,{column.x,h-41,column.w,28},home,"返回指挥部");}
  void render(){if(!ready||!surface||!ctx->foreground())return;
+  auto view=screen_viewport();
+  if(view.width!=w||view.height!=h)layout_viewport(view,view_center());
 #ifdef IRON_PROFILE
   auto perf_begin=RenderProfile::now();
 #endif
 auto lease=surface->acquire();if(!lease)return;auto dest=lease->pixels();int stride=lease->stride_bytes()/2;auto output=reinterpret_cast<uint16_t*>(dest.data());bool direct=display_plan.width==w&&display_plan.height==h;
-field.clock=(screen==Screen::battle||screen==Screen::pause||screen==Screen::radio)?world.time:clock;native_text.reset(display_plan.width,display_plan.height,w,h,display_plan.text_scale(w),readable_ui()?display_plan.minimum_text_scale():1);Raster r(direct?output:pixels.data(),w,h,direct?stride:w);if(screen==Screen::battle||screen==Screen::campaign||screen==Screen::briefing||screen==Screen::help||screen==Screen::research)r.native_text=&native_text;if(screen!=Screen::battle)r.rect(0,0,w,h,navy);button_count=0;switch(screen){case Screen::radio:radio_screen(r);break;case Screen::research:research_screen(r);break;case Screen::home:home_screen(r);break;case Screen::campaign:campaign_screen(r);break;case Screen::briefing:briefing_screen(r);break;case Screen::battle:field.draw(r,world);selection.draw(r,world,field);hud(r);break;case Screen::pause:pause_screen(r);break;case Screen::help:help_screen(r);break;case Screen::result:result_screen(r);break;case Screen::factions:faction_screen(r);break;}
+field.clock=(screen==Screen::battle||screen==Screen::pause||screen==Screen::radio)?world.time:clock;native_text.reset(display_plan.width,display_plan.height,w,h,display_plan.text_scale(w),readable_ui()?display_plan.minimum_text_scale():1);Raster r(direct?output:pixels.data(),w,h,direct?stride:w);if(screen==Screen::battle||screen==Screen::campaign||screen==Screen::briefing||screen==Screen::help||screen==Screen::research)r.native_text=&native_text;if(screen!=Screen::battle)r.rect(0,0,w,h,navy);button_count=0;switch(screen){case Screen::radio:radio_screen(r);break;case Screen::research:research_screen(r);break;case Screen::home:home_screen(r);break;case Screen::campaign:campaign_screen(r);break;case Screen::briefing:briefing_screen(r);break;case Screen::battle:field.draw(r,world);selection.draw(r,world,field);hud(r);break;case Screen::pause:pause_screen(r);break;case Screen::help:help_screen(r);break;case Screen::result:result_screen(r);break;case Screen::factions:faction_screen(r);break;case Screen::defense_maps:defense_map_screen(r);break;case Screen::lan_menu:case Screen::lan_join:lan_screen(r);break;}
 #ifdef IRON_PROFILE
   auto perf_drawn=RenderProfile::now();
 #endif

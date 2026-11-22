@@ -1,0 +1,193 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 289
+    },
+    {
+      "name": "guide",
+      "action": "screenshot"
+    },
+    {
+      "name": "dismiss-guide",
+      "action": "tap",
+      "x": 155,
+      "y": 408
+    },
+    {
+      "name": "ready",
+      "action": "screenshot"
+    },
+    {
+      "name": "bed-one",
+      "action": "tap",
+      "x": 178,
+      "y": 181
+    },
+    {
+      "name": "build-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "build-pea",
+      "action": "tap",
+      "x": 80,
+      "y": 430
+    },
+    {
+      "name": "tower-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-one",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "bed-two",
+      "action": "tap",
+      "x": 236,
+      "y": 181
+    },
+    {
+      "name": "build-ice",
+      "action": "tap",
+      "x": 205,
+      "y": 430
+    },
+    {
+      "name": "close-two",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "bed-four",
+      "action": "tap",
+      "x": 343,
+      "y": 278
+    },
+    {
+      "name": "build-sun",
+      "action": "tap",
+      "x": 350,
+      "y": 430
+    },
+    {
+      "name": "close-three",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "wave-one",
+      "action": "tap",
+      "x": 380,
+      "y": 430
+    },
+    {
+      "name": "fight",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "combat",
+      "action": "screenshot"
+    },
+    {
+      "name": "ice-skill",
+      "action": "tap",
+      "x": 60,
+      "y": 430
+    },
+    {
+      "name": "frozen",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 442,
+      "y": 28
+    },
+    {
+      "name": "paused",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause-help",
+      "action": "tap",
+      "x": 240,
+      "y": 229
+    },
+    {
+      "name": "guide-reopened",
+      "action": "screenshot"
+    },
+    {
+      "name": "guide-back",
+      "action": "tap",
+      "x": 155,
+      "y": 408
+    },
+    {
+      "name": "resume",
+      "action": "tap",
+      "x": 240,
+      "y": 175
+    },
+    {
+      "name": "double-speed",
+      "action": "tap",
+      "x": 381,
+      "y": 27
+    },
+    {
+      "name": "fight-more",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "normal-play",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause-again",
+      "action": "tap",
+      "x": 442,
+      "y": 28
+    },
+    {
+      "name": "return-map",
+      "action": "tap",
+      "x": 240,
+      "y": 343
+    },
+    {
+      "name": "level-map",
+      "action": "screenshot"
+    },
+    {
+      "name": "save-settle",
+      "action": "wait",
+      "ms": 500
+    },
+    {
+      "name": "restart-app",
+      "action": "relaunch"
+    },
+    {
+      "name": "start-again",
+      "action": "tap",
+      "x": 240,
+      "y": 289
+    },
+    {
+      "name": "persisted-guide-dismissal",
+      "action": "screenshot"
+    }
+  ]
+}

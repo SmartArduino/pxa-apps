@@ -1,0 +1,120 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 289
+    },
+    {
+      "name": "dismiss-guide",
+      "action": "tap",
+      "x": 155,
+      "y": 408
+    },
+    {
+      "name": "only-tower-bed",
+      "action": "tap",
+      "x": 48,
+      "y": 350
+    },
+    {
+      "name": "only-tower-buy",
+      "action": "tap",
+      "x": 95,
+      "y": 430
+    },
+    {
+      "name": "only-tower-close",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "wave-one",
+      "action": "tap",
+      "x": 380,
+      "y": 430
+    },
+    {
+      "name": "undefended-0",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-1",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-2",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-3",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-4",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-5",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-6",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-7",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-8",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "undefended-9",
+      "action": "wait",
+      "ms": 5000
+    },
+    {
+      "name": "defeat",
+      "action": "screenshot"
+    },
+    {
+      "name": "retry",
+      "action": "tap",
+      "x": 240,
+      "y": 320
+    },
+    {
+      "name": "retry-ready",
+      "action": "screenshot"
+    },
+    {
+      "name": "pause",
+      "action": "tap",
+      "x": 442,
+      "y": 28
+    },
+    {
+      "name": "map",
+      "action": "tap",
+      "x": 240,
+      "y": 343
+    },
+    {
+      "name": "locked-levels",
+      "action": "screenshot"
+    }
+  ]
+}

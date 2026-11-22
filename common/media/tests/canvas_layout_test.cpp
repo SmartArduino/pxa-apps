@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace {
-std::vector<uint8_t> transaction, presented;
+std::vector<uint8_t> transaction, presented, present_request;
 unsigned commits = 0, frames = 0;
 struct Record {
   uint8_t type;
@@ -65,6 +65,7 @@ extern "C" int32_t pxa_call(uint32_t route, uint64_t, const uint8_t *payload,
     presented.insert(presented.end(), payload + 12, payload + size);
     break;
   case PXA_UI_CANVAS_PRESENT:
+    present_request.assign(payload, payload + size);
     ++frames;
     break;
   default:
@@ -113,7 +114,9 @@ int main() {
     canvas.begin(area.w, area.h, 0x101020);
     canvas.pill(71, 0, 45, 80, "Back", true, 0x9988bb, 0xffffff, 0x333333);
     canvas.hit(72, -20, 80, area.w + 40, 30);
-    assert(canvas.present() && canvas.initialized);
+    const pxa_canvas_dirty_rect_t dirty{area.x, area.y + 40, area.w, 30};
+    assert(canvas.present(&dirty, 1) && canvas.initialized);
+    assert(present_request.size() == 13 && present_request[12] == 0);
     const auto draw = records(presented);
     assert(draw.size() >= 7);
     assert(draw[0].type == PXA_CANVAS_DRAW_RECT);
@@ -152,6 +155,13 @@ int main() {
       assert(clip_depth >= 0);
     }
     assert(clip_depth == 0);
+    canvas.begin(area.w, area.h, 0x101020);
+    assert(canvas.present(&dirty, 1));
+    assert(present_request.size() == 29 && present_request[12] == 1);
+    assert(coordinate(present_request.data(), 13) == dirty.x);
+    assert(coordinate(present_request.data(), 17) == dirty.y);
+    assert(coordinate(present_request.data(), 21) == dirty.width);
+    assert(coordinate(present_request.data(), 25) == dirty.height);
 
     // A native text input shares the Canvas origin but never occupies the
     // gesture-only strip; trimming its left edge preserves its right edge.
@@ -186,7 +196,7 @@ int main() {
     env.density_q16 += 512;
     assert(canvas.environment(env) && !canvas.initialized);
   }
-  assert(frames == 4);
+  assert(frames == 8);
   std::puts("media Canvas: full background, presented/hit coordinate agreement, "
             "left gesture exclusion, native input placement and metric updates "
             "at 120/125/160/205 DPI passed");

@@ -1,0 +1,17 @@
+{
+  "name": "云峡巡航",
+  "summary": "驾驶像素战机穿过群岛，守卫友方航母并突袭敌舰。",
+  "description": "驾驶三种战机巡航群岛、护送运输船，或在舰队突袭中击毁敌方航母、炮艇和岸炮。回到友舰可以沿跑道着舰、补给并再次起飞。支持追尾、俯视和机内视角，失事时可弹射并由同型战机接应。\n\nFly one of three pixel-art aircraft over an island chain, escort a cargo ship, or strike an enemy carrier, gunboat and coastal battery. Land on the friendly carrier to resupply and launch again. Switch between chase, overhead and cockpit views.\n\n封面为宣传插画，截图来自实际运行的 PXA 模拟器。",
+  "kind": "game",
+  "category": "action",
+  "tags": [
+    "飞行",
+    "像素",
+    "空战",
+    "3D",
+    "手柄"
+  ],
+  "icon": "assets/icon-store.png",
+  "cover": "store/cover.jpg",
+  "changelog": "航母甲板扩至约 260 × 80 米，加入真实模型停机位、辅助着舰、减速停稳和甲板起飞。新增舰队突袭、僚机和分阶段机体破坏。地图增加湖泊、河流和入海河口，并更新载具、飞行员和水面的像素画面。\n\nCarriers now have a roughly 260 × 80 m deck with full-size parked aircraft, assisted landing, a braking rollout and deck launches. Added Fleet Strike, wingmen and progressive aircraft damage. Added lakes and rivers and refreshed vehicle, pilot and water visuals."
+}

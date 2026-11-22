@@ -1,0 +1,32 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-skybreak-islands",
+  "version": "0.4.0",
+  "release_sequence": 16,
+  "name": "云峡巡航",
+  "description": "驾驶像素战机巡航群岛、护送运输船或突袭敌方舰队。可着舰补给和再次起飞。",
+  "icon": "assets/icon-runtime.png",
+  "min_sdk": [2, 0],
+  "target_sdk": [2, 0],
+  "compile_sdk": [2, 0],
+  "build": {
+    "system": "cmake",
+    "source_dir": ".",
+    "linear_memory": {"maximum_bytes": 2097152, "pinned": true}
+  },
+  "components": [{
+    "id": "main",
+    "kind": "ui",
+    "services": ["clock", "window", "surface", "ui", "log"],
+    "cmake_target": "pxa_main",
+    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
+  }],
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {"id": "touch-flight", "kind": "touch", "complete": true, "contacts": 1, "requires": {"tap": "tap"}},
+      {"id": "gamepad-flight", "kind": "controller", "complete": true,
+       "requires": {"up":"hold","down":"hold","left":"hold","right":"hold","a":"press","b":"press","x":"hold","y":"press","start":"press","r":"press"}}
+    ]
+  }
+}

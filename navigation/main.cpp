@@ -29,7 +29,13 @@ struct NavigationApp {
     std::uint32_t canvas_node=0;
     State<TextInputBox> query_box{TextInputBox{}},key_box{TextInputBox{}},city_box{TextInputBox{}},endpoint_box{TextInputBox{}};
     TextInputRef query_editor,key_editor,city_editor,endpoint_editor;
-    unsigned screen=0,return_screen=0,settings_tab=0;
+    unsigned screen=0,settings_return_screen=0,search_return_screen=0,plan_return_screen=0,settings_tab=0;
+    bool search_attempted=false,search_failed=false;
+    std::optional<nav::Place> selected_place;
+    nav::Viewport detail_previous_camera;
+    std::vector<nav::Place> detail_results;
+    std::string detail_query;
+    unsigned detail_search_return=0;
     bool ui_dirty=true,dragging=false,pointer_down=false,in_tick=false;
     unsigned clock_period=0;
     unsigned route_revision=0,notice_revision=0;
@@ -76,6 +82,7 @@ struct NavigationApp {
         (void)query_editor.hide_keyboard();(void)key_editor.hide_keyboard();
         (void)city_editor.hide_keyboard();(void)endpoint_editor.hide_keyboard();
         screen=page;list_scroll=0;pan_x=pan_y=0;ui_dirty=true;resize_map();draw();
+        if(page==8)toast_until=0;
     }
     void clock() {
         const unsigned period=ui_dirty?16:(live&&demo)?33:compass_streaming()?50:!idle.get()?100:500;
@@ -128,7 +135,7 @@ struct NavigationApp {
         auto b=co_await ctx->storage().set("location.url",std::as_bytes(std::span{e.data(),e.size()}),packet);
         auto d=co_await ctx->storage().set("search.city",std::as_bytes(std::span{c.data(),c.size()}),packet);
         auto s=co_await ctx->storage().set_value("location.source",std::uint32_t(source));
-        if(a&&b&&d&&s) {active_key=k;active_endpoint=e;active_city=c;++location_epoch;location_retry=false;location_jobs.cancel();location_pending=false;net.reset();wifi.reset();wifi_open=false;location_gate.reset();message("设置已保存");show(return_screen);}
+        if(a&&b&&d&&s) {active_key=k;active_endpoint=e;active_city=c;++location_epoch;location_retry=false;location_jobs.cancel();location_pending=false;net.reset();wifi.reset();wifi_open=false;location_gate.reset();message("设置已保存");show(settings_return_screen);}
         else message("设置保存失败，请重试");
         done();
         if(a&&b&&d&&s&&!active_key.empty()&&map_screen())request_map(camera);
@@ -158,25 +165,32 @@ struct NavigationApp {
     }
     void begin_search(bool origin) {
         if (!idle.get()) return;
-        search_start=origin;return_screen=screen;query.set("");results.clear();
+        search_start=origin;search_return_screen=screen;query.set("");results.clear();search_attempted=false;search_failed=false;
         show(4);notice.set("");toast_until=0;
     }
     void choose(unsigned index) {
         if(!idle.get()||index>=results.size())return;
-        invalidate_route();
-        if(search_start)start=results[index];else end=results[index];
-        show(5);toast_until=0;
+        if(search_return_screen==5){
+            invalidate_route();
+            if(search_start)start=results[index];else end=results[index];
+            show(5);
+        }else{
+            selected_place=results[index];detail_previous_camera=camera;
+            detail_results=results;detail_query=query.get();detail_search_return=search_return_screen;
+            show(7);camera.zoom=std::max(15,camera.zoom);request_map(focus_camera(selected_place->point));
+        }
+        toast_until=0;
     }
     Task<void> search() {
-        results.clear();
+        results.clear();list_scroll=0;search_attempted=true;search_failed=false;
         if(auto p=nav::coordinate(query.get())) results.push_back({nav::coordinate(*p),"手动输入的高德坐标（GCJ-02）",*p});
-        else if(active_key.empty())message("请先在设置中填写高德 Key");
-        else if(query.get().empty())message("请输入地点名称");
+        else if(active_key.empty()){search_failed=true;message("请先在设置中填写高德 Key");}
+        else if(query.get().empty()){search_attempted=false;message("请输入地点名称");}
         else {
             message("正在搜索…");
             auto body=co_await fetch(nav::search_url(Api,active_key,query.get(),active_city));std::string error;
-            if(body&&!nav::places(*body,results,error))message(error);
-            else if(!body)message("地点搜索失败，请检查网络和 Key");
+            if(body&&!nav::places(*body,results,error)){search_failed=true;message(error);}
+            else if(!body){search_failed=true;message("地点搜索失败，请检查网络和 Key");}
         }
         if(!results.empty())toast_until=0;done();co_return Result<void>{};
     }

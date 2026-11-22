@@ -4,16 +4,31 @@
 
 namespace han {
 
-constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+noGear+
+constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+legacyGearCount+
     3*talentFirst+4*columnCount+6+1;
 static_assert(seventhCityCount==48 && cityCount>seventhCityCount && cityCount<64);
 constexpr size_t fourthSaveWords=thirdSaveWords+3*(expandedCityCount-oldCityCount)+1;
 constexpr size_t fifthSaveWords=thirdSaveWords+3*(seventhCityCount-oldCityCount)+1;
 constexpr size_t sixthSaveWords=fifthSaveWords+1;
-constexpr size_t seventhSaveWords=sixthSaveWords+2+3*talentCount;
+constexpr int legacyCommanders=talentFirst+legacyTalentCount;
+constexpr size_t seventhSaveWords=sixthSaveWords+2+3*legacyTalentCount;
 constexpr size_t eighthSaveWords=seventhSaveWords+1+3*(cityCount-seventhCityCount);
-constexpr size_t saveWords=eighthSaveWords+1;
+constexpr size_t ninthSaveWords=eighthSaveWords+1;
+constexpr size_t tenthSaveWords=ninthSaveWords+3*(newTalentFirst-legacyCommanders)+2+cityCount+
+    newTalentFirst+1+4*(Campaign{}.prisoners.size()-1)+3*(guestCount-1);
+constexpr size_t eleventhSaveWords=tenthSaveWords+4*(rulerSlot-newTalentFirst);
+constexpr size_t twelfthSaveWords=eleventhSaveWords+4+noGear-legacyGearCount+commanderSlots*gearSlotCount;
+constexpr size_t thirteenthSaveWords=twelfthSaveWords+3;
+constexpr size_t fourteenthSaveWords=thirteenthSaveWords+5;
+constexpr size_t cityPolicyWords=(cityCount+7)/8;
+constexpr size_t saveWords=fourteenthSaveWords+1+cityPolicyWords;
 using Save=std::array<std::byte,saveWords*2>;
+using FourteenthSave=std::array<std::byte,fourteenthSaveWords*2>;
+using ThirteenthSave=std::array<std::byte,thirteenthSaveWords*2>;
+using TwelfthSave=std::array<std::byte,twelfthSaveWords*2>;
+using EleventhSave=std::array<std::byte,eleventhSaveWords*2>;
+using TenthSave=std::array<std::byte,tenthSaveWords*2>;
+using NinthSave=std::array<std::byte,ninthSaveWords*2>;
 using EighthSave=std::array<std::byte,eighthSaveWords*2>;
 using SeventhSave=std::array<std::byte,seventhSaveWords*2>;
 using SixthSave=std::array<std::byte,sixthSaveWords*2>;
@@ -22,13 +37,19 @@ using FourthSave=std::array<std::byte,fourthSaveWords*2>;
 using ThirdSave=std::array<std::byte,thirdSaveWords*2>;
 using SecondSave=std::array<std::byte,194>;
 using LegacySave=std::array<std::byte,78>;
-constexpr const char* saveKey="campaign-v9";
+constexpr const char* saveKey="campaign-v15";
 struct SaveSlot {
     const char* key;
     size_t size;
 };
 inline constexpr SaveSlot saveSlots[] = {
     {saveKey,Save{}.size()},
+    {"campaign-v14",FourteenthSave{}.size()},
+    {"campaign-v13",ThirteenthSave{}.size()},
+    {"campaign-v12",TwelfthSave{}.size()},
+    {"campaign-v11",EleventhSave{}.size()},
+    {"campaign-v10",TenthSave{}.size()},
+    {"campaign-v9",NinthSave{}.size()},
     {"campaign-v8",EighthSave{}.size()},
     {"campaign-v7",SeventhSave{}.size()},
     {"campaign-v6",SixthSave{}.size()},
@@ -71,9 +92,10 @@ inline Save encode(const Campaign& c) {
     auto veteran=[&](const Veteran& g) {
         put(g.xp);
         put(g.fatigue|((g.station+1)<<8));
-        put(g.gear);
+        const auto legacy=std::find_if(g.kit.begin(),g.kit.end(),[](Gear item){return item<legacyGearCount;});
+        put(legacy==g.kit.end()?legacyGearCount:int(*legacy));
     };
-    put(0x4842);put(9);put(c.player);put(c.turn);put(c.gold);put(c.grain);
+    put(0x4842);put(15);put(c.player);put(c.turn);put(c.gold);put(c.grain);
     put(c.actions);put(c.won+1);put(c.commander);put(c.recruited);put(c.tours);
     for (int n:c.truce) put(n);
     put(c.chapter);put(c.objectivePaid);
@@ -85,20 +107,51 @@ inline Save encode(const Campaign& c) {
     }
     for (auto o:c.orders) order(o);
     order(c.defense);
-    for (int n:c.stock) put(n);
+    for (int item=0;item<legacyGearCount;++item) put(c.stock[item]);
     for (int slot=0;slot<talentFirst;++slot) veteran(c.generals[slot]);
     for (const auto& unit:c.columns) {
         order(unit.road);
         put(unit.troops);
         put((unit.leader+1)|(unit.eta<<8)|(int(unit.blockade)<<12));
     }
-    captive(c.prisoner);
-    captive(c.guest);
+    captive(c.prisoners[0]);
+    captive(c.guests[0]);
     put(c.regionalRewards);
     put(c.talentSeen);
     put(c.talentHired);
-    for (int slot=talentFirst;slot<commanderSlots;++slot) veteran(c.generals[slot]);
+    for (int slot=talentFirst;slot<legacyCommanders;++slot) veteran(c.generals[slot]);
     put(int(c.difficulty));
+    for (int slot=legacyCommanders;slot<newTalentFirst;++slot) veteran(c.generals[slot]);
+    put(c.hireOffered);
+    put(c.talentOffered);
+    for (const auto& city:c.cities) put(city.prisoners);
+    auto detention=[&](Detention person) {put((person.city+1)|(person.since<<8));};
+    for (int slot=0;slot<newTalentFirst;++slot) detention(c.detained[slot]);
+    put(c.prisoners[0].since|(c.prisoners[0].offered<<8));
+    for (size_t i=1;i<c.prisoners.size();++i) {
+        const auto& person=c.prisoners[i];
+        captive(person);
+        put(person.since|(person.offered<<8));
+    }
+    for (size_t i=1;i<c.guests.size();++i) captive(c.guests[i]);
+    for (int slot=newTalentFirst;slot<commanderSlots;++slot) {
+        veteran(c.generals[slot]);
+        detention(c.detained[slot]);
+    }
+    for (int item=legacyGearCount;item<noGear;++item) put(c.stock[item]);
+    for (const auto& person:c.generals) for (Gear item:person.kit) put(item);
+    for (int n:c.alliance) put(n);
+    for (const auto request:{c.alliedRequest,c.alliedReport.request}) {
+        put(request.side+1);
+        put(request.target+1);
+    }
+    put(int(c.alliedReport.outcome));
+    put(c.marchBase+1);
+    for (int first=0;first<cityCount;first+=8) {
+        int policies=0;
+        for (int i=0;i<8 && first+i<cityCount;++i) policies|=int(c.cities[first+i].policy)<<(2*i);
+        put(policies);
+    }
     put(checksum(bytes,i));
     return bytes;
 }
@@ -108,14 +161,17 @@ bool readCommon(Reader<N>& r,Campaign& c,bool old=false) {
     c.player=r.get();c.turn=r.get();c.gold=r.get();c.grain=r.get();
     c.actions=r.get();c.won=r.get()-1;c.commander=r.get();c.recruited=r.get();
     c.tours=r.get();
-    for (int& t:c.truce) {t=r.get();if (t>3) return false;}
+    for (int& t:c.truce) {t=r.get();if (t>truceSeasons) return false;}
     return c.player<3 && c.turn>=1 && c.turn<=lastTurn+1 && c.gold<=9999 && c.grain<=9999 &&
         c.actions<=4 && c.won>=-1 && c.won<=1 && c.tours<=4*lastTurn &&
         c.commander<(old?5:commanderSlots) && c.recruited<=(old?31:255) && (c.recruited&7)==7;
 }
-inline bool validRoad(Order o) {
+inline bool validRouteEndpoints(Order o) {
     if (!o) return o.from==-1 && o.to==-1;
-    return o.from<cityCount && o.to>=0 && o.to<cityCount && adjacent(o.from,o.to);
+    return o.from<cityCount && o.to>=0 && o.to<cityCount && o.from!=o.to;
+}
+inline bool validRoad(Order o) {
+    return validRouteEndpoints(o) && (!o || adjacent(o.from,o.to));
 }
 template<size_t N>
 bool readMap(Reader<N>& r,Campaign& c,int count,bool old=false) {
@@ -154,14 +210,20 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     if constexpr (Version>=8) loaded.surveyed|=uint64_t(r.get())<<48;
     if ((loaded.surveyed>>Count) || !readMap(r,loaded,Count))
         return false;
-    for (int& count:loaded.stock) {count=r.get();if (count>33) return false;}
+    if constexpr (Version<12) if (loaded.commander==rulerSlot) return false;
+    constexpr int stockLimit=Version>=12?24+commanderSlots:33;
+    for (int i=0;i<legacyGearCount;++i) {
+        loaded.stock[i]=r.get();
+        if (loaded.stock[i]>stockLimit) return false;
+    }
     auto readVeteran=[&](Veteran& veteran) {
         veteran.xp=r.get();
         const auto status=r.get();
         veteran.fatigue=status&255;
         veteran.station=(status>>8)-1;
-        veteran.gear=Gear(r.get());
-        return veteran.xp<=549 && veteran.fatigue<=100 && veteran.gear<=noGear &&
+        const int item=r.get();
+        if (item<legacyGearCount) veteran.kit[gearSpecs[item].slot]=Gear(item);
+        return veteran.xp<=549 && veteran.fatigue<=100 && item<=legacyGearCount &&
             (veteran.station<0 || loaded.own(veteran.station));
     };
     for (int slot=0;slot<talentFirst;++slot)
@@ -173,13 +235,13 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
         unit.leader=(flags&255)-1;
         unit.eta=(flags>>8)&15;
         unit.blockade=flags&4096;
-        if (!validRoad(unit.road) || (flags>>13) ||
+        if (!(Version>=13?validRouteEndpoints(unit.road):validRoad(unit.road)) || (flags>>13) ||
             (unit && (unit.troops<180 || unit.troops>armyLimit || unit.leader<0 ||
-                      unit.leader>=commanderSlots || unit.eta>1 || (unit.eta && !unit.blockade))) ||
+                      unit.leader>=(Version>=12?commanderSlots:rulerSlot) || unit.eta>1 || (unit.eta && !unit.blockade))) ||
             (!unit && (unit.leader!=-1 || unit.troops || unit.eta || unit.blockade))) return false;
     }
-    loaded.prisoner=r.captive();
-    loaded.guest=r.captive();
+    loaded.prisoners[0]=r.captive();
+    loaded.guests[0]=r.captive();
     if constexpr (Version>=6) {
         loaded.regionalRewards=r.get();
         if (loaded.regionalRewards>>regionalGoalCount) return false;
@@ -187,8 +249,10 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     if constexpr (Version>=7) {
         loaded.talentSeen=r.get();
         loaded.talentHired=r.get();
-        if ((loaded.talentSeen>>talentCount) || (loaded.talentHired&~loaded.talentSeen)) return false;
-        for (int slot=talentFirst;slot<commanderSlots;++slot)
+        constexpr int limit=Version>=11?talentCount:Version>=10?previousTalentCount:legacyTalentCount;
+        if ((loaded.talentSeen>>limit) ||
+            (loaded.talentHired&~loaded.talentSeen)) return false;
+        for (int slot=talentFirst;slot<legacyCommanders;++slot)
             if (!readVeteran(loaded.generals[slot])) return false;
     }
     if constexpr (Version>=9) {
@@ -196,24 +260,117 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
         if (difficulty>int(Difficulty::veteran)) return false;
         loaded.difficulty=Difficulty(difficulty);
     }
-    auto validCaptive=[&](Captive p,bool visiting) {
-        if (!p) return p.side==-1 && p.officer==-1 && p.city==-1;
-        return p.side<3 && p.side!=loaded.player && p.officer>=0 && p.officer<officerCount &&
-            (visiting?p.city==-1:loaded.own(p.city));
+    if constexpr (Version>=10) {
+        for (int slot=legacyCommanders;slot<newTalentFirst;++slot)
+            if (!readVeteran(loaded.generals[slot])) return false;
+        loaded.hireOffered=r.get();
+        loaded.talentOffered=r.get();
+        if ((loaded.hireOffered&~0xf8u) || (loaded.talentOffered&~loaded.talentSeen)) return false;
+        for (auto& city:loaded.cities) {
+            city.prisoners=r.get();
+            if (city.prisoners>armyLimit) return false;
+        }
+        auto readDetention=[&](Detention& person) {
+            const int status=r.get();
+            person={(status&255)-1,status>>8};
+            return person.city<cityCount && (person? !loaded.own(person.city) &&
+                person.since>0 && person.since<=loaded.turn:!person.since);
+        };
+        for (int slot=0;slot<newTalentFirst;++slot)
+            if (!readDetention(loaded.detained[slot])) return false;
+        for (size_t i=0;i<loaded.prisoners.size();++i) {
+            auto& person=loaded.prisoners[i];
+            if (i) person=r.captive();
+            const int status=r.get();
+            person.since=status&255;
+            person.offered=status>>8;
+        }
+        for (size_t i=1;i<loaded.guests.size();++i) loaded.guests[i]=r.captive();
+        if constexpr (Version>=11) {
+            for (int slot=newTalentFirst;slot<(Version>=12?commanderSlots:rulerSlot);++slot)
+                if (!readVeteran(loaded.generals[slot]) || !readDetention(loaded.detained[slot])) return false;
+        }
+    } else if (loaded.prisoners[0]) {
+        loaded.prisoners[0].since=loaded.turn;
+    }
+    if constexpr (Version>=12) {
+        for (int item=legacyGearCount;item<noGear;++item) {
+            loaded.stock[item]=r.get();
+            if (loaded.stock[item]>stockLimit) return false;
+        }
+        for (auto& person:loaded.generals)
+            for (int category=0;category<gearSlotCount;++category) {
+                const int item=r.get();
+                if (item>noGear || (item!=noGear && gearSpecs[item].slot!=category)) return false;
+                person.kit[category]=Gear(item);
+            }
+    } else if (loaded.player==0) {
+        loaded.generals[rulerSlot].kit[armsSlot]=twinJian;
+    }
+    if constexpr (Version>=13) {
+        for (int side=0;side<3;++side) {
+            const int duration=r.get();
+            if (duration>allianceSeasons || (duration && (side==loaded.player || loaded.truce[side]))) return false;
+            loaded.alliance[side]=duration;
+        }
+    }
+    if constexpr (Version>=14) {
+        loaded.alliedRequest={r.get()-1,r.get()-1};
+        auto& report=loaded.alliedReport;
+        report.request={r.get()-1,r.get()-1};
+        const int outcome=r.get();
+        auto validRequest=[&](AlliedRequest request) {
+            return request?request.side<3 && request.side!=loaded.player &&
+                request.target>=0 && request.target<cityCount:request.target==-1;
+        };
+        if (!validRequest(loaded.alliedRequest) || !validRequest(report.request) ||
+            outcome>int(AlliedOutcome::captured) || bool(outcome)!=bool(report.request)) return false;
+        report.outcome=AlliedOutcome(outcome);
+        if (loaded.alliedRequest) {
+            const auto request=loaded.alliedRequest;
+            const auto order=loaded.orders[request.side];
+            if (!loaded.allied(request.side) || report.request || (order && order.to!=request.target))
+                return false;
+        }
+    }
+    if constexpr (Version>=15) {
+        loaded.marchBase=r.get()-1;
+        if (loaded.marchBase>=cityCount) return false;
+        for (int first=0;first<cityCount;first+=8) {
+            const int policies=r.get();
+            for (int i=0;i<8;++i) {
+                const int policy=(policies>>(i*2))&3;
+                const int city=first+i;
+                if (policy>int(CityPolicy::garrison) || (policy && !loaded.own(city))) return false;
+                if (city<cityCount) loaded.cities[city].policy=CityPolicy(policy);
+            }
+        }
+    }
+    bool found[3][officerCount]{};
+    auto validCaptive=[&](const Captive& p,bool visiting) {
+        if (!p) return p.side==-1 && p.officer==-1 && p.city==-1 && !p.since && !p.offered;
+        if (p.side>=3 || p.side==loaded.player || p.officer<0 || p.officer>=officerCount ||
+            found[p.side][p.officer]) return false;
+        found[p.side][p.officer]=true;
+        if (visiting) return p.city==-1 && !p.since && !p.offered;
+        return loaded.own(p.city) && p.since>0 && p.since<=loaded.turn &&
+            (!p.offered || (p.offered>=p.since && p.offered<=loaded.turn));
     };
-    if (!validCaptive(loaded.prisoner,false) || !validCaptive(loaded.guest,true) ||
-        !loaded.unlocked(loaded.commander) || !r.finish()) return false;
+    for (const auto& p:loaded.prisoners) if (!validCaptive(p,false)) return false;
+    for (const auto& p:loaded.guests) if (!validCaptive(p,true)) return false;
+    if (!loaded.unlocked(loaded.commander) || !r.finish()) return false;
     std::array<bool,cityCount> seatUsed{},targeted{};
     std::array<bool,commanderSlots> leading{};
     for (int slot=0;slot<commanderSlots;++slot) {
         const auto station=loaded.generals[slot].station;
+        if (loaded.held(slot) && (!loaded.unlocked(slot) || station>=0)) return false;
         if (station<0) continue;
         if (seatUsed[station] || !loaded.unlocked(slot)) return false;
         seatUsed[station]=true;
     }
     for (const auto& unit:loaded.columns) if (unit) {
         if (leading[unit.leader] || targeted[unit.road.to] || !loaded.unlocked(unit.leader) ||
-            loaded.generals[unit.leader].station>=0) return false;
+            loaded.generals[unit.leader].station>=0 || loaded.held(unit.leader)) return false;
         leading[unit.leader]=true;
         targeted[unit.road.to]=true;
     }
@@ -221,6 +378,24 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     return true;
 }
 inline bool decode(const Save& bytes,Campaign& campaign) {
+    return decodeCampaign<15,cityCount>(bytes,campaign);
+}
+inline bool migrate(const FourteenthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<14,cityCount>(bytes,campaign);
+}
+inline bool migrate(const ThirteenthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<13,cityCount>(bytes,campaign);
+}
+inline bool migrate(const TwelfthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<12,cityCount>(bytes,campaign);
+}
+inline bool migrate(const EleventhSave& bytes,Campaign& campaign) {
+    return decodeCampaign<11,cityCount>(bytes,campaign);
+}
+inline bool migrate(const TenthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<10,cityCount>(bytes,campaign);
+}
+inline bool migrate(const NinthSave& bytes,Campaign& campaign) {
     return decodeCampaign<9,cityCount>(bytes,campaign);
 }
 inline bool migrate(const EighthSave& bytes,Campaign& campaign) {
@@ -282,6 +457,12 @@ inline bool restoreSave(const Save& data,size_t size,Campaign& campaign) {
     };
     switch (size) {
         case Save{}.size():return decode(data,campaign);
+        case FourteenthSave{}.size():return older(FourteenthSave{});
+        case ThirteenthSave{}.size():return older(ThirteenthSave{});
+        case TwelfthSave{}.size():return older(TwelfthSave{});
+        case EleventhSave{}.size():return older(EleventhSave{});
+        case TenthSave{}.size():return older(TenthSave{});
+        case NinthSave{}.size():return older(NinthSave{});
         case EighthSave{}.size():return older(EighthSave{});
         case SeventhSave{}.size():return older(SeventhSave{});
         case SixthSave{}.size():return older(SixthSave{});

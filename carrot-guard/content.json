@@ -1,0 +1,625 @@
+{
+  "themes": [
+    {
+      "id": 0,
+      "label": "theme0",
+      "name": "花晴原野",
+      "road": [
+        "#7eaa55",
+        "#bc994e",
+        "#f3cf83",
+        "#ffe4a4"
+      ]
+    },
+    {
+      "id": 1,
+      "label": "theme1",
+      "name": "蘑菇秘境",
+      "road": [
+        "#64678d",
+        "#a48baf",
+        "#d8b8dc",
+        "#f2dcdf"
+      ]
+    },
+    {
+      "id": 2,
+      "label": "theme2",
+      "name": "荷塘寻宝",
+      "road": [
+        "#539b96",
+        "#91bfa8",
+        "#d3e2b1",
+        "#f4edc2"
+      ]
+    },
+    {
+      "id": 3,
+      "label": "theme3",
+      "name": "沙丘绿洲",
+      "road": [
+        "#b48e5d",
+        "#cb9b5c",
+        "#ebc582",
+        "#ffe3a6"
+      ]
+    },
+    {
+      "id": 4,
+      "label": "theme4",
+      "name": "冰雪乐园",
+      "road": [
+        "#789db6",
+        "#9cc5dc",
+        "#d5ecf2",
+        "#f1fbff"
+      ]
+    },
+    {
+      "id": 5,
+      "label": "theme5",
+      "name": "糖果王国",
+      "road": [
+        "#bc8b9d",
+        "#daa5a9",
+        "#f4cdb7",
+        "#ffe9cf"
+      ]
+    }
+  ],
+  "levels": [
+    {
+      "map": 0,
+      "theme": 0,
+      "mode": 0,
+      "waves": 6,
+      "coins": 440,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "title": "花晴原野·1"
+    },
+    {
+      "map": 1,
+      "theme": 0,
+      "mode": 1,
+      "waves": 6,
+      "coins": 440,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 3,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "title": "花晴原野·2"
+    },
+    {
+      "map": 2,
+      "theme": 0,
+      "mode": 4,
+      "waves": 7,
+      "coins": 440,
+      "boss": 3,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4
+      ],
+      "title": "花晴原野·3"
+    },
+    {
+      "map": 3,
+      "theme": 1,
+      "mode": 2,
+      "waves": 7,
+      "coins": 475,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "title": "蘑菇秘境·1"
+    },
+    {
+      "map": 4,
+      "theme": 1,
+      "mode": 3,
+      "waves": 7,
+      "coins": 555,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "title": "蘑菇秘境·2"
+    },
+    {
+      "map": 5,
+      "theme": 1,
+      "mode": 4,
+      "waves": 8,
+      "coins": 475,
+      "boss": 10,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5
+      ],
+      "title": "蘑菇秘境·3"
+    },
+    {
+      "map": 6,
+      "theme": 2,
+      "mode": 1,
+      "waves": 8,
+      "coins": 510,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 3,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "title": "荷塘寻宝·1"
+    },
+    {
+      "map": 7,
+      "theme": 2,
+      "mode": 5,
+      "waves": 8,
+      "coins": 510,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "title": "荷塘寻宝·2"
+    },
+    {
+      "map": 8,
+      "theme": 2,
+      "mode": 4,
+      "waves": 9,
+      "coins": 510,
+      "boss": 11,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        4,
+        5,
+        6
+      ],
+      "title": "荷塘寻宝·3"
+    },
+    {
+      "map": 9,
+      "theme": 3,
+      "mode": 3,
+      "waves": 9,
+      "coins": 625,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "title": "沙丘绿洲·1"
+    },
+    {
+      "map": 10,
+      "theme": 3,
+      "mode": 1,
+      "waves": 9,
+      "coins": 545,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 3,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "title": "沙丘绿洲·2"
+    },
+    {
+      "map": 11,
+      "theme": 3,
+      "mode": 4,
+      "waves": 10,
+      "coins": 545,
+      "boss": 12,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        5,
+        6,
+        7
+      ],
+      "title": "沙丘绿洲·3"
+    },
+    {
+      "map": 12,
+      "theme": 4,
+      "mode": 5,
+      "waves": 10,
+      "coins": 580,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        6,
+        7,
+        8
+      ],
+      "title": "冰雪乐园·1"
+    },
+    {
+      "map": 13,
+      "theme": 4,
+      "mode": 1,
+      "waves": 10,
+      "coins": 580,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 3,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        6,
+        7,
+        8
+      ],
+      "title": "冰雪乐园·2"
+    },
+    {
+      "map": 14,
+      "theme": 4,
+      "mode": 4,
+      "waves": 11,
+      "coins": 580,
+      "boss": 13,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        6,
+        7,
+        8
+      ],
+      "title": "冰雪乐园·3"
+    },
+    {
+      "map": 15,
+      "theme": 5,
+      "mode": 2,
+      "waves": 11,
+      "coins": 615,
+      "boss": -1,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9
+      ],
+      "title": "糖果王国·1"
+    },
+    {
+      "map": 16,
+      "theme": 5,
+      "mode": 6,
+      "waves": 11,
+      "coins": 615,
+      "boss": -1,
+      "time_limit": 220,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9
+      ],
+      "title": "糖果王国·2"
+    },
+    {
+      "map": 17,
+      "theme": 5,
+      "mode": 4,
+      "waves": 12,
+      "coins": 615,
+      "boss": 14,
+      "time_limit": 0,
+      "chests": 1,
+      "enemy_pool": [
+        0,
+        1,
+        2,
+        7,
+        8,
+        9
+      ],
+      "title": "糖果王国·3"
+    }
+  ],
+  "towers": [
+    {
+      "name": "糖果炮",
+      "label": "pea_name",
+      "icon": "pea",
+      "cost": 90,
+      "upgrade": 100,
+      "damage": 24,
+      "cooldown": 0.68,
+      "range": 112,
+      "unlock": 0,
+      "color": 15639402
+    },
+    {
+      "name": "冰晶塔",
+      "label": "ice_name",
+      "icon": "ice",
+      "cost": 130,
+      "upgrade": 115,
+      "damage": 11,
+      "cooldown": 0.95,
+      "range": 100,
+      "unlock": 0,
+      "color": 7460079
+    },
+    {
+      "name": "烟花炮",
+      "label": "sun_name",
+      "icon": "sun",
+      "cost": 180,
+      "upgrade": 155,
+      "damage": 51,
+      "cooldown": 1.55,
+      "range": 112,
+      "unlock": 0,
+      "color": 16763218
+    },
+    {
+      "name": "回旋镖",
+      "label": "dart_name",
+      "icon": "dart",
+      "cost": 150,
+      "upgrade": 125,
+      "damage": 30,
+      "cooldown": 0.9,
+      "range": 136,
+      "unlock": 3,
+      "color": 7260320
+    },
+    {
+      "name": "雷电球",
+      "label": "tesla_name",
+      "icon": "tesla",
+      "cost": 200,
+      "upgrade": 155,
+      "damage": 33,
+      "cooldown": 1.1,
+      "range": 116,
+      "unlock": 6,
+      "color": 12883184
+    },
+    {
+      "name": "熔岩炮",
+      "label": "bomb_name",
+      "icon": "bomb",
+      "cost": 230,
+      "upgrade": 175,
+      "damage": 70,
+      "cooldown": 1.9,
+      "range": 118,
+      "unlock": 9,
+      "color": 16418657
+    }
+  ],
+  "enemies": [
+    {
+      "sprite": "slime",
+      "hp": 1,
+      "speed": 32,
+      "reward": 11,
+      "armor": 0,
+      "boss": false,
+      "faces_right": true
+    },
+    {
+      "sprite": "rabbit",
+      "hp": 0.75,
+      "speed": 49,
+      "reward": 13,
+      "armor": 0,
+      "boss": false,
+      "faces_right": true
+    },
+    {
+      "sprite": "beetle",
+      "hp": 2.3,
+      "speed": 24,
+      "reward": 24,
+      "armor": 0.28,
+      "boss": false,
+      "faces_right": true
+    },
+    {
+      "sprite": "boss",
+      "hp": 9,
+      "speed": 18,
+      "reward": 150,
+      "armor": 0,
+      "boss": true,
+      "faces_right": true
+    },
+    {
+      "sprite": "bat",
+      "hp": 0.85,
+      "speed": 53,
+      "reward": 14,
+      "armor": 0,
+      "boss": false,
+      "faces_right": true
+    },
+    {
+      "sprite": "snail",
+      "hp": 2.8,
+      "speed": 22,
+      "reward": 28,
+      "armor": 0.5,
+      "boss": false,
+      "faces_right": false
+    },
+    {
+      "sprite": "spiky",
+      "hp": 1.6,
+      "speed": 30,
+      "reward": 20,
+      "armor": 0,
+      "boss": false,
+      "faces_right": false
+    },
+    {
+      "sprite": "bee",
+      "hp": 0.65,
+      "speed": 61,
+      "reward": 12,
+      "armor": 0,
+      "boss": false,
+      "faces_right": false
+    },
+    {
+      "sprite": "snowpuff",
+      "hp": 1.7,
+      "speed": 31,
+      "reward": 23,
+      "armor": 0,
+      "boss": false,
+      "faces_right": false
+    },
+    {
+      "sprite": "imp",
+      "hp": 1.25,
+      "speed": 38,
+      "reward": 20,
+      "armor": 0,
+      "boss": false,
+      "faces_right": false
+    },
+    {
+      "sprite": "moth",
+      "hp": 10,
+      "speed": 20,
+      "reward": 170,
+      "armor": 0,
+      "boss": true,
+      "faces_right": true
+    },
+    {
+      "sprite": "crabking",
+      "hp": 12,
+      "speed": 17,
+      "reward": 180,
+      "armor": 0.22,
+      "boss": true,
+      "faces_right": true
+    },
+    {
+      "sprite": "scorpion",
+      "hp": 11,
+      "speed": 21,
+      "reward": 190,
+      "armor": 0,
+      "boss": true,
+      "faces_right": false
+    },
+    {
+      "sprite": "yeti",
+      "hp": 14,
+      "speed": 18,
+      "reward": 200,
+      "armor": 0.15,
+      "boss": true,
+      "faces_right": true
+    },
+    {
+      "sprite": "candyking",
+      "hp": 16,
+      "speed": 20,
+      "reward": 250,
+      "armor": 0.18,
+      "boss": true,
+      "faces_right": true
+    }
+  ],
+  "modes": [
+    "标准防守",
+    "寻宝挑战",
+    "怪物狂潮",
+    "装甲突围",
+    "首领决战",
+    "极速追击",
+    "限时保卫"
+  ]
+}

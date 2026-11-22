@@ -22,7 +22,8 @@
    auto ballast=lit?rgb(70,73,68):rgb(40,48,45);
    auto sleeper=lit?rgb(111,88,67):rgb(58,50,42);
    auto steel=lit?rgb(145,151,147):rgb(72,83,80);
-   quad(r,p,.35f,.51f,0,ballast);
+   auto corner=[&](float x,float y){return Pt{std::round(q.x+(x-y)*20*zoom),std::round(q.y+(x+y)*10*zoom)};};
+   r.poly({corner(-.35f,-.51f),corner(.35f,-.51f),corner(.35f,.51f),corner(-.35f,.51f)},ballast);
    for(float t:{-.33f,0.f,.33f})wire(r,{p.x-.31f,p.y+t},{p.x+.31f,p.y+t},0,sleeper);
    for(float t:{-.20f,.20f})wire(r,{p.x+t,p.y-.5f},{p.x+t,p.y+.5f},1,steel);
    return;

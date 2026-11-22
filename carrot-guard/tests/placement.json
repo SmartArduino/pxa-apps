@@ -1,0 +1,122 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 289
+    },
+    {
+      "name": "dismiss-guide",
+      "action": "tap",
+      "x": 155,
+      "y": 408
+    },
+    {
+      "name": "new-land",
+      "action": "tap",
+      "x": 150,
+      "y": 179
+    },
+    {
+      "name": "all-land-grid",
+      "action": "screenshot"
+    },
+    {
+      "name": "candy",
+      "action": "tap",
+      "x": 80,
+      "y": 430
+    },
+    {
+      "name": "close-candy",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "new-land-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "near-obstacle",
+      "action": "tap",
+      "x": 210,
+      "y": 269
+    },
+    {
+      "name": "firework",
+      "action": "tap",
+      "x": 350,
+      "y": 430
+    },
+    {
+      "name": "close-firework",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "focus-obstacle",
+      "action": "tap",
+      "x": 240,
+      "y": 269
+    },
+    {
+      "name": "obstacle-target",
+      "action": "screenshot"
+    },
+    {
+      "name": "attack-obstacle",
+      "action": "tap",
+      "x": 330,
+      "y": 430
+    },
+    {
+      "name": "clear-wait",
+      "action": "wait",
+      "ms": 4000
+    },
+    {
+      "name": "cleared-land",
+      "action": "screenshot"
+    },
+    {
+      "name": "reclaimed-cell",
+      "action": "tap",
+      "x": 240,
+      "y": 269
+    },
+    {
+      "name": "ice",
+      "action": "tap",
+      "x": 205,
+      "y": 430
+    },
+    {
+      "name": "reclaimed-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-ice",
+      "action": "tap",
+      "x": 450,
+      "y": 430
+    },
+    {
+      "name": "wave",
+      "action": "tap",
+      "x": 380,
+      "y": 430
+    },
+    {
+      "name": "combat-wait",
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "name": "turning-turrets",
+      "action": "screenshot"
+    }
+  ]
+}

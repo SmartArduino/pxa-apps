@@ -22,27 +22,31 @@ struct Rect {
 };
 enum Action : unsigned {None,Search,Settings,Plan,Demo,Locate,Plus,Minus,Overview,Start,Book,Back,Swap,
     SelectStart,SelectEnd,Walk,Bike,Drive,Save,MapSettings,LocationSettings,WifiSource,ForwardSource,
-    Previous,Next,Submit,Clear,CitySettings,ClearField,RetryMap,OpenCompass,CalibrateCompass,SaveCompassCalibration,CancelCompassCalibration,RetryCompass,FirstMagnetometer,SecondMagnetometer,Result0=100};
+    Previous,Next,Submit,Clear,CitySettings,ClearField,RetryMap,OpenCompass,CalibrateCompass,SaveCompassCalibration,CancelCompassCalibration,RetryCompass,FirstMagnetometer,SecondMagnetometer,
+    GoHere,ClearRoute,KeepNavigating,EndNavigation,Food,Fuel,Parking,Result0=100};
 struct Hit {Rect box;unsigned action;};
 struct Layout {
     int w=320,h=240,left=0,top=0,right=0,bottom=0;
     bool compact=true;
-    Rect search,settings,deck,primary,secondary,recenter,zoom_in,zoom_out,book,back;
+    Rect search,settings,deck,primary,secondary,recenter,zoom_in,zoom_out,book,back,map_back;
     int map_h=150;
     void update(int width,int height,Rect safe,bool navigating) {
         w=width;h=height;left=safe.x;top=safe.y;right=w-safe.x-safe.w;bottom=h-safe.y-safe.h;
         compact=safe.h<400;
         const int m=compact?10:16, content=safe.w-2*m;
-        const int deck_h=navigating?(compact?76:116):(compact?90:150);
+        const int deck_h=navigating?(compact?76:116):(compact?90:158);
         deck={left+m,h-bottom-m-deck_h,content,deck_h};
         map_h=deck.y-6;
-        search={left+m,top+m,content-48,compact?40:48};
+        const int search_h=compact?40:48;
+        map_back={left+m,top+m,search_h,search_h};
+        search={map_back.x+map_back.w+8,top+m,content-search_h-56,search_h};
         settings={w-right-m-40,top+m+(compact?0:4),40,40};
-        back={left+m,top+m,36,36};
+        back={left+10,top+10,40,40};
         const int primary_w=compact?std::clamp(content-118,82,110):150;
         primary={deck.x+deck.w-primary_w-12,deck.y+deck.h-48,primary_w,36};
         secondary={deck.x+12,primary.y,compact?58:100,36};
         recenter={w-right-m-38,map_h-66,38,38};
+        if(compact)recenter.x=left+m;
         zoom_in={compact?w-right-m-76:recenter.x,compact?map_h-64:top+88,38,34};
         zoom_out={compact?zoom_in.x+38:zoom_in.x,compact?zoom_in.y:zoom_in.y+34,38,34};
         book={deck.x+12,primary.y,compact||safe.w<360?44:74,36};
@@ -53,8 +57,8 @@ inline std::uint32_t mix(std::uint32_t a,std::uint32_t b,unsigned amount) {
     return out|255;
 }
 struct Palette {
-    std::uint32_t background=0xfff8eaff,surface=0xffffffff,primary=0x20866bff,
-        ink=0x28433fff,muted=0x6a7e77ff,line=0xdfe9e2ff,on_primary=0xffffffff,danger=0xc05b50ff;
+    std::uint32_t background=0xf5f7faff,surface=0xffffffff,primary=0x2563ebff,
+        ink=0x202b3dff,muted=0x738096ff,line=0xe5eaf1ff,on_primary=0xffffffff,danger=0xd95050ff;
     bool dark=false;
 };
 struct Painter {
@@ -126,12 +130,13 @@ struct Painter {
         const int k=std::max(1,s/10),a=s/2;
         if(name=="search"){ring(x-2,y-2,a-4,c,k);line(x+3,y+3,x+a,y+a,c,k);}
         else if(name=="back"){
-            // LV_SYMBOL_LEFT is also used by the system Settings header.
-            pxa_canvas_text_box_role(&frame,x-a,y-a-3,s,s+6,c,
-                PXA_CANVAS_FONT_ICON,PXA_CANVAS_ALIGN_CENTER,
-                PXA_CANVAS_TEXT_ALIGN_MIDDLE,"\xef\x81\x93",3);
+            const int tip=x-a+3,arm=a-4;
+            line(tip,y,x+a-3,y,c,3);
+            line(tip,y,tip+arm,y-arm,c,3);
+            line(tip,y,tip+arm,y+arm,c,3);
         }
         else if(name=="plus"||name=="minus"){line(x-a+3,y,x+a-3,y,c,k);if(name=="plus")line(x,y-a+3,x,y+a-3,c,k);}
+        else if(name=="close"){line(x-5,y-5,x+5,y+5,c,k);line(x-5,y+5,x+5,y-5,c,k);}
         else if(name=="locate"){ring(x,y,a-4,c,k);circle(x,y,2,c);line(x-a,y,x-a+4,y,c,k);line(x+a-4,y,x+a,y,c,k);line(x,y-a,x,y-a+4,c,k);line(x,y+a-4,x,y+a,c,k);}
         else if(name=="compass"){ring(x,y,a-2,c,k);line(x-3,y+4,x+3,y-5,c,2);circle(x+3,y-5,2,c);}
         else if(name=="settings"){ring(x,y,4,c,k);for(int i=0;i<8;++i){double t=i*3.14159265/4;line(x+int(std::cos(t)*7),y+int(std::sin(t)*7),x+int(std::cos(t)*10),y+int(std::sin(t)*10),c,3);}}
@@ -145,7 +150,7 @@ struct Painter {
             else {line(x-sign*5,y+a-2,x-sign*5,y-5,c,3);line(x-sign*5,y-5,x+sign*8,y-5,c,3);line(x+sign*8,y-5,x+sign*3,y-10,c,3);line(x+sign*8,y-5,x+sign*3,y,c,3);}
         }
     }
-    void icon_button(Rect r,std::string_view name,const Palette& p,unsigned action,bool enabled=true){card(r,p,r.h/2);icon(name,r.x+r.w/2,r.y+r.h/2,enabled?p.ink:p.muted);if(enabled)hit(r,action);}
+    void icon_button(Rect r,std::string_view name,const Palette& p,unsigned action,bool enabled=true){card(r,p,r.h/2);icon(name,r.x+r.w/2,r.y+r.h/2,enabled?p.ink:p.muted,name=="back"?(r.h>=48?28:24):20);if(enabled)hit(r,action);}
     bool present(std::uint32_t node,const pxa_canvas_dirty_rect_t* dirty=nullptr,std::uint8_t count=0,bool force=false){
         if(frame.failed)return false;
         bool equal=!force&&previous_size==frame.length;

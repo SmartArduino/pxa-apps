@@ -14,6 +14,10 @@ int main(int argc,char** argv){if(argc!=3)return 2;std::string_view mode=argv[1]
  else if(mode=="raid-defense"){
   w.init_defense(4);w.wave=2;w.extra.cleared=2;
  }
+ else if(mode=="reef-raid"){
+  w.init_defense(9,Faction::northern,DefenseMap::reef);
+  w.wave=1;w.extra.cleared=1;w.fog.fill(1);w.seen.fill(1);
+ }
  else if(mode=="lighthouse"){
   w.init(lighthouse_chapter,harbor_beacon);
   s.career.unlocked=lighthouse_chapter;s.career.wins=127;s.career.harbor_plan=harbor_beacon;
@@ -47,5 +51,5 @@ int main(int argc,char** argv){if(argc!=3)return 2;std::string_view mode=argv[1]
  else if(mode=="tactics"){w.init(4);w.mission.waypoint.fill(1);w.select_one(5);}
  else if(mode=="squads"){w.init(0);w.select_one(5);w.select_one(6,true);}
  else {w.init((mode=="radio"||mode=="far")?5:std::clamp(std::atoi(argv[1]),0,CHAPTERS-1));if(w.chapter>=harbor_chapter){s.career.unlocked=w.chapter;s.career.wins=(1u<<w.chapter)-1;}if(mode=="far"){for(auto& a:w.e)if(a.kind==relay&&a.p.x<45)a.team=0;}if(mode=="radio"){w.mission.events=1u<<3;w.mission.stage=1;}}
- w.next_wave=mode=="raid-defense"?3:100000;w.reveal_timer=100000;w.power_update();s.checksum=checksum(s);if(!valid_save(s))return 4;FILE* f=std::fopen(argv[2],"wb");if(!f)return 5;bool ok=std::fwrite(&s,1,sizeof s,f)==sizeof s;std::fclose(f);return ok?0:6;
+ w.next_wave=mode=="raid-defense"||mode=="reef-raid"?3:100000;w.reveal_timer=100000;w.power_update();s.checksum=checksum(s);if(!valid_save(s))return 4;FILE* f=std::fopen(argv[2],"wb");if(!f)return 5;bool ok=std::fwrite(&s,1,sizeof s,f)==sizeof s;std::fclose(f);return ok?0:6;
 }

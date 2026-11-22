@@ -122,12 +122,13 @@ def exercise(s, calls):
     s.key('DOWN'); assert s.focus() == '模拟导航'
     s.choose('模拟导航'); s.choose('行程路书'); s.shot('roadbook')
     s.choose('下一段'); s.choose('上一段'); s.choose('返回')
-    s.choose('结束导航'); s.choose('放大地图'); s.choose('缩小地图')
+    s.choose('结束导航'); s.choose('结束导航'); s.choose('放大地图'); s.choose('缩小地图')
     s.choose('路线全览'); s.choose('搜索地点')
     s.choose('[文本输入]', False)
     s.command('TEXT 114.050000,22.540000'); time.sleep(.2)
     s.choose('搜索'); time.sleep(.3)
     s.choose('114.050000,22.540000')
+    s.choose('去这里')
     s.choose('选择起点'); s.choose('[文本输入]', False)
     s.command('TEXT 114.050000,22.540000'); time.sleep(.2); s.choose('搜索')
     s.choose('114.050000,22.540000')
@@ -143,7 +144,7 @@ def exercise(s, calls):
     s.wait(lambda: any(path.startswith('/v5/direction/') for path, _ in calls)); time.sleep(.5)
     request = next(query for path, query in calls if path.startswith('/v5/direction/'))
     assert request['destination'] == ['114.054040,22.542000'], request
-    s.shot('route-preview'); s.choose('开始导航'); s.choose('结束导航')
+    s.shot('route-preview'); s.choose('开始导航'); s.choose('结束导航'); s.choose('结束导航')
     s.choose('偏好设置'); s.choose('搜索城市'); s.choose('[文本输入]')
     s.wait(lambda: s.focus().startswith('[键盘]')); s.shot('system-ime')
     # Enter actual letters through the native keyboard using the same 3 keys.

@@ -29,7 +29,7 @@ struct GroundTexture {
    out[x]=palette[(src[sample/2]>>((sample&1)*4))&15];
   }
  }
- void paint(Raster& r,int width,int top,int bottom,float camx,float camy,float zoom,int side=N)const{float cx=width*.5f-camx,cy=top+(bottom-top)*.5f-camy;for(int y=top;y<bottom;++y){float dy=(y+.5f-cy)/(10*zoom),lo=std::max(-dy,dy-2*side),hi=std::min(dy,2*side-dy);if(lo<hi)span(r,int(std::ceil(cx+20*zoom*lo)),int(std::ceil(cx+20*zoom*hi)),y);}}
+ void paint(Raster& r,int width,int top,int bottom,float camx,float camy,float zoom,int side=N)const{float cx=width*.5f-camx,cy=top+(bottom-top)*.5f-camy;for(int y=std::max(top,r.clip.y);y<std::min(bottom,r.clip.y+r.clip.h);++y){float dy=(y+.5f-cy)/(10*zoom),lo=std::max(-dy,dy-2*side),hi=std::min(dy,2*side-dy);if(lo<hi)span(r,int(std::ceil(cx+20*zoom*lo)),int(std::ceil(cx+20*zoom*hi)),y);}}
  void dim(Raster& r,Pt p,float zoom)const{int first=std::max(r.clip.y,int(std::floor(p.y-10*zoom))),last=std::min(r.clip.y+r.clip.h,int(std::ceil(p.y+10*zoom)));for(int y=first;y<last;++y){float half=20*zoom*std::max(0.f,1-std::abs((y+.5f-p.y)/(10*zoom)));span(r,int(std::ceil(p.x-half)),int(std::ceil(p.x+half)),y,true);}}
 };
 }

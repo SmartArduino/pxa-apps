@@ -119,13 +119,19 @@ portraits = []
 portrait_size = 50
 portrait_sheets = (("portraits",3,2),("officers",4,3),("veterans",3,3),("wild-talents",3,2))
 portrait_count = sum(columns*rows for _,columns,rows in portrait_sheets)
-for name,columns,rows in portrait_sheets:
+
+
+def portrait_cells(name, columns, rows):
     people=image(name)
     for i in range(columns*rows):
         x, y = i % columns, i // columns
         crop = people.crop((x*people.width//columns, y*people.height//rows,
                             (x+1)*people.width//columns, (y+1)*people.height//rows))
-        crop = ImageOps.fit(crop, (portrait_size,portrait_size), Image.Resampling.LANCZOS)
+        yield ImageOps.fit(crop, (portrait_size,portrait_size), Image.Resampling.LANCZOS)
+
+
+for name,columns,rows in portrait_sheets:
+    for crop in portrait_cells(name,columns,rows):
         index=len(portraits)%20
         if index==0:
             rows_on_page=(min(20,portrait_count-len(portraits))+4)//5
@@ -304,8 +310,9 @@ for enemy in range(2):
             strip.append((march_page,x0,y0,32,28))
         marchers[enemy].append(strip)
 
+# Leave room in the compact renderer's asset cache for march sprites and audio.
 compact_map_tiles = [
-    whole(terrain.crop((x,y,x+256,y+256)).resize((224,224),Image.Resampling.LANCZOS))
+    whole(terrain.crop((x,y,x+256,y+256)).resize((208,208),Image.Resampling.LANCZOS))
     for y in (0,256) for x in (0,256)
 ]
 
@@ -358,6 +365,34 @@ sample = Image.new("RGB", (256*3, 256*((len(color_pages)+2)//3)), (23,25,23))
 for i, page in enumerate(color_pages):
     sample.paste(page, (256*(i%3), 256*(i//3)), page.getchannel("A"))
 palette_source = sample.quantize(colors=255, method=Image.Quantize.MEDIANCUT)
+
+# A typical battle with two portrait sheets has just enough texture slots for
+# the detailed backgrounds when marching and tactical poses share each army page.
+detail_troops=[]
+for side in range(2):
+    march_page=troops[side][0][0][0]
+    tactic_page=tactics[side][0][0][0]
+    combined=Image.new("RGBA",(252,252))
+    combined.paste(pages[march_page],(0,0))
+    combined.paste(pages[tactic_page],(0,126))
+    pages[tactic_page]=combined
+    detail_troops.append([[(tactic_page,x,y,w,h) for _,x,y,w,h in row] for row in troops[side]])
+    tactics[side]=[[(tactic_page,x,y+126,w,h) for _,x,y,w,h in row] for row in tactics[side]]
+
+# Add new portraits after sampling so their colors do not repack existing artwork.
+historical_cells=list(portrait_cells("historical-talents",3,2))
+historical_page=portraits[-1][0]
+existing=len(portraits)%20
+assert existing and existing+len(historical_cells)<=20
+old=pages[historical_page]
+rows=(existing+len(historical_cells)+4)//5
+pages[historical_page]=Image.new("RGBA",(old.width,rows*portrait_size))
+pages[historical_page].paste(old,(0,0))
+for index,cell in enumerate(historical_cells,existing):
+    x,y=portrait_size*(index%5),portrait_size*(index//5)
+    pages[historical_page].paste(cell,(x,y))
+    portraits.append((historical_page,x,y,portrait_size,portrait_size))
+
 # Use the empty corners of the two existing UI atlases. Both are already
 # resident in deployment and battle, including on the compact texture budget.
 mixed=image("mixed-forces")
@@ -426,6 +461,59 @@ for compact,name,w,h,cols,rows in (
     for y in range(0,h,th):
         for x in range(0,w,tw):
             whole(back.crop((x,y,x+tw,y+th)))
+leader_portrait_page=new_page(3*portrait_size,portrait_size)
+for i,face in enumerate(portrait_cells("field-leader-portraits",3,1)):
+    x=i*portrait_size
+    pages[leader_portrait_page].paste(face,(x,0))
+    portraits.append((leader_portrait_page,x,0,portrait_size,portrait_size))
+
+leader_poses=separated_poses(image("field-leaders"),4,3)
+bars=pages[bars_page]
+
+def leader_row(page, poses, size, offset, columns, start, side, recolor=False):
+    width,height=size
+    scale=min((width-2)/max(p.width for p in poses),(height-2)/max(p.height for p in poses))
+    frames=[]
+    for index,pose in enumerate(poses,start):
+        w,h=round(pose.width*scale),round(pose.height*scale)
+        sprite=pose.resize((w,h),Image.Resampling.LANCZOS)
+        if side:
+            sprite=opponent_sprite(sprite) if recolor else ImageOps.mirror(sprite)
+        x,y=index%columns*width,offset+index//columns*height
+        pages[page].paste(sprite,(x+(width-w)//2,y+height-1-h))
+        frames.append((page,x,y,width,height))
+    return frames
+
+
+compact_bars_page=new_page(192,48+4*28)
+compact_hud_bars=[(compact_bars_page,x,y,w,h) for _,x,y,w,h in hud_bars]
+field_leaders=[]
+compact_field_leaders=[]
+for page,columns,w,h,target in ((bars_page,5,44,41,field_leaders),
+                                 (compact_bars_page,6,32,28,compact_field_leaders)):
+    pages[page]=Image.new("RGBA",(columns*w,48+((24+columns-1)//columns)*h))
+    pages[page].paste(bars,(0,0))
+    for side in range(2):
+        target.append([leader_row(page,poses,(w,h),48,columns,12*side+4*row,side,True)
+                       for row,poses in enumerate(leader_poses)])
+
+first_signature_page=len(pages)
+signature_leaders=[]
+for name in ("shu-commanders","three-kingdoms-commanders","veteran-commanders"):
+    for poses in separated_poses(image(name),4,4):
+        page=new_page(4*40,2*40)
+        signature_leaders.append([leader_row(page,poses,(40,40),0,4,4*side,side)
+                                  for side in range(2)])
+
+relic_page=new_page(192,192)
+relics=image("relic-equipment")
+for i in range(9):
+    x,y=(i%3)*64,(i//3)*64
+    sprite=crop_cell(relics,i%3,i//3,3,3)
+    sprite.thumbnail((60,60),Image.Resampling.LANCZOS)
+    pages[relic_page].paste(sprite,(x+(64-sprite.width)//2,y+(64-sprite.height)//2))
+    equipment.append((relic_page,x,y,64,64))
+
 palette = palette_source.getpalette()[:765]
 colors = [0] + [((r>>3)<<11) | ((g>>2)<<5) | (b>>3)
                 for r,g,b in zip(palette[0::3], palette[1::3], palette[2::3])]
@@ -464,6 +552,8 @@ lines = [
     f"inline constexpr int pageCount = {len(pages)};",
     f"inline constexpr int firstFontPage = {first_font_page};",
     f"inline constexpr int firstDetailedPage = {first_detailed_page};",
+    f"inline constexpr int pastDetailedPage = {leader_portrait_page};",
+    f"inline constexpr int firstSignaturePage = {first_signature_page};",
     "struct Backdrop {uint8_t compact,first,columns,rows; uint16_t w,h;};",
     "inline constexpr Backdrop detailedBackdrops[] = {" +
     ",".join("{" + ",".join(map(str,tile)) + "}" for tile in detailed_backdrops) + "};",
@@ -474,14 +564,19 @@ for name,t in (("coverWide",cover_wide),("coverSquare",cover_square),("logo",log
     lines.append(f"inline constexpr Tile {name} = {tile_initializer(t)};")
 for name,tiles in (("mapTiles",map_tiles),("compactMapTiles",compact_map_tiles),("battlefields",battlefields),
                    ("portraits",portraits),("equipment",equipment),
-                   ("outcomes",outcomes),("hudBars",hud_bars),("marchBars",march_bars),("commandIcons",command_icons),
+                   ("outcomes",outcomes),("hudBars",hud_bars),("compactHudBars",compact_hud_bars),
+                   ("marchBars",march_bars),("commandIcons",command_icons),
                    ("mapProps",map_props),("plaques",plaques),("battlePanels",battle_panels),
                    ("windows",windows),("mixedForces",new_sprites)):
     lines.append(f"inline constexpr Tile {name}[{len(tiles)}] = {{" +
                  ",".join(map(tile_initializer,tiles)) + "};")
 for name,dimension,banks in (("troops","[2][3][6]",troops),
+                             ("detailTroops","[2][3][6]",detail_troops),
                              ("tacticTroops","[2][3][6]",tactics),
-                             ("marchers","[2][2][3]",marchers)):
+                             ("marchers","[2][2][3]",marchers),
+                             ("fieldLeaders","[2][3][4]",field_leaders),
+                             ("compactFieldLeaders","[2][3][4]",compact_field_leaders),
+                             ("signatureLeaders",f"[{len(signature_leaders)}][2][4]",signature_leaders)):
     lines.append(f"inline constexpr Tile {name}{dimension} = {{")
     for army in banks:
         lines.append("  {")

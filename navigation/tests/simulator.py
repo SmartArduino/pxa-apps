@@ -68,7 +68,10 @@ with (out/'simulator.log').open('w') as log:
         tap(left+44,deck_y+48 if compact else footer_y);book=shot('book')
         tap(width-right-47,height-bottom-29);page=shot('book-next');assert page!=book,'Roadbook did not advance'
         time.sleep(1);assert shot('book-reading')==page,'Live fixes interrupted manual roadbook reading'
-        back();back();time.sleep(4.3)
+        back();back()
+        dialog_w=min(360,safe_w-32);dialog_h=148 if compact else 174;button_w=(dialog_w-44)//2
+        tap(left+(safe_w-dialog_w)//2+28+button_w+button_w//2,top+(safe_h+dialog_h)//2-34)
+        time.sleep(4.3)
         before=shot('preview');drag(left+safe_w//2,top+78,40,12)
         assert shot('map-dragged')!=before,'Map drag did not change the camera'
         if a.zoom_range:
@@ -83,7 +86,8 @@ with (out/'simulator.log').open('w') as log:
         back()
         tap(left+safe_w//2,top+30);shot('search-empty')
         tap(left+90,top+70);command('TEXT 114.054000,22.542000');tap(width-right-38,top+72);shot('search-coordinate')
-        tap(left+safe_w//2,top+133);shot('plan')
+        tap(left+safe_w//2,top+133);shot('place-detail')
+        tap(primary_x,footer_y);shot('plan')
         tap(width-right-40,top+120) if compact else tap(left+safe_w//2,top+253)
         time.sleep(.5);shot('missing-wifi')
         assert process.poll() is None

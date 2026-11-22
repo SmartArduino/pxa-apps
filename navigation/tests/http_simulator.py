@@ -152,6 +152,8 @@ with (out/'simulator.log').open('w') as log:
         time.sleep(.5);command('SCREENSHOT AFTER_PRESENT','live-progress.png')
         assert calls.count('/v3/assistant/coordinate/convert')==2,'Repeated sample consumed another coordinate-conversion request'
         tap(px,h-48 if compact else py)
+        dw=min(360,w-32);dh=148 if compact else 174;bw=(dw-44)//2
+        tap((w-dw)//2+28+bw+bw//2,(h+dh)//2-34)
         maps=calls.count('/v3/staticmap');center=[v['query']['location'][0] for v in requests if v['path']=='/v3/staticmap'][-1]
         map_hold.set();drag(w//2,80 if compact else 112,30,10)
         until(lambda:map_started.is_set())

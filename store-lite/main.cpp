@@ -97,6 +97,7 @@ struct App {
   unsigned page_index = 0;
   char profile[40]{};
   std::string kind = "", category, sort = "featured", selected_identity;
+  std::string catalog_key;
   store_package_format_t preferred_format = STORE_FORMAT_AUTO;
   State<bool> formats_visible{false}, wasm_selected{false};
   State<std::string> format_label{""};
@@ -116,7 +117,7 @@ struct App {
   void log(std::string_view text) {
     (void)ctx->log().write(LogLevel::info, text);
   }
-  void show(Screen s);
+  void show(Screen s, bool rebuild = false);
   void message(std::string text) {
     notice_visible.set(!text.empty());
     notice.set(std::move(text));
@@ -216,27 +217,20 @@ struct App {
     done();
     co_return Result<void>{};
   }
-  Task<std::string> fetch(std::string address) {
-    if (!permission) {
-      auto p =
-          co_await ctx->permissions().acquire("net.client", PXA_STORE_ORIGIN);
-      if (!p)
-        co_return std::unexpected(p.error());
-      permission = std::move(*p);
-      account.network(permission.handle(), now);
-    }
+  Task<std::string> fetch_once(const std::string &address) {
     // Reuse the streaming transport used by screenshots. Readiness events
     // suspend this task instead of polling the body on clock ticks.
     auto response = co_await ctx->http().get(
         address, permission, {.buffer_bytes = 4096, .header_bytes = 1024,
-                             .max_body_bytes = 65536, .timeout_ms = 20000});
+                             .max_body_bytes = 65536, .timeout_ms = 12000});
     if (!response) {
       log("Lite network error " + std::to_string(int(response.error())));
       co_return std::unexpected(response.error());
     }
     if (response->status_code != 200) {
       log("Lite HTTP status " + std::to_string(response->status_code));
-      co_return std::unexpected(Error::unavailable);
+      co_return std::unexpected(store_retryable_http(response->status_code)
+                                    ? Error::unavailable : Error::protocol_error);
     }
     std::string data;
     if (response->body_length && *response->body_length > 65536)
@@ -253,7 +247,25 @@ struct App {
         co_return std::unexpected(Error::resource_limit);
       data.append(reinterpret_cast<const char *>(chunk.data()), *n);
     }
+    if (response->body_length && data.size() != *response->body_length)
+      co_return std::unexpected(Error::io_error);
     co_return data;
+  }
+  Task<std::string> fetch(std::string address) {
+    if (!permission) {
+      auto p =
+          co_await ctx->permissions().acquire("net.client", PXA_STORE_ORIGIN);
+      if (!p)
+        co_return std::unexpected(p.error());
+      permission = std::move(*p);
+      account.network(permission.handle(), now);
+    }
+    auto result = co_await fetch_once(address);
+    if (!result && store_retryable_network(int32_t(result.error()))) {
+      log("Lite retry interrupted JSON request");
+      result = co_await fetch_once(address);
+    }
+    co_return std::move(result);
   }
   void browse(std::string filter = "app", std::string order = "featured") {
     if (busy)
@@ -261,12 +273,11 @@ struct App {
     kind = std::move(filter);
     sort = std::move(order);
     category.clear();
-    page_index = 0;
-    cursors = {};
     show(Screen::catalog);
-    run(load_catalog());
+    run(load_catalog(0u));
   }
-  bool parse_catalog(std::string_view body) {
+  bool parse_catalog(std::string_view body, uint64_t cursor, unsigned skips,
+                     uint64_t &next) {
     // Parsing is synchronous: keep the large temporary models off the bounded
     // coroutine-frame pool, including when a request is repeated in a loop.
     store_catalog_t result{};
@@ -275,14 +286,31 @@ struct App {
             reinterpret_cast<const uint8_t *>(body.data()), body.size(),
             &result, &types))
       return false;
+    next = cursor;
+    if (!result.count && result.has_more && result.next_cursor != cursor && skips < 4) {
+      next = result.next_cursor;
+      return true;
+    }
     catalog = result;
     // Later pages omit the shared taxonomy; keep the first-page filters.
     if (types.kind_count || types.category_count)
       taxonomy = types;
     return true;
   }
-  Task<void> load_catalog() {
-    loading(catalog.count ? Screen::catalog : Screen::home);
+  Task<void> load_catalog(std::optional<unsigned> target_page = {}) {
+    const unsigned requested_page = target_page.value_or(page_index);
+    const std::string key = kind + "\n" + sort + "\n" + category + "\n" + query.get();
+    if (catalog_key != key) {
+      // A refresh may keep the last successful page; a different search
+      // or filter must not display those rows as its own results.
+      catalog = {};
+      cursors = {};
+      page_index = 0;
+      catalog_key = key;
+      sync_rows();
+    }
+    const bool reset_scroll = !catalog.count || page_index != requested_page;
+    show(Screen::catalog);
     if (!profile[0]) {
       message("当前设备暂不支持在线商城");
       show(Screen::catalog);
@@ -290,7 +318,7 @@ struct App {
       co_return Result<void>{};
     }
     message("正在加载…");
-    auto cursor = cursors[page_index];
+    auto cursor = cursors[requested_page];
     // Compatibility filtering can leave a page empty with a valid next cursor.
     // Bound automatic continuation so a low-memory/older Host reaches usable
     // entries without an unbounded request chain or extra response buffers.
@@ -305,16 +333,18 @@ struct App {
         co_return Result<void>{};
       }
       auto body = co_await fetch(url);
-      if (!body || !parse_catalog(*body)) {
-        message("加载失败，检查网络后重试");
+      uint64_t next;
+      if (!body || !parse_catalog(*body, cursor, skipped, next)) {
+        message(catalog.count ? "更新失败，仍显示已有列表" : "加载失败，检查网络后重试");
         show(Screen::catalog);
         done();
         co_return Result<void>{};
       }
-      if (!catalog.count && catalog.has_more && catalog.next_cursor != cursor && skipped < 4) {
-        cursor = catalog.next_cursor;
+      if (next != cursor) {
+        cursor = next;
         continue;
       }
+      page_index = requested_page;
       cursors[page_index] = cursor;
       break;
     }
@@ -327,7 +357,7 @@ struct App {
     message(catalog.count ? "第 " + std::to_string(page_index + 1) + " 页"
                           : catalog.has_more ? "当前页无兼容项，可继续下一页"
                                              : "暂时没有匹配的应用");
-    show(Screen::catalog);
+    show(Screen::catalog, reset_scroll);
     log("Lite catalog loaded n=" + std::to_string(catalog.count));
     done();
     co_return Result<void>{};
@@ -335,13 +365,12 @@ struct App {
   void page(int delta) {
     if (busy)
       return;
-    if (delta < 0 && page_index)
-      --page_index;
-    else if (delta > 0 && catalog.has_more && page_index + 1 < cursors.size()) {
-      cursors[++page_index] = catalog.next_cursor;
-    } else
-      return;
-    run(load_catalog());
+    if (delta < 0 && page_index) {
+      run(load_catalog(page_index - 1));
+    } else if (delta > 0 && catalog.has_more && page_index + 1 < cursors.size()) {
+      cursors[page_index + 1] = catalog.next_cursor;
+      run(load_catalog(page_index + 1));
+    }
   }
   void filters() {
     if (busy)
@@ -365,9 +394,8 @@ struct App {
       return;
     category =
         index < 0 ? "" : taxonomy.categories[category_indices[index]].value;
-    page_index = 0;
     show(Screen::catalog);
-    run(load_catalog());
+    run(load_catalog(0u));
   }
   void detail(const store_app_t &item) {
     if (busy)
@@ -383,12 +411,12 @@ struct App {
     describe();
     run(load_detail());
   }
-  bool parse_detail(std::string_view body) {
+  bool parse_detail(std::string_view body, store_package_format_t format) {
     store_app_t item{};
     store_gallery_t pictures{};
     if (!store_json_parse_app_detail(reinterpret_cast<const uint8_t *>(body.data()), body.size(), &item, &pictures) ||
         identity(item) != selected_identity ||
-        (preferred_format != STORE_FORMAT_AUTO && item.package_format != preferred_format)) return false;
+        (format != STORE_FORMAT_AUTO && item.package_format != format)) return false;
     selected = item;
     gallery = pictures;
     return true;
@@ -396,7 +424,7 @@ struct App {
   Task<void> load_detail() {
     primary_enabled.set(false);
     operation_error_visible.set(false);
-    loading(detail_from);
+    message("正在加载详情…");
     char url[512];
     if (!store_client_build_variant_url(url, sizeof url, profile,
                                          selected.app_id,
@@ -407,7 +435,7 @@ struct App {
       co_return Result<void>{};
     }
     auto body = co_await fetch(url);
-    if (body && parse_detail(*body)) {
+    if (body && parse_detail(*body, preferred_format)) {
       selected_identity = identity(selected);
       message("");
       describe();
@@ -460,6 +488,33 @@ struct App {
   Task<void> install(bool only_download = false) {
     operation_error_visible.set(false);
     loading(Screen::detail);
+    message("正在获取最新安装信息…");
+    // A detail page may have been open longer than its signed download URL.
+    // Pin the presented format and don't silently switch the release.
+    const auto format = static_cast<store_package_format_t>(selected.package_format);
+    const auto sequence = selected.release_sequence;
+    char detail_url[512];
+    if (!store_client_build_variant_url(detail_url, sizeof detail_url, profile,
+            selected.app_id, selected.lineage_root_key_id, "", format)) {
+      message("应用身份不完整");
+      show(Screen::detail);
+      done();
+      co_return Result<void>{};
+    }
+    auto fresh = co_await fetch(detail_url);
+    if (!fresh || !parse_detail(*fresh, format)) {
+      message("无法更新安装信息，请检查网络后重试");
+      show(Screen::detail);
+      done();
+      co_return Result<void>{};
+    }
+    if (selected.release_sequence != sequence) {
+      describe();
+      message("商城已有新版本，请核对后再次选择安装");
+      show(Screen::detail);
+      done();
+      co_return Result<void>{};
+    }
     message(only_download ? "正在准备下载…" : "等待系统确认安装…");
     if (selected.publisher_binding[0]) {
       std::array<uint8_t, 396> binding{};
@@ -879,10 +934,9 @@ struct App {
       return;
     if (search_input.mounted())
       (void)search_input.hide_keyboard();
-    page_index = 0;
     category.clear();
     show(Screen::catalog);
-    run(load_catalog());
+    run(load_catalog(0u));
   }
   void back() {
     if (screen == Screen::loading) {
@@ -1003,10 +1057,10 @@ auto Route::view() {
       .enabled(app->ready);
 }
 
-void App::show(Screen s) {
+void App::show(Screen s, bool rebuild) {
   const bool changed = screen != s;
   screen = s;
-  if (changed || !navigation_.depth()) {
+  if (changed || rebuild || !navigation_.depth()) {
     auto result = navigation_.replace<Route>(this);
     // Several state transitions may coalesce before the next UI flush.
     // Every route reads the latest App state when it mounts.

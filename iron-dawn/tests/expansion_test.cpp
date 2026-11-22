@@ -14,6 +14,6 @@ int main(){
  {World w;w.init_defense(5);assert(w.research_start(1));for(auto& a:w.e)if(a.kind==factory)a.hp=0;w.power_update();w.research_tick(10);assert(w.extra.research_left==16);w.add(factory,0,{7,5});w.power_net=-10;w.research_tick(10);assert(w.extra.research_left==11.5f);w.power_net=0;w.research_tick(12);assert(w.extra.damage==1&&!w.extra.research);}
  // Released V4–V6 binary fixtures and in-place migration: frontier_test.cpp.
 
- {Save s;s.world.init_defense(9);s.world.research_start(2);s.defense_best=7;s.has_run=1;s.checksum=checksum(s);Save d;assert(decode_save(std::as_bytes(std::span{&s,1}),d)&&d.world.extra.research==2&&d.defense_best==7);}
+ {Save s;s.world.init_defense(9);s.world.research_start(2);s.defense_best[0]=7;s.has_run=1;s.checksum=checksum(s);Save d;assert(decode_save(std::as_bytes(std::span{&s,1}),d)&&d.world.extra.research==2&&d.defense_best[0]==7);}
  std::puts("Defense waves/rewards/elite raids, research/cancel/levels, damage/armor and V8 save roundtrip passed");
 }

@@ -1,0 +1,436 @@
+{
+  "doit-gamekit-2": [
+    {
+      "name": "await-title",
+      "action": "wait",
+      "ms": 650
+    },
+    {
+      "name": "title",
+      "action": "screenshot"
+    },
+    {
+      "name": "arrive",
+      "action": "tap",
+      "x": 123,
+      "y": 218
+    },
+    {
+      "name": "tutorial",
+      "action": "screenshot"
+    },
+    {
+      "name": "start-town",
+      "action": "tap",
+      "x": 160,
+      "y": 179
+    },
+    {
+      "name": "town",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-construction",
+      "action": "tap",
+      "x": 38,
+      "y": 226
+    },
+    {
+      "name": "builder-catalog",
+      "action": "screenshot"
+    },
+    {
+      "name": "choose-forge",
+      "action": "tap",
+      "x": 267,
+      "y": 103
+    },
+    {
+      "name": "choose-lot",
+      "action": "tap",
+      "x": 65,
+      "y": 139
+    },
+    {
+      "name": "construction-preview",
+      "action": "screenshot"
+    },
+    {
+      "name": "build-forge",
+      "action": "tap",
+      "x": 182,
+      "y": 226
+    },
+    {
+      "name": "town-forge",
+      "action": "screenshot"
+    },
+    {
+      "name": "open-quests",
+      "action": "tap",
+      "x": 195,
+      "y": 226
+    },
+    {
+      "name": "choose-floor",
+      "action": "tap",
+      "x": 137,
+      "y": 92
+    },
+    {
+      "name": "party",
+      "action": "screenshot"
+    },
+    {
+      "name": "launch-team",
+      "action": "tap",
+      "x": 181,
+      "y": 179
+    },
+    {
+      "name": "expedition-outbound",
+      "action": "screenshot"
+    },
+    {
+      "name": "await-combat",
+      "action": "wait",
+      "ms": 1250
+    },
+    {
+      "name": "combat",
+      "action": "screenshot"
+    },
+    {
+      "name": "finish-expedition",
+      "action": "wait",
+      "ms": 4800
+    },
+    {
+      "name": "expedition-success",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-expedition",
+      "action": "tap",
+      "x": 245,
+      "y": 179
+    },
+    {
+      "name": "leave-quests",
+      "action": "tap",
+      "x": 292,
+      "y": 43
+    },
+    {
+      "name": "open-ledger",
+      "action": "tap",
+      "x": 273,
+      "y": 226
+    },
+    {
+      "name": "open-treasures",
+      "action": "tap",
+      "x": 66,
+      "y": 179
+    },
+    {
+      "name": "secret-treasure",
+      "action": "screenshot"
+    },
+    {
+      "name": "await-save",
+      "action": "wait",
+      "ms": 1100
+    },
+    {
+      "name": "reopen",
+      "action": "relaunch"
+    },
+    {
+      "name": "continue-title",
+      "action": "screenshot"
+    },
+    {
+      "name": "continue-app",
+      "action": "tap",
+      "x": 123,
+      "y": 218
+    },
+    {
+      "name": "restored-town",
+      "action": "screenshot"
+    },
+    {
+      "name": "reopen-ledger",
+      "action": "tap",
+      "x": 273,
+      "y": 226
+    },
+    {
+      "name": "reopen-treasures",
+      "action": "tap",
+      "x": 66,
+      "y": 179
+    },
+    {
+      "name": "restored-treasure",
+      "action": "screenshot"
+    },
+    {
+      "name": "close-treasures",
+      "action": "tap",
+      "x": 292,
+      "y": 43
+    },
+    {
+      "name": "close-ledger",
+      "action": "tap",
+      "x": 292,
+      "y": 43
+    },
+    {
+      "name": "look-at-ridge",
+      "action": "tap",
+      "x": 266,
+      "y": 15
+    },
+    {
+      "name": "terraced-ridge",
+      "action": "screenshot"
+    },
+    {
+      "name": "back-to-town",
+      "action": "tap",
+      "x": 266,
+      "y": 15
+    },
+    {
+      "name": "start-earthwork",
+      "action": "tap",
+      "x": 38,
+      "y": 226
+    },
+    {
+      "name": "ground-tab-for-raise",
+      "action": "tap",
+      "x": 267,
+      "y": 72
+    },
+    {
+      "name": "terrain-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "pick-raise-ground",
+      "action": "tap",
+      "x": 185,
+      "y": 147
+    },
+    {
+      "name": "select-landing",
+      "action": "tap",
+      "x": 129,
+      "y": 160
+    },
+    {
+      "name": "raise-preview",
+      "action": "screenshot"
+    },
+    {
+      "name": "raise-landing",
+      "action": "tap",
+      "x": 184,
+      "y": 226
+    },
+    {
+      "name": "select-plot",
+      "action": "tap",
+      "x": 111,
+      "y": 170
+    },
+    {
+      "name": "raise-plot",
+      "action": "tap",
+      "x": 184,
+      "y": 226
+    },
+    {
+      "name": "raised-pair",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-raising",
+      "action": "tap",
+      "x": 37,
+      "y": 226
+    },
+    {
+      "name": "new-stairs",
+      "action": "tap",
+      "x": 38,
+      "y": 226
+    },
+    {
+      "name": "ground-tab-for-steps",
+      "action": "tap",
+      "x": 267,
+      "y": 72
+    },
+    {
+      "name": "pick-stairs",
+      "action": "tap",
+      "x": 267,
+      "y": 103
+    },
+    {
+      "name": "select-raised-landing",
+      "action": "tap",
+      "x": 129,
+      "y": 144
+    },
+    {
+      "name": "lay-stairs",
+      "action": "tap",
+      "x": 183,
+      "y": 226
+    },
+    {
+      "name": "new-stone-steps",
+      "action": "screenshot"
+    },
+    {
+      "name": "leave-stairs",
+      "action": "tap",
+      "x": 37,
+      "y": 226
+    },
+    {
+      "name": "build-on-raised-land",
+      "action": "tap",
+      "x": 38,
+      "y": 226
+    },
+    {
+      "name": "pick-market",
+      "action": "tap",
+      "x": 185,
+      "y": 147
+    },
+    {
+      "name": "select-raised-lot",
+      "action": "tap",
+      "x": 111,
+      "y": 154
+    },
+    {
+      "name": "build-upper-market",
+      "action": "tap",
+      "x": 183,
+      "y": 226
+    },
+    {
+      "name": "upper-market",
+      "action": "screenshot"
+    },
+    {
+      "name": "await-terrain-save",
+      "action": "wait",
+      "ms": 1400
+    },
+    {
+      "name": "restart-terrace",
+      "action": "relaunch"
+    },
+    {
+      "name": "continue-terrace",
+      "action": "tap",
+      "x": 123,
+      "y": 218
+    },
+    {
+      "name": "restored-terrace",
+      "action": "screenshot"
+    }
+  ],
+  "pai-touch": [
+    {
+      "name": "await-title",
+      "action": "wait",
+      "ms": 650
+    },
+    {
+      "name": "open-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 70
+    },
+    {
+      "name": "start-with-pad",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 70
+    },
+    {
+      "name": "town",
+      "action": "screenshot"
+    },
+    {
+      "name": "cursor",
+      "action": "controller",
+      "buttons": 512,
+      "ms": 70
+    },
+    {
+      "name": "move-cursor",
+      "action": "controller",
+      "buttons": 8,
+      "ms": 70
+    },
+    {
+      "name": "map-selection",
+      "action": "screenshot"
+    },
+    {
+      "name": "exit-cursor",
+      "action": "controller",
+      "buttons": 32,
+      "ms": 70
+    },
+    {
+      "name": "drag-east",
+      "action": "swipe",
+      "x": 214,
+      "y": 96,
+      "x2": 85,
+      "y2": 98,
+      "ms": 260
+    },
+    {
+      "name": "east-terrace",
+      "action": "screenshot"
+    }
+  ],
+  "espp4-a": [
+    {
+      "name": "await-title",
+      "action": "wait",
+      "ms": 650
+    },
+    {
+      "name": "open-game",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 70
+    },
+    {
+      "name": "start",
+      "action": "controller",
+      "buttons": 16,
+      "ms": 70
+    },
+    {
+      "name": "portrait-town",
+      "action": "screenshot"
+    }
+  ]
+}

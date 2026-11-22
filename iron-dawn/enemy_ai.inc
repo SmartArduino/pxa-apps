@@ -84,20 +84,25 @@
   const auto intel=defense?RaidIntel{}:scout_raid();
   const bool aircraft=defense?wave>=6&&wave%3==0:(wave>=2||intel.air)&&ready_count(helipad,1)>0;
   int units=std::min(slots,defense?std::min(12,3+wave):std::min(7,2+wave/2+(chapter==2?1:chapter)));
+  const int ships=naval_raid(wave)?std::min(units,wave>=5?2:1):0;
+  const bool ridge_attack=defense&&defense_map()==DefenseMap::ridge&&wave>=2;
   bool objective=!defense&&(chapter==1||chapter>=3);
   Vec base=base_position();
   int spawned=0;
   for(int j=0;j<units;++j){
    bool wing=j%3==1;
    RaidRole role=objective&&(wing||chapter==1)?RaidRole::intercept:wing&&wave>=2?RaidRole::flank:RaidRole::assault;
-   Vec entry=wave_entry(wave+int(wing&&dual_raid_entry(wave)));
+   bool sailing=j>=units-ships;
+   Vec entry=sailing?naval_entry(wave):wave_entry(wave+int(wing&&dual_raid_entry(wave)));
    int kind=j%3==0?tank:j%3==1?rifle:rocket;
    if(wing&&(intel.air||intel.armor))kind=rocket;
    if(j>0&&kind==tank&&!factory_ready&&chapter>=2)kind=rocket;
    bool siege=heavy&&j%3==0;
    siege|=j==units-1&&(defense?wave>=4:wave>=3||intel.fortified);
+   siege|=ridge_attack&&j==units-1-int(aircraft);
    if(factory_ready&&siege)kind=artillery;
    if(aircraft&&j==units-1)kind=rotorcraft;
+   if(sailing){kind=patrol_boat;role=RaidRole::flank;}
    Vec start=raid_open_point(kind,{entry.x+(j%3)*.65f,entry.y+(j/3)*.65f},entry);
    if(!open_for(kind,start))start=raid_open_point(kind,wave_entry(wave+1),entry);
    if(!open_for(kind,start))continue;
@@ -118,7 +123,10 @@
    if(heavy){a.hp*=1.25f;a.kills=std::max(uint8_t(2),a.kills);}
   }
   if(!spawned){--wave;next_wave=time+3;return;}
-  say(heavy?"侦察：敌军重装部队正在集结！":dual_raid_entry(wave)?"侦察：敌军分两路集结！":"侦察：敌军正在集结！",6);
+  say(ships?"侦察：陆军正向堤道集结，水面也有敌艇。":
+   heavy?"侦察：敌军重装部队正在集结！":
+   ridge_attack?"侦察：山路上有敌军火炮。":
+   dual_raid_entry(wave)?"侦察：敌军分两路集结！":"侦察：敌军正在集结！",6);
  }
 
  void enemy_orders(){
@@ -139,7 +147,7 @@
    auto& a=e[i];
    if(!deployed(a)||!raider(a)||(rallying(a)&&!launch))continue;
    auto role=raid_role(a);
-   Vec point=goals[int(role)];
+   Vec point=a.kind==patrol_boat?naval_objective(base):goals[int(role)];
    Vec desired{point.x+(i%3-1)*.9f,point.y+(i%2?-.7f:.7f)};
    Vec goal=raid_open_point(a.kind,desired,a.p);
    if(!rallying(a)&&distance_squared(goal,a.goal)<.7f*.7f)continue;

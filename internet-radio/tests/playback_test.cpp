@@ -8,7 +8,13 @@ static std::vector<int16_t> delivered;
 static size_t at = 0;
 static unsigned writes = 0;
 static bool retrying = false;
-extern "C" int32_t pxa_call(uint32_t, uint64_t, const uint8_t *, uint32_t) {
+static std::vector<uint8_t> pcm_modes;
+extern "C" int32_t pxa_call(uint32_t operation, uint64_t, const uint8_t *data,
+                            uint32_t size) {
+  if (operation == (PXA_AUDIO_OPEN_PCM << 16 | PXA_AUDIO_SERVICE)) {
+    assert(size == 16);
+    pcm_modes.push_back(data[13]);
+  }
   return 0;
 }
 extern "C" int32_t pxa_io(uint64_t h, uint32_t operation, uint8_t *data,
@@ -66,6 +72,17 @@ int main(int argc, char **argv) {
   stream_started = last_received = last_pcm = now_ms();
   for (unsigned i = 0; i < 1500; ++i) {
     if (audio_open_token) {
+      if (pcm_modes.size() == 1) {
+        const uint64_t buffered_token = audio_open_token;
+        uint8_t payload[4], event[40];
+        uint32_t size = 0;
+        pxa_store_u32(payload, PXA_STATUS_UNSUPPORTED);
+        assert(pxa_build_message(event, sizeof(event), PXA_AUDIO_SERVICE,
+                                 PXA_AUDIO_OPEN_PCM, buffered_token, payload,
+                                 sizeof(payload), &size));
+        pxa_app_on_event(event, size);
+        assert(audio_open_token && audio_open_token != buffered_token);
+      }
       audio_open_token = 0;
       audio = UINT64_C(0x10000000b);
       audio_ready = true;
@@ -81,6 +98,7 @@ int main(int argc, char **argv) {
          compressed_head + compressed_size <= sizeof(compressed) &&
          writes > 400);
   assert(blocked_writes > 20 && want_play);
+  assert(pcm_modes == (std::vector<uint8_t>{1, 0}));
   std::puts("radio: continuous PCM matches baseline across compressed-window "
             "compaction, 20 ms staging and atomic backpressure retries");
 }

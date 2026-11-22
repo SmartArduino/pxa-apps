@@ -1,0 +1,21 @@
+{
+  "music_model": "ACE-Step 1.5 Turbo",
+  "effects_model": "Stable Audio 3 Small SFX",
+  "reference_audio": null,
+  "effects": {
+    "tap": "A single tiny soft wooden button click, friendly cartoon game interface, dry close-up recording, clean silence around the short isolated sound, no music, no voice.",
+    "build": "A single cute wooden toy construction pop and gentle springy plonk, cartoon candy cannon being placed, short satisfying warm impact, dry isolated sound effect, no music, no voice.",
+    "upgrade": "A short cheerful magical rising three note sparkle chime, bright toy bells and a soft twinkle, upgrade success in a cute cartoon game, isolated dry sound effect, no music, no voice.",
+    "sell": "A short soft coin purse jingle and wooden click, selling a tiny toy, dry isolated cheerful cartoon sound effect, no music, no voice.",
+    "coin": "A single bright small golden coin pickup ping with two delicate bell partials, short satisfying metallic twinkle, dry isolated cartoon sound effect, no music, no voice.",
+    "alert": "A short gentle muted wooden descending two note bloop, friendly cartoon unavailable action notification, not harsh or alarming, isolated dry game sound, no music, no voice.",
+    "freeze": "A short bright icy crystalline shimmer burst with tiny ice clinks, magical ice freezing spell in a cute cartoon game, isolated clean sound effect, no music, no voice.",
+    "begin": "A short cheerful wooden whistle chirrup and soft bell, friendly cartoon adventure starting signal, isolated clean sound effect, no music, no voice.",
+    "fire": "A single short soft cork pop with a rubbery air puff, small toy candy cannon shooting, cute bouncy cartoon sound effect, dry isolated, no gunfire, no music, no voice.",
+    "ice": "A single tiny crystal ice projectile whoosh and delicate glass clink, short soft cartoon ice tower firing, dry isolated sound effect, no music, no voice.",
+    "firework": "A single short toy firework launch puff followed by tiny cheerful crackles, soft whimsical cartoon game effect, dry isolated, no loud explosion, no music, no voice.",
+    "clear": "A short crumble of tiny pebbles followed by a small magical sparkle, removing a cartoon obstacle, dry close-up isolated sound effect, no music, no voice.",
+    "win": "A short joyful ascending toy bell victory flourish, gentle celebratory marimba and sparkling chime, cute cartoon game success stinger, isolated clean sound, no speech, no singing.",
+    "lose": "A short gentle descending wooden marimba consolation flourish, warm friendly cartoon game retry stinger, not scary, isolated dry sound, no speech, no singing."
+  }
+}

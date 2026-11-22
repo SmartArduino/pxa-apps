@@ -1,0 +1,17 @@
+{
+  "tool": "built-in image_gen",
+  "sources": {
+    "worlds-v1.png": "d0456881d1d16661634ba109aad2ec9d48ba8aaeaf1ab3a89822b685dec8d3c4",
+    "enemies-v1.png": "1cf6cf0a289c6390a4db793584c9459b95fe8c28f72f92f25d8ccfea8406c5a6",
+    "bosses-v1.png": "d97bb267f460f16d95669102ab877eff12457b517f0bc734b08ef191c6b9cd26",
+    "turrets-expansion-v1.png": "4ddc65a598922f51512c65850556041b79f38f06e60da9a1e281742fa1f2dada",
+    "props-v1.png": "425fcce37cf80ad09280118e2b717dbbf0c9ed18a15dc0c0a5b728e6fc57b564",
+    "expansion-labels-v1.png": "6c5b447cadc69a7c0107ef4f05318aca5ab137f02e585463d0f8f953a28767e3",
+    "expansion-help-v1.png": "33cb098269bac60f8d90a3bdea9ebe1936f784cc378a60fb212aebf30ff7d207",
+    "progress-bars-v1.png": "5643448fcde2eb28640bdcf4cad0f96384a86b7072d79c92e5a1638d6dc1e2bb",
+    "upgrade-bases-v1.png": "1a904185db2f16a978cb2ffad14780345524eb439961663434cdc35db25e6566"
+  },
+  "animation_frames": 4,
+  "turret_directions": 32,
+  "processing": "Slice generated poses with shared crops and pivots; rotate turret heads and resize once; alpha palettes, 96-color backgrounds and small UI atlases"
+}

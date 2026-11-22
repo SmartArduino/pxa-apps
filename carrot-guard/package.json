@@ -1,0 +1,95 @@
+{
+  "format": "pxa-package-source-0.2",
+  "id": "pxa-carrot-guard",
+  "name": "萝卜小卫队",
+  "description": "手绘塔防：18 个趣味关卡、6 种解锁炮塔、6 个主题和首领。原创生成场景、角色动画与中文美术字。",
+  "version": "1.1.6",
+  "release_sequence": 14,
+  "icon": "assets/icon.png",
+  "min_sdk": [
+    2,
+    1
+  ],
+  "target_sdk": [
+    2,
+    1
+  ],
+  "compile_sdk": [
+    2,
+    1
+  ],
+  "build": {
+    "system": "cmake",
+    "linear_memory": {
+      "maximum_bytes": 6553600,
+      "pinned": true
+    }
+  },
+  "components": [
+    {
+      "id": "main",
+      "kind": "ui",
+      "cmake_target": "pxa_main",
+      "services": [
+        "clock",
+        "window",
+        {
+          "name": "ui",
+          "min_version": [
+            0,
+            11
+          ]
+        },
+        "log",
+        "storage",
+        "audio",
+        "permission",
+        {
+          "name": "assets",
+          "min_version": [
+            2,
+            0
+          ]
+        },
+        {
+          "name": "surface",
+          "min_version": [
+            0,
+            2
+          ]
+        }
+      ],
+      "wasi": {
+        "version": "preview1",
+        "libc": "wasi-libc",
+        "features": [
+          "monotonic-clock",
+          "wall-clock"
+        ]
+      }
+    }
+  ],
+  "permissions": [
+    {
+      "name": "audio.playback",
+      "required": false,
+      "scope": "media"
+    }
+  ],
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {
+        "id": "touch",
+        "kind": "touch",
+        "complete": true,
+        "requires": {
+          "tap": "tap"
+        },
+        "contacts": 1,
+        "min_width": 240,
+        "min_height": 240
+      }
+    ]
+  }
+}

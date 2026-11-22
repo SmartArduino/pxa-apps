@@ -137,6 +137,25 @@ constexpr Vec island_grid_site{42.5f,33.5f},lighthouse_site{54.5f,16.5f};
 constexpr float lighthouse_hold_seconds=35;
 constexpr unsigned island_grid_radio=10,lighthouse_radio=11;
 enum class GroundMaterial : uint8_t { grass, red_gravel, marsh, scree, asphalt };
+enum class DefenseMap : uint8_t { river, reef, ridge };
+struct DefenseArena {
+ const char* title;
+ const char* terrain_note;
+ int side, credits, first_wave;
+ GroundMaterial material;
+ Vec view, resupply;
+ std::array<Vec,3> entries;
+ const char* orders;
+};
+inline constexpr DefenseArena defense_arenas[]={
+ {"河谷前哨","三处渡口",28,1500,35,GroundMaterial::grass,{8,10},{15,16},
+  {{{23,5},{24,22},{5,24}}},"把坦克放在渡口附近，留一队守矿车。"},
+ {"礁湾海防","堤道与舰艇",48,1850,44,GroundMaterial::marsh,{35,24},{37,33},
+  {{{7,9},{6,22},{8,39}}},"守住西边两条堤道，也给船坞留一支巡逻队。"},
+ {"石岭矿场","山路与炮兵",44,1700,42,GroundMaterial::scree,{23,34},{28,33},
+  {{{6,7},{22,5},{38,10}}},"山脊把来路分开。看清敌军从哪条山路过来，再布置火炮。"},
+};
+constexpr unsigned defense_map_count=std::size(defense_arenas);
 struct CampaignMap {
  int side, credits, first_wave;
  GroundMaterial material;
@@ -168,6 +187,8 @@ struct World {
  void say(const char* s,float duration=5){std::snprintf(notice,sizeof notice,"%s",s);notice_time=duration;}
  bool building(int k)const{return !unit_kind(k);}
  Faction faction(int team=0)const{return faction_for(extra.mode,team);}
+ DefenseMap defense_map()const{return extra.mode&&extra.map_rules?DefenseMap(extra.map_rules-1):DefenseMap::river;}
+ const DefenseArena& arena()const{return defense_arenas[unsigned(defense_map())];}
  const Spec& spec(int kind,int team=0)const{return faction_spec(kind,faction(team));}
  const Spec& spec(const Entity& a)const{return spec(a.kind,a.team);}
  int count(int k,int team=0)const{int n=0;for(auto& a:e)n+=a.hp>0&&a.team==team&&a.kind==k;return n;}
@@ -180,50 +201,22 @@ struct World {
   if(chapter==lighthouse_chapter)mission.harbor_plan=plan;
   init_campaign();
  }
- // Defense keeps its seeded 28-cell battlefield and its separate career.
- void init_defense(uint32_t seed,Faction player=Faction::northern) {
+ void init_defense(uint32_t seed,Faction player=Faction::northern,DefenseMap map=DefenseMap::river){
   new(this) World{};
-  extra.mode = player==Faction::gray_tower?gray_tower_defense:1;
-  extra.map_rules = 1;
-  extra.seed = seed ? seed : 83711;
-  credits = 1500;
-  next_wave = 35;
+  extra.mode=player==Faction::gray_tower?gray_tower_defense:1;
+  extra.map_rules=uint8_t(1+unsigned(map));
+  extra.seed=seed?seed:83711;
+  side=arena().side;
+  credits=arena().credits;
+  next_wave=arena().first_wave;
   terrain.fill(water);
-  // Reproduce the starter deposits used by the published defense seeds.
-  for (int y=0;y<side;++y) for (int x=0;x<side;++x) {
-   random();
-   bool mine=(x>=3&&x<=6&&y>=13&&y<=16)||(x>=19&&x<=22&&y>=6&&y<=9)||(x>=7&&x<=10&&y>=21&&y<=23);
-   if(mine) ore[y*N+x]=180+random()%76;
+  switch(map){
+   case DefenseMap::river:init_river_defense();break;
+   case DefenseMap::reef:init_reef_defense();break;
+   case DefenseMap::ridge:init_ridge_defense();break;
   }
-  for(int y=20;y<=21;++y)for(int x=16;x<=17;++x)ore[y*N+x]=160+unsigned(x*19+y*11)%65;
-  deploy(0, {{hq,{5.5f,8.5f}}, {power,{3.5f,7}}, {refinery,{4,11}}, {barracks,{8,8}},
-             {harvester,{5,12.5f}}, {tank,{8.5f,11}}, {tank,{9.5f,12}}, {rifle,{8,13}}, {rocket,{10.5f,11.5f}}});
-  rng = extra.seed;
-  for (int y=1;y<side-1;++y) for (int x=1;x<side-1;++x) {
-   int c=y*N+x;
-   terrain[c]=ore[c]?ground:(random()%13==0?woodland:ground);
-  }
-  for(int y=1;y<side-1;++y)if(!defense_crossing(y))for(int x=17;x<=18;++x){terrain[y*N+x]=water;ore[y*N+x]=0;}
-  add(factory,0,{7,5});add(power,0,{3,4});add(turret,0,{10,9});
-  add(supply,2,{13,8});add(supply,2,{9,18});add(supply,2,{19,16});
-  for(int y=18;y<21;++y)for(int x=13;x<16;++x)ore[y*N+x]=200+random()%55;
-  build_defense_landscape();
-  say(player==Faction::gray_tower?"灰塔前哨：稳住防线，等待电网恢复。":"苏弥：守住前哨。每次击退敌军，补给队就能靠近。",8);
+  say(arena().orders,8);
   power_update();reveal();
- }
- // Terrain is stored in the existing byte grid; published save prefixes stay intact.
- void build_defense_landscape(){
-  for(int y=2;y<side-2;++y){auto crossing=[&](int row){return defense_crossing(row);};if(crossing(y-1)||crossing(y)||crossing(y+1))continue;for(int side=0;side<2;++side){int x=side?19:16,c=y*N+x;unsigned hash=x*97+y*53+extra.seed;if(hash%4!=0||ore[c]||terrain[c]!=ground)continue;bool occupied=false;for(auto& a:e)if(a.hp>0&&dist(a.p,center(c))<2.5f){occupied=true;break;}if(!occupied)terrain[c]=water;}}
-  auto rocks=[&](int left,int top,int width,int height){for(int y=top;y<top+height;++y)for(int x=left;x<left+width;++x){int c=y*N+x;if(terrain[c]==water||ore[c])continue;bool occupied=false;for(auto& a:e)if(a.hp>0&&dist(a.p,center(c))<2.3f){occupied=true;break;}if(!occupied)terrain[c]=ridge;}};
-  rocks(13,3,2,3);rocks(12,12,2,3);rocks(20,18,2,3);
-  auto paving=[&](int x,int y){if(x<=0||y<=0||x>=side-1||y>=side-1)return;int c=y*N+x;if(!ore[c]&&terrain[c]!=water)terrain[c]=road;};
-  for(int x=2;x<=25;++x)for(int y=9;y<=10;++y)paving(x,y);for(int y=3;y<=25;++y)for(int x=10;x<=11;++x)paving(x,y);
-  for(int x=8;x<=24;++x)for(int y=17;y<=18;++y)paving(x,y);for(int y=9;y<=23;++y)for(int x=20;x<=21;++x)paving(x,y);
-  // Soft woodland patches leave roads, mine cells and building approaches clear.
-  for(Vec patch:{Vec{9,16},Vec{16,6},Vec{23,13},Vec{8,21}})for(int y=int(patch.y)-2;y<=int(patch.y)+2;++y)for(int x=int(patch.x)-2;x<=int(patch.x)+2;++x){int c=y*N+x;Vec p=center(c);if(terrain[c]!=ground||ore[c]||dist(p,patch)>2.2f)continue;bool occupied=false;for(auto& a:e)if(a.hp>0&&building(a.kind)&&dist(a.p,p)<2.4f){occupied=true;break;}if(!occupied)terrain[c]=woodland;}
-  for(int y=1;y<side-1;++y)if(defense_crossing(y))for(int x=17;x<=18;++x)terrain[y*N+x]=bridge,ore[y*N+x]=0;
-  // Forward deposits reward opening a second mine without replacing the safe starter ore.
-  for(int y=20;y<=21;++y)for(int x=16;x<=17;++x){int c=y*N+x;if(terrain[c]==ground||terrain[c]==woodland)ore[c]=160+unsigned(x*19+y*11+chapter*23)%65;}
  }
  bool paved(Vec p)const{return terrain[cell(p)]==road||terrain[cell(p)]==bridge;}
  bool in_cover(const Entity& a)const{return extra.map_rules&&(a.kind<=rocket||a.kind==commander)&&(terrain[cell(a.p)]==woodland||terrain[cell(a.p)]==crater||terrain[cell(a.p)]==ruins);}
@@ -232,24 +225,22 @@ struct World {
   if(!extra.mode&&chapter==harbor_chapter&&mission.stage==harbor_beacon)
    return next%2?Vec{27.5f,9.5f}:Vec{29.5f,47.5f};
   if (authored_map()) return campaign_maps[chapter].entries[(next-1)&1];
-  if (extra.mode) {
-   constexpr Vec edges[]={{23,5},{24,22},{5,24}};
-   return edges[(extra.seed+unsigned(next))%3];
-  }
+  if (extra.mode) return arena().entries[(extra.seed+unsigned(next))%3];
   if (chapter>=3) return next%2?Vec{float(side-5),6}:Vec{float(side-5),float(side-6)};
   return chapter==1?Vec{23,24}:Vec{24,22};
  }
  const char* wave_direction(int next) const {
+  if(naval_raid(next))return "陆路与水路";
   if(dual_raid_entry(next))return "双路";
   auto p=wave_entry(next);
-  if (!authored_map()) return p.x<10?"南路":p.y<10?"东北":"东南";
+  if (!authored_map()&&defense_map()==DefenseMap::river) return p.x<10?"南路":p.y<10?"东北":"东南";
   int east = p.x > side*2.f/3, west = p.x < side/3.f;
   if (p.y < side/3.f) return west?"西北":east?"东北":"北面";
   if (p.y > side*2.f/3) return west?"西南":east?"东南":"南面";
   return west?"西面":east?"东面":"中路";
  }
  GroundMaterial material() const {
-  return authored_map() ? campaign_maps[chapter].material : GroundMaterial::grass;
+  return extra.mode?arena().material:authored_map()?campaign_maps[chapter].material:GroundMaterial::grass;
  }
  bool defense_crossing(int y)const{int first=6+int(extra.seed%2)*2,second=15+int(extra.seed%3);return (y>=first&&y<=first+3)||(y>=second&&y<=second+3)||(y>=23&&y<=25);}
  bool defense_bridge(int x,int y)const{if(x<17||x>18)return false;int first=6+int(extra.seed%2)*2,second=15+int(extra.seed%3);return y==first||y==first+3||y==second||y==second+3||y==23||y==25;}
@@ -266,7 +257,10 @@ struct World {
  }
  void defense_clear(){extra.cleared=wave;int reward=150+25*wave;credits=std::min(10000000,credits+reward);next_wave=time+18;
   int base=nearest({6,9},hq,0);if(base>=0)for(auto& a:e)if(a.hp>0&&a.team==0&&unit_kind(a.kind)&&dist(a.p,e[base].p)<8){if(a.hp<spec(a).hp)a.hp=std::min(float(spec(a).hp),a.hp+spec(a).hp*.12f);blast(a.p,3);}
-  if(wave%3==0){Vec station=wave%2?Vec{15,16}:Vec{18,8};if(open(station)&&add(supply,2,station)>=0)power_update();}
+  if(wave%3==0){
+   Vec station=defense_map()==DefenseMap::river&&wave%2==0?Vec{18,8}:arena().resupply;
+   if(open(station)&&add(supply,2,station)>=0)power_update();
+  }
   char text[120];std::snprintf(text,sizeof text,"第 %d 波已击退！补给 +%d，前哨维修完成",wave,reward);say(text,8);emit_sound(5);
  }
  void power_update(){
@@ -532,6 +526,7 @@ struct World {
 #include "tactical_orders.inc"
 #include "production.inc"
 #include "campaign_map.inc"
+#include "defense_maps.inc"
 #include "frontier.inc"
 #include "harbor.inc"
 #include "lighthouse.inc"

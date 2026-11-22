@@ -83,7 +83,7 @@ int main(){
  head[2]=checksum_bytes(bytes);
  std::memcpy(bytes.data()+8,&head[2],sizeof head[2]);
  assert(decode_save(bytes,restored));
- assert(restored.generation==123&&restored.has_run&&restored.defense_best==42);
+ assert(restored.generation==123&&restored.has_run&&restored.defense_best[0]==42);
  assert(restored.career.unlocked==harbor_chapter&&restored.career.wins==63);
  assert(restored.career.best[5]==90&&restored.career.best[6]==0&&restored.career.easy);
  assert(restored.world.chapter==5&&restored.world.e[ship].kind==landing_craft);

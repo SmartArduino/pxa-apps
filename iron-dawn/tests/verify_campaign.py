@@ -514,6 +514,8 @@ def raid_defense(host):
 def gray_faction(host):
  host.launch()
  host.tap(185,max(214,host.h-128)+64)
+ host.wait_log('screen=10')
+ host.tap(host.w/2,host.h*.30)
  host.wait_log('screen=9')
  host.shot('choose-faction')
  host.tap(host.w/2,host.h*.65)
@@ -574,7 +576,62 @@ def gray_faction(host):
  host.leave()
  return {'faction_selected':True,'built_launch_pad':True,'interceptor_trained_and_flown':True,'faction_and_aircraft_restored':True}
 
+def defense_map(host,reef):
+ host.launch()
+ offset=(host.w-480)//2
+ host.tap(offset+185,max(214,host.h-128)+64)
+ host.wait_log('screen=10')
+ host.shot('choose-battlefield')
+ host.tap(host.w/2,host.h*(.48 if reef else .68))
+ host.wait_log('screen=9')
+ host.shot('choose-faction')
+ host.tap(host.w/3 if host.ww<host.w else host.w/2,host.h*.37)
+ host.shot('briefing')
+ for _ in range(6):
+  host.tap(180,host.h-44)
+  if 'screen=3' in host.log.read_text():break
+ else:raise AssertionError('Defense map did not deploy')
+ host.objective('objective focus x=39.0 y=24.0 side=48' if reef else 'objective focus x=23.0 y=38.0 side=44')
+ host.shot('battlefield')
+ host.pause()
+ state=host.save()
+ assert state[schema['map_rules']]==(2 if reef else 3)
+ assert struct.unpack_from('<i',state,schema['side'])[0]==(48 if reef else 44)
+ host.leave();host.launch();host.resume()
+ assert host.save()[schema['map_rules']]==state[schema['map_rules']]
+ host.pause();host.leave()
+ return {'selected_battlefield':True,'saved_map_restored':True}
+
+def reef_raid(host):
+ host.bootstrap('reef-raid');host.resume()
+ def boats(state):
+  return [at for i in range(100) if state[(at:=schema['entities']+56*i)+50:at+52]==bytes((13,1))
+          and struct.unpack_from('<f',state,at+24)[0]>0]
+ time.sleep(8.6)
+ host.pause()
+ state=host.save(lambda s:len(boats(s))==1)
+ boat=boats(state)[0]
+ order=lambda s:struct.unpack_from('<h',s,boat+schema['target_offset'])[0]
+ position=lambda s:struct.unpack_from('<2f',s,boat)
+ assert order(state)==-305
+ host.leave();host.launch();host.resume()
+ layout=compact_layout(host.w,host.h,host.ph)
+ x,y=position(state)
+ host.tap(host.w-layout.map_size-10+x*layout.map_size/48,layout.status+8+y*layout.map_size/48)
+ time.sleep(3.4)
+ host.shot('naval-wave')
+ host.pause()
+ restored=host.save(lambda s:len(boats(s))==1)
+ assert restored[schema['map_rules']]==2 and order(restored)==-305
+ x2,y2=position(restored)
+ assert (x2-x)**2+(y2-y)**2>.04
+ host.leave()
+ return {'naval_raid_reaches_coast':True,'boat_orders_persist':True}
+
 scenario('gray-faction-small',gray_faction,296,240)
+scenario('reef-defense-small',lambda host:defense_map(host,True),296,240)
+scenario('ridge-defense-wide',lambda host:defense_map(host,False))
+scenario('reef-raid-small',reef_raid,296,240)
 scenario('campaign-wide',campaign)
 scenario('campaign-small',lambda host:campaign(host,3),296,240)
 def legacy_convoy(host):

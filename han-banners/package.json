@@ -2,9 +2,9 @@
   "format": "pxa-package-source-0.2",
   "id": "pxa-han-banners",
   "name": "三国逐城",
-  "version": "1.9.0",
-  "release_sequence": 23,
-  "description": "原创三国策略。三个历史剧本、五十六处城关。六类兵种分路混编，长战场上调兵出招，带冲车或投石车攻破城防。",
+  "version": "2.1.0",
+  "release_sequence": 25,
+  "description": "原创三国策略。任命太守治理城池，结盟借道或请援，再率三路混编军队会战。",
   "icon": "assets/icon.png",
   "min_sdk": [
     2,

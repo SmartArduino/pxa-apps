@@ -1,0 +1,56 @@
+{
+  "source": "OpenAI built-in imagegen",
+  "style": "hand-painted meadow; cream/caramel bespoke game lettering",
+  "sources": {
+    "meadow.png": "c2538b68cbf4a8acaba2d8df5bceb72e0faae59f0aff874878008b76b27090e7",
+    "actors.png": "6fb4f7d7136ea3df92f64e4ab02598e3a238916cffd4621f00283b7ff0d9c22c",
+    "lettering.png": "7d2e7a4e867d9bfaef18090151d23afd89006430a8517f40a2b9c80e47ac9814",
+    "digits.png": "6269d1e257db0b6787a2195b171a279d8e49e192ed8256d541db964b7430529c",
+    "title.png": "eccf2fffba51c5faa994657446a1a568a4175775040efad6a6c8eec05cca7738",
+    "turrets-v2.png": "c10b2df34ed5a3cb6316f5fb85076f0400c5bd44cd28d59495a7b09958f31db0",
+    "turret-labels-v2.png": "a3d8e0f923ab0ec49586d7d68a99217057507fac7db44a72dbb136ec31f13216",
+    "turrets-v3-outlined.png": "610e5b1a7bc22c18d518e1e440cb91b37aeac2bacb7c738f25b1dc5b054a21f0",
+    "ui-digits-v2.png": "07232f9b14e22c223439b3794cfccc6fe24e24ca68d049cc00c271b67e548a4b",
+    "ui-kit-v1.png": "e9c4567d1a69e08a85b14fbd4365bb441bcc8b1ac27d2d61df27e48a1dc49d6f",
+    "ui-controls-v2.png": "8c084714023194b3058ba63e57e3c0fd66fd035f58bc43d0699d23c2a3972c67",
+    "ui-help-v2.png": "8b2b6d63d7175beb7aab3d4962c5e5e477d4df25907eb5d68b591afa4f297cc9",
+    "ui-tower-names-v3.png": "f29619ed90a239f2130d1250347b8c32906503dba1b0d28e04186777f06c53bc",
+    "spawn-sign-v1.png": "5bdad22adca21341ea97b53c4b3cccee06ca55f6f0af9ff6d6deacf1ce5010e2",
+    "worlds-v1.png": "d0456881d1d16661634ba109aad2ec9d48ba8aaeaf1ab3a89822b685dec8d3c4",
+    "enemies-v1.png": "1cf6cf0a289c6390a4db793584c9459b95fe8c28f72f92f25d8ccfea8406c5a6",
+    "bosses-v1.png": "d97bb267f460f16d95669102ab877eff12457b517f0bc734b08ef191c6b9cd26",
+    "turrets-expansion-v1.png": "4ddc65a598922f51512c65850556041b79f38f06e60da9a1e281742fa1f2dada",
+    "expansion-labels-v1.png": "6c5b447cadc69a7c0107ef4f05318aca5ab137f02e585463d0f8f953a28767e3",
+    "props-v1.png": "425fcce37cf80ad09280118e2b717dbbf0c9ed18a15dc0c0a5b728e6fc57b564",
+    "progress-bars-v1.png": "5643448fcde2eb28640bdcf4cad0f96384a86b7072d79c92e5a1638d6dc1e2bb",
+    "expansion-help-v1.png": "33cb098269bac60f8d90a3bdea9ebe1936f784cc378a60fb212aebf30ff7d207",
+    "upgrade-bases-v1.png": "1a904185db2f16a978cb2ffad14780345524eb439961663434cdc35db25e6566"
+  },
+  "animation": {
+    "frames": 4,
+    "frame_ms": 140,
+    "loop": true,
+    "paths": [
+      "assets/walk0.png",
+      "assets/walk1.png",
+      "assets/walk2.png",
+      "assets/walk3.png"
+    ]
+  },
+  "turrets": {
+    "generated_keyframes_per_type": 4,
+    "types": 3,
+    "directions": 32,
+    "frames_per_direction": 4,
+    "head_size": [
+      43,
+      43
+    ],
+    "source": "art/turrets-v3-outlined.png",
+    "labels": "art/turret-labels-v2.png",
+    "processing": "slice generated keyframes, register swivel pivots, rotate uniformly; no invented animation frames",
+    "frame_pattern": "assets/h{type}-{pair:02}.png",
+    "directions_per_strip": 4,
+    "strip_frames": 4
+  }
+}

@@ -45,6 +45,7 @@ constexpr uint64_t WindowSnapshot = UINT64_C(0x4d45444941000001);
 media::Canvas scene;
 media::Decoder decoder;
 media::PcmPacket pcm_packet;
+media::PcmOpen pcm_open;
 music::Lyrics lyrics;
 Track tracks[12], favs[16], queue[16], current, pending_favorite;
 Track discovery[music::MaxTracks], discovery_incoming[music::MaxTracks];
@@ -78,7 +79,6 @@ uint64_t stream = 0, play_token = 0, audio = 0, audio_token = 0,
          commit_token = 0, query_token = 0;
 unsigned rate = 0, channels = 0, pcm_frames = 0, pcm_offset = 0;
 size_t compressed_size = 0, compressed_head = 0;
-bool audio_queue_full = false;
 bool want_play = false, paused = false, audio_ready = false, buffering = true,
      eof = false, exhausted = false, advance = false;
 uint64_t stream_started = 0;
@@ -236,7 +236,6 @@ void reset_audio() {
   compressed_size = compressed_head = 0;
   play_headers = false;
   audio_ready = false;
-  audio_queue_full = false;
   buffering = true;
   eof = exhausted = false;
   decoder.reset();
@@ -258,6 +257,13 @@ void stop() {
   status("已停止");
 }
 void open_player();
+bool open_pcm() {
+  audio_token = ++serial;
+  if (!pcm_open.open(audio_token, audio_permission, rate, channels))
+    return true;
+  audio_token = 0;
+  return false;
+}
 void start_job(Job, const char *);
 void choose(const Track &, bool = false);
 const Track *list(unsigned);
@@ -322,6 +328,8 @@ void toggle() {
     return;
   }
   paused = !paused;
+  if (!paused)
+    last_data = now();
   status(paused ? "已暂停" : buffering ? "正在缓冲…" : "正在播放");
 }
 const Track *list(unsigned n) {
@@ -973,11 +981,8 @@ void pump_player() {
       if (paused || !audio_ready)
         return;
       int n = pcm_packet.write(audio);
-      if (n == PXA_STATUS_WOULD_BLOCK) {
-        audio_queue_full = true;
+      if (n == PXA_STATUS_WOULD_BLOCK)
         return;
-      }
-      audio_queue_full = false;
       if (n < 0) {
         fail("音频输出异常。");
         return;
@@ -1079,11 +1084,8 @@ void pump_player() {
       rate = info.hz;
       channels = info.channels;
       pcm_packet.configure(rate, channels);
-      audio_token = ++serial;
-      if (pxa_audio_open_pcm(audio_token, audio_permission, rate, channels)) {
-        audio_token = 0;
+      if (!open_pcm())
         fail("固件不支持该采样率。");
-      }
       return;
     }
   }
@@ -1187,11 +1189,12 @@ void text_box(int x, int y, int w, int h, uint32_t c, uint8_t role,
                            text, length);
   scene.unclip();
 }
-void render() {
+void render(bool clock_update = false, bool lyrics_changed = false) {
   const auto render_begin = now();
   dirty = false;
   int w = width, h = height, m = scene.margin(w < 280 ? 12 : 16);
   bool compact = h < 210;
+  pxa_canvas_dirty_rect_t lyric_area{};
   scene.begin(w, h, Bg);
   if (w <= 0 || h <= 0) { scene.present(); return; }
   if (view == 4) {
@@ -1209,8 +1212,6 @@ void render() {
     int info_height = std::max(16, h - 84 - y);
     int size = std::max(24, std::min(w / 3, info_height));
     artwork(x, y, size, current.id, true);
-    if (!cover && want_play && !paused && audio_ready)
-      scene.orbit(x + size / 2, y + size / 2, size / 2 - 3, now(), Accent);
     int tx = x + size + 16, tw = w - tx - m;
     int title_height = compact ? std::min(32, std::max(16, info_height - 17)) : 46;
     text_box(tx, y + 1, tw, title_height, pxa_canvas_rgba(Ink),
@@ -1230,7 +1231,9 @@ void render() {
         scene.text(tx, y + 52, tw, message, Muted);
     } else {
       int ly = y + 73;
-      text_box(tx, ly, tw, std::max(17, h - 91 - ly), pxa_canvas_rgba(Accent),
+      int lyric_height = std::max(17, h - 91 - ly);
+      lyric_area = {tx, ly, tw, lyric_height};
+      text_box(tx, ly, tw, lyric_height, pxa_canvas_rgba(Accent),
                PXA_CANVAS_FONT_CAPTION, 0, 0, line, std::strlen(line));
       if (show_status)
         scene.text(m, h - 92, w - 2 * m, message, Muted, 0, 1);
@@ -1239,6 +1242,7 @@ void render() {
     progress(h - 72);
     controls(h - 27);
   } else if (view == 5) {
+    lyric_area = {m, 51, w - 2 * m, h - 125};
     scene.back(20, 20, Ink);
     scene.hit(Back, 0, 0, 40, 39);
     scene.text(43, 9, w - 90, current.name, Ink, 1);
@@ -1297,11 +1301,7 @@ void render() {
     scene.text(m, 12, w - 2 * m, "声屿", Ink, 2);
     scene.text(m + 50, 17, 130, "S O N O R A", Muted);
     if (view == 0) {
-      if (job == Discover) {
-        int angle = (now() / 5) % 360;
-        scene.arc(w - 59, 22, 7, angle, angle + 285, Accent, 2);
-      } else
-        scene.icon("refresh", w - 59, 22, Muted);
+      scene.icon("refresh", w - 59, 22, Muted);
       scene.hit(RefreshDiscovery, w - 78, 1, 36, 40);
     }
     scene.search(w - 22, 23, Ink);
@@ -1341,8 +1341,6 @@ void render() {
       std::snprintf(sub, sizeof(sub), "%s%s", t.artist,
                     t.fee == 1 || t.fee == 4 ? " · 会员" : "");
       scene.text(tx, y + 26, tw, sub, Muted);
-      if (selected && want_play && !paused && audio_ready)
-        scene.activity(w - m - 20, y + 17, now(), Accent);
       scene.line(tx, y + row - 1, w - m - 8, y + row - 1, 0x263142);
       scene.hit(TrackBase + i, m, std::max(top, y), w - 2 * m,
                 std::min(bottom, y + row) - std::max(top, y));
@@ -1373,7 +1371,7 @@ void render() {
                have_current ? current.name : "尚未播放", Ink);
     scene.text(m + 42, h - 22, w - 2 * m - 77,
                have_current
-                   ? (audio_ready && !buffering && !retry_at && !seek_pending
+                   ? (audio_ready && !paused && !buffering && !retry_at && !seek_pending
                           ? current.artist
                           : message)
                : view == 0 ? (discovery_cached ? "上次推荐 · 联网后可刷新"
@@ -1386,8 +1384,23 @@ void render() {
     scene.hit(Play, w - m - 35, h - 45, 42, 44);
   }
   bool fresh = !scene.initialized;
-  if (!scene.present())
+  // Clock updates redraw the progress and changed lyrics without repainting
+  // the album art or transport controls.
+  pxa_canvas_dirty_rect_t damage[] = {{scene.viewport.content.x,
+      scene.viewport.content.y + h - 83, w, 37}, lyric_area};
+  uint8_t damage_count = 0;
+  if (clock_update && h >= 83) {
+    damage_count = 1;
+    if (lyrics_changed && lyric_area.width > 0 && lyric_area.height > 0) {
+      damage[1].x += scene.viewport.content.x;
+      damage[1].y += scene.viewport.content.y;
+      ++damage_count;
+    }
+  }
+  if (!scene.present(damage, damage_count)) {
+    dirty = true;
     log("MUSIC UI frame failed");
+  }
   if (fresh && view == 3 && !scene.input(20, m, 68, w - 2 * m, draft, 96))
     log("MUSIC search input failed");
   ui_at = now();
@@ -1589,12 +1602,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
   } else if (e.service == PXA_AUDIO_SERVICE && e.opcode == PXA_AUDIO_OPEN_PCM) {
     pxa_audio_pcm_result_t r{};
-    if (pxa_audio_parse_pcm(&e, e.token, &r)) {
+    if (pxa_audio_parse_pcm_buffered(&e, e.token, &r)) {
       if (e.token == audio_token) {
         audio_token = 0;
-        if (r.source.status)
-          fail("音频设备暂不可用。");
-        else {
+        if (r.source.status) {
+          if (!pcm_open.use_default(r.source.status) || !open_pcm())
+            fail("音频设备暂不可用。");
+        } else {
           audio = r.source.handle;
           commit_token = ++serial;
           if (pxa_audio_commit_gain(commit_token, audio, 0)) {
@@ -1849,7 +1863,9 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
   }
   uint64_t tick = 0;
-  if (pxa_clock_parse_tick(&e, &tick) && !background) {
+  const bool clock_tick = pxa_clock_parse_tick(&e, &tick);
+  bool clock_update = false, lyrics_changed = false;
+  if (clock_tick && !background) {
     if (hold_direction && now() - hold_at >= 400 &&
         now() - hold_repeat >= 200) {
       hold_seeking = true;
@@ -1862,8 +1878,6 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     pump_player();
     pump_job();
     pump_discovery();
-    if (job == Discover && now() - ui_at >= 80)
-      dirty = true;
     if (view < 3 && scroll.tick(now()))
       dirty = true;
     pump_cover();
@@ -1877,14 +1891,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       advance = false;
       next(1, true);
     }
-    if (want_play && !paused) {
-      if (view < 3 && now() - ui_at >= 200)
-        dirty = true;
-      else if (view >= 4 &&
-               (rendered_second != display_position() / 1000 ||
-                rendered_lyric != lyrics.current(display_position()) ||
-                (view == 4 && !cover && audio_ready && now() - ui_at >= 200)))
-        dirty = true;
+    if (want_play && !paused && view >= 4) {
+      lyrics_changed = rendered_lyric != lyrics.current(display_position()) ||
+          (view == 5 && lyrics.timed && lyric_shift &&
+           now() - lyric_manual_at > 4000);
+      clock_update = lyrics_changed || rendered_second != display_position() / 1000;
     }
     if (audio_ready && now() - stats_at >= 5000) {
       char line[256];
@@ -1907,22 +1918,13 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       stats_at = now();
     }
   }
-  if (dirty && !background &&
-      (!audio_ready ||
-       now() - ui_at >= ((scrub || hold_seeking ||
-                          (view < 3 && (scroll.dragging || scroll.easing ||
-                                        std::abs(scroll.velocity) > .015f)))
-                             ? (paused ? 33u : 100u)
-                             : 100u) ||
-       !scene.initialized)) {
-    pump_player();
-    // Repaint only after refilling the bounded PCM queue. Under decode load,
-    // retain dirty and let the next event replenish audio before drawing.
-    if (!audio_ready || !want_play || paused || buffering || retry_at ||
-        !scene.initialized || audio_queue_full) {
-      render();
+  if ((dirty || clock_update) && !background &&
+      (!scene.initialized || !audio_ready || now() - ui_at >= 33)) {
+    // Tick events have already filled the PCM queue. Give playback the same
+    // opportunity before rendering an input or service event.
+    if (!clock_tick)
       pump_player();
-    }
+    render(clock_update && !dirty, lyrics_changed);
   }
   flush_discovery_cache();
   return PXA_EVENT_HANDLED;

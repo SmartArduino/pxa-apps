@@ -8,7 +8,7 @@
 using namespace iron;
 void step(World& w,float seconds){for(int i=0;i<int(seconds*20);++i)w.tick(.05f);}
 int main(int argc,char** argv){assert(argc==2);
- for(int version:{4,5,6}){std::ifstream f(std::string(argv[1])+"/save-v"+std::to_string(version)+".bin",std::ios::binary);std::vector<char> raw((std::istreambuf_iterator<char>(f)),{});assert(!raw.empty());Save s;assert(decode_save(std::as_bytes(std::span{raw.data(),raw.size()}),s));assert(s.version==save_version&&s.world.side==28&&s.world.chapter==1&&s.world.credits==1234&&s.world.time==43&&s.generation==73&&s.career.unlocked==3&&s.career.best[2]==330&&s.career.easy);assert(s.world.e[5].p.x==8.5f&&s.world.ore[14*N+4]>0);assert(s.world.extra.damage==(version==6?1:0));assert(s.defense_best==(version==6?9:0));Save inplace;std::memcpy(&inplace,raw.data(),raw.size());assert(decode_save(std::as_bytes(std::span{&inplace,1}).first(raw.size()),inplace));raw[19]^=1;assert(!decode_save(std::as_bytes(std::span{raw.data(),raw.size()}),s));}
+ for(int version:{4,5,6}){std::ifstream f(std::string(argv[1])+"/save-v"+std::to_string(version)+".bin",std::ios::binary);std::vector<char> raw((std::istreambuf_iterator<char>(f)),{});assert(!raw.empty());Save s;assert(decode_save(std::as_bytes(std::span{raw.data(),raw.size()}),s));assert(s.version==save_version&&s.world.side==28&&s.world.chapter==1&&s.world.credits==1234&&s.world.time==43&&s.generation==73&&s.career.unlocked==3&&s.career.best[2]==330&&s.career.easy);assert(s.world.e[5].p.x==8.5f&&s.world.ore[14*N+4]>0);assert(s.world.extra.damage==(version==6?1:0));assert(s.defense_best[0]==(version==6?9:0));Save inplace;std::memcpy(&inplace,raw.data(),raw.size());assert(decode_save(std::as_bytes(std::span{&inplace,1}).first(raw.size()),inplace));raw[19]^=1;assert(!decode_save(std::as_bytes(std::span{raw.data(),raw.size()}),s));}
  {
   std::ifstream f(std::string(argv[1])+"/save-v7.bin",std::ios::binary);
   std::vector<char> raw((std::istreambuf_iterator<char>(f)),{});
@@ -33,7 +33,7 @@ int main(int argc,char** argv){assert(argc==2);
   std::memcpy(&s,bytes.data(),bytes.size());
   assert(decode_save(std::as_bytes(std::span{&s,1}).first(bytes.size()),s));
   auto& w=s.world;
-  assert(s.generation==2243&&s.defense_best==17&&w.chapter==4&&w.side==60);
+  assert(s.generation==2243&&s.defense_best[0]==17&&w.chapter==4&&w.side==60);
   assert(w.construction.kind==power&&w.construction.left>0&&w.construction.left<5);
   assert(w.job_count==1&&w.jobs[0].kind==tank&&w.can_train_at(tank,w.jobs[0].producer-1));
   assert(std::all_of(w.squads.begin(),w.squads.end(),[](int squad){return squad==0;}));

@@ -1,0 +1,11 @@
+{
+  "name": "秘宝冒险镇",
+  "summary": "经营层叠山谷中的小镇，招募旅人探索六层矿洞、寻回秘宝，将驿站发展成五星城镇。",
+  "description": "沿着层叠山谷铺路、开店，为旅人建造并分配民居。旅人会自行逛店、打野，傍晚回家休整。训练突击、护卫和探路专精，使用仓库装备和遗物炼成新装备，再组建一至三人小队探索六层矿洞。常规首通后可前往山脊裂隙挑战险境，镇务中的发展指引会显示下一星所需的声望、旅人和秘宝。\n\nBuild a terraced village and assign homes to adventurers who shop, fight wild monsters and return home at dusk. Train specializations, refine equipment and lead parties of up to three through six mine floors. Cleared floors unlock challenge routes at Ridge Rift.",
+  "kind": "game",
+  "category": "strategy",
+  "tags": ["模拟经营", "像素", "冒险", "寻宝", "城镇建设"],
+  "icon": "store/icon.png",
+  "cover": "store/cover.png",
+  "changelog": "新增民居分配与搬家，旅人会自行打野并回家休整。山脊裂隙有独立险境入口。新增三种公会专精、六个炼成配方、野外悬赏和发展指引。可点旅人查看并跟随，灯会时旅人会聚到广场。放慢步态，修复小屏按钮文字显示。\nAdds home assignments, roaming monsters, a separate challenge entrance, three specializations, six recipes, hunting commissions and a town progress guide. Follow adventurers on the map and watch them gather for festivals. Slows walking and fixes compact button labels."
+}

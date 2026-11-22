@@ -4,6 +4,28 @@
 #include <algorithm>
 #include <cstring>
 namespace media {
+// Prefer the media buffer when the Host supports Audio 0.16. Older Hosts
+// reject the flag as an invalid argument. Some providers report unsupported.
+struct PcmOpen {
+  bool buffered = true;
+  bool use_default(int32_t status) {
+    if (!buffered ||
+        (status != PXA_STATUS_UNSUPPORTED && status != PXA_STATUS_INVALID_ARGUMENT))
+      return false;
+    buffered = false;
+    return true;
+  }
+  int32_t open(uint64_t token, uint64_t permission, unsigned rate,
+               unsigned channels) {
+    if (buffered) {
+      int32_t status = pxa_audio_open_pcm_buffered(token, permission, rate, channels);
+      if (!use_default(status))
+        return status;
+    }
+    return pxa_audio_open_pcm(token, permission, rate, channels);
+  }
+};
+
 // Fill each bounded Host packet across MP3 frame boundaries. Splitting every
 // MP3 block into a full packet plus a short fragment wastes queue capacity.
 struct PcmPacket {

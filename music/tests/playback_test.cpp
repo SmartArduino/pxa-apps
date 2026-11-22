@@ -8,7 +8,13 @@ static bool block_write = true, check_retry = false;
 static uint64_t delivered = 0;
 static std::vector<uint8_t> held;
 static std::vector<unsigned> packet_sizes;
-extern "C" int32_t pxa_call(uint32_t, uint64_t, const uint8_t *, uint32_t) {
+static std::vector<uint8_t> pcm_modes;
+extern "C" int32_t pxa_call(uint32_t operation, uint64_t, const uint8_t *data,
+                            uint32_t size) {
+  if (operation == (PXA_AUDIO_OPEN_PCM << 16 | PXA_AUDIO_SERVICE)) {
+    assert(size == 16);
+    pcm_modes.push_back(data[13]);
+  }
   return 0;
 }
 extern "C" int32_t pxa_io(uint64_t handle, uint32_t operation, uint8_t *data,
@@ -118,4 +124,23 @@ int main(int argc, char **argv) {
   advance = false;
   pump_player();
   assert(!want_play && !stream);
+
+  // Audio 0.15 rejects the buffered flag in its asynchronous open reply.
+  audio_permission = UINT64_C(0x100000001);
+  rate = 44100;
+  channels = 2;
+  background = true;
+  assert(open_pcm() && pcm_modes == std::vector<uint8_t>{1});
+  const uint64_t buffered_token = audio_token;
+  uint8_t payload[4], event[40];
+  uint32_t size = 0;
+  pxa_store_u32(payload, PXA_STATUS_INVALID_ARGUMENT);
+  assert(pxa_build_message(event, sizeof(event), PXA_AUDIO_SERVICE,
+                           PXA_AUDIO_OPEN_PCM, buffered_token, payload,
+                           sizeof(payload), &size));
+  pxa_app_on_event(event, size);
+  assert(audio_token && audio_token != buffered_token &&
+         pcm_modes == (std::vector<uint8_t>{1, 0}));
+  pxa_app_on_event(event, size);
+  assert(pcm_modes.size() == 2);
 }

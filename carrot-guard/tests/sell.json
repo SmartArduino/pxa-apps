@@ -1,0 +1,95 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 239,
+      "y": 286
+    },
+    {
+      "name": "dismiss-guide",
+      "action": "tap",
+      "x": 159,
+      "y": 399
+    },
+    {
+      "name": "bed",
+      "action": "tap",
+      "x": 181,
+      "y": 185
+    },
+    {
+      "name": "buy",
+      "action": "tap",
+      "x": 95,
+      "y": 420
+    },
+    {
+      "name": "tower-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "drag-to-close",
+      "action": "swipe",
+      "x": 350,
+      "y": 430,
+      "x2": 438,
+      "y2": 430,
+      "ms": 400
+    },
+    {
+      "name": "drag-cancel",
+      "action": "screenshot"
+    },
+    {
+      "name": "gap",
+      "action": "tap",
+      "x": 408,
+      "y": 430
+    },
+    {
+      "name": "gap-preserves-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "close",
+      "action": "tap",
+      "x": 438,
+      "y": 430
+    },
+    {
+      "name": "closed",
+      "action": "screenshot"
+    },
+    {
+      "name": "reselect",
+      "action": "tap",
+      "x": 181,
+      "y": 185
+    },
+    {
+      "name": "still-a-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "sell",
+      "action": "tap",
+      "x": 350,
+      "y": 430
+    },
+    {
+      "name": "sold",
+      "action": "screenshot"
+    },
+    {
+      "name": "empty-cell",
+      "action": "tap",
+      "x": 181,
+      "y": 185
+    },
+    {
+      "name": "build-menu-again",
+      "action": "screenshot"
+    }
+  ]
+}

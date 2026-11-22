@@ -60,6 +60,7 @@ uint32_t nonzero_samples = 0, blocked_writes = 0;
 bool controller_mode = false;
 media::Decoder decoder;
 media::PcmPacket pcm_packet;
+media::PcmOpen pcm_open;
 radio::IcyFilter icy;
 uint64_t now_ms() {
   timespec t{};
@@ -117,6 +118,14 @@ void failure(const char *text, bool retry) {
     want_play = false;
     retry_at = 0;
   }
+}
+bool open_pcm() {
+  audio_open_token = ++next_token;
+  if (!pcm_open.open(audio_open_token, audio_permission, audio_rate,
+                    audio_channels))
+    return true;
+  audio_open_token = 0;
+  return false;
 }
 void permission(uint64_t token, const char *name, const char *scope) {
   uint32_t n = 0;
@@ -522,7 +531,9 @@ void playback_pump() {
         icy.consume(raw, n, compressed + compressed_head + compressed_size);
   }
   if (buffering) {
-    if (compressed_size < 24576)
+    // The Host also prebuffers decoded audio. Let the decoder start on a
+    // smaller network reserve, especially for low-bitrate stations.
+    if (compressed_size < (audio_frames ? 16384u : 8192u))
       return;
     buffering = false;
   }
@@ -603,12 +614,8 @@ void playback_pump() {
       audio_rate = info.hz;
       audio_channels = info.channels;
       pcm_packet.configure(audio_rate, audio_channels);
-      audio_open_token = ++next_token;
-      if (pxa_audio_open_pcm(audio_open_token, audio_permission, audio_rate,
-                             audio_channels)) {
-        audio_open_token = 0;
+      if (!open_pcm())
         failure("固件不支持该音频格式", false);
-      }
       return;
     }
   }
@@ -623,7 +630,6 @@ media::SmoothList scroll;
 bool touch_list = false;
 int touch_x = 0, touch_y = 0;
 unsigned touch_action = 0;
-uint64_t animation_at = 0;
 constexpr unsigned PlayerView = 70, BackView = 71;
 constexpr uint32_t Paper = 0xf5f1e8, Ink = 0x242a2a, Muted = 0x858980,
                    Accent = 0xbd572f, Card = 0xfffdf8, Line = 0xe5dfd2;
@@ -647,14 +653,12 @@ void render() {
     int r = std::max(10, std::min((h - 164) / 2, w / 5)), cx = w / 2,
         cy = 40 + r;
     scene.disc(cx, cy, r, Accent, Paper);
-    if (want_play && audio_ready)
-      scene.orbit(cx, cy, r - 4, now_ms(), 0xa5aaa4);
     scene.rect(cx - 29, cy - 7, 58, 14, Accent, 7);
-    scene.text(cx - 29, cy - 5, 58, want_play ? "ON AIR" : "RADIO", 0xffffff, 0,
-               1);
+    const bool live = want_play && audio_frames && !buffering && !retry_at;
+    scene.text(cx - 29, cy - 5, 58, live ? "ON AIR" : "RADIO", 0xffffff, 0, 1);
     scene.text(m, cy + r + 11, w - 2 * m,
                have_current ? current.name : "网络收音机", Ink, 1, 1);
-    if (!audio_ready || buffering || retry_at || !want_play)
+    if (!live)
       scene.text(m, cy + r + 34, w - 2 * m, play_status, Muted, 0, 1);
     int y = h - 37;
     scene.skip_icon(cx - 67, y, -1, Ink);
@@ -723,8 +727,8 @@ void render() {
       scene.text(tx, y + 5, tw, st.name, Ink, compact ? 0 : 1);
       scene.text(tx, y + 26, tw, st.country[0] ? st.country : "网络电台",
                  Muted);
-      if (playing && want_play && audio_ready)
-        scene.activity(w - m - 20, y + 17, now_ms(), Accent);
+      if (playing && want_play && audio_frames && !buffering)
+        scene.circle(w - m - 12, y + row / 2, 4, Accent);
       else
         scene.line(w - m - 13, y + 19, w - m - 9, y + 23, Muted, 2);
       scene.line(tx, y + row - 1, w - m - 8, y + row - 1, Line);
@@ -987,17 +991,19 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       pxa_close_handle(r.handle);
   } else if (e.service == PXA_AUDIO_SERVICE && e.opcode == PXA_AUDIO_OPEN_PCM) {
     pxa_audio_pcm_result_t r{};
-    if (!pxa_audio_parse_pcm(&e, e.token, &r))
+    if (!pxa_audio_parse_pcm_buffered(&e, e.token, &r))
       return PXA_EVENT_UNHANDLED;
     if (e.token == audio_open_token) {
       audio_open_token = 0;
       if (r.source.status) {
-        char info[100];
-        std::snprintf(info, sizeof(info),
-                      "RADIO PCM open status=%d rate=%u channels=%u",
-                      r.source.status, audio_rate, audio_channels);
-        log(info);
-        failure("音频设备暂不可用，请重试", false);
+        if (!pcm_open.use_default(r.source.status) || !open_pcm()) {
+          char info[100];
+          std::snprintf(info, sizeof(info),
+                        "RADIO PCM open status=%d rate=%u channels=%u",
+                        r.source.status, audio_rate, audio_channels);
+          log(info);
+          failure("音频设备暂不可用，请重试", false);
+        }
       } else {
         audio = r.source.handle;
         audio_commit_token = ++next_token;
@@ -1157,16 +1163,12 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
     }
   }
   uint64_t tick = 0;
-  if (pxa_clock_parse_tick(&e, &tick) && !background) {
+  const bool clock_tick = pxa_clock_parse_tick(&e, &tick);
+  if (clock_tick && !background) {
     playback_pump();
     directory_pump();
     if (!player_view && !search_open && view < 3 && scroll.tick(now_ms()))
       dirty = true;
-    if (want_play && audio_ready && now_ms() - animation_at >= 200) {
-      animation_at = now_ms();
-      dirty = true;
-    }
-
     if (audio_frames && now_ms() - stats_at >= 5000) {
       char line[220];
       std::snprintf(line, sizeof(line),
@@ -1179,17 +1181,11 @@ extern "C" int32_t pxa_app_on_event(const uint8_t *data, uint32_t size) {
       stats_at = now_ms();
     }
   }
-  if (dirty && !background &&
-      (!audio_ready ||
-       now_ms() - ui_at >= ((!player_view && !search_open && view < 3 &&
-                             (scroll.dragging || scroll.easing ||
-                              std::abs(scroll.velocity) > .015f))
-                                ? 50u
-                                : 100u) ||
-       !scene.initialized)) {
-    playback_pump();
+  if (dirty && !background && (!scene.initialized || !audio_ready ||
+                               now_ms() - ui_at >= 33)) {
+    if (!clock_tick)
+      playback_pump();
     render();
-    playback_pump();
   }
   return PXA_EVENT_HANDLED;
 }

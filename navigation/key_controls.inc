@@ -9,31 +9,37 @@
     };
     struct KeyBinding { unsigned action, screens; };
     static constexpr KeyBinding key_bindings[]={
-        {navui::SelectStart,63},{navui::SelectEnd,63},{navui::Swap,63},{navui::Locate,1u<<5},
-        {navui::Walk,63},{navui::Bike,63},{navui::Drive,63},{navui::Demo,63},{navui::Start,63},
-        {navui::Book,63},{navui::Overview,63},{navui::Plan,63},{navui::Search,63},
-        {navui::Plus,63},{navui::Minus,63},{navui::Locate,63u^(1u<<5)},
-        {navui::RetryMap,63},{navui::Settings,63},{navui::Submit,63},
-        {navui::MapSettings,63},{navui::LocationSettings,63},{navui::CitySettings,63},
-        {navui::WifiSource,63},{navui::ForwardSource,63},{navui::ClearField,63},{navui::Save,63},
-        {navui::Previous,63},{navui::Next,63},
-        {navui::OpenCompass,63},{navui::CalibrateCompass,64},{navui::SaveCompassCalibration,64},
+        {navui::SelectStart,191},{navui::SelectEnd,191},{navui::Swap,191},{navui::Locate,1u<<5},
+        {navui::Walk,191},{navui::Bike,191},{navui::Drive,191},{navui::Demo,191},{navui::Start,191},
+        {navui::Book,191},{navui::Overview,191},{navui::Plan,191},{navui::Search,191},
+        {navui::Plus,191},{navui::Minus,191},{navui::Locate,191u^(1u<<5)},
+        {navui::RetryMap,191},{navui::Settings,191},{navui::Submit,191},
+        {navui::MapSettings,191},{navui::LocationSettings,191},{navui::CitySettings,191},
+        {navui::WifiSource,191},{navui::ForwardSource,191},{navui::ClearField,191},{navui::Save,191},
+        {navui::Previous,191},{navui::Next,191},
+        {navui::OpenCompass,191},{navui::CalibrateCompass,64},{navui::SaveCompassCalibration,64},
         {navui::CancelCompassCalibration,64},{navui::RetryCompass,64},
-        {navui::FirstMagnetometer,64},{navui::SecondMagnetometer,64}
+        {navui::FirstMagnetometer,64},{navui::SecondMagnetometer,64},
+        {navui::GoHere,128},{navui::ClearRoute,3},{navui::Clear,16},
+        {navui::KeepNavigating,256},{navui::EndNavigation,256},
+        {navui::Food,17},{navui::Fuel,17},{navui::Parking,17}
     };
     static constexpr unsigned key_count=sizeof(key_bindings)/sizeof(*key_bindings);
     struct KeyState:State<KeyTarget>{KeyState():State<KeyTarget>(KeyTarget{}){}};
     std::array<KeyState,key_count> key_targets{};
-    std::array<KeyState,7> key_backs{};
+    std::array<KeyState,9> key_backs{};
     struct KeyClick {
         NavigationApp* app=nullptr;unsigned id=0;
         void operator()(){if(app)app->action(id);}
     };
     std::array<KeyClick,key_count> key_clicks{};
-    std::array<KeyClick,7> key_back_clicks{};
+    std::array<KeyClick,9> key_back_clicks{};
     std::string_view key_label(unsigned id)const{
         using namespace navui;
         switch(id){
+        case GoHere:return "去这里";case ClearRoute:return "清除路线";case Clear:return "清空搜索";
+        case KeepNavigating:return "继续导航";case EndNavigation:return "结束导航";
+        case Food:return "餐饮";case Fuel:return "加油站";case Parking:return "停车场";
         case OpenCompass:return "指南针";case CalibrateCompass:return "六面校准";
         case SaveCompassCalibration:return "保存校准";case CancelCompassCalibration:return "取消校准";
         case RetryCompass:return "重新检测";case FirstMagnetometer:return "磁力计 1";case SecondMagnetometer:return "磁力计 2";
@@ -85,10 +91,10 @@
         }
     };
     struct KeyBackControls:ViewModifiers {
-        static constexpr Capacity capacity{7,7,7};NavigationApp* app;
+        static constexpr Capacity capacity{9,9,9};NavigationApp* app;
         explicit KeyBackControls(NavigationApp* a):app(a){}
         template<class Owner> bool render(Owner& owner,std::uint32_t parent){
-            for(unsigned i=0;i<7;++i){auto node=owner.create(parent,protocol::control,protocol::button);auto& tx=owner.transaction();app->key_back_clicks[i]={app,navui::Back};
+            for(unsigned i=0;i<9;++i){auto node=owner.create(parent,protocol::control,protocol::button);auto& tx=owner.transaction();app->key_back_clicks[i]={app,navui::Back};
                 if(!node||!tx.u8(node,protocol::position,1)||!tx.rgba(node,protocol::background,0)||!tx.rgba(node,protocol::foreground,0)||
                     !tx.dp(node,protocol::border_width,0)||!tx.dp(node,protocol::radius,18)||!tx.u64(node,protocol::event_mask,1)||
                     !write_key_target(tx,node,app->key_backs[i].get())||!owner.template bind<KeyTarget,write_key_target>(app->key_backs[i],node)||

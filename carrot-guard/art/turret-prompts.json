@@ -1,0 +1,19 @@
+{
+  "tool": "built-in image_gen",
+  "transparent_background": true,
+  "turrets": {
+    "source": "turrets-v2.png",
+    "prompt": "Production game sprite atlas, 4 columns by 4 rows, equal cells, transparent RGBA background, no text or grid lines. Cute hand-painted original toy tower-defense turrets for a carrot garden. No plants, pea-shooter mouths, sunflowers, leaves or pots. Rows 1-3: rotating weapon heads pointing up, consistent camera/scale/registration, four generated keyframes each: neutral, recoil with muzzle flash, recovering with fading flash, neutral. Row 1 coral-red and cream candy cannon with brass and turquoise details. Row 2 turquoise/periwinkle ice crystal turret in cream mechanical fork. Row 3 golden-orange/red twin firework rocket turret. Row 4 stationary low round ivory swivel bases with corresponding colored trim in cells 1-3; cell 4 empty. Warm brown outlines, soft painted highlights, readable at small size, generous transparent margins."
+  },
+  "labels": {
+    "source": "turret-labels-v2.png",
+    "prompt": "Exactly 3 columns by 2 rows, six separate Chinese hand-lettered UI phrases centered in equal cells. Transparent RGBA; cream-yellow lettering with caramel brown outline and warm orange shadow; chunky readable game strokes; no icons or extra copy. Row-major verbatim: 糖果炮; 冰晶塔; 烟花炮; 点击空地建炮塔; 点击障碍可集火; 冰晶减速烟花范围."
+  },
+  "runtime": "Bases remain fixed. Generated heads/keyframes are registered to swivel pivots and exported in 32 orientations in four-frame strips; no procedural replacement for generated animation frames.",
+  "outline_refinement": {
+    "source": "turrets-v3-outlined.png",
+    "reference": "turrets-v2.png",
+    "tool": "built-in image_gen edit",
+    "prompt": "Keep exact 4 by 4 atlas layout, identities, row/column order, dimensions, pivots, four animation frames and three stationary bases. Add bold closed deep warm dark-brown contours around silhouettes, barrel, muzzle, rocket tube, cream housing, crystal and base boundaries, approximately 1-2 pixels at 48px game size (9-12px at source scale). Simplify tiny highlights and soft smudges; use clean cel-painted light/shadow shapes, saturated coral/cream, turquoise/blue, orange/red. Preserve transparent RGBA, no blur, halo, background, text, borders or new props."
+  }
+}

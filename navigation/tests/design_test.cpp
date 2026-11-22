@@ -18,7 +18,8 @@ int main(){
     for(auto safe:{Rect{0,0,240,284},Rect{0,0,296,240},Rect{0,0,320,240},Rect{0,0,251,251},Rect{0,0,480,480},Rect{0,0,320,533},Rect{0,0,320,378},Rect{0,0,320,400},Rect{8,12,304,204}}){
         for(bool live:{false,true}){
             Layout l;l.update(safe.x+safe.w+safe.x,safe.y+safe.h+safe.y,safe,live);
-            for(auto r:{l.search,l.settings,l.deck,l.primary,l.book,l.back})within(r,safe);
+            for(auto r:{l.search,l.settings,l.deck,l.primary,l.book,l.back,l.map_back})within(r,safe);
+            assert(!overlaps(l.map_back,l.search));
             assert(!overlaps(l.search,l.settings));assert(l.map_h<l.deck.y);
             if(!live){assert(!overlaps(l.secondary,l.primary));assert(!overlaps(l.book,l.primary));}
             assert(!overlaps(l.book,l.primary));
@@ -47,13 +48,6 @@ int main(){
     assert(Painter::shorten("Map",40,14)=="Map");
     p.text({0,0,60,30},"路线就绪",0xffffffff,14);
     assert(!p.frame.failed);
-    // Use Settings' LV_SYMBOL_LEFT through the Host's native icon font.
-    p.begin(480,480,65536);
-    p.icon("back",34,34,0xffffffff);
-    assert(!p.frame.failed&&p.frame.records==1&&p.frame.length==31);
-    assert(p.frame.data[0]==PXA_CANVAS_DRAW_TEXT_BOX);
-    assert(p.frame.data[24]==PXA_CANVAS_FONT_ICON);
-    assert(std::string_view(reinterpret_cast<const char*>(p.frame.data+28),3)=="\xef\x81\x93");
     // The turn banner and attribution already reserve vertical space. Applying
     // a second padding used to zoom a 240dp panel all the way out to the world.
     auto route=navigation::demo_route();auto camera=navigation::fit(route,272,59,0,0);

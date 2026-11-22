@@ -2,7 +2,7 @@
 // Included in NavigationApp: layout/presentation stays separate from providers.
     int width=320,height=240;
     navui::Rect safe{0,0,320,240};
-    bool map_screen()const{return screen==0||screen==1;}
+    bool map_screen()const{return screen==0||screen==1||screen==7||screen==8;}
     bool illustration()const{return demo||(active_key.empty()&&route.points.empty());}
     void geometry() {
         const auto& d=env.display().get();
@@ -18,6 +18,7 @@
         }
         safe={dp(r.x),dp(r.y),dp(r.width),dp(r.height)};
         layout.update(width,height,safe,live);
+        if(screen==7&&layout.compact){layout.deck.y-=20;layout.deck.h+=20;layout.map_h-=20;}
     }
     void resize_map() {
         geometry();
@@ -92,9 +93,9 @@
             draw();return;
         }
         if(id==Back){(void)ctx->window().request_back();return;}
-        if(id==Settings){return_screen=screen;settings_tab=0;show(3);return;}
+        if(id==Settings){settings_return_screen=screen;settings_tab=0;show(3);return;}
         if(id==Book){step_index=progress.step;show(2);return;}
-        if(id==Plan){show(5);return;}
+        if(id==Plan){plan_return_screen=screen;show(5);return;}
         if(id==Search){begin_search(false);return;}
         if(id==MapSettings||id==LocationSettings||id==CitySettings){
             (void)key_editor.hide_keyboard();(void)city_editor.hide_keyboard();(void)endpoint_editor.hide_keyboard();
@@ -110,9 +111,25 @@
             if(settings_tab==0)key.set("");else if(settings_tab==2)city.set("");else endpoint.set("");
             ui_dirty=true;draw();return;
         }
-        if(id==Clear){query.set("");results.clear();list_scroll=0;ui_dirty=true;draw();return;}
+        if(id==Clear){if(!idle.get())return;query.set("");results.clear();list_scroll=0;search_attempted=false;search_failed=false;toast_until=0;ui_dirty=true;draw();return;}
         if(!idle.get()){message("正在处理，请稍候");draw();return;}
         switch(id){
+        case GoHere:
+            if(selected_place){
+                const auto place=*selected_place;invalidate_route();end=place;
+                if(fix&&!fix->simulated&&now_ms()-fix->time_ms<=30000&&fix->accuracy<=80)start=nav::Place{"当前位置","",fix->point};
+                plan_return_screen=7;show(5);
+            }
+            break;
+        case ClearRoute:
+            invalidate_route();image.reset();selected_place.reset();show(0);
+            if(!active_key.empty())request_map(camera);
+            break;
+        case KeepNavigating:show(1);break;
+        case EndNavigation:stop();show(1);message("导航已结束，路线已保留");break;
+        case Food:case Fuel:case Parking:
+            if(screen!=4)begin_search(false);
+            query.set(id==Food?"餐饮":id==Fuel?"加油站":"停车场");run(search());break;
         case SelectStart:begin_search(true);break;
         case SelectEnd:begin_search(false);break;
         case Demo:start_demo();toast_until=0;break;
@@ -124,10 +141,10 @@
         case RetryMap:request_map(camera);break;
         case Plus:zoom_map(1);break;
         case Minus:zoom_map(-1);break;
-        case Overview:if(!route.points.empty()){following=true;request_map(fit_camera());}break;
+        case Overview:if(!route.points.empty()){following=false;request_map(fit_camera());}break;
         case Start:
-            if(screen==5){if(active_key.empty()){return_screen=5;settings_tab=0;show(3);message("先连接高德地图服务，即可查询路线");}else{stop();run(plan());}}
-            else toggle_live();
+            if(screen==5){if(active_key.empty()){settings_return_screen=5;settings_tab=0;show(3);message("先连接高德地图服务，即可查询路线");}else{stop();run(plan());}}
+            else if(live)show(8);else toggle_live();
             break;
         case Swap:{invalidate_route();std::swap(start,end);break;}
         case Walk:case Bike:case Drive:
@@ -159,7 +176,7 @@
                 if(!dragging&&map_screen()&&idle.get()){drag_origin_x=pan_x;drag_origin_y=pan_y;++map_generation;requested_map.reset();}
                 dragging=true;
                 pressed_action=0;
-                if(map_screen()&&idle.get()){following=false;pan_x=std::clamp(drag_origin_x+dx,-width,width);pan_y=std::clamp(drag_origin_y+dy,-height,height);}
+                if(map_screen()&&screen!=8&&idle.get()){following=false;pan_x=std::clamp(drag_origin_x+dx,-width,width);pan_y=std::clamp(drag_origin_y+dy,-height,height);}
                 else if(screen==4)list_scroll=std::clamp(list_scroll-(p.y-down_y),0,std::max(0,int(results.size())*66-(safe.h-114)));
                 down_y=screen==4?p.y:down_y;
                 ui_dirty=true;draw();
@@ -178,7 +195,7 @@
             TextInputBox b{{r.x,r.y,r.w,r.h},visible,Font::body,colors.ink};if(target.get()!=b)target.set(b);
         };
         const int x=safe.x+16,w=safe.w-32;
-        set(query_box,{safe.x+56,safe.y+54,safe.w-116,36},screen==4);
+        set(query_box,{safe.x+56,safe.y+54,safe.w-152,36},screen==4);
         set(key_box,{x+10,safe.y+(layout.compact?105:112),w-20,layout.compact?32:36},screen==3&&settings_tab==0);
         set(city_box,{x+10,safe.y+(layout.compact?105:112),w-20,layout.compact?32:36},screen==3&&settings_tab==2);
         set(endpoint_box,{x+10,safe.y+126,w-20,36},screen==3&&settings_tab==1&&source==1);
@@ -187,7 +204,7 @@
         using namespace navui;
         paint.rect({0,0,width,height},colors.background);
         paint.icon_button(layout.back,"back",colors,Back);
-        paint.text({safe.x+60,safe.y+12,safe.w-76,26},name,colors.ink,20);
+        paint.text({layout.back.x+layout.back.w+12,layout.back.y+4,safe.w-78,32},name,colors.ink,20);
         if(!subtitle.empty())paint.text({safe.x+18,safe.y+55,safe.w-36,20},subtitle,colors.muted,12);
     }
     void demo_map() {
@@ -256,12 +273,12 @@
         paint.clip({0,0,width,std::max(1,layout.map_h-24)});
         const auto& points=route_drawing.get(route,route_revision,camera);
         const auto shift=route_drawing.offset(camera);
-        for(unsigned pass=0;pass<2;++pass)for(std::size_t i=1;i<points.size();++i){auto a=points[i-1],b=points[i];
+        for(unsigned pass=0;screen!=7&&pass<2;++pass)for(std::size_t i=1;i<points.size();++i){auto a=points[i-1],b=points[i];
             int x=int((a.lon+shift.lon)*width/camera.width)+pan_x,y=int((a.lat+shift.lat)*layout.map_h/camera.height)+pan_y;
             int xx=int((b.lon+shift.lon)*width/camera.width)+pan_x,yy=int((b.lat+shift.lat)*layout.map_h/camera.height)+pan_y;
             paint.line(x,y,xx,yy,pass?0x4389f5ff:0xffffffff,pass?6:9);
         }
-        if(!route.points.empty()){
+        if(screen!=7&&!route.points.empty()){
             auto a=screen_point(route.points.front()),b=screen_point(route.points.back());
             paint.circle(a.lon,a.lat,7,0xffffffff);paint.circle(a.lon,a.lat,4,0x3c9c7bff);
             paint.circle(b.lon,b.lat,8,0xffffffff);paint.circle(b.lon,b.lat,5,0xf06c61ff);
@@ -269,6 +286,11 @@
         if(fix){auto p=screen_point(fix->point);const bool good=(fix->simulated||now_ms()-fix->time_ms<=30000)&&fix->accuracy<=80;
             paint.circle(p.lon,p.lat,18,good?0x4389f52a:0x8c93932a);paint.circle(p.lon,p.lat,10,0xffffffff);
             paint.circle(p.lon,p.lat,7,good?0x347ff1ff:0x8d9695ff);paint.icon("arrow",p.lon,p.lat,0xffffffff,12);
+        }
+        if(screen==7&&selected_place){
+            auto p=screen_point(selected_place->point);
+            paint.circle(p.lon,p.lat-10,15,colors.primary);paint.circle(p.lon,p.lat-10,6,colors.surface);
+            paint.line(p.lon-8,p.lat,p.lon,p.lat+10,colors.primary,4);paint.line(p.lon,p.lat+10,p.lon+8,p.lat,colors.primary,4);
         }
         paint.unclip();paint.unclip();
         // Keep the provider's own attribution unobscured at the image bottom.
@@ -301,8 +323,8 @@
             paint.text({turn.x+h,turn.y+8,turn.w-h-12-(compass_available()?40:0),32},dist,colors.ink,layout.compact?21:28);
             paint.text({turn.x+h,turn.y+(layout.compact?34:43),turn.w-h-12-(compass_available()?40:0),layout.compact?18:20},instruction,colors.muted,layout.compact?11:13);
         }else{
-            auto search=layout.search;search.x+=44;search.w-=44;
-            paint.icon_button(layout.back,"back",colors,Back);
+            auto search=layout.search;
+            paint.icon_button(layout.map_back,"back",colors,Back);
             paint.card(search,colors,search.h/2);paint.icon("search",search.x+19,search.y+search.h/2,colors.primary);
             paint.text({search.x+38,search.y+(search.h-20)/2,search.w-48,24},"搜索地点、地址",colors.muted,14);
             paint.hit(search,Search);paint.icon_button(layout.settings,"settings",colors,Settings);
@@ -313,31 +335,49 @@
         }
         if(layout.zoom_in.y>=safe.y+(live?70:54)&&layout.zoom_out.y+layout.zoom_out.h+6<=layout.map_h-24){
             paint.card({layout.zoom_in.x,layout.zoom_in.y,layout.compact?76:38,layout.compact?34:68},colors,16);
-            paint.icon("plus",layout.zoom_in.x+19,layout.zoom_in.y+17,colors.ink);paint.hit(layout.zoom_in,Plus);
+            paint.icon("plus",layout.zoom_in.x+19,layout.zoom_in.y+17,camera.zoom<17?colors.ink:colors.line);if(camera.zoom<17)paint.hit(layout.zoom_in,Plus);
             if(layout.compact)paint.line(layout.zoom_out.x,layout.zoom_out.y+8,layout.zoom_out.x,layout.zoom_out.y+26,colors.line);
             else paint.line(layout.zoom_in.x+10,layout.zoom_out.y,layout.zoom_in.x+28,layout.zoom_out.y,colors.line);
-            paint.icon("minus",layout.zoom_out.x+19,layout.zoom_out.y+17,colors.ink);paint.hit(layout.zoom_out,Minus);
+            paint.icon("minus",layout.zoom_out.x+19,layout.zoom_out.y+17,camera.zoom>1?colors.ink:colors.line);if(camera.zoom>1)paint.hit(layout.zoom_out,Minus);
         }
         // On a short panel, recenter sits on the other side of the map.
-        auto locate=layout.recenter;if(layout.compact)locate.x=safe.x+10;
-        if(locate.y>safe.y+(live?70:58))paint.icon_button(locate,"locate",colors,Locate);
+        auto locate=layout.recenter;
+        if(locate.y>safe.y+(live?70:58)){
+            paint.icon_button(locate,"locate",colors,Locate);
+            if(following&&fix)paint.icon("locate",locate.x+19,locate.y+19,colors.primary);
+            if(live&&!following){
+                Rect resume{layout.compact?locate.x+46:locate.x-98,locate.y,layout.compact?76:90,38};
+                paint.button(resume,"回到导航",colors,Locate,false);
+            }
+        }
         compass_badge_draw();
         auto r=layout.deck;paint.card(r,colors,20);
         paint.rect({r.x+r.w/2-16,r.y+6,32,3},mix(colors.surface,colors.muted,40),2);
         if(route.points.empty()){
-            paint.text({r.x+16,r.y+17,r.w-32,24},"去发现下一站",colors.ink,layout.compact?18:23);
-            if(!layout.compact)paint.text({r.x+16,r.y+51,r.w-32,22},active_key.empty()?"先体验一段轻松的模拟旅程":"选好目的地，我们为你指路",colors.muted,13);
-            paint.button(layout.primary,"模拟导航",colors,Demo);
+            paint.text({r.x+16,r.y+(layout.compact?9:12),r.w-(!layout.compact&&!active_key.empty()?104:32),layout.compact?30:36},"随行地图",colors.ink,layout.compact?18:23);
+            if(!layout.compact){
+                if(!active_key.empty())paint.button({r.x+r.w-76,r.y+14,60,30},"模拟",colors,Demo,false);
+                const int gap=8,chip=(r.w-32-gap*2)/3;
+                const unsigned ids[]={Food,Fuel,Parking};const char* names[]={"餐饮","加油站","停车场"};
+                for(int i=0;i<3;++i)paint.button({r.x+16+i*(chip+gap),r.y+54,chip,32},names[i],colors,ids[i],false);
+            }
+            paint.button(layout.primary,active_key.empty()?"模拟导航":"搜索目的地",colors,active_key.empty()?Demo:Search);
             paint.button(layout.secondary,"路线",colors,Plan,false);
+            if(layout.compact&&!active_key.empty()){
+                const int x=layout.secondary.x+layout.secondary.w+4,w=std::min(64,layout.primary.x-x-4);
+                if(w>=36){Rect d{x,layout.secondary.y,w,36};paint.rect(d,mix(colors.surface,colors.primary,20),18);paint.text({x+2,d.y+10,w-4,20},"模拟",colors.primary,12,1);paint.hit(d,Demo);}
+            }
         }else{
             const int heading=layout.compact?23:29;
             paint.text({r.x+16,r.y+13,r.w/2,layout.compact?30:38},progress.arrived?"已到达目的地":duration_text(),colors.ink,heading);
             if(layout.compact&&live){
                 paint.text({r.x+16,r.y+46,r.w/2,20},remaining_text()+" · 路书 ›",colors.muted,11);
                 paint.hit({r.x+8,r.y+10,r.w/2-8,r.h-18},Book);
-            }else paint.text({r.x+r.w/2,r.y+23,r.w/2-16,22},remaining_text()+" · "+nav::mode_name(mode),colors.muted,12,2);
+            }else paint.text({r.x+r.w/2,r.y+23,r.w/2-(layout.compact?48:16),22},remaining_text()+" · "+nav::mode_name(mode),colors.muted,12,2);
             if(!layout.compact){
-                const auto line_y=r.y+57;paint.rect({r.x+16,line_y,r.w-32,3},mix(colors.surface,colors.muted,25),2);
+                if(!live)paint.text({r.x+16,r.y+53,r.w-68,22},demo?"模拟行程":end?end->name:"目的地",colors.muted,13);
+                if(!live){paint.hit({r.x+12,r.y+47,r.w-62,32},Plan);paint.icon_button({r.x+r.w-44,r.y+45,32,32},"close",colors,ClearRoute);}
+                const auto line_y=r.y+(live?48:86);paint.rect({r.x+16,line_y,r.w-32,3},mix(colors.surface,colors.muted,25),2);
                 if(progress.usable&&tracker.total()>0)paint.rect({r.x+16,line_y,std::max(2,int((r.w-32)*progress.along/tracker.total())),3},colors.primary,2);
             }
             auto primary=layout.primary;if(layout.compact&&live)primary.y=r.y+20;
@@ -348,7 +388,40 @@
                 Rect overview{layout.book.x+layout.book.w+8,layout.book.y,layout.compact||safe.w<360?36:60,36};
                 paint.icon_button(overview,"route",colors,Overview,idle.get());
             }
+            if(layout.compact&&!live){
+                paint.hit({r.x+8,r.y+10,r.w-48,32},Plan);
+                paint.icon_button({r.x+r.w-40,r.y+8,30,30},"close",colors,ClearRoute);
+            }
         }
+    }
+    void place_draw(){
+        using namespace navui;
+        paint.rect({0,0,width,height},colors.background);map_layer();
+        paint.icon_button(layout.map_back,"back",colors,Back);
+        Rect heading=layout.search;paint.card(heading,colors,heading.h/2);
+        paint.text({heading.x+10,heading.y+(heading.h-24)/2,heading.w-20,24},"地点详情",colors.ink,14,1);
+        paint.icon_button(layout.settings,"settings",colors,Settings);
+        auto r=layout.deck;paint.card(r,colors,20);
+        if(selected_place){
+            paint.text({r.x+16,r.y+12,r.w-32,26},selected_place->name,colors.ink,layout.compact?18:22);
+            const auto address=selected_place->address.empty()?nav::coordinate(selected_place->point):selected_place->address;
+            paint.paragraph({r.x+16,r.y+(layout.compact?40:46),r.w-32,layout.compact?22:48},address,colors.muted,12,20);
+        }
+        paint.button(layout.primary,"去这里",colors,GoHere);
+        paint.button(layout.secondary,layout.compact?"返回":"返回结果",colors,Back,false);
+    }
+    void exit_draw(){
+        using namespace navui;
+        map_page_draw();paint.rect({0,0,width,height},0x17243b70);
+        // Only the dialog contributes native focus targets or Canvas hits.
+        paint.hit_count=0;
+        const int w=std::min(360,safe.w-32),h=layout.compact?148:174;
+        Rect r{safe.x+(safe.w-w)/2,safe.y+(safe.h-h)/2,w,h};paint.card(r,colors,20);
+        paint.text({r.x+18,r.y+18,r.w-36,28},demo?"结束模拟导航？":"结束本次导航？",colors.ink,20);
+        paint.text({r.x+18,r.y+54,r.w-36,22},"路线会保留，可随时重新开始",colors.muted,12);
+        const int bw=(r.w-44)/2,y=r.y+r.h-52;
+        paint.button({r.x+16,y,bw,36},"继续导航",colors,KeepNavigating,true);
+        paint.button({r.x+28+bw,y,bw,36},"结束导航",colors,EndNavigation,false);
     }
     void modes(int y) {
         using namespace navui;
@@ -371,27 +444,37 @@
             paint.hit({card.x,yy,card.w-46,line_h},i?SelectEnd:SelectStart);
         }
         paint.line(card.x+32,y+line_h,card.x+card.w-49,y+line_h,colors.line);
-        paint.icon("swap",card.x+card.w-24,y+(c?line_h*3/2:card.h/2),colors.muted);paint.hit({card.x+card.w-44,y,44,card.h},Swap);
+        paint.icon("swap",card.x+card.w-24,y+(c?line_h*3/2:card.h/2),colors.muted);paint.hit({card.x+card.w-44,c?y+line_h:y,44,c?line_h:card.h},Swap);
         Rect primary{safe.x+16,safe.y+safe.h-46,safe.w-32,36};
         if(!c){
             Rect locate{safe.x+16,y+card.h+16,safe.w-32,40};paint.button(locate,"使用当前位置出发",colors,Locate,false,idle.get());
             paint.paragraph({safe.x+20,locate.y+54,safe.w-40,74},"选好起点和目的地，即可查看路线。导航会根据有效位置提示下一次转向。",colors.muted,13,21);
         }else{
             // The small locating control remains reachable without scrolling.
-            paint.icon("locate",card.x+card.w-24,y+20,colors.primary,16);paint.hit({card.x+card.w-44,y,44,36},Locate);
+            paint.icon("locate",card.x+card.w-24,y+line_h/2,colors.primary,16);paint.hit({card.x+card.w-44,y,44,line_h},Locate);
         }
-        paint.button(primary,!idle.get()?"正在规划…":active_key.empty()?"连接地图服务":"查看路线",colors,Start,true,idle.get());
+        const bool ready=start&&end;
+        paint.button(primary,!idle.get()?"正在规划…":active_key.empty()?"连接地图服务":!start?"请选择起点":!end?"请选择目的地":"查看路线",colors,Start,true,idle.get()&&(active_key.empty()||ready));
     }
     void search_draw() {
         using namespace navui;
-        title(search_start?"选择起点":"想去哪里");
+        title(search_start?"选择起点":"搜索目的地");
+        paint.icon_button({safe.x+safe.w-46,safe.y+10,36,36},"settings",colors,Settings);
         Rect field{safe.x+16,safe.y+52,safe.w-32,40};paint.card(field,colors,14);paint.icon("search",field.x+20,field.y+20,colors.primary,18);
-        paint.text({field.x+field.w-39,field.y+12,32,20},"搜索",colors.primary,12,1);paint.hit({field.x+field.w-44,field.y,44,40},Submit);
+        paint.icon("close",field.x+field.w-61,field.y+20,colors.muted,16);paint.hit({field.x+field.w-78,field.y,34,40},Clear);
+        paint.text({field.x+field.w-39,field.y+12,32,20},"搜索",colors.primary,12,1);if(idle.get())paint.hit({field.x+field.w-44,field.y,44,40},Submit);
         if(results.empty()){
-            const int center=safe.y+std::max(115,(safe.h+60)/2);
-            paint.circle(safe.x+safe.w/2,center-16,28,mix(colors.background,colors.primary,16));paint.icon("pin",safe.x+safe.w/2,center-16,colors.primary,26);
-            paint.text({safe.x+18,center+22,safe.w-36,24},idle.get()?"搜索地点，开启下一段旅程":"正在寻找目的地…",colors.ink,14,1);
-            if(!layout.compact)paint.text({safe.x+18,center+52,safe.w-36,22},active_city.empty()?"支持地点名称、地址或经纬度":"优先搜索 "+active_city,colors.muted,12,1);
+            const int center=safe.y+std::max(search_attempted?122:142,(safe.h+40)/2);
+            if(!layout.compact){paint.circle(safe.x+safe.w/2,center-35,28,mix(colors.background,colors.primary,16));paint.icon("pin",safe.x+safe.w/2,center-35,colors.primary,26);}
+            const auto heading=!idle.get()?"正在搜索…":search_failed?"搜索暂不可用":search_attempted?"未找到相关地点":"搜索地点或地址";
+            paint.text({safe.x+18,center,safe.w-36,24},heading,colors.ink,16,1);
+            const auto hint=search_failed?(active_key.empty()?"请在设置中连接高德地图服务":"检查网络和 Key 后重试"):search_attempted?"试试更短的关键词，或更换搜索城市":active_city.empty()?"也可输入经度,纬度（GCJ-02）":"搜索城市："+active_city;
+            paint.text({safe.x+18,center+29,safe.w-36,20},hint,colors.muted,11,1);
+            if(idle.get()&&!search_attempted){
+                const int chip=(safe.w-48)/3;
+                for(int i=0;i<3;++i)paint.button({safe.x+16+i*(chip+8),safe.y+104,chip,32},i==0?"餐饮":i==1?"加油站":"停车场",colors,i==0?Food:i==1?Fuel:Parking,false);
+            }
+            if(idle.get()&&search_failed&&!layout.compact)paint.button({safe.x+safe.w/2-60,center+64,120,36},active_key.empty()?"连接地图服务":"重新搜索",colors,active_key.empty()?Settings:Submit);
         }
         // The result list uses native controls for key focus and scrolling.
     }
@@ -464,7 +547,7 @@
     void flush_draw() {
         if(!canvas_node)return;
         resize_map();sync_inputs();paint.begin(width,height,env.display().get().density_q16);
-        switch(screen){case 0:case 1:map_page_draw();break;case 2:book_draw();break;case 3:settings_draw();break;case 4:search_draw();break;case 5:plan_draw();break;case 6:compass_draw();break;}
+        switch(screen){case 0:case 1:map_page_draw();break;case 2:book_draw();break;case 3:settings_draw();break;case 4:search_draw();break;case 5:plan_draw();break;case 6:compass_draw();break;case 7:place_draw();break;case 8:exit_draw();break;}
         if(toast_until&&now_ms()<toast_until&&!notice.get().empty()){
             const int map_y=layout.map_h-70;
             const bool over_map=map_screen()&&map_y>=safe.y+64;
@@ -554,15 +637,25 @@
     void on_window(Context&,const WindowMetrics& m){window_metrics=m;force_frame=true;resize_map();ui_dirty=true;draw();}
     void on_foreground(Context&) {force_frame=true;ui_dirty=true;flush_draw();clock();}
     BackAction on_back() {
+        if(initialized&&!idle.get()&&(screen==4||screen==5)){
+            jobs.cancel();done();toast_until=0;
+        }
         if(screen==6){
             if(compass_saving)return BackAction::stay;
             heading.model.capture.collecting=false;heading.model.capture.candidate={};
             show(compass_return);return BackAction::stay;
         }
-        if(screen==3){show(return_screen==3?0:return_screen);return BackAction::stay;}
-        if(screen==4){show(return_screen==4?0:return_screen);return BackAction::stay;}
+        if(screen==3){show(settings_return_screen==3?0:settings_return_screen);return BackAction::stay;}
+        if(screen==4){show(search_return_screen==4?0:search_return_screen);return BackAction::stay;}
+        if(screen==7){
+            results=detail_results;query.set(detail_query);search_return_screen=detail_search_return;
+            search_start=false;search_attempted=true;search_failed=false;show(4);request_map(detail_previous_camera);return BackAction::stay;
+        }
+        if(screen==8){show(1);return BackAction::stay;}
+        if(screen==5){show(plan_return_screen==5?0:plan_return_screen);return BackAction::stay;}
         if(screen==2){show(route.points.empty()?0:1);return BackAction::stay;}
-        if(screen==1&&live){stop();resize_map();message("导航已结束，路线已保留");draw();return BackAction::stay;}
+        if((screen==0||screen==1)&&live){show(8);return BackAction::stay;}
+        if(screen==1){invalidate_route();image.reset();show(0);if(!active_key.empty())request_map(camera);return BackAction::stay;}
         if(screen!=0){show(0);return BackAction::stay;}return BackAction::close;
     }
     void on_background(Context&) {close_compass();compass_probed=false;compass_settings_loaded=false;jobs.cancel();location_jobs.cancel();map_jobs.cancel();if(bookmark_pending)bookmark_dirty=true;settings_jobs.cancel();bookmark_pending=false;map_pending=false;requested_map.reset();++map_generation;location_pending=false;stop();pointer_down=false;dragging=false;pan_x=pan_y=0;if(initialized)done();}

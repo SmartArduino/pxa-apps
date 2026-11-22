@@ -1,0 +1,8 @@
+{
+  "tool": "built-in image_gen",
+  "source": "carrot-states-v1.png",
+  "reference": "runtime/carrot.png",
+  "layout": "4 health rows x 4 expression columns; true alpha; no baked shadows",
+  "prompt": "Preserve the original smiling carrot identity, orange palette, green leaf tuft and crisp brown outlines. Four health rows: healthy, one right-flank bite, larger bites on both flanks, critical thin core with drooping leaves. Four expression columns: neutral, blink, hit wince, happy player-tap smile. Keep silhouette and bottom pivot consistent within each row. Transparent, no text, props or ground shadows.",
+  "runtime": "72px frames, shared scale and bottom pivot; actual generated poses, no synthetic damage masks"
+}

@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.20)
+project(pxa_skybreak_islands LANGUAGES CXX)
+list(APPEND CMAKE_MODULE_PATH "${PXA_CMAKE_MODULE_DIR}")
+include(PxaGuest)
+pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp scene.cpp aircraft.cpp ui.cpp clouds.cpp effects.cpp landscape.cpp pilot.cpp convoy.cpp world.cpp fleet.cpp)
+target_compile_options(pxa_main PRIVATE -O2 -Wall -Wextra)

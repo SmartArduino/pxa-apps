@@ -1,0 +1,280 @@
+{
+  "esp-mosaico": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 240,
+      "y": 288
+    },
+    {
+      "name": "open-guide",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "guide-back",
+      "action": "tap",
+      "x": 156,
+      "y": 409
+    },
+    {
+      "name": "ready-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "ready",
+      "action": "screenshot"
+    },
+    {
+      "name": "first-cell",
+      "action": "tap",
+      "x": 180,
+      "y": 179
+    },
+    {
+      "name": "first-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "first-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "first-build",
+      "action": "tap",
+      "x": 88,
+      "y": 432
+    },
+    {
+      "name": "first-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "first-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "adjacent-edge-cell",
+      "action": "tap",
+      "x": 164,
+      "y": 179
+    },
+    {
+      "name": "adjacent-edge-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "adjacent-edge-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "adjacent-edge-build",
+      "action": "tap",
+      "x": 223,
+      "y": 432
+    },
+    {
+      "name": "adjacent-edge-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "adjacent-edge-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "roadside-cell",
+      "action": "tap",
+      "x": 150,
+      "y": 149
+    },
+    {
+      "name": "roadside-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "roadside-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "roadside-build",
+      "action": "tap",
+      "x": 358,
+      "y": 432
+    },
+    {
+      "name": "roadside-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "roadside-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "close",
+      "action": "tap",
+      "x": 449,
+      "y": 432
+    },
+    {
+      "name": "start-wave",
+      "action": "tap",
+      "x": 380,
+      "y": 432
+    },
+    {
+      "name": "combat-wait",
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "name": "combat",
+      "action": "screenshot"
+    }
+  ],
+  "esp32s31-korvo-1": [
+    {
+      "name": "start",
+      "action": "tap",
+      "x": 400,
+      "y": 288
+    },
+    {
+      "name": "open-guide",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "guide-back",
+      "action": "tap",
+      "x": 316,
+      "y": 409
+    },
+    {
+      "name": "ready-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "ready",
+      "action": "screenshot"
+    },
+    {
+      "name": "west-cell",
+      "action": "tap",
+      "x": 56,
+      "y": 177
+    },
+    {
+      "name": "west-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "west-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "west-build",
+      "action": "tap",
+      "x": 142,
+      "y": 432
+    },
+    {
+      "name": "west-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "west-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "east-cell",
+      "action": "tap",
+      "x": 744,
+      "y": 177
+    },
+    {
+      "name": "east-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "east-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "east-build",
+      "action": "tap",
+      "x": 383,
+      "y": 432
+    },
+    {
+      "name": "east-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "east-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "center-cell",
+      "action": "tap",
+      "x": 338,
+      "y": 177
+    },
+    {
+      "name": "center-menu-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "center-menu",
+      "action": "screenshot"
+    },
+    {
+      "name": "center-build",
+      "action": "tap",
+      "x": 624,
+      "y": 432
+    },
+    {
+      "name": "center-built-settle",
+      "action": "wait",
+      "ms": 150
+    },
+    {
+      "name": "center-tower",
+      "action": "screenshot"
+    },
+    {
+      "name": "close",
+      "action": "tap",
+      "x": 769,
+      "y": 432
+    },
+    {
+      "name": "start-wave",
+      "action": "tap",
+      "x": 700,
+      "y": 432
+    },
+    {
+      "name": "combat-wait",
+      "action": "wait",
+      "ms": 3000
+    },
+    {
+      "name": "combat",
+      "action": "screenshot"
+    }
+  ]
+}

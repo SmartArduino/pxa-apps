@@ -364,7 +364,8 @@ int store_client_consume_body(store_client_t *client, uint8_t *body,
         if (count < 0 || (remaining == 0 && count != 0) ||
             (uint32_t)(count < 0 ? 0 : count) > remaining) {
             (void)store_client_close_body(client);
-            return remaining == 0 ? STORE_BODY_LIMIT : STORE_BODY_ERROR;
+            return count < 0 ? count :
+                   remaining == 0 ? STORE_BODY_LIMIT : STORE_BODY_ERROR;
         }
         if (count == 0) {
             client->stream_waiting = 0;

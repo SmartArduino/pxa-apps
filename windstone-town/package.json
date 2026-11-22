@@ -1,0 +1,27 @@
+{
+  "format": "pxa-package-source-0.1",
+  "id": "windstone-town",
+  "name": "秘宝冒险镇",
+  "description": "经营山谷里的冒险者之镇，招募旅人深入六层遗迹，寻回失落的秘宝。",
+  "version": "0.14.0",
+  "release_sequence": 22,
+  "icon": "assets/icon.png",
+  "min_sdk": [2, 0],
+  "target_sdk": [2, 0],
+  "compile_sdk": [2, 0],
+  "build": {"system": "cmake", "linear_memory": {"maximum_bytes": 2097152, "pinned": true}},
+  "interaction": {
+    "schema": "pxa-app-interaction-1",
+    "profiles": [
+      {"id": "touch", "kind": "touch", "complete": true, "contacts": 1, "requires": {"tap": "tap"}},
+      {"id": "gamepad", "kind": "controller", "complete": true,
+       "requires": {"up": "press", "down": "press", "left": "press", "right": "press", "a": "press", "b": "press"}}
+    ]
+  },
+  "components": [{
+    "id": "main", "kind": "ui",
+    "services": ["clock", "window", "ui", "surface", "storage", "log"],
+    "cmake_target": "pxa_main",
+    "wasi": {"version": "preview1", "libc": "wasi-libc", "features": ["monotonic-clock", "wall-clock"]}
+  }]
+}

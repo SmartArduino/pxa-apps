@@ -204,18 +204,22 @@ struct Canvas {
 
     return true;
   }
-  bool present() {
+  bool present(const pxa_canvas_dirty_rect_t *dirty = nullptr,
+               uint8_t dirty_count = 0) {
     if (content_clip) {
       unclip();
       content_clip = false;
     }
-    if (!initialized && !initialize_surface())
-      return false;
+    if (!initialized) {
+      if (!initialize_surface())
+        return false;
+      dirty_count = 0;
+    }
     uint8_t frame_initialized = 1;
-    return pxa_canvas_present_with_root_event_mask(
+    return pxa_canvas_present_regions(
         2, &frame, &generation, &frame_initialized,
         PXA_UI_EVENT_MASK_CONTROLLER_STATE, scratch, sizeof(scratch), scratch,
-        sizeof(scratch));
+        sizeof(scratch), dirty, dirty_count);
   }
   bool input(unsigned id, int x, int y, int width, const char *value,
              unsigned max = 96, uint32_t bg = 0x1b2533,

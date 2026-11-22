@@ -46,8 +46,8 @@
       "path": "assets/atlas-6.pxr",
       "kind": "index8",
       "source": "resources/atlas-6.index8",
-      "width": 192,
-      "height": 48
+      "width": 220,
+      "height": 253
     },
     {
       "path": "assets/atlas-7.pxr",
@@ -117,7 +117,7 @@
       "kind": "index8",
       "source": "resources/atlas-16.index8",
       "width": 250,
-      "height": 150
+      "height": 200
     },
     {
       "path": "assets/atlas-17.pxr",
@@ -159,14 +159,14 @@
       "kind": "index8",
       "source": "resources/atlas-22.index8",
       "width": 252,
-      "height": 126
+      "height": 252
     },
     {
       "path": "assets/atlas-23.pxr",
       "kind": "index8",
       "source": "resources/atlas-23.index8",
       "width": 252,
-      "height": 126
+      "height": 252
     },
     {
       "path": "assets/atlas-24.pxr",
@@ -200,29 +200,29 @@
       "path": "assets/atlas-28.pxr",
       "kind": "index8",
       "source": "resources/atlas-28.index8",
-      "width": 224,
-      "height": 224
+      "width": 208,
+      "height": 208
     },
     {
       "path": "assets/atlas-29.pxr",
       "kind": "index8",
       "source": "resources/atlas-29.index8",
-      "width": 224,
-      "height": 224
+      "width": 208,
+      "height": 208
     },
     {
       "path": "assets/atlas-30.pxr",
       "kind": "index8",
       "source": "resources/atlas-30.index8",
-      "width": 224,
-      "height": 224
+      "width": 208,
+      "height": 208
     },
     {
       "path": "assets/atlas-31.pxr",
       "kind": "index8",
       "source": "resources/atlas-31.index8",
-      "width": 224,
-      "height": 224
+      "width": 208,
+      "height": 208
     },
     {
       "path": "assets/atlas-32.pxr",
@@ -243,7 +243,7 @@
       "kind": "index8",
       "source": "resources/atlas-34.index8",
       "width": 252,
-      "height": 72
+      "height": 108
     },
     {
       "path": "assets/atlas-35.pxr",
@@ -468,6 +468,111 @@
       "source": "resources/atlas-66.index8",
       "width": 256,
       "height": 136
+    },
+    {
+      "path": "assets/atlas-67.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-67.index8",
+      "width": 150,
+      "height": 50
+    },
+    {
+      "path": "assets/atlas-68.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-68.index8",
+      "width": 192,
+      "height": 160
+    },
+    {
+      "path": "assets/atlas-69.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-69.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-70.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-70.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-71.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-71.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-72.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-72.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-73.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-73.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-74.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-74.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-75.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-75.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-76.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-76.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-77.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-77.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-78.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-78.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-79.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-79.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-80.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-80.index8",
+      "width": 160,
+      "height": 80
+    },
+    {
+      "path": "assets/atlas-81.pxr",
+      "kind": "index8",
+      "source": "resources/atlas-81.index8",
+      "width": 192,
+      "height": 192
     }
   ]
 }

@@ -20,7 +20,7 @@ struct Pt {float x,y;};
 struct FontStyle {int face=0,scale=1;};
 inline bool ascii_text(std::string_view s){for(unsigned char c:s)if(c>=128)return false;return true;}
 inline FontStyle font_style(int desired,bool){return {0,std::clamp((desired+6)/12,1,8)};}
-inline int pixel_scale(int value,int numerator,int denominator){int64_t p=int64_t(value)*numerator;return int(p>=0?(p+denominator/2)/denominator:-((-p+denominator/2)/denominator));}
+inline int pixel_scale(int value,int numerator,int denominator){if(numerator==denominator)return value;int64_t p=int64_t(value)*numerator;return int(p>=0?(p+denominator/2)/denominator:-((-p+denominator/2)/denominator));}
 struct TextCommand {int x,y,size,align;uint16_t color;Rect clip;uint16_t offset,length;int box_width,box_height;};
 struct NativeText {
  int width=480,height=320,canvas_width=480,canvas_height=320,minimum_scale=1;float text_scale=1;unsigned count=0,bytes=0;bool overflow=false;
@@ -43,7 +43,14 @@ struct Raster {
  [[gnu::noinline]] void line(int x,int y,int xx,int yy,uint16_t c,int thick=1){if(thick<=0)return;if(y==yy){rect(std::min(x,xx)-thick/2,y-thick/2,std::abs(xx-x)+thick,thick,c);return;}if(x==xx){rect(x-thick/2,std::min(y,yy)-thick/2,thick,std::abs(yy-y)+thick,c);return;}int dx=std::abs(xx-x),dy=-std::abs(yy-y),sx=x<xx?1:-1,sy=y<yy?1:-1,err=dx+dy;for(;;){if(thick==1)dot(x,y,c);else rect(x-thick/2,y-thick/2,thick,thick,c);if(x==xx&&y==yy)break;int twice=2*err;if(twice>=dy){err+=dy;x+=sx;}if(twice<=dx){err+=dx;y+=sy;}}}
  [[gnu::noinline]] void poly(const std::array<Pt,4>& v,uint16_t c){int ymin=h,ymax=0;for(auto p:v){ymin=std::min(ymin,int(std::floor(p.y)));ymax=std::max(ymax,int(std::ceil(p.y)));}ymin=std::max(ymin,clip.y);ymax=std::min(ymax,clip.y+clip.h-1);for(int y=ymin;y<=ymax;++y){float xs[4];int n=0;for(int j=0;j<4;++j){Pt a=v[j],b=v[(j+1)%4];if((a.y<=y+.5f&&b.y>y+.5f)||(b.y<=y+.5f&&a.y>y+.5f))xs[n++]=a.x+(y+.5f-a.y)*(b.x-a.x)/(b.y-a.y);}if(n>=2){std::sort(xs,xs+n);rect(int(std::ceil(xs[0])),y,int(std::ceil(xs[n-1]))-int(std::ceil(xs[0])),1,c);}}}
  [[gnu::noinline]] void ellipse(int x,int y,int rx,int ry,uint16_t c){if(ry<=0||rx<=0)return;for(int yy=-ry;yy<=ry;++yy){int width=int(std::sqrt(std::max(0.f,1.f-float(yy*yy)/(ry*ry)))*rx);rect(x-width,y+yy,width*2+1,1,c);}}
- void ring(int x,int y,int rx,int ry,uint16_t c){static const auto points=[](){std::array<Pt,37> p{};for(int i=0;i<=36;++i){float a=i*.174533f;p[i]={std::cos(a),std::sin(a)};}return p;}();for(int i=0;i<36;++i)line(x+points[i].x*rx,y+points[i].y*ry,x+points[i+1].x*rx,y+points[i+1].y*ry,c);}
+ void ring(int x,int y,int rx,int ry,uint16_t c){
+  static const auto points=[](){std::array<Pt,37> p{};for(int i=0;i<=36;++i){float a=i*.174533f;p[i]={std::cos(a),std::sin(a)};}p.back()=p.front();return p;}();
+  // Round the local offset before adding the position so the same ring
+  // translates by whole pixels without changing shape.
+  auto point=[&](int i){return std::array<int,2>{x+int(std::floor(points[i].x*rx)),y+int(std::floor(points[i].y*ry))};};
+  auto a=point(0);
+  for(int i=1;i<=36;++i){auto b=point(i);line(a[0],a[1],b[0],b[1],c);a=b;}
+ }
  static uint32_t next(std::string_view& s){if(s.empty())return 0;uint8_t b=s[0];int n=b<128?1:b<224?2:b<240?3:4;if(int(s.size())<n){s={};return '?';}uint32_t c=b&(n==1?127:n==2?31:n==3?15:7);for(int j=1;j<n;++j)c=(c<<6)|(uint8_t(s[j])&63);s.remove_prefix(n);return c;}
  static int glyph(uint32_t c){auto i=std::lower_bound(glyph_codes.begin(),glyph_codes.end(),c);return i==glyph_codes.end()||*i!=c?int(std::lower_bound(glyph_codes.begin(),glyph_codes.end(),uint32_t('?'))-glyph_codes.begin()):int(i-glyph_codes.begin());}
  static int text_width(std::string_view s,FontStyle style){int width=0;while(!s.empty())width+=glyph_advances[style.face][glyph(next(s))]*style.scale;return width;}
