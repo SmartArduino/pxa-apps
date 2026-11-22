@@ -236,6 +236,7 @@ struct SeaFishery {
 struct State {
     PilotageState pilot;
     std::uint32_t pilot_visits=0;
+    std::array<PilotParcelStage,std::size(PilotParcels)> pilot_parcels{};
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
     int origin = lisbon, destination = -1, leg = 0, progress = 0, reefed = 0;
@@ -294,7 +295,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, SaveBytes=1896;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, SaveBytes=1904;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -360,16 +361,31 @@ struct Game {
     bool unload_provisions(bool water);
     SeaConditions conditions() const { return conditions_at(position(),s.day); }
     int pilot_region() const;
+    int starting_pilot_patch() const;
+    PilotRegion pilot_area() const;
+    PilotSite pilot_site(int site) const;
+    bool pilot_site_visible(int site) const;
+    bool pilot_site_visited(int site) const;
+    bool pilot_near_edge() const;
     bool begin_pilotage(int index,PilotWater map);
+    bool connect_pilotage(PilotWater map);
     bool leave_pilotage(WaterTest ocean);
     void set_pilot_heading(int heading);
-    int pilot_speed(PilotWater map) const;
+    int pilot_speed(PilotWater map,int near_berth=-1) const;
     void pilot_tick(PilotWater map);
-    int pilot_berth(PilotWater map) const;
-    bool moor_pilotage(PilotWater map);
+    int pilot_berth(PilotWater map,int preferred=-1) const;
+    PilotApproach pilot_approach(int site,PilotWater map) const;
+    bool begin_pilot_docking(PilotWater map,int preferred);
+    void cancel_pilot_docking() { pilot_dock_target=-1; }
+    int pilot_docking() const { return pilot_dock_target; }
     void cast_off_pilotage();
+    PilotSupplies pilot_supply_offer(bool water) const;
     bool pilot_supplies(bool water);
+    int pilot_parcel_destination() const;
+    bool pilot_parcel_at(int site) const;
+    bool handle_pilot_parcel();
     bool start_helm(int destination);
+    bool take_over_helm();
     void helm_step(WaterTest water_at);
     void helm_pulses(WaterTest water_at, int count);
     int visible_landmark() const;
@@ -535,6 +551,10 @@ struct Game {
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:
+    Point pilot_remainder{}, pilot_dock_from{};
+    float pilot_dock_travel=0;
+    int pilot_dock_target=-1;
+    bool finish_pilot_docking(int site);
     PassageForecast forecast_from(const Passage& path, int first_leg, int progress, int end, int cargo) const;
     int next_route_pace() const;
     unsigned roll(unsigned range);

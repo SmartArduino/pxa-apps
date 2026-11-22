@@ -10,14 +10,20 @@ inline constexpr unsigned VesselFrameMs=135;
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
 inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
+inline constexpr int PilotWorldPictureBase=256;
 inline constexpr int PilotMarkSize=22, SmallShipSize=16, SmallShipStride=8*SmallShipSize;
 
 inline bool pilot_picture(int kind) {
     return kind>=PilotPictureBase && kind<PilotPictureBase+int(std::size(PilotRegions));
 }
 
+inline bool pilot_world_picture(int kind) {
+    return kind>=PilotWorldPictureBase && kind<PilotWorldPictureBase+PilotTileCount;
+}
+
 inline Text sea_picture_path(int kind) {
     if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
+    if (pilot_world_picture(kind)) return "assets/sea/pilot-world.bin";
     switch (kind) {
     case Castaways: return "assets/sea/castaways.pxi";
     case FalseBeacon: return "assets/sea/false-beacon.pxi";
@@ -55,8 +61,39 @@ public:
     }
 
 private:
+    pxa::Task<bool> load_world(pxa::AssetService assets,int patch) {
+        auto output=std::span(bytes_);
+        const auto path=sea_picture_path(PilotWorldPictureBase+patch);
+        auto header=co_await assets.read(path,patch*4,std::as_writable_bytes(output.first(8)));
+        if (!header || header->bytes!=8) co_return false;
+        const auto read=[&](int pos) {
+            return unsigned(bytes_[pos])|unsigned(bytes_[pos+1])<<8|
+                   unsigned(bytes_[pos+2])<<16|unsigned(bytes_[pos+3])<<24;
+        };
+        const auto start=read(0), end=read(4);
+        if (start<(PilotTileCount+1)*4 || end<=start || end>header->total_bytes ||
+            end-start>PilotTileBytes) co_return false;
+        auto packed=output.subspan(PilotTileBytes,end-start);
+        std::size_t offset=0;
+        while (offset<packed.size()) {
+            const auto count=std::min<std::size_t>(packed.size()-offset,4064);
+            auto block=co_await assets.read(path,start+offset,std::as_writable_bytes(packed.subspan(offset,count)));
+            if (!block || !block->bytes) co_return false;
+            offset+=block->bytes;
+        }
+        co_return decode_pilot_tile(packed,output.first(PilotTileBytes));
+    }
+
     pxa::Task<void> load(pxa::AssetService assets, int kind, bool& dirty) {
         ready_=Calm;
+        if (pilot_world_picture(kind)) {
+            const auto loaded=co_await load_world(assets,kind-PilotWorldPictureBase);
+            if (loaded && *loaded) ready_=kind;
+            else if (wanted_==kind) failed_=true;
+            busy_=false;
+            dirty=true;
+            co_return pxa::Result<void>{};
+        }
         const bool nearshore=pilot_picture(kind);
         const auto count=nearshore?PilotMapBytes:int(bytes_.size());
         auto output=std::as_writable_bytes(std::span(bytes_)).first(count);

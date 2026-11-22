@@ -1088,6 +1088,8 @@ void Game::wait_at_port() {
 }
 
 void Game::restore() {
+    cancel_pilot_docking();
+    pilot_remainder={};
     route=s.helm?Passage{}:passage(s.origin,s.destination);
     paused = sea() && (!encounter() || s.skirmish.active);
     s.chart_marks|=StartingChart;
@@ -1146,8 +1148,27 @@ bool Game::start_helm(int destination) {
     return true;
 }
 
+bool Game::take_over_helm() {
+    if (!sea() || s.helm || encounter()) return false;
+    const auto here=position(), ahead=position(1.f);
+    s.destination=sailing_target();
+    s.helm=1;
+    s.helm_x=here.x*16;
+    s.helm_y=here.y*16;
+    if (ahead.x!=here.x || ahead.y!=here.y)
+        s.heading=direction_to({ahead.x-here.x,ahead.y-here.y});
+    s.leg=s.progress=s.stop_next=0;
+    s.event_mask=0;
+    s.wake_head=s.wake_count=0;
+    route={};
+    record_wake();
+    paused=true;
+    return true;
+}
+
 void Game::clear_helm() {
     s.pilot={.minutes=s.pilot.minutes};
+    cancel_pilot_docking();
     s.fishery={};
     s.helm=s.heading=0;
     s.helm_x=s.helm_y=0;
@@ -2659,7 +2680,7 @@ constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2694,7 +2715,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x4a445054);
+    put(0x4b445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2793,6 +2814,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put(s.pilot_visits);
     for (auto value : {s.pilot.region,s.pilot.heading,s.pilot.moored,s.pilot.minutes})
         bytes[offset++]=std::byte(value);
+    for (const auto stage : s.pilot_parcels) bytes[offset++]=std::byte(stage);
+    bytes[offset++]=std::byte(s.pilot.patch);
+    bytes[offset++]=std::byte(s.pilot.patch>>8);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2806,7 +2830,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
         bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
-        bytes.size()!=SaveBytes) return false;
+        bytes.size()!=PilotSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2816,7 +2840,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool pilotage=version==0x4a445054 && bytes.size()==SaveBytes;
+    const bool parcels=version==0x4b445054 && bytes.size()==SaveBytes;
+    const bool pilotage=parcels || (version==0x4a445054 && bytes.size()==PilotSaveBytes);
     const bool sea_law=pilotage || (version==0x49445054 && bytes.size()==SeaLawSaveBytes);
     const bool enclaves=sea_law || (version==0x48445054 && bytes.size()==EnclaveSaveBytes);
     const bool fishery=enclaves || (version==0x47445054 && bytes.size()==FisherySaveBytes);
@@ -3163,7 +3188,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             s.pilot_visits=get();
             for (auto* field : {&s.pilot.region,&s.pilot.heading,&s.pilot.moored,&s.pilot.minutes})
                 *field=std::to_integer<std::uint8_t>(bytes[offset++]);
-            if (s.pilot.region>std::size(PilotRegions) || s.pilot.heading>=16 ||
+            if (s.pilot.region>WorldPilotIndex+1 || (!parcels && s.pilot.region>WorldPilotIndex) || s.pilot.heading>=16 ||
                 s.pilot.x>=PilotWidth*PilotSubcell || s.pilot.y>=PilotHeight*PilotSubcell ||
                 s.pilot.minutes>=60 || s.pilot.minutes%PilotTickMinutes ||
                 (s.pilot_visits>>std::size(PilotSites)) ||
@@ -3171,11 +3196,23 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 return false;
             if (s.pilot.region) {
                 if (!s.helm || s.weather!=Calm) return false;
-                const auto& region=PilotRegions[s.pilot.region-1];
-                if (s.pilot.moored && (s.pilot.moored-1<=region.first ||
-                    s.pilot.moored-1>=region.first+region.count ||
-                    PilotSites[s.pilot.moored-1].berth.x<0)) return false;
+                if (s.pilot.moored) {
+                    if (s.pilot.region>WorldPilotIndex) return false;
+                    const auto& region=PilotRegions[s.pilot.region-1];
+                    if (s.pilot.moored-1<=region.first || s.pilot.moored-1>=region.first+region.count ||
+                        PilotSites[s.pilot.moored-1].berth.x<0) return false;
+                }
             }
+        }
+        if (parcels) {
+            for (auto& stage : s.pilot_parcels) {
+                const auto code=std::to_integer<std::uint8_t>(bytes[offset++]);
+                if (code>static_cast<std::uint8_t>(PilotParcelStage::Delivered)) return false;
+                stage=static_cast<PilotParcelStage>(code);
+            }
+            s.pilot.patch=std::to_integer<std::uint8_t>(bytes[offset++]);
+            s.pilot.patch|=unsigned(std::to_integer<std::uint8_t>(bytes[offset++]))<<8;
+            if (s.pilot.region==WorldPilotIndex+1?s.pilot.patch>=PilotTileCount:s.pilot.patch!=0) return false;
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

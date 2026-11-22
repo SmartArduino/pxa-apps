@@ -4,9 +4,49 @@
 #include <cassert>
 #include <cstdio>
 #include <fstream>
+#include <iterator>
 #include <string>
+#include <vector>
 
 using namespace tide;
+
+namespace {
+
+struct WorldAtlas {
+    std::ifstream file{"assets/sea/pilot-world.bin",std::ios::binary};
+    std::vector<unsigned char> data{std::istreambuf_iterator<char>(file),{}};
+    std::array<unsigned char,PilotTileBytes> pixels{};
+
+    PilotWater read(int patch) {
+        const auto offset=[this](int index) {
+            const auto* b=data.data()+4*index;
+            return std::uint32_t(b[0])|(std::uint32_t(b[1])<<8)|
+                   (std::uint32_t(b[2])<<16)|(std::uint32_t(b[3])<<24);
+        };
+        assert(!data.empty() && patch>=0 && patch<PilotTileCount);
+        const auto start=offset(patch), end=offset(patch+1);
+        assert(start<end && end<=data.size());
+        assert(decode_pilot_tile(std::span(data).subspan(start,end-start),pixels));
+        return {pixels.data(),true};
+    }
+};
+
+void check_legacy(const State& state) {
+    const auto current=encode(state);
+    std::array<std::byte,PilotSaveBytes> old{};
+    std::copy_n(current.begin(),old.size()-4,old.begin());
+    old[3]=std::byte{0x4a};
+    std::uint32_t checksum=2166136261U;
+    for (std::size_t i=0;i<old.size()-4;++i)
+        checksum=(checksum^std::to_integer<unsigned>(old[i]))*16777619U;
+    for (int i=0;i<4;++i) old[old.size()-4+i]=std::byte(checksum>>(i*8));
+    State loaded;
+    assert(decode(loaded,old) && loaded.pilot.region==state.pilot.region &&
+           loaded.pilot.moored==state.pilot.moored && loaded.pilot_visits==state.pilot_visits);
+    for (const auto stage : loaded.pilot_parcels) assert(stage==PilotParcelStage::Waiting);
+}
+
+} // namespace
 
 int main() {
     const auto ocean=[](Point) { return true; };
@@ -33,6 +73,7 @@ int main() {
         State loaded;
         assert(decode(loaded,encode(advanced.s)) && loaded.pilot.x==x &&
                loaded.pilot.y==y && loaded.pilot.region==index+1);
+        check_legacy(advanced.s);
         const auto fixed=pilot_to_world(area,{x,y});
         assert(fixed.x==ship.s.helm_x && fixed.y==ship.s.helm_y);
 
@@ -47,21 +88,83 @@ int main() {
         }
         assert(moved);
         Game harbour=ship;
-        const auto village=PilotSites[area.first+1].berth;
-        assert(water.navigable(village));
-        harbour.s.pilot.x=village.x;
-        harbour.s.pilot.y=village.y;
-        assert(harbour.moor_pilotage(water) && harbour.s.pilot.moored==area.first+2);
+        const auto& parcel=PilotParcels[index];
+        const int sender=area.first+parcel.sender, recipient=area.first+parcel.recipient;
+        const auto village=PilotSites[sender].berth;
+        assert(water.navigable(village) && !harbour.handle_pilot_parcel());
+        bool has_channel=false;
+        for (int dy=-72;dy<=72 && !has_channel;dy+=6)
+            for (int dx=-72;dx<=72 && !has_channel;dx+=6) {
+                const Point at{village.x+dx,village.y+dy};
+                if (!water.navigable(at)) continue;
+                harbour.s.pilot.x=at.x;
+                harbour.s.pilot.y=at.y;
+                const auto approach=harbour.pilot_approach(sender,water);
+                has_channel=approach.clear && approach.tenths>=6 && approach.tenths<=22;
+            }
+        assert(has_channel && harbour.begin_pilot_docking(water,sender) && harbour.pilot_docking()==sender);
+        const int hull=harbour.s.hull;
+        for (int tick=0;tick<100 && !harbour.paused;++tick) harbour.pilot_tick(water);
+        assert(harbour.s.pilot.moored==sender+1 && harbour.paused && harbour.s.hull==hull);
         const int gold=harbour.s.gold;
         harbour.s.water=12;
         harbour.s.stores=12;
         assert(harbour.pilot_supplies(true) && harbour.s.water==20 && harbour.s.gold==gold-12);
-        assert(decode(loaded,encode(harbour.s)) && loaded.pilot.moored==area.first+2);
+        harbour.s.water=harbour.water_capacity()-1;
+        assert(harbour.pilot_supply_offer(true).cost==2 && harbour.pilot_supplies(true));
+        assert(harbour.pilot_parcel_at(sender) && harbour.handle_pilot_parcel());
+        assert(harbour.pilot_parcel_destination()==recipient && !harbour.handle_pilot_parcel());
+        assert(decode(loaded,encode(harbour.s)) && loaded.pilot.moored==sender+1 &&
+               loaded.pilot_parcels[index]==PilotParcelStage::Aboard);
+        harbour.cast_off_pilotage();
+        assert(!harbour.handle_pilot_parcel());
+        const auto dock=PilotSites[recipient].berth;
+        harbour.s.pilot.x=dock.x;
+        harbour.s.pilot.y=dock.y;
+        assert(harbour.begin_pilot_docking(water,recipient) && harbour.s.pilot.moored==recipient+1);
+        const int before=harbour.s.gold;
+        assert(harbour.handle_pilot_parcel() && harbour.s.gold==before+parcel.reward);
+        assert(!harbour.handle_pilot_parcel() && harbour.pilot_parcel_destination()<0);
         harbour.cast_off_pilotage();
         assert(!harbour.pilot_supplies(true) && harbour.leave_pilotage(ocean) && !harbour.s.pilot.region);
 
-        assert(ship.moor_pilotage(water) && ship.s.origin==area.port && !ship.sea());
+        assert(ship.begin_pilot_docking(water,area.first) && ship.s.origin==area.port && !ship.sea());
         assert(ship.s.pilot_visits&(1U<<area.first));
     }
-    std::puts("Pilotage charts, bearings, departure, mooring, supplies and saves passed.");
+    WorldAtlas atlas;
+    for (int i=0;i<PilotTileCount;++i) atlas.read(i);
+    for (int port=0;port<PortCount;++port) {
+        Game ship;
+        ship.s.origin=port;
+        assert(ship.start_helm(-1));
+        if (ship.pilot_region()!=WorldPilotIndex) continue;
+        const auto water=atlas.read(ship.starting_pilot_patch());
+        assert(ship.begin_pilotage(WorldPilotIndex,water));
+        const auto berth=ship.pilot_site(port+WorldPilotSite).berth;
+        assert(water.navigable(berth) && ship.pilot_site_visible(port+WorldPilotSite));
+        State loaded;
+        assert(decode(loaded,encode(ship.s)) && loaded.pilot.patch==ship.s.pilot.patch);
+        assert(ship.begin_pilot_docking(water,port+WorldPilotSite) && ship.s.origin==port && !ship.sea());
+    }
+    Game crossing;
+    assert(crossing.start_helm(-1));
+    crossing.s.helm_x=30*24*16-2;
+    crossing.s.helm_y=14*28*16+55;
+    auto water=atlas.read(crossing.starting_pilot_patch());
+    assert(crossing.begin_pilotage(WorldPilotIndex,water));
+    const int first=crossing.s.pilot.patch;
+    crossing.set_pilot_heading(4);
+    crossing.paused=false;
+    for (int i=0;i<60 && crossing.s.pilot.patch==first && !crossing.paused;++i)
+        crossing.pilot_tick(water);
+    assert(crossing.s.pilot.patch==first+1 && !crossing.paused);
+    water=atlas.read(crossing.s.pilot.patch);
+    assert(water.navigable({crossing.s.pilot.x,crossing.s.pilot.y}));
+
+    Game automatic;
+    assert(automatic.depart(madeira));
+    const auto from_route=automatic.position();
+    assert(automatic.take_over_helm() && automatic.paused && automatic.s.destination==madeira);
+    assert(from_route.x==automatic.position().x && from_route.y==automatic.position().y);
+    std::puts("Regional and world pilotage, chart edges, assisted berths, errands and old saves passed.");
 }
