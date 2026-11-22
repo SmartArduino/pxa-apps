@@ -29,7 +29,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -80,7 +80,7 @@ enum Action {
     OpenEnclaves=ShoreEntry+int(ShoreTaskCount), DockEnclave, ShowLocalEnclave, MarkEnclave, LeaseEnclave,
     EnclaveWait, HireVillagers, HireCarpenter, CarrySettlers, LodgeSettlers, SellEnclaveGoods,
     StormEnclave, ReleaseGuards, RansomGuards, EnclaveTab, EnclaveEntry=EnclaveTab+4,
-    EnclaveConstruction=EnclaveEntry+EnclaveCount, EnclaveSupply=EnclaveConstruction+EnclaveBuildingCount
+    EnclaveConstruction=EnclaveEntry+EnclaveCount, EnclaveSupply=EnclaveConstruction+EnclaveBuildingCount, PrepareMerchantRaid=EnclaveSupply+4, ConfirmMerchantRaid, RenderWhaleOil
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(SellWhaleOil<DockService);
@@ -167,7 +167,7 @@ struct VoyageApp {
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
     bool open_helm_view=false;
-    int enclave_item=0, enclave_tab=0;
+    int enclave_item=0, enclave_tab=0, raid_company=-1;
     unsigned trim_ms=0, skirmish_tick=0;
     struct SeaFlash { Point position{}; unsigned started=0; int sprite=0; };
     std::array<SeaFlash,4> sea_flashes{};
@@ -747,9 +747,16 @@ struct VoyageApp {
             if (!game.chart_cell(location.x/ChartCell,location.y/ChartCell)) continue;
             const auto p=map_point(location);
             if (!map.contains(p)) continue;
-            d.diamond(p,5,ink);
-            d.diamond(p,3,flags[i]);
-            voyage_icon(d,SailIcon,{p.x-6,p.y-13,12,12});
+            if (full_helm_chart() && zoom>=4) {
+                const bool west=Anchor[MerchantPorts[ship.destination]].x<location.x;
+                vessel_sprite(d,i==0?0:2,(vessel_frame()+3*i)%VesselFrames,
+                              {p.x-14,p.y-19,28,20},west);
+                d.diamond({p.x,p.y+3},2,flags[i]);
+            } else {
+                d.diamond(p,5,ink);
+                d.diamond(p,3,flags[i]);
+                voyage_icon(d,SailIcon,{p.x-6,p.y-13,12,12});
+            }
         }
     }
     void draw_rumor_marks(Draw& d) {
@@ -804,10 +811,10 @@ struct VoyageApp {
     void map_vessel(Draw& d, Point at, int hull, bool west, bool following) {
         const int frame=(vessel_frame()+(following?2:0))%VesselFrames;
         const bool close=!following && full_helm_chart() && zoom>=4 && !game.s.skirmish.active;
-        const auto* detail=close && hull==1?sea_picture.pixels(CaravelDetail):nullptr;
+        const auto* detail=close?sea_picture.pixels(DetailedHullPictures[hull]):nullptr;
         const int w=detail?std::clamp(map.w/4,60,88):
                     following?27:close?48:VesselFrameWidth;
-        const int h=detail?w*CaravelFrameHeight/CaravelFrameWidth:
+        const int h=detail?w*SailFrameHeight/SailFrameWidth:
                     following?20:close?36:VesselFrameHeight;
         if (!game.paused) {
             const int stern=west?1:-1;
@@ -825,11 +832,11 @@ struct VoyageApp {
             const int pose=game.s.reefed?step:2-step;
             auto raised=body;
             raised.y+=VesselHeave[frame];
-            d.image({detail},{pose%2*CaravelFrameWidth,pose/2*CaravelFrameHeight,
-                              CaravelFrameWidth,CaravelFrameHeight},raised,true,west);
-            mast={33,7};
-            source_w=CaravelFrameWidth;
-            source_h=CaravelFrameHeight;
+            d.image({detail},{pose%2*SailFrameWidth,pose/2*SailFrameHeight,
+                              SailFrameWidth,SailFrameHeight},raised,true,west);
+            mast=DetailedHullMasts[hull];
+            source_w=SailFrameWidth;
+            source_h=SailFrameHeight;
         } else {
             vessel_sprite(d,hull,frame,body,west);
         }
@@ -900,8 +907,8 @@ struct VoyageApp {
         placed[labels++]=compass;
         const auto ship_mark=map_point(ship_x,ship_y);
         if (full_helm_chart()) {
-            const int w=zoom>=4 && game.s.ship==1?std::clamp(map.w/4,60,88):48;
-            const int h=std::max(36,w*CaravelFrameHeight/CaravelFrameWidth);
+            const int w=zoom>=4?std::clamp(map.w/4,60,88):48;
+            const int h=std::max(36,w*SailFrameHeight/SailFrameWidth);
             placed[labels++]={ship_mark.x-w/2-2,ship_mark.y-h, w+4,h+8};
             placed[labels++]={map.x+3,map.y+3,92,22};
         }
@@ -1066,7 +1073,8 @@ struct VoyageApp {
         skin_box(d,badge,0,4);
         weather_icon(d,state.weather,{badge.x+4,badge.y+2,15,15});
         d.label(badge.x+22,badge.y+3,course,ivory,badge.w-24);
-
+        if (game.raid_target(chart_water)>=0)
+            button(d,{badge.x,badge.bottom()+4,65,19},"截停商船",PrepareMerchantRaid);
         const auto bar=[&](int index,int count,int row) {
             const int left=body.x+index*(body.w+3)/count;
             return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
@@ -1268,8 +1276,8 @@ struct VoyageApp {
             skin_box(d,body,0,6);
             d.label(body.x+7,body.y+6,format("%s市场",Places[game.s.origin].name.data()),gold);
             d.wrap({body.x+7,body.y+31,body.w-14,body.h-64},
-                   "旗号的查验结果已记入港簿。商会暂不与你买卖，去港务处查看留案。",ivory,17);
-            button(d,{body.x+7,body.bottom()-28,body.w-14,24},"查看旗号留案",OpenPortCase,true);
+                   "港务已把此事记入港簿，商会暂时停止交易。",ivory,17);
+            button(d,{body.x+7,body.bottom()-28,body.w-14,24},"查看港务留案",OpenPortCase,true);
             return;
         }
         const auto& s=game.s;
@@ -1313,8 +1321,10 @@ struct VoyageApp {
         const Text stock_note=news?(news->price_percent>0?"求购中":"到货中"):road_goods?"驿道来货":"";
         const auto note=format("%s 库存%d %s",GoodsNames[good].data(),game.stock(good),stock_note.data());
         const auto bargain=format("%s · 五件省%d%%",GoodsNames[good].data(),s.bargain_rate);
-        if (s.whale_oil)
-            button(d,{x+4,body.bottom()-54,std::min(104,w-71),22},format("鲸油 ×%d",int(s.whale_oil)),ShowFishBook,true);
+        if (s.whale_oil || s.whale_blubber)
+            button(d,{x+4,body.bottom()-54,std::min(104,w-71),22},
+                   format("%s ×%d",s.whale_blubber?"鲸脂":"鲸油",int(s.whale_blubber?s.whale_blubber:s.whale_oil)),
+                   ShowFishBook,true);
         else d.label(x+4,body.bottom()-51,negotiated?Text(bargain):Text(note),
                      negotiated?mint:news || road_goods?gold:mist,w-(pages>1?72:10));
         if (pages>1) {
@@ -1614,17 +1624,20 @@ struct VoyageApp {
     }
 
     void port_case(Draw& d) {
-        page_title(d,"旗号留案",LetterIcon);
+        page_title(d,"港务留案",LetterIcon);
         const int x=body.x+7, w=body.w-14, y=body.y+32;
         if (!game.market_held()) {
             d.label(x,y,"商会已重新开放交易。",mint,w);
             return;
         }
         d.label(x,y,format("还需等 %d 日",game.port_hold_until()-game.s.day),gold,w);
-        d.wrap({x,y+20,w,body.bottom()-y-48},
-               "冒称王家差船一事已记入港簿。交偿金可以提前结案。补给、修船和出海仍可照常办理。",ivory,16);
-        button(d,{x,body.bottom()-28,w,24},format("交偿金 %d金",Game::PortSettlement),SettlePortCase,
-               true,game.s.gold<Game::PortSettlement);
+        const bool piracy=game.piracy_docket_until()>game.s.day;
+        const auto settlement=game.port_settlement_cost();
+        d.wrap({x,y+20,w,body.bottom()-y-48},piracy?
+               "遇袭的商船已报案。该辖区的商会停止交易，巡逻船在近海查缉。缴清偿金可撤销通缉。":
+               "港务在核查船只文书或港口纠纷。交偿金可提前结案，补给、修船和出海照常办理。",ivory,16);
+        button(d,{x,body.bottom()-28,w,24},format("交偿金 %d金",settlement),SettlePortCase,
+               true,game.s.gold<settlement);
     }
 
     void flag_art(Draw& d, int id, Rect area) {
@@ -1681,6 +1694,20 @@ struct VoyageApp {
             row(d,id,step?ShoreTasks[id].title:Places[ShoreTasks[id].port].name,
                 step>=3?"已记完":step?"待续":"有待探访",ShoreEntry+id,step>=3);
         }
+    }
+
+    void merchant_raid_offer(Draw& d) {
+        if (raid_company<0 || raid_company>=int(MerchantNames.size())) return;
+        page_title(d,MerchantNames[raid_company],PennantIcon);
+        const int x=body.x+7, w=body.w-14, y=body.y+33;
+        const auto jurisdiction=game.merchant_jurisdiction(raid_company);
+        const auto& ship=game.s.merchants[raid_company];
+        d.label(x,y,format("%s商船 · %s ×%d",jurisdiction.data(),GoodsNames[ship.good].data(),int(ship.units)),
+                gold,w);
+        d.wrap({x,y+19,w,body.bottom()-y-49},
+               "船员看到对方挂起商旗。动手后，遇袭船只会向它的辖区报案。当地商会将停止与你交易。",
+               ivory,15);
+        pair(d,{x,body.bottom()-27,w,24},"放行",Close,"袭击商船",ConfirmMerchantRaid);
     }
 
     void enclave_registry(Draw& d) {
@@ -1810,11 +1837,19 @@ struct VoyageApp {
         const int x=body.x+6, y=body.y+28, width=body.w-12;
         const int art_height=std::max(30,(body.h-58)*3/5);
         sea_picture_panel(d,FisheryPicture,{x,y,width,art_height});
-        const int quote=game.whale_oil_quote();
+        const int quote=game.whale_oil_quote(), cost=game.whale_rendering_cost();
         const Rect button_at{x,body.bottom()-27,width,24};
         d.wrap({x,y+art_height+3,width,std::max(0,button_at.y-y-art_height-5)},
+               game.s.whale_blubber?"渔队带回的鲸脂可交波尔多的岸上工匠炼油。":
                "葡萄牙近岸的银色鱼群能补口粮。比斯开湾入冬后，渔队会留意露脊鲸的双柱鲸息。",ivory);
-        if (quote) button(d,button_at,format("卖出%d桶鲸油 · 收%d金",int(game.s.whale_oil),quote),SellWhaleOil,true);
+        Rect processing=button_at, selling=button_at;
+        if (cost && quote) {
+            processing.w=width/2-2;
+            selling.x=processing.right()+4;
+            selling.w=button_at.right()-selling.x;
+        }
+        if (cost) button(d,processing,format("委托炼油 %d金 · 1日",cost),RenderWhaleOil,true,game.s.gold<cost);
+        if (quote) button(d,selling,format("卖出%d桶鲸油 · 收%d金",int(game.s.whale_oil),quote),SellWhaleOil,true);
     }
 
     void shore_page(Draw& d) {
@@ -2076,7 +2111,7 @@ struct VoyageApp {
         if (modal==EnclavePage && enclave_tab==0) return enclave_item==0?MachicoPicture:VilaFrancaPicture;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
         if (modal==NatureWatch && game.s.helm) return Doldrums;
-        if (full_helm_chart() && !game.encounter() && game.s.ship==1 && zoom>=4) return CaravelDetail;
+        if (full_helm_chart() && !game.encounter() && zoom>=4) return DetailedHullPictures[game.s.ship];
         if (screen==Chart && modal==None) return game.s.weather;
         return Calm;
     }
@@ -2172,7 +2207,9 @@ struct VoyageApp {
         atlas_background(d);
         helm_rain(d);
         const auto player=skirmish_point({s.helm_x,s.helm_y}), enemy=skirmish_point(battle.rival);
-        const auto status=format("敌船 %d",s.enemy);
+        const Text target=battle.opponent>=FirstMerchantOpponent?"商船":
+                          battle.opponent==PatrolOpponent?"巡逻船":"私掠船";
+        const auto status=format("%s %d",target.data(),s.enemy);
         const auto wind=game.conditions();
         const auto course=format("风向%s %d级",Bearings[wind.direction].data(),wind.strength);
         const Point heading=Directions[s.heading], rival_heading=Directions[battle.heading];
@@ -2183,7 +2220,12 @@ struct VoyageApp {
         };
         if (battle.rope_ticks) skirmish_effect(d,4,skirmish_point(battle.rope),23);
         if (battle.snared) skirmish_effect(d,5,enemy,31);
-        vessel_sprite(d,1,(vessel_frame()+3)%VesselFrames,{enemy.x-20,enemy.y-23,40,30},rival_heading.x<0);
+        const int rival_hull=battle.opponent>=FirstMerchantOpponent?2:1;
+        vessel_sprite(d,rival_hull,(vessel_frame()+3)%VesselFrames,{enemy.x-20,enemy.y-23,40,30},rival_heading.x<0);
+        if (battle.court) {
+            const int flag=battle.court==1?PortugueseColors:CastilianColors;
+            flag_art(d,flag,{enemy.x-4,enemy.y-24,12,7});
+        }
         map_vessel(d,player,s.ship,heading.x<0,false);
         heading_mark(player,heading,mint);
         heading_mark(enemy,rival_heading,vermilion);
@@ -2242,8 +2284,8 @@ struct VoyageApp {
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
         const auto& scene=Encounters[weather];
-        d.label(x,body.y+5,game.convoy_battle() && weather==Privateer ?
-                "银铃号护航 · 断铃号" : scene.title,gold,w);
+        d.label(x,body.y+5,s.skirmish.opponent==PatrolOpponent?"巡逻船要求停船":
+                game.convoy_battle() && weather==Privateer?"银铃号护航 · 断铃号":scene.title,gold,w);
         if (weather==Privateer) {
             d.label(x,body.y+23,format("船距%d  敌船%d  %s",s.range,s.enemy,
                      s.needs_reload?"待装填":s.aim?"已瞄准":"可开炮"),ivory,w);
@@ -2976,7 +3018,7 @@ struct VoyageApp {
         const bool invested=game.guild_stake(game.s.origin);
         const auto cost=format("入股 %d金",game.guild_cost());
         if (game.market_held()) {
-            row(d,0,"旗号留案","暂停交易",OpenPortCase,true);
+            row(d,0,"港务留案","暂停交易",OpenPortCase,true);
             d.label(body.x+7,body.y+52,"商会等港务处结案再开市。",mist,body.w-14);
         } else {
             row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
@@ -3763,6 +3805,7 @@ struct VoyageApp {
         case FishBook: fish_book(d); break;
         case EnclaveRegistry: enclave_registry(d); break;
         case EnclavePage: enclave_page(d); break;
+        case MerchantRaidOffer: merchant_raid_offer(d); break;
         case DriftStory: drift_story(d); break;
         case DriftRecovery: drift_recovery(d); break;
         case MerchantBoard: merchant_board(d); break;
@@ -3893,6 +3936,26 @@ struct VoyageApp {
         }
         if (action>=OpenLanguages) {
             switch (action) {
+            case RenderWhaleOil:
+                if (modal==FishBook && game.render_whale_oil()) changed();
+                break;
+            case PrepareMerchantRaid:
+                if (const int company=game.raid_target(chart_water); company>=0) {
+                    raid_company=company;
+                    game.paused=true;
+                    save_needed=true;
+                    set_modal(MerchantRaidOffer);
+                }
+                break;
+            case ConfirmMerchantRaid:
+                if (modal==MerchantRaidOffer && game.begin_merchant_raid(raid_company,chart_water)) {
+                    sea_flashes={};
+                    skirmish_tick=now;
+                    open_helm_view=true;
+                    set_modal(None);
+                    changed();
+                } else notify();
+                break;
             case OpenEnclaves: set_modal(EnclaveRegistry); break;
             case DockEnclave: case ShowLocalEnclave:
                 if (action==DockEnclave && !game.dock_helm(chart_water)) { notify(); break; }

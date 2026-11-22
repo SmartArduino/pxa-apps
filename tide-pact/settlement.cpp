@@ -43,7 +43,7 @@ int Game::enclave_nearby(WaterTest water) const {
 Text Game::enclave_lease_requirement(int site) const {
     if (site!=enclave_here() || site<0) return "请先抵达村镇";
     if (s.enclaves[site].status) return "已有地契";
-    if (market_held() || s.court_hold_until[Portugal]>s.day) return "港簿上的旧案须先了结";
+    if (market_held() || std::max(s.court_hold_until[Portugal],s.sea_warrant[Portugal])>s.day) return "港簿上的旧案须先了结";
     if (!understands(Portuguese)) return "签地契需要葡萄牙语";
     if (!has_royal_pass(Portugal) && (s.renown<2 || s.trust<1)) return "需声望2、信任1或王家委状";
     if (s.gold<EnclaveSites[site].fee) return "金币不足";
@@ -85,7 +85,7 @@ bool Game::build_enclave(int site,int building) {
 }
 
 int Game::enclave_export_quote(int site) const {
-    if (site!=enclave_here() || site<0 || market_held() || s.court_hold_until[Portugal]>s.day) return 0;
+    if (site!=enclave_here() || site<0 || market_held() || std::max(s.court_hold_until[Portugal],s.sea_warrant[Portugal])>s.day) return 0;
     const auto& holding=s.enclaves[site];
     if (!holding.status || !has_building(holding,EnclaveWharf)) return 0;
     return holding.exports*(site==0?14:19);

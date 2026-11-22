@@ -618,11 +618,14 @@ void coastal_fishery() {
     assert(job.stage==GearReady);
     whale.s.helm_x=job.gear.x;
     whale.s.helm_y=job.gear.y;
-    assert(whale.work_fishery() && whale.s.whale_oil==3 && whale.load()==load+3);
+    assert(whale.work_fishery() && whale.s.whale_blubber==3 && whale.load()==load+3);
     whale.s.helm_x=Anchor[bordeaux].x*16;
     whale.s.helm_y=Anchor[bordeaux].y*16;
     whale.s.chart_marks|=place_bit(bordeaux);
     assert(whale.dock_helm(ocean));
+    const int cost=whale.whale_rendering_cost(), prior_gold=whale.s.gold;
+    assert(cost==21 && whale.render_whale_oil() && whale.s.whale_oil==3 &&
+           whale.s.gold==prior_gold-cost && !whale.render_whale_oil());
     const int gold=whale.s.gold, quote=whale.whale_oil_quote();
     assert(quote>0 && whale.sell_whale_oil() && whale.s.gold==gold+quote);
     assert(!whale.sell_whale_oil() && whale.load()==load);
@@ -676,6 +679,52 @@ void island_settlements() {
     assert(siege.decide_enclave_prisoners(1,ReleaseEnclavePrisoners));
     assert(siege.s.court_hold_until[Portugal]<before &&
            !siege.decide_enclave_prisoners(1,RansomEnclavePrisoners));
+}
+
+void merchant_raids_and_patrols() {
+    const auto ocean=[](Point) { return true; };
+    Game ship;
+    ship.s.day=5;
+    ship.s.guns=3;
+    ship.s.merchants[0]={.progress=77,.gold=700,.port=0,.destination=1,.good=Timber,.units=4};
+    assert(ship.start_helm(-1));
+    const auto merchant=ship.merchant_position(0);
+    ship.s.helm_x=(merchant.x-3)*16;
+    ship.s.helm_y=merchant.y*16;
+    ship.restore();
+    assert(ship.raid_target(ocean)==0 && ship.begin_merchant_raid(0,ocean));
+    assert(ship.s.sea_warrant[Portugal]>ship.s.day && !ship.s.sea_warrant[Castile]);
+    State saved;
+    assert(decode(saved,encode(ship.s)) && saved.skirmish.opponent==FirstMerchantOpponent);
+    ship.paused=false;
+    ship.s.heading=6;
+    ship.s.enemy=30;
+    ship.s.skirmish.rival={ship.s.helm_x,ship.s.helm_y+21};
+    ship.s.skirmish.snared=18;
+    assert(ship.fire_skirmish(-1) && ship.s.enemy==30);
+    const int money=ship.s.gold;
+    for (int tick=0;ship.encounter() && tick<12;++tick) ship.tick_skirmish(ocean);
+    assert(!ship.encounter() && ship.s.gold==money+52 && ship.s.cargo[Timber]==4);
+    assert(ship.s.merchants[0].units==0);
+
+    auto patrol=ship;
+    patrol.s.day=patrol.s.patrol_after[Portugal];
+    patrol.s.helm_x=(Anchor[lisbon].x-9)*16;
+    patrol.s.helm_y=Anchor[lisbon].y*16;
+    patrol.s.chart_marks=(1ULL<<PlaceCount)-1;
+    while (patrol.conditions().weather==Squall) ++patrol.s.day;
+    patrol.s.sail_watch=3;
+    patrol.s.helm_pulse=5;
+    patrol.helm_pulses(ocean,1);
+    assert(patrol.encounter() && patrol.s.skirmish.opponent==PatrolOpponent);
+    assert(patrol.begin_skirmish(ocean) && patrol.s.skirmish.opponent==PatrolOpponent);
+
+    ship.s.helm_x=Anchor[lisbon].x*16;
+    ship.s.helm_y=Anchor[lisbon].y*16;
+    assert(ship.dock_helm(ocean) && ship.market_held() && ship.port_settlement_cost()==150);
+    const int payout=ship.s.gold;
+    assert(ship.settle_port_case() && ship.s.gold==payout-150 && !ship.market_held());
+    assert(!ship.settle_port_case());
 }
 
 void sailing_units() {
@@ -1785,6 +1834,7 @@ int main() {
     chart_skirmish();
     coastal_fishery();
     island_settlements();
+    merchant_raids_and_patrols();
     sailing_units();
     weather_forecasts();
     sailing_rations();

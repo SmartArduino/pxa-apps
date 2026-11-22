@@ -207,11 +207,14 @@ struct SeaShot {
     std::uint8_t heading=0, steps=0;
 };
 
+enum SeaOpponent : std::uint8_t { PrivateerOpponent, PatrolOpponent, FirstMerchantOpponent, SecondMerchantOpponent };
+
 struct SeaSkirmish {
     Point rival{}, rope{};
     std::array<SeaShot,2> shots{};
     std::uint8_t heading=0, reload=0, enemy_reload=0, turn_delay=0, rope_ticks=0, snared=0;
     bool active=false;
+    std::uint8_t opponent=PrivateerOpponent, court=0;
 };
 
 enum SkirmishEffect : unsigned {
@@ -270,13 +273,14 @@ struct State {
     bool in_company=false;
     std::uint8_t colors=MerchantColors, royal_passes=0;
     std::array<int,CourtCount> court_hold_until{};
+    std::array<int,CourtCount> sea_warrant{}, patrol_after{};
     std::array<std::uint8_t,ShoreTaskCount> shore_tasks{};
     SeaSkirmish skirmish;
     SeaFishery fishery;
     std::array<EnclaveHolding,EnclaveCount> enclaves{};
     std::uint8_t migrant_site=0;
     std::array<int,2> fishery_next{};
-    std::uint8_t whale_oil=0;
+    std::uint8_t whale_oil=0, whale_blubber=0;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -284,7 +288,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, SaveBytes=1840;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SaveBytes=1872;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -396,6 +400,11 @@ struct Game {
     void navigator();
     void encounter_action(int action);
     bool begin_skirmish(WaterTest water);
+    int raid_target(WaterTest water) const;
+    Text merchant_jurisdiction(int company) const;
+    bool begin_merchant_raid(int company,WaterTest water);
+    int piracy_docket_until() const;
+    int port_settlement_cost() const;
     bool fire_skirmish(int side);
     bool drop_drift_rope();
     bool can_board_skirmish() const;
@@ -409,6 +418,8 @@ struct Game {
     bool cancel_fishery();
     int whale_oil_quote() const;
     bool sell_whale_oil();
+    int whale_rendering_cost() const;
+    bool render_whale_oil();
     int enclave_here() const;
     int enclave_nearby(WaterTest water) const;
     Text enclave_lease_requirement(int site) const;
@@ -543,6 +554,8 @@ private:
     void helm_move(WaterTest water_at, int pulses);
     void tick_fishery(WaterTest water);
     void tick_enclaves();
+    bool start_patrol_interception(Point position);
+    void resolve_special_skirmish();
     bool observation_day();
     void reveal_chart(Point center, int radius);
     int lookout_radius() const { return s.first_mate==Pilot?19:14; }

@@ -98,9 +98,9 @@ bool Game::work_fishery() {
     }
     const bool whale=job.target==WhaleFishery;
     if (whale) {
-        const int barrels=std::min({3,capacity()-load(),12-int(s.whale_oil)});
-        s.whale_oil+=std::max(0,barrels);
-        notice=barrels>0?"渔队带回鲸油，可交海港商人":"收回小艇，货舱没有鲸油空位";
+        const int barrels=std::min({3,capacity()-load(),12-int(s.whale_oil)-int(s.whale_blubber)});
+        s.whale_blubber+=std::max(0,barrels);
+        notice=barrels>0?"渔队带回鲸脂，可到波尔多炼油":"收回小艇，货舱已满";
     } else {
         const int season=s.day%365;
         const int haul=season>=95 && season<=238?12:8;
@@ -148,6 +148,21 @@ void Game::tick_fishery(WaterTest water) {
         job.stage=GearReady;
         notice=job.target==WhaleFishery?"渔队正等待接应":"浮标沉了一截，靠过去收网";
     }
+}
+
+int Game::whale_rendering_cost() const {
+    return port() && s.origin==bordeaux && !market_held()?7*s.whale_blubber:0;
+}
+
+bool Game::render_whale_oil() {
+    const int cost=whale_rendering_cost();
+    if (!cost || s.gold<cost || s.day>=99999) return false;
+    earn(-cost);
+    spend_day(1);
+    s.whale_oil+=s.whale_blubber;
+    s.whale_blubber=0;
+    notice="岸上工匠炼好了鲸油";
+    return true;
 }
 
 int Game::whale_oil_quote() const {

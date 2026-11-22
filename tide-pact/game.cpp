@@ -228,7 +228,7 @@ int Game::water_capacity() const {
 int Game::crew_limit() const { return berths[s.ship]; }
 
 int Game::load() const {
-    int all = dispatch_space()+s.whale_oil+(s.migrant_site?3:0);
+    int all = dispatch_space()+s.whale_oil+s.whale_blubber+(s.migrant_site?3:0);
     for (const int count : s.cargo) all += count;
     return all;
 }
@@ -1354,6 +1354,7 @@ void Game::helm_move(WaterTest water_at, int pulses) {
         paused=true;
     }
     if (!new_day || paused) return;
+    if (start_patrol_interception(position())) return;
     if (!(s.event_mask&1U) && convoy_battle()) {
         start_encounter(Privateer);
         notice="断铃号拦住了护航商船";
@@ -1482,6 +1483,7 @@ void Game::rescue() {
     earn(-160);
     for (auto& item : s.cargo) item /= 2;
     s.whale_oil/=2;
+    s.whale_blubber/=2;
     const auto here = position();
     int nearest = 0;
     for (int p = 1; p < PortCount; ++p)
@@ -2215,15 +2217,25 @@ void Game::wear_company_hull(int loss) {
 int Game::port_hold_until() const {
     if (s.origin==calicut) return s.calicut_hold_until;
     const auto court=port_court(s.origin);
-    return court==NoCourt?0:s.court_hold_until[court];
+    return court==NoCourt?0:std::max(s.court_hold_until[court],s.sea_warrant[court]);
+}
+
+int Game::port_settlement_cost() const {
+    return piracy_docket_until()>s.day?150:PortSettlement;
 }
 
 bool Game::settle_port_case() {
-    if (!market_held() || s.gold<PortSettlement) return false;
-    earn(-PortSettlement);
+    const int cost=port_settlement_cost();
+    if (!market_held() || s.gold<cost) return false;
+    earn(-cost);
     if (s.origin==calicut) s.calicut_hold_until=0;
-    else s.court_hold_until[port_court(s.origin)]=0;
-    notice="旗号留案已了结，市场重新开放";
+    else {
+        const auto court=port_court(s.origin);
+        s.court_hold_until[court]=0;
+        s.sea_warrant[court]=0;
+        s.patrol_after[court]=0;
+    }
+    notice="港务留案已了结，市场重新开放";
     return true;
 }
 
@@ -2393,6 +2405,7 @@ void Game::start_duel(int kind) {
 }
 
 void Game::win_at_sea(bool boarded) {
+    if (s.skirmish.opponent!=PrivateerOpponent) { resolve_special_skirmish(); return; }
     const bool convoy=convoy_battle();
     if (convoy) s.escort=boarded?EscortWonDuel:EscortWonGuns;
     earn(boarded?155+s.ship*45:135+s.ship*65);
@@ -2643,8 +2656,9 @@ constexpr int AddedPorts=PortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
 constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
+constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+4);
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+4);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2679,7 +2693,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x48445054);
+    put(0x49445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -2769,6 +2783,11 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
                                 holding.term,holding.prisoners,std::uint8_t(holding.carpenter)})
             bytes[offset++]=std::byte(field);
     }
+    bytes[offset++]=std::byte(s.skirmish.opponent);
+    bytes[offset++]=std::byte(s.skirmish.court);
+    for (const auto& dates : {s.sea_warrant,s.patrol_after})
+        for (const auto day : dates) put(day);
+    bytes[offset++]=std::byte(s.whale_blubber);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -2781,7 +2800,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=LanguageSaveBytes && bytes.size()!=MerchantSaveBytes &&
         bytes.size()!=NatureSaveBytes && bytes.size()!=BerthSaveBytes &&
         bytes.size()!=HelmClockSaveBytes && bytes.size()!=SkirmishSaveBytes &&
-        bytes.size()!=FisherySaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes &&
+        bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -2791,7 +2811,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool enclaves=version==0x48445054 && bytes.size()==SaveBytes;
+    const bool sea_law=version==0x49445054 && bytes.size()==SaveBytes;
+    const bool enclaves=sea_law || (version==0x48445054 && bytes.size()==EnclaveSaveBytes);
     const bool fishery=enclaves || (version==0x47445054 && bytes.size()==FisherySaveBytes);
     const bool skirmish=fishery || (version==0x46445054 && bytes.size()==SkirmishSaveBytes);
     const bool continuous=skirmish || (version==0x45445054 && bytes.size()==HelmClockSaveBytes);
@@ -3113,6 +3134,22 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 holding.carpenter=carpenter!=0;
             }
         }
+        if (sea_law) {
+            s.skirmish.opponent=std::to_integer<std::uint8_t>(bytes[offset++]);
+            s.skirmish.court=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (s.skirmish.opponent>SecondMerchantOpponent || s.skirmish.court>CourtCount ||
+                bool(s.skirmish.opponent)!=bool(s.skirmish.court) ||
+                (s.skirmish.opponent && (s.weather!=Privateer && s.weather!=Boarding))) return false;
+            for (auto* dates : {&s.sea_warrant,&s.patrol_after}) {
+                for (auto& day : *dates) {
+                    const auto expiry=get();
+                    if (expiry>99999) return false;
+                    day=static_cast<int>(expiry);
+                }
+            }
+            s.whale_blubber=std::to_integer<std::uint8_t>(bytes[offset++]);
+            if (int(s.whale_blubber)+s.whale_oil>12) return false;
+        }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }
@@ -3129,7 +3166,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    int load = s.whale_oil+(s.migrant_site?3:0)+
+    int load = s.whale_oil+s.whale_blubber+(s.migrant_site?3:0)+
         (s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;
     if (load > cargo_capacity(s) || s.crew+s.berth.sailors>berths[2]) return false;

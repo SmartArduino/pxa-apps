@@ -69,14 +69,15 @@ bool Game::begin_skirmish(WaterTest water) {
         const auto rival=step_toward(player,heading,58);
         if (!in_water(rival,water) || !in_water(step_toward(player,heading,32),water) ||
             !in_water(step_toward(player,heading,16),water) || !in_water(step_toward(player,heading,48),water)) continue;
-        s.skirmish={};
-        s.skirmish.active=true;
+        const auto opponent=s.skirmish.opponent, court=s.skirmish.court;
+        s.skirmish={.active=true,.opponent=opponent,.court=court};
         s.skirmish.rival=rival;
         s.skirmish.heading=(heading+4)%8;
         s.skirmish.enemy_reload=22;
         if (s.needs_reload) s.skirmish.reload=22;
         paused=true;
-        notice="断铃号正在逼近";
+        notice=opponent==PatrolOpponent?"巡逻船正在逼近":
+            convoy_battle()?"断铃号正在逼近":"私掠船正在逼近";
         return true;
     }
     notice="这片浅滩无法展开海战";
@@ -108,7 +109,8 @@ bool Game::can_board_skirmish() const {
 
 bool Game::board_skirmish() {
     if (!can_board_skirmish()) return false;
-    s.skirmish={};
+    const auto opponent=s.skirmish.opponent, court=s.skirmish.court;
+    s.skirmish={.opponent=opponent,.court=court};
     s.range=1;
     start_duel(Boarding);
     notice="两船接舷";
@@ -132,11 +134,13 @@ unsigned Game::tick_skirmish(WaterTest water) {
     }
     const int separation=distance_squared(player,battle.rival);
     if (separation>=ChaseLimit*ChaseLimit) {
-        if (s.enemy<=15) win_at_sea(false);
+        if (s.enemy<=15 && battle.opponent==PrivateerOpponent) win_at_sea(false);
         else {
+            const auto opponent=battle.opponent;
             log_encounter(1);
             finish_encounter();
-            notice="已甩开私掠船";
+            notice=opponent>=FirstMerchantOpponent?"商船已脱离战斗":
+                opponent==PatrolOpponent?"已甩开巡逻船":"已甩开私掠船";
         }
         return SkirmishEnded;
     }
@@ -153,7 +157,7 @@ unsigned Game::tick_skirmish(WaterTest water) {
     if (battle.reload) --battle.reload;
     if (battle.enemy_reload) --battle.enemy_reload;
     const int toward=direction_to({player.x-battle.rival.x,player.y-battle.rival.y});
-    const bool fleeing=s.enemy<=15;
+    const bool fleeing=s.enemy<=15 || battle.opponent>=FirstMerchantOpponent;
     int desired=fleeing?(toward+4)%8:toward;
     const bool broadside=separation<52*52 && separation>20*20;
     if (!fleeing && broadside) desired=(toward+2)%8;
@@ -166,7 +170,7 @@ unsigned Game::tick_skirmish(WaterTest water) {
     }
     if (battle.snared) --battle.snared;
     else {
-        const auto away=step_toward(battle.rival,battle.heading,fleeing?3:2);
+        const auto away=step_toward(battle.rival,battle.heading,battle.opponent>=FirstMerchantOpponent?2:fleeing?3:2);
         if (in_water(away,water)) battle.rival=away;
         else battle.heading=(battle.heading+2)%8;
     }

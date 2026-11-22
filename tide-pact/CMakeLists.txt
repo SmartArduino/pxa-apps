@@ -17,5 +17,5 @@ add_custom_command(
     DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/tools/embed_assets.py" ${asset_files}
     VERBATIM
 )
-pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp game.cpp sea_skirmish.cpp sea_fishery.cpp settlement.cpp "${asset_source}")
+pxa_add_app(pxa_main COMPONENT_ID main SOURCES main.cpp game.cpp sea_skirmish.cpp sea_fishery.cpp sea_law.cpp settlement.cpp "${asset_source}")
 target_include_directories(pxa_main PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}")
