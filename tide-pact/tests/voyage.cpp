@@ -289,6 +289,27 @@ void merchant_trade() {
     assert(!decode(invalid,encode(game.s)));
 }
 
+void custom_trade_quantities() {
+    Game game;
+    const auto buy=game.trade_quote(Wine,false,7);
+    assert(buy.units==7 && game.trade_limit(Wine,false)>=7);
+    game.s.gold=buy.gold;
+    assert(game.trade_limit(Wine,false)==7);
+    assert(game.trade(Wine,false,7).gold==buy.gold && game.s.cargo[Wine]==7 && !game.s.gold);
+    assert(game.trade_limit(Wine,true)==7);
+    const auto sell=game.trade_quote(Wine,true,3);
+    assert(game.trade(Wine,true,3).gold==sell.gold && game.s.cargo[Wine]==4 && game.s.gold==sell.gold);
+
+    Game old_deal;
+    old_deal.s.bargain_good=Wine+1;
+    old_deal.s.bargain_rate=8;
+    const auto discounted=old_deal.trade_quote(Wine,false,TradeLot);
+    assert(discounted.saved && discounted.units==TradeLot);
+    old_deal.s.gold=discounted.gold;
+    assert(old_deal.trade_quote(Wine,false,old_deal.capacity()).units<TradeLot);
+    assert(old_deal.trade_limit(Wine,false)==TradeLot);
+}
+
 void port_market_cycles() {
     Game game;
     for (auto& ship : game.s.merchants) ship.gold=0;
@@ -1296,6 +1317,7 @@ int main() {
     trading_quotes();
     merchant_trade();
     port_market_cycles();
+    custom_trade_quantities();
     town_walks();
     port_stories();
     port_dispatches();

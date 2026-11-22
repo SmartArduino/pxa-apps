@@ -28,7 +28,7 @@ enum Overlay {
     Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
-    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage
+    DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -65,7 +65,9 @@ enum Action {
     WalkToCityGate, WalkToOutsideGate, WalkToRiver, WalkToShed, WalkToPostRoad, ReturnTimber, TakeTimberReward,
     OpenDispatch, ViewDispatchReceipt, AcceptDispatch, FileDispatch, MarkDispatch, AskCancelDispatch,
     CancelDispatch, OpenLandReport, WalkLandStream, WalkLandPass, WalkLandCopy, WalkLandLookout,
-    WalkLandBack, FileLandReport, DispatchEntry
+    WalkLandBack, FileLandReport, OpenTradeQuantity, QuantityBuy, QuantitySell,
+    QuantityBackspace, QuantityMaximum, QuantityConfirm, QuantityDigit,
+    DispatchEntry=QuantityDigit+10
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(CycleSpeed<DockService);
@@ -126,6 +128,10 @@ struct VoyageApp {
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
     bool bargain_sell=false;
     int bargain_rate=8, bargain_counter=0;
+    TradeQuote settled_bargain;
+    HaggleReply bargain_reply=InvalidOffer;
+    int trade_quantity=0;
+    bool quantity_sell=false;
     int expedition_item=0;
     int officer_item=Pilot;
     int rumor_item=0, pinned_rumor=-1;
@@ -568,7 +574,7 @@ struct VoyageApp {
         const int status_width=show_weather?speed_x-safe.x-10:safe.w-(fits?80:d.measure(compact)+15);
         if (save_failed && !save_active)
             d.label(safe.x+6,safe.y+18,"存档失败，正在重试",vermilion,status_width);
-        else if (modal!=EventReport && notice_until && !game.notice.empty())
+        else if (modal!=EventReport && modal!=HaggleOutcomePage && notice_until && !game.notice.empty())
             d.label(safe.x+6,safe.y+18,game.notice,mint,status_width);
         else {
             const auto& p=Places[game.s.origin];
@@ -1052,16 +1058,65 @@ struct VoyageApp {
             button(d,{right-56,body.bottom()-54,25,23},"<",Previous,false,page==0);
             button(d,{right-27,body.bottom()-54,25,23},">",Next,false,page+1==pages);
         }
-        const int step=w/4;
-        for (int i=0;i<4;++i) {
+        for (int column=0;column<5;++column) {
+            const int left=x+w*column/5, width=x+w*(column+1)/5-left-3;
+            const Rect r{left,body.bottom()-31,width,PricedButtonHeight};
+            if (column==2) {
+                button(d,r,"数量",OpenTradeQuantity,true,false,"自定");
+                continue;
+            }
+            const int i=column<2?column:column-1;
             const bool sell=i>=2;
             const int batch=i%2==0 ? 1 : TradeLot;
             const auto offer=game.trade_quote(good,sell,batch);
             const auto label=format("%s%d",sell?"卖":"买",offer.units ? offer.units : batch);
-            const auto price=format("%d%s",offer.gold,step>=48?"金":"");
-            button(d,{x+i*step,body.bottom()-31,step-3,PricedButtonHeight},label,BuyOne+i,i==0 || offer.saved,!offer.units,
-                   offer.units ? Text(price) : Text("—"));
+            const auto price=format("%d%s",offer.gold,width>=48?"金":"");
+            button(d,r,label,BuyOne+i,i==0 || offer.saved,!offer.units,offer.units?Text(price):Text("—"));
         }
+    }
+
+    void trade_quantity_page(Draw& d) {
+        page_title(d,GoodsNames[good],CargoIcon);
+        const int x=body.x+7, y=body.y, right=body.right()-7;
+        const int pad_width=std::min(body.w/2,165);
+        const int pad_x=right-pad_width, width=pad_x-x-7;
+        const int maximum=game.trade_limit(good,quantity_sell);
+        const bool over=trade_quantity>maximum;
+        const auto quote=over?TradeQuote{}:game.trade_quote(good,quantity_sell,trade_quantity);
+        const bool ready=trade_quantity>0 && quote.units==trade_quantity;
+        const int half=(width-4)/2;
+        button(d,{x,y+28,half,22},"买入",QuantityBuy,!quantity_sell);
+        button(d,{x+half+4,y+28,width-half-4,22},"卖出",QuantitySell,quantity_sell);
+        d.label(x,y+55,format("数量 %d",trade_quantity),over?vermilion:ivory,width);
+        d.label(x,y+72,format("最多 %d 件",maximum),mist,width);
+        const auto total=format("%s %d金",quantity_sell?"收取":"支付",quote.gold);
+        d.label(x,y+89,ready?Text(total):over?"超出可成交量":maximum?"请输入数量":"暂无可成交量",
+                ready?mint:over?vermilion:mist,width);
+        button(d,{x,body.bottom()-28,width,23},quantity_sell?"确认卖出":"确认买入",QuantityConfirm,true,!ready);
+
+        constexpr Text keys[]{"1","2","3","4","5","6","7","8","9","退格","0","最大"};
+        const int key_height=std::min(27,(body.h-31)/4-3);
+        for (int i=0;i<int(std::size(keys));++i) {
+            const int column=i%3, row=i/3;
+            const int left=pad_x+column*pad_width/3;
+            const int action=i<9?QuantityDigit+i+1:i==9?QuantityBackspace:i==10?QuantityDigit:QuantityMaximum;
+            button(d,{left,y+28+row*(key_height+3),pad_x+(column+1)*pad_width/3-left-3,key_height},
+                   keys[i],action,i==11,i==11?maximum==0:i==9 && trade_quantity==0);
+        }
+    }
+
+    bool market_order(bool sell, int quantity) {
+        const auto trade=game.trade(good,sell,quantity);
+        if (!trade.units) { notify(); return false; }
+        if (trade.saved)
+            std::snprintf(trade_receipt.data(),trade_receipt.size(),"买入%d件 %d金 · 省%d金",
+                          trade.units,trade.gold,trade.saved);
+        else
+            std::snprintf(trade_receipt.data(),trade_receipt.size(),"%s %d件  %s%d金",
+                          sell?"卖出":"买入",trade.units,sell?"+":"-",trade.gold);
+        game.notice=trade_receipt.data();
+        changed();
+        return true;
     }
 
     void merchant_board(Draw& d) {
@@ -1136,14 +1191,36 @@ struct VoyageApp {
 
     void submit_bargain(int rate) {
         if (modal!=BargainPage) return;
+        const auto quote=game.bargain_quote(good,bargain_sell,rate);
         const auto result=game.bargain_offer(good,bargain_sell,rate);
         if (result.reply==InvalidOffer) { notify(); return; }
         bargain_counter=result.counter;
-        if (result.reply==DealAgreed) {
-            set_modal(None);
-            audio.cue(Sound::Page);
+        if (result.reply==DealAgreed || result.reply==TalksEnded) {
+            settled_bargain=quote;
+            bargain_reply=result.reply;
+            set_modal(HaggleOutcomePage);
+            if (result.reply==DealAgreed) audio.cue(Sound::Page);
         }
         changed();
+    }
+
+    void haggle_outcome_page(Draw& d) {
+        page_title(d,"码头议价",SpeechIcon,false);
+        const bool agreed=bargain_reply==DealAgreed;
+        const int x=body.x+7, y=body.y, w=body.w-14;
+        const auto& offer=settled_bargain;
+        d.label(x,y+32,agreed?(offer.saved?"议价成功":"市价成交"):"议价失败",
+                agreed?mint:vermilion,w);
+        if (agreed) {
+            goods_icon(d,good,{x,y+51,25,25});
+            d.label(x+31,y+55,format("%s %s ×%d",bargain_sell?"卖出":"买入",GoodsNames[good].data(),offer.units),ivory,w-31);
+            d.label(x+31,y+74,format("%s%d金",bargain_sell?"收到":"支付",offer.gold),gold,w-31);
+            if (offer.saved)
+                d.label(x+31,y+92,format("%s%d金",bargain_sell?"比市价多赚":"比市价少付",offer.saved),mint,w-31);
+        } else {
+            d.wrap({x,y+53,w,body.h-85},"商人收起账簿，本次停泊的议价结束。仍可回市场按市价买卖。",ivory,15);
+        }
+        button(d,{x,body.bottom()-28,w,24},"返回市场",Close,true);
     }
 
     void no_port(Draw& d, Text reason) {
@@ -1744,7 +1821,7 @@ struct VoyageApp {
         button(d,{body.right()-50,y,45,20},"下页",Next,false,page+1>=pages);
     }
     void route_list(Draw& d) {
-        page_title(d,"目的地");
+        page_title(d,"已知航点");
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
         button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
         std::array<int,PlaceCount> order{};
@@ -2703,12 +2780,12 @@ struct VoyageApp {
         page_title(d,"船长手册");
         constexpr Text instructions[]={
             "点港口或菱形选择目的地。拖动海图，用加减调整比例。手柄方向键选项，A 确认，B 返回。海图上 START 可启航或停船。",
-            "跨港贩货赚取差价。库存和行情会变，连续买入会抬高价格。船坞可加粮、修船、招募及换船。",
+            "在市场选货后点数量，可输入件数并预览总价。议价以五件为一批，出价后会看到还价、成交或失败。船坞可补给和修船。",
             "出发前看预计天数。船员越多耗粮越快。海上可缩帆、停船、掉头或在下站靠泊。遇到私掠船时，火炮齐射后需装填，机动可以贴近并瞄准。距一且有六名船员时可以接舷。",
             "海里是航程单位。一节等于每小时航行一海里。航线按整日估算。自由掌舵每步推进六小时，靠泊后时刻会保留。",
             "金色菱形标明下一处主线。到青色测绘点后记入图鉴。交易和航行中会自动保存，重开可续航。",
             "决斗时先看对方起手。格挡克突刺，佯攻破格挡，突刺截佯攻。",
-            "在目的地页点掌舵可自由出海。用左右舵或点海面改航向。航经的海域会画入海图。",
+            "在目的地页点掌舵可自由出海，用左右舵或点海面改航向。未知港口可从传闻圈出大致海域，驶近后会发现港口。",
             "航海时点顶部倍速。沿航线可用一、二或四倍，自由掌舵可用一或二倍。船速和水粮消耗按原航程计算。",
             "从里斯本城门走到河堤，沿旧驿道进山。两条路线耗费的天数和水粮不同。把测绘图带回城内档案室。",
             "去港务的档案室抄录手记。可出资或领预支，也可询问船工。抵达水域后点考察，按线索观测，再回原港交付。错过首报仍可交复测。"
@@ -2788,6 +2865,8 @@ struct VoyageApp {
         case LanguageDesk: language_desk(d); break;
         case TideLedger: tide_ledger_page(d); break;
         case BargainPage: bargain_page(d); break;
+        case TradeQuantityPage: trade_quantity_page(d); break;
+        case HaggleOutcomePage: haggle_outcome_page(d); break;
         case TimberTrailPage: timber_trail_page(d); break;
         case LandPage: land_page(d); break;
         case DriftStory: drift_story(d); break;
@@ -2826,6 +2905,11 @@ struct VoyageApp {
     }
     void activate(int action) {
         dirty=true;
+        if (action>=QuantityDigit && action<QuantityDigit+10) {
+            if (modal==TradeQuantityPage && trade_quantity<100)
+                trade_quantity=trade_quantity*10+action-QuantityDigit;
+            return;
+        }
         if (action>=DispatchEntry && action<DispatchEntry+DispatchCount) {
             const int id=action-DispatchEntry;
             if (modal==DispatchBoard && !game.s.dispatch.number && game.dispatch_offer_here(id)) {
@@ -2865,6 +2949,27 @@ struct VoyageApp {
             case MarkLedger: select(cadiz); break;
             case PublishLedger: case ReturnLedger:
                 if (game.decide_tide_ledger(action==PublishLedger)) { audio.cue(Sound::Page); changed(); }
+                break;
+            case OpenTradeQuantity:
+                if (game.port() && screen==Market && modal==None) {
+                    trade_quantity=0;
+                    quantity_sell=!game.trade_limit(good,false) && game.trade_limit(good,true)>0;
+                    set_modal(TradeQuantityPage);
+                }
+                break;
+            case QuantityBuy: case QuantitySell:
+                if (modal==TradeQuantityPage) quantity_sell=action==QuantitySell;
+                break;
+            case QuantityBackspace:
+                if (modal==TradeQuantityPage) trade_quantity/=10;
+                break;
+            case QuantityMaximum:
+                if (modal==TradeQuantityPage) trade_quantity=game.trade_limit(good,quantity_sell);
+                break;
+            case QuantityConfirm:
+                if (modal==TradeQuantityPage && trade_quantity>0 &&
+                    game.trade_quote(good,quantity_sell,trade_quantity).units==trade_quantity &&
+                    market_order(quantity_sell,trade_quantity)) set_modal(None);
                 break;
             case ShowBargain:
                 if (game.port()) {
@@ -3261,21 +3366,9 @@ struct VoyageApp {
             follow=true;
             changed();
             break;
-        case BuyOne: case BuyFive: case SellOne: case SellFive: {
-            const bool sell=action>=SellOne;
-            const auto trade=game.trade(good,sell,action==BuyFive || action==SellFive?TradeLot:1);
-            if (trade.units) {
-                if (trade.saved)
-                    std::snprintf(trade_receipt.data(),trade_receipt.size(),"买入%d件 %d金 · 省%d金",
-                                  trade.units,trade.gold,trade.saved);
-                else
-                    std::snprintf(trade_receipt.data(),trade_receipt.size(),"%s %d件  %s%d金",
-                                  sell?"卖出":"买入",trade.units,sell?"+":"-",trade.gold);
-                game.notice=trade_receipt.data();
-                changed();
-            } else notify();
+        case BuyOne: case BuyFive: case SellOne: case SellFive:
+            market_order(action>=SellOne,action==BuyFive || action==SellFive?TradeLot:1);
             break;
-        }
         case Accept: game.take_contract(); changed(); break;
         case Deliver: game.deliver(); changed(); break;
         case ReadStory: if (story_here()) set_modal(StoryPage); break;

@@ -242,6 +242,7 @@ struct Game {
     int price_at(int port, int good, bool sell) const;
     Point merchant_position(int company) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
+    int trade_limit(int good, bool sell) const;
     int negotiation_rate() const;
     Text bargain_block(int good, bool sell) const;
     TradeQuote bargain_quote(int good, bool sell, int rate) const;

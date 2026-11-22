@@ -306,6 +306,13 @@ TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
     return quote_order(good,sell,quantity,0,true);
 }
 
+int Game::trade_limit(int good, bool sell) const {
+    const int regular=trade_quote(good,sell,capacity()).units;
+    if (!sell && regular<TradeLot && s.bargain_good==good+1 &&
+        trade_quote(good,false,TradeLot).units==TradeLot) return TradeLot;
+    return regular;
+}
+
 int Game::negotiation_rate() const {
     if (!port()) return 0;
     const auto language=PortSpeech[s.origin];
@@ -1145,11 +1152,11 @@ void Game::helm_step(WaterTest water_at) {
     record_wake();
     const int found=sighting(position());
     if (found>=0) {
-        notice=Places[found].name;
+        notice=found<PortCount?"发现新港":"发现测绘点";
         paused=true;
     }
     if (reached_berth) {
-        notice="已到锚地，可以靠泊";
+        if (found<0) notice="已到锚地，可以靠泊";
         paused=true;
     }
     const bool new_day=++s.sail_watch==SailingWatches;
