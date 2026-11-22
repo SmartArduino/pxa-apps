@@ -89,7 +89,7 @@ enum Action {
     EnclaveConstruction=EnclaveEntry+EnclaveCount, EnclaveSupply=EnclaveConstruction+EnclaveBuildingCount, PrepareMerchantRaid=EnclaveSupply+4, ConfirmMerchantRaid, RenderWhaleOil,
     EnterPilot, LeavePilot, PilotZoomIn, PilotZoomOut, PilotCenter, PilotMoor, PilotUnmoor,
     PilotWaterBuy, PilotFoodBuy, PilotBookOpen, PilotStoryOpen, PilotGuide, PilotAim, PilotOpenParcel,
-    PilotHandleParcel, PilotConnect, PilotSiteEntry
+    PilotHandleParcel, PilotSpeed, PilotCenterShip, PilotCoastHint, PilotSiteEntry
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(SellWhaleOil<DockService);
@@ -125,6 +125,7 @@ struct VoyageApp {
     Game game;
     GameAudio audio;
     SeaPicture sea_picture;
+    PilotAtlas pilot_atlas;
     EncounterOutcome outcome;
     std::array<char,96> trade_receipt{};
     // Loading completes before gameplay can start. Subsequent saves use one
@@ -182,9 +183,11 @@ struct VoyageApp {
     unsigned skirmish_tick=0;
     int pilot_pending=-1, pilot_zoom=-1, pilot_site=-1, pilot_guide=-1;
     Overlay pilot_story_back=None;
-    bool pilot_connecting=false;
     bool pilot_follow=true;
-    float pilot_x=PilotWidth/2.f, pilot_y=PilotHeight/2.f, pilot_scale=1.f;
+    unsigned pilot_rate=1;
+    unsigned pilot_painted=0;
+    Point pilot_visual_from{-1,-1};
+    float pilot_x=0, pilot_y=0, pilot_scale_x=1.f, pilot_scale_y=1.f, pilot_pixels_per_mile=1.f;
     struct SeaFlash { Point position{}; unsigned started=0; int sprite=0; };
     std::array<SeaFlash,4> sea_flashes{};
     unsigned flash_slot=0;
@@ -317,6 +320,11 @@ struct VoyageApp {
         surface.reset();
         auto created = co_await context->surface().create_mapped({
             .width=w, .height=h, .buffers=2, .max_buffer_bytes=1024*1024});
+        if (!created && area>220000) {
+            created=co_await context->surface().create_mapped({
+                .width=w, .height=h, .buffers=1, .max_buffer_bytes=1024*1024});
+            if (created) (void)context->log().write(pxa::LogLevel::info,"Tide Pact using one display buffer");
+        }
         if (!created) {
             surface_retry=now+1800;
             (void)context->log().write(pxa::LogLevel::error,"Tide Pact surface allocation failed");
@@ -367,20 +375,47 @@ struct VoyageApp {
 
     PilotWater pilot_water() const {
         const int region=game.s.pilot.region;
-        const bool world=region==WorldPilotIndex+1;
-        const int art=world?PilotWorldPictureBase+game.s.pilot.patch:PilotPictureBase+region-1;
-        return {region?sea_picture.pixels(art):nullptr,world};
+        if (region==WorldPilotIndex+1) return pilot_atlas.water(game.s.pilot.patch);
+        return {region?sea_picture.pixels(PilotPictureBase+region-1):nullptr};
     }
 
-    int pending_pilot_picture() const {
-        if (pilot_pending<0) return Calm;
-        if (pilot_pending!=WorldPilotIndex) return PilotPictureBase+pilot_pending;
-        const int patch=pilot_connecting?pilot_patch_at({game.s.helm_x,game.s.helm_y}):game.starting_pilot_patch();
-        return PilotWorldPictureBase+patch;
+    int visible_pilot_detail() const {
+        if (pilot_pending>=0 && pilot_pending<WorldPilotIndex) return pilot_pending;
+        if (game.s.pilot.region && game.s.pilot.region<=WorldPilotIndex) return game.s.pilot.region-1;
+        return game.s.pilot.region?pilot_detail_at(game.pilot_atlas_position(),640):-1;
+    }
+
+    void prepare_pilot_chart() {
+        if (title || (!game.s.pilot.region && pilot_pending<0)) return;
+        const auto ship=game.pilot_atlas_position();
+        const Point camera=pilot_follow?ship:Point{int(pilot_x),int(pilot_y)};
+        const auto crossing=game.pilot_exit_position();
+        int priority=-1;
+        if (game.pilot_exiting()) priority=pilot_patch_at({crossing.x/8,crossing.y/8});
+        else if (pilot_pending==WorldPilotIndex) priority=game.starting_pilot_patch();
+        else if (game.s.pilot.region==WorldPilotIndex+1) priority=game.s.pilot.patch;
+        pilot_atlas.prepare(*context,ship,camera,priority,dirty);
+        if (game.pilot_exiting() && !game.paused) {
+            const auto water=pilot_atlas.water(priority);
+            if (water.bytes) {
+                if (!game.connect_pilotage(water)) notify();
+                save_needed=true;
+                dirty=true;
+            } else if (pilot_atlas.failed(priority)) {
+                game.set_pilot_heading(game.s.pilot.heading);
+                game.paused=true;
+                game.notice="海图读取失败，停船后可重试";
+                notify();
+            }
+        } else if (!game.paused && game.s.pilot.region==WorldPilotIndex+1) {
+            const int detail=pilot_detail_at(ship);
+            if (detail>=0 && game.refine_pilotage(detail,{sea_picture.pixels(PilotPictureBase+detail)}))
+                dirty=true;
+        }
     }
 
     unsigned voyage_interval() const {
-        return game.s.pilot.region?PilotTickMilliseconds:game.s.helm?HelmPulseMs:SailingDayMs/voyage_rate;
+        return game.s.pilot.region?PilotTickMilliseconds/pilot_rate:game.s.helm?HelmPulseMs:SailingDayMs/voyage_rate;
     }
 
     bool full_helm_chart() const {
@@ -398,6 +433,14 @@ struct VoyageApp {
         else last_day=now;
     }
 
+    void cycle_pilot_rate() {
+        const auto water=pilot_water();
+        if (!pilot_view() || !water.bytes || game.pilot_slow_water(water)) return;
+        const unsigned interval=voyage_interval();
+        pilot_rate=pilot_rate==4?1:pilot_rate*2;
+        last_day=game.paused?now:now-std::min(now-last_day,interval)*voyage_interval()/interval;
+    }
+
     void on_frame(pxa::Context&, pxa::game::FrameTick tick) {
         if (!foreground) return;
         now=unsigned(tick.timestamp_us / 1000);
@@ -408,6 +451,7 @@ struct VoyageApp {
             if (!context->tasks().start(open_surface())) opening=false;
         }
         if (!surface || opening) return;
+        prepare_pilot_chart();
 
         if (modal==HarborTown && town.moving() && now-town_frame>=30) {
             town_frame=now;
@@ -430,21 +474,33 @@ struct VoyageApp {
                 const int old_food=game.s.stores, old_water=game.s.water;
                 const auto old_marks=game.s.chart_marks;
                 const bool manual=game.s.helm;
+                const bool accelerated=game.s.pilot.region?pilot_rate>1:voyage_rate>1;
                 const int moored=game.s.pilot.moored;
                 const auto fish_stage=game.s.fishery.stage, fish_target=game.s.fishery.target;
                 if (manual) {
                     previous_helm={game.s.helm_x,game.s.helm_y};
-                    if (game.s.pilot.region) game.pilot_tick(pilot_water());
+                    if (game.s.pilot.region) {
+                        pilot_visual_from=game.pilot_atlas_position();
+                        game.pilot_tick(pilot_water());
+                    }
                     else game.helm_pulses(chart_water,voyage_rate);
                 }
                 else game.advance();
                 last_day+=interval;
                 if (now-last_day>=interval) last_day=now;
-                if (voyage_rate>1 && game.sea() && !game.encounter() && !game.paused &&
+                if (accelerated && game.sea() && !game.encounter() && !game.paused &&
                     ((old_food && !game.s.stores) || (old_water && !game.s.water))) {
                     game.paused=true;
+                    pilot_rate=1;
                     game.notice=!game.s.stores && !game.s.water ? "水粮耗尽" :
                                 !game.s.stores ? "食物耗尽" : "淡水耗尽";
+                }
+                if (pilot_rate>1 && game.s.pilot.region && game.pilot_slow_water(pilot_water())) {
+                    pilot_rate=1;
+                    if (!game.paused) {
+                        game.notice="近岸减速，已切回一倍";
+                        notify();
+                    }
                 }
                 if (!game.sea() || game.encounter() || game.paused) voyage_rate=1;
                 if ((game.s.day!=old_day && game.s.day%4==0) ||
@@ -476,7 +532,10 @@ struct VoyageApp {
                     modal=None; screen=Chart; focused=0; notify();
                 }
             }
-            if (screen==Chart && modal==None) dirty=true;
+            if (screen==Chart && modal==None && (!game.s.pilot.region || now-pilot_painted>=30)) {
+                pilot_painted=now;
+                dirty=true;
+            }
         } else last_day=now;
         if (notice_until && now >= notice_until) { notice_until=0; dirty=true; }
         if (saved_until && now >= saved_until) { saved_until=0; dirty=true; }
@@ -489,23 +548,25 @@ struct VoyageApp {
         }
         sea_picture.show(*context,visible_sea_picture(),dirty);
         if (pilot_pending>=0 && !title) {
-            const int asset=pending_pilot_picture();
-            if (const auto* pixels=sea_picture.pixels(asset)) {
-                const PilotWater water{pixels,pilot_world_picture(asset)};
-                if (pilot_connecting?game.connect_pilotage(water):game.begin_pilotage(pilot_pending,water)) {
+            const bool world=pilot_pending==WorldPilotIndex;
+            const int asset=PilotPictureBase+pilot_pending;
+            const int patch=world?game.starting_pilot_patch():-1;
+            const auto water=world?pilot_atlas.water(patch):PilotWater{sea_picture.pixels(asset)};
+            if (water.bytes) {
+                if (game.begin_pilotage(pilot_pending,water)) {
                     pilot_zoom=-1;
                     pilot_site=-1;
                     pilot_guide=-1;
                     pilot_follow=true;
+                    pilot_visual_from=game.pilot_atlas_position();
+                    pilot_rate=1;
                     voyage_rate=1;
                     audio.cue(Sound::CastOff);
                     changed();
                 } else notify();
                 pilot_pending=-1;
-                pilot_connecting=false;
-            } else if (sea_picture.failed(asset)) {
+            } else if (world?pilot_atlas.failed(patch):sea_picture.failed(asset)) {
                 pilot_pending=-1;
-                pilot_connecting=false;
                 game.notice="领航图读取失败，可再试一次";
                 notify();
             }
@@ -1209,9 +1270,28 @@ struct VoyageApp {
         }
     }
 
-    Point pilot_point(Point fixed) const {
-        return {map.x+map.w/2+int(std::lround((fixed.x/float(PilotSubcell)-pilot_x)*pilot_scale)),
-                map.y+map.h/2+int(std::lround((fixed.y/float(PilotSubcell)-pilot_y)*pilot_scale))};
+    Point pilot_point(Point atlas) const {
+        return {map.x+map.w/2+int(std::lround((atlas.x-pilot_x)*pilot_scale_x)),
+                map.y+map.h/2+int(std::lround((atlas.y-pilot_y)*pilot_scale_y))};
+    }
+
+    Point pilot_visual_ship() const {
+        const auto ship=game.pilot_atlas_position();
+        if (game.paused || pilot_visual_from.x<0 || game.pilot_exiting()) return ship;
+        const auto period=voyage_interval();
+        const int elapsed=std::min(now-last_day,period);
+        return {ship.x+(pilot_visual_from.x-ship.x)*int(period-elapsed)/int(period),
+                ship.y+(pilot_visual_from.y-ship.y)*int(period-elapsed)/int(period)};
+    }
+
+    template<class F>
+    void pilot_visible_sites(F visit) const {
+        for (int id=0;id<int(std::size(PilotSites));++id) visit(id);
+        for (int id=WorldPilotSite;id<PilotSiteEnd;++id) {
+            const bool duplicate=id<CoastalPilotSite && std::any_of(std::begin(PilotRegions),std::end(PilotRegions),
+                [&](const PilotRegion& region) { return region.port==id-WorldPilotSite; });
+            if (!duplicate && game.pilot_site_visible(id)) visit(id);
+        }
     }
 
     void pilot_mark(Draw& d,int glyph,Point center,int size) {
@@ -1219,8 +1299,8 @@ struct VoyageApp {
                 {center.x-size/2,center.y-size/2,size,size},true);
     }
 
-    void pilot_distance(Draw& d,const PilotRegion& region) {
-        const float pixels=pilot_scale/pilot_cell_miles(region);
+    void pilot_distance(Draw& d) {
+        const float pixels=pilot_pixels_per_mile;
         int miles=1;
         for (const int candidate : {1,2,5,10,20,50,100}) {
             if (candidate*pixels>54) break;
@@ -1245,29 +1325,38 @@ struct VoyageApp {
 
     void pilot_chart(Draw& d) {
         const auto& state=game.s.pilot;
-        const auto area=game.pilot_area();
         const auto water=pilot_water();
         map={body.x,body.y,body.w,body.h-46};
-        if (pilot_zoom<0) pilot_zoom=map.w>map.h*5/2?1:0;
+        if (pilot_zoom<0) pilot_zoom=water.world?2:4;
         const auto saved_clip=d.clip;
         d.clip=d.clipped(map);
-        d.fill(map,rgb(0x122e39));
-        constexpr float magnification[]{1.f,1.55f,2.2f,3.2f};
-        pilot_scale=std::min(map.w/float(PilotWidth),map.h/float(PilotHeight))*magnification[pilot_zoom];
+        constexpr float widths[]{200.f,100.f,60.f,36.f,22.f,12.f,6.f};
+        const auto tracked=pilot_visual_ship();
         if (pilot_follow) {
-            pilot_x=pilot_zoom?state.x/float(PilotSubcell):PilotWidth/2.f;
-            pilot_y=pilot_zoom?state.y/float(PilotSubcell):PilotHeight/2.f;
+            pilot_x=tracked.x;
+            pilot_y=tracked.y;
         }
-        const float half_width=std::min(PilotWidth/2.f,map.w/(pilot_scale*2));
-        const float half_height=std::min(PilotHeight/2.f,map.h/(pilot_scale*2));
-        pilot_x=std::clamp(pilot_x,half_width,PilotWidth-half_width);
-        pilot_y=std::clamp(pilot_y,half_height,PilotHeight-half_height);
-        const auto tl=pilot_point({0,0}), br=pilot_point({PilotWidth*PilotSubcell,PilotHeight*PilotSubcell});
-        const Rect local{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
+        pilot_x=std::clamp(pilot_x,0.f,float(PilotAtlasWidth-1));
+        pilot_y=std::clamp(pilot_y,0.f,float(PilotAtlasHeight-1));
+        const float latitude=ChartNorth-pilot_y/(ChartLatitudeScale*float(PilotAtlasUnit));
+        pilot_pixels_per_mile=map.w/widths[pilot_zoom];
+        pilot_scale_x=pilot_pixels_per_mile*60.f*std::cos(latitude*.0174532925f)/(ChartLongitudeScale*PilotAtlasUnit);
+        pilot_scale_y=pilot_pixels_per_mile*60.f/(ChartLatitudeScale*PilotAtlasUnit);
+        const int detail_index=visible_pilot_detail();
+        const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
+        const PilotRaster raster{map,{int(pilot_x),int(pilot_y)},pilot_scale_x,pilot_scale_y};
+        draw_pilot_world(d,raster,pilot_atlas);
+        if (detail_index>=0 && pilot_zoom>=2) {
+            const auto& area=PilotRegions[detail_index];
+            const auto tl=pilot_point(pilot_to_atlas(area,{0,0}));
+            const auto br=pilot_point(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
+            draw_pilot_detail(d,{sea_picture.pixels(PilotPictureBase+detail_index)},
+                              {tl.x,tl.y,br.x-tl.x,br.y-tl.y},raster);
+        }
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;
-        const auto ship=pilot_point({state.x,state.y});
+        const auto ship=pilot_point(tracked);
         const auto approach=game.pilot_approach(guide,water);
         const auto caption=[&]() {
             if (guide<0 && berth<0 && state.moored==0) return format("%s","点海面转舵");
@@ -1275,12 +1364,12 @@ struct VoyageApp {
             if (docking) return format("%s 进港中",site.name.data());
             if (berth>=0 && !state.moored) return format("可泊 %s",game.pilot_site(berth).name.data());
             if (guide<0 || berth==guide) return format("%s",site.name.data());
-            if (site.kind!=PilotPoint && water.bytes && !approach.clear)
+            if (site.kind!=PilotPoint && approach.known && !approach.clear)
                 return format("%s 绕行",site.name.data());
             return format("%s  %d.%d海里",site.name.data(),approach.tenths/10,approach.tenths%10);
         }();
         const Rect detail{map.x+5,map.bottom()-23,std::min(map.w-75,d.measure(caption)+13),19};
-        const Rect title_box{map.x+5,map.y+5,d.measure(area.name)+25,20};
+        const Rect title_box{map.x+5,map.y+5,d.measure(area_name)+25,20};
         const Rect compass{map.right()-29,map.y+4,24,24};
         const int current_speed=game.paused?0:game.pilot_speed(water,berth);
         const auto course=format("%s  %d.%d节",PilotBearings[state.heading].data(),
@@ -1316,62 +1405,66 @@ struct VoyageApp {
                 return;
             }
         };
-        if (water.bytes) {
-            draw_pilot_water(d,water,local,water.world?pilot_patch_origin(state.patch):Point{});
-            d.frame(local,border);
-            const auto saved=d.clip;
-            d.clip=d.clipped(local);
-            if (pilot_zoom && !water.world) {
-                for (int y=7;y<PilotHeight;y+=12)
-                    for (int x=6;x<PilotWidth;x+=12) {
-                        const int ox=int(unsigned(x*19+y*17)%7), oy=int(unsigned(y*11+x*13)%7);
-                        const auto height=water.at({x+ox,y+oy});
-                        if (height>=7 && height<=10)
-                            pilot_mark(d,5,pilot_point({(x+ox)*PilotSubcell,(y+oy)*PilotSubcell}),9+pilot_zoom);
-                    }
-            }
+        {
             if (guide>=0 && approach.clear)
-                d.line(ship,pilot_point(game.pilot_site(guide).berth),mint,true);
+                d.line(ship,pilot_point(game.pilot_atlas_site(guide,true)),mint,true);
             auto draw_site=[&](int i) {
-                if (!game.pilot_site_visible(i)) return;
                 const auto site=game.pilot_site(i);
                 const bool marked=i==guide;
-                if (site.berth.x>=0 && site.berth.y>=0 &&
-                    site.berth.x<PilotWidth*PilotSubcell && site.berth.y<PilotHeight*PilotSubcell) {
-                    const auto dock=pilot_point(site.berth);
-                    if (site.kind==PilotCity && pilot_zoom>=1) pilot_mark(d,2,dock,11);
+                const auto anchorage=game.pilot_atlas_site(i,true);
+                if (anchorage.x>=0) {
+                    const auto dock=pilot_point(anchorage);
+                    if (map.contains(dock) && site.kind==PilotCity && pilot_zoom>=4) pilot_mark(d,2,dock,11);
                     d.diamond(dock,i==berth || marked?3:2,i==berth || marked?gold:mint);
                 }
-                const auto mark=pilot_point(site.location);
+                const auto mark=pilot_point(game.pilot_atlas_site(i,false));
                 if (!map.contains(mark)) return;
+                if (pilot_zoom<=2 && site.kind!=PilotCity && !marked && i!=berth) {
+                    d.diamond(mark,2,quiet);
+                    return;
+                }
                 pilot_mark(d,site.kind==PilotPoint?3:site.kind,mark,
-                           site.kind==PilotCity?(pilot_zoom?22:16):(pilot_zoom?16:12));
+                           site.kind==PilotCity?(pilot_zoom>=4?18:13):(pilot_zoom>=4?14:10));
                 place_label(mark,site.name,i==berth || marked?gold:ivory);
             };
             if (guide>=0) draw_site(guide);
-            for (int i=area.first;i<area.first+area.count;++i)
-                if (i!=guide) draw_site(i);
-            const int size=pilot_zoom>=2?23:19;
+            pilot_visible_sites([&](int i) { if (i!=guide) draw_site(i); });
+            const int size=pilot_zoom>=4?22:20;
             const auto motion=PilotDirections[state.heading];
-            if (!game.paused) {
-                const auto turn=vessel_frame()/3;
-                for (int beam : {-1,1})
-                    d.line({ship.x-motion.x/12,ship.y-motion.y/12},
-                           {ship.x-motion.x*(15+turn)/100-motion.y*beam/19,
-                            ship.y-motion.y*(15+turn)/100+motion.x*beam/19},rgb(0x85c4bf),true);
+            if (map.inset(15).contains(ship)) {
+                if (!game.paused) {
+                    const auto turn=vessel_frame()/3;
+                    for (int beam : {-1,1})
+                        d.line({ship.x-motion.x/12,ship.y-motion.y/12},
+                               {ship.x-motion.x*(15+turn)/100-motion.y*beam/19,
+                                ship.y-motion.y*(15+turn)/100+motion.x*beam/19},rgb(0x85c4bf),true);
+                }
+                for (int i=0;i<16;++i) {
+                    const auto a=PilotDirections[i], b=PilotDirections[(i+1)&15];
+                    d.line({ship.x+a.x*14/100,ship.y+a.y*14/100},
+                           {ship.x+b.x*14/100,ship.y+b.y*14/100},ink);
+                    d.line({ship.x+a.x*12/100,ship.y+a.y*12/100},
+                           {ship.x+b.x*12/100,ship.y+b.y*12/100},gold);
+                }
+                small_ship(d,game.s.ship,((state.heading+1)/2)&7,game.s.reefed || docking,
+                           {ship.x-size/2,ship.y-size/2,size,size});
+                d.diamond({ship.x+motion.x/7,ship.y+motion.y/7},3,mint);
+            } else {
+                const Point edge{std::clamp(ship.x,map.x+23,map.right()-23),
+                                 std::clamp(ship.y,map.y+31,map.bottom()-28)};
+                const auto direction=PilotDirections[pilot_bearing({ship.x-edge.x,ship.y-edge.y})];
+                d.diamond(edge,10,ink);
+                const Point tip{edge.x+direction.x/12,edge.y+direction.y/12};
+                d.line({edge.x-direction.x/20,edge.y-direction.y/20},tip,gold);
+                d.line(tip,{edge.x-direction.y/22,edge.y+direction.x/22},gold);
+                d.line(tip,{edge.x+direction.y/22,edge.y-direction.x/22},gold);
+                buttons[button_count++]={{edge.x-13,edge.y-13,27,27},PilotCenterShip};
             }
-            small_ship(d,game.s.ship,((state.heading+1)/2)&7,game.s.reefed || docking,
-                       {ship.x-size/2,ship.y-size/2,size,size});
-            const Point tip{ship.x+motion.x/8,ship.y+motion.y/8};
-            d.diamond(tip,2,mint);
-            d.clip=saved;
-            pilot_distance(d,area);
-        } else {
-            d.center(map,"正在读取领航图",ivory);
+            pilot_distance(d);
         }
         skin_box(d,title_box,0,4);
         weather_icon(d,game.conditions().weather,{title_box.x+3,title_box.y+3,13,13});
-        d.label(title_box.x+18,title_box.y+3,area.name,gold,title_box.w-20);
+        d.label(title_box.x+18,title_box.y+3,area_name,gold,title_box.w-20);
         nav_icon(d,CompassIcon,compass);
         skin_box(d,course_box,0,4);
         d.center(course_box,course,ivory);
@@ -1383,14 +1476,14 @@ struct VoyageApp {
             const int left=body.x+index*(body.w+3)/count;
             return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
         };
-        button(d,bar(0,6,0),"+",PilotZoomIn,false,pilot_zoom>=3);
-        button(d,bar(1,6,0),"-",PilotZoomOut,false,!pilot_zoom);
-        const bool connect=game.pilot_near_edge();
-        button(d,bar(2,6,0),connect?"接图":"定位",connect?PilotConnect:PilotCenter,connect,pilot_connecting);
-        button(d,bar(3,6,0),"泊地",PilotBookOpen);
-        button(d,bar(4,6,0),"远航",LeavePilot,false,state.moored);
-        button(d,bar(5,6,0),state.moored?"上岸":docking?"收帆":"靠泊",state.moored?PilotStoryOpen:PilotMoor,
-               true,berth<0 || docking,{},HelmAnchor);
+        button(d,bar(0,7,0),"+",PilotZoomIn,false,pilot_zoom>=6);
+        button(d,bar(1,7,0),"-",PilotZoomOut,false,!pilot_zoom);
+        button(d,bar(2,7,0),"回船",PilotCenter,!pilot_follow);
+        button(d,bar(3,7,0),"泊地",PilotBookOpen);
+        button(d,bar(4,7,0),format("%u倍",pilot_rate),PilotSpeed,pilot_rate>1,!water.bytes || game.pilot_slow_water(water));
+        button(d,bar(5,7,0),"远航",LeavePilot,false,state.moored);
+        button(d,bar(6,7,0),state.moored?"上岸":docking?"进港":"靠泊",state.moored?PilotStoryOpen:PilotMoor,
+               true,berth<0 || docking,{},body.w>=350?HelmAnchor:-1);
         if (state.moored) {
             const auto water_offer=game.pilot_supply_offer(true), food_offer=game.pilot_supply_offer(false);
             button(d,bar(0,3,1),water_offer.amount?Text(format("淡水+%d %d金",water_offer.amount,water_offer.cost)):"淡水已满",
@@ -1412,11 +1505,17 @@ struct VoyageApp {
         const auto area=game.pilot_area();
         const bool world=region==WorldPilotIndex;
         const auto stage=world?PilotParcelStage::Delivered:game.s.pilot_parcels[region];
-        std::array<int,PlaceCount> sites{};
+        struct Nearby { int id, distance; };
+        std::array<Nearby,PilotSiteEnd> sites{};
         int visible=0;
-        for (int i=area.first;i<area.first+area.count;++i)
-            if (game.pilot_site_visible(i)) sites[visible++]=i;
-        page_title(d,area.name,MooringIcon);
+        pilot_visible_sites([&](int id) {
+            const auto distance=game.pilot_approach(id,{}).tenths;
+            if (distance<=850) sites[visible++]={id,distance};
+        });
+        std::sort(sites.begin(),sites.begin()+visible,[](Nearby a,Nearby b) {
+            return a.distance!=b.distance?a.distance<b.distance:a.id<b.id;
+        });
+        page_title(d,world?"附近泊地":area.name,MooringIcon);
         if (!visible) {
             d.center(body,"附近没有已知泊地",mist);
             return;
@@ -1424,13 +1523,13 @@ struct VoyageApp {
         const int count=std::max(2,list_rows()), pages=(visible+count-1)/count;
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<count && i+page*count<visible;++i) {
-            const int id=sites[i+page*count];
+            const int id=sites[i+page*count].id;
             const auto mark=game.pilot_site(id);
             const bool visited=game.pilot_site_visited(id);
             const bool has_offer=stage==PilotParcelStage::Waiting && id-area.first==PilotParcels[region].sender;
             const bool destination=id==game.pilot_parcel_destination();
             const Text type=destination?"送货地":has_offer?"有差事":visited?"已靠泊":
-                            mark.kind==PilotCity?"港镇":mark.kind==PilotVillage?"聚落":"地标";
+                            mark.kind==PilotCity?"港城":mark.kind==PilotVillage?"村镇":"地标";
             row(d,i,mark.name,type,PilotSiteEntry+id,visited || destination,28,
                 destination || has_offer?LetterIcon:-1);
         }
@@ -1452,9 +1551,12 @@ struct VoyageApp {
         const int y=body.bottom()-28, half=(body.w-12)/2;
         const bool job=game.pilot_parcel_at(pilot_site);
         const bool aim=!game.s.pilot.moored && approach.clear && approach.tenths>0;
-        button(d,{body.x+5,y,job || aim?half:body.w-10,24},"标在图上",PilotGuide,!job && !aim,false,{},SeaChartIcon);
+        const bool hint=moored && game.pilot_coastal_hint()>=0;
+        button(d,{body.x+5,y,job || aim || hint?half:body.w-10,24},"标在图上",PilotGuide,
+               !job && !aim && !hint,false,{},SeaChartIcon);
         if (job) button(d,{body.x+7+half,y,body.w-12-half,24},"差事",PilotOpenParcel,true,false,{},LetterIcon);
         if (aim) button(d,{body.x+7+half,y,body.w-12-half,24},"转向泊地",PilotAim,true,false,{},HelmIcon);
+        if (hint) button(d,{body.x+7+half,y,body.w-12-half,24},"问航路",PilotCoastHint,true,false,{},SpeechIcon);
     }
 
     void pilot_parcel_page(Draw& d) {
@@ -1477,18 +1579,15 @@ struct VoyageApp {
 
     void pilot_tap(Point touch) {
         const auto& state=game.s.pilot;
-        const auto region=game.pilot_area();
         int selected_site=-1, shortest=11*11;
-        for (int i=region.first;i<region.first+region.count;++i) {
-            if (!game.pilot_site_visible(i)) continue;
-            const auto site=game.pilot_site(i);
-            for (const auto mark : {site.location,site.berth}) {
+        pilot_visible_sites([&](int i) {
+            for (const auto mark : {game.pilot_atlas_site(i,false),game.pilot_atlas_site(i,true)}) {
                 if (mark.x<0 || mark.y<0) continue;
                 const auto at=pilot_point(mark);
                 const int dx=touch.x-at.x, dy=touch.y-at.y, squared=dx*dx+dy*dy;
                 if (squared<shortest) { shortest=squared; selected_site=i; }
             }
-        }
+        });
         if (selected_site>=0) {
             if (pilot_guide==selected_site) {
                 pilot_site=selected_site;
@@ -1499,11 +1598,10 @@ struct VoyageApp {
             } else pilot_guide=selected_site;
             return;
         }
-        const auto at=pilot_point({state.x,state.y});
+        const auto at=pilot_point(pilot_visual_ship());
         const Point delta{touch.x-at.x,touch.y-at.y};
         if (std::abs(delta.x)+std::abs(delta.y)>7 && !state.moored) {
-            const float horizontal=pilot_cell_miles(region)*PilotHeight/((region.north-region.south)*60.f);
-            game.set_pilot_heading(pilot_bearing(delta,horizontal));
+            game.set_pilot_heading(pilot_bearing(delta));
             save_needed=true;
         }
     }
@@ -2509,9 +2607,8 @@ struct VoyageApp {
     }
     int visible_sea_picture() const {
         if (title) return Calm;
-        if (pilot_pending>=0) return pending_pilot_picture();
-        if (game.s.pilot.region==WorldPilotIndex+1) return PilotWorldPictureBase+game.s.pilot.patch;
-        if (game.s.pilot.region) return PilotPictureBase+game.s.pilot.region-1;
+        if (const int detail=visible_pilot_detail();detail>=0) return PilotPictureBase+detail;
+        if (game.s.pilot.region || pilot_pending>=0) return Calm;
         if (modal==FishBook) return FisheryPicture;
         if (modal==EnclavePage && enclave_tab==0) return enclave_item==0?MachicoPicture:VilaFrancaPicture;
         if (modal==SeaLog && sea_item>=0) return read_sea(game.s.sea_log[sea_item]).kind;
@@ -4369,7 +4466,7 @@ struct VoyageApp {
             else notify();
             return;
         }
-        if (modal==PilotBook && action>=PilotSiteEntry && action<PilotSiteEntry+WorldPilotSite+PlaceCount) {
+        if (modal==PilotBook && action>=PilotSiteEntry && action<PilotSiteEntry+PilotSiteEnd) {
             pilot_site=action-PilotSiteEntry;
             pilot_story_back=PilotBook;
             set_modal(PilotStory);
@@ -4389,17 +4486,10 @@ struct VoyageApp {
                 game.notice="正在展开近岸领航图";
                 notify();
                 break;
-            case PilotConnect:
-                if (pilot_pending<0 && game.pilot_near_edge()) {
-                    pilot_pending=WorldPilotIndex;
-                    pilot_connecting=true;
-                    game.cancel_pilot_docking();
-                    game.paused=true;
-                }
-                break;
             case LeavePilot:
                 if (pilot_pending>=0) break;
                 if (game.leave_pilotage(chart_water)) {
+                    pilot_rate=1;
                     previous_helm={game.s.helm_x,game.s.helm_y};
                     open_helm_view=false;
                     follow=true;
@@ -4409,14 +4499,25 @@ struct VoyageApp {
                 } else notify();
                 break;
             case PilotZoomIn: case PilotZoomOut:
-                pilot_zoom=std::clamp(pilot_zoom+(action==PilotZoomIn?1:-1),0,3);
+                pilot_zoom=std::clamp(pilot_zoom+(action==PilotZoomIn?1:-1),0,6);
+                break;
+            case PilotCenter: case PilotCenterShip:
                 pilot_follow=true;
                 break;
-            case PilotCenter:
-                pilot_follow=true;
+            case PilotSpeed: cycle_pilot_rate(); break;
+            case PilotCoastHint:
+                if (modal==PilotStory) {
+                    const int nearby=game.pilot_coastal_hint();
+                    if (game.record_pilot_coast(nearby)) {
+                        pilot_guide=nearby;
+                        pilot_site=nearby;
+                        changed();
+                    }
+                }
                 break;
             case PilotMoor:
                 if (game.begin_pilot_docking(pilot_water(),pilot_target())) {
+                    pilot_rate=1;
                     if (!game.sea()) {
                         audio.cue(Sound::Anchor);
                         select(game.s.origin);
@@ -5283,7 +5384,7 @@ struct VoyageApp {
             if (!game.paused) activate(Pause);
             return true;
         }
-        if (pilot_pending>=0) { pilot_pending=-1; pilot_connecting=false; dirty=true; return true; }
+        if (pilot_pending>=0) { pilot_pending=-1; dirty=true; return true; }
         if (pilot_view()) {
             activate(game.pilot_docking()>=0?Pause:LeavePilot);
             return true;
@@ -5461,8 +5562,8 @@ struct VoyageApp {
                 panning |= std::abs(p.x-press_x)+std::abs(p.y-press_y)>5;
                 if (panning) {
                     if (pilot_view()) {
-                        pilot_x-=(p.x-last_x)/pilot_scale;
-                        pilot_y-=(p.y-last_y)/pilot_scale;
+                        pilot_x-=(p.x-last_x)/pilot_scale_x;
+                        pilot_y-=(p.y-last_y)/pilot_scale_y;
                         pilot_follow=false;
                     } else {
                         chart_x-=(p.x-last_x)/factor;

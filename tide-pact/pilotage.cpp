@@ -73,6 +73,28 @@ Point pilot_patch_origin(int patch) {
     return {(patch%PilotTilesX*30-1)*16,(patch/PilotTilesX*14-1)*16};
 }
 
+Point pilot_from_atlas(const PilotRegion& region,Point atlas) {
+    const float lon=ChartWest+atlas.x/(world_x*8);
+    const float lat=ChartNorth-atlas.y/(world_y*8);
+    return {int(std::lround((lon-region.west)*width/(region.east-region.west))),
+            int(std::lround((region.north-lat)*height/(region.north-region.south)))};
+}
+
+Point pilot_to_atlas(const PilotRegion& region,Point local) {
+    const float lon=region.west+(region.east-region.west)*local.x/width;
+    const float lat=region.north-(region.north-region.south)*local.y/height;
+    return {int(std::lround((lon-ChartWest)*world_x*8)),
+            int(std::lround((ChartNorth-lat)*world_y*8))};
+}
+
+int pilot_detail_at(Point atlas,int padding) {
+    for (int i=0;i<WorldPilotIndex;++i) {
+        const auto p=pilot_from_atlas(PilotRegions[i],atlas);
+        if (p.x>=-padding && p.x<width+padding && p.y>=-padding && p.y<height+padding) return i;
+    }
+    return -1;
+}
+
 int pilot_patch_at(Point world) {
     const int x=std::clamp(world.x/(30*16),0,PilotTilesX-1);
     const int y=std::clamp(world.y/(14*16),0,PilotTilesY-1);
@@ -132,41 +154,96 @@ PilotRegion Game::pilot_area() const {
     if (index!=WorldPilotIndex) return PilotRegions[index];
     const auto origin=pilot_patch_origin(s.pilot.patch);
     const float west=ChartWest+origin.x/world_x, north=ChartNorth-origin.y/world_y;
-    return {"近岸海图",{},-1,WorldPilotSite,PlaceCount,west,north,
+    return {"精航海图",{},-1,WorldPilotSite,PilotSiteEnd-WorldPilotSite,west,north,
             west+32.f/ChartLongitudeScale,north-16.f/ChartLatitudeScale};
+}
+
+Point Game::pilot_atlas_position() const {
+    if (!s.pilot.region) return {s.helm_x*8,s.helm_y*8};
+    if (s.pilot.region<=WorldPilotIndex)
+        return pilot_to_atlas(pilot_area(),{s.pilot.x,s.pilot.y});
+    const auto origin=pilot_patch_origin(s.pilot.patch);
+    return {origin.x*8+s.pilot.x,origin.y*8+s.pilot.y};
+}
+
+Point Game::pilot_atlas_site(int site,bool berth) const {
+    if (site<WorldPilotSite) {
+        for (const auto& region : PilotRegions)
+            if (site>=region.first && site<region.first+region.count) {
+                const auto& mark=PilotSites[site];
+                if (berth && mark.berth.x<0) return {-1,-1};
+                return pilot_to_atlas(region,berth?mark.berth:mark.location);
+            }
+        return {-1,-1};
+    }
+    if (site>=CoastalPilotSite) {
+        const auto& place=PilotCoastalSites[site-CoastalPilotSite];
+        return berth?place.berth:place.location;
+    }
+    const int place=site-WorldPilotSite;
+    if (berth) return {PilotWorldBerths[place].x*8,PilotWorldBerths[place].y*8};
+    const auto& info=Places[place];
+    return {int(std::lround((info.longitude*.01f-ChartWest)*world_x*8)),
+            int(std::lround((ChartNorth-info.latitude*.01f)*world_y*8))};
 }
 
 PilotSite Game::pilot_site(int site) const {
     if (site<WorldPilotSite) return PilotSites[site];
+    const auto origin=pilot_patch_origin(s.pilot.patch);
+    const auto local=[origin](Point atlas) {
+        return atlas.x<0?atlas:Point{atlas.x-origin.x*8,atlas.y-origin.y*8};
+    };
+    const auto location=local(pilot_atlas_site(site,false)), berth=local(pilot_atlas_site(site,true));
+    if (site>=CoastalPilotSite) {
+        const auto& place=PilotCoastalSites[site-CoastalPilotSite];
+        return {place.name,place.note,location,berth,place.kind};
+    }
     const int place=site-WorldPilotSite;
     const auto& info=Places[place];
-    const auto origin=pilot_patch_origin(s.pilot.patch);
-    const auto berth=PilotWorldBerths[place];
-    const auto project=[origin](Point world) {
-        return Point{(world.x-origin.x)*8,(world.y-origin.y)*8};
-    };
-    const Point town{int(std::lround((info.longitude*.01f-ChartWest)*world_x)),
-                     int(std::lround((ChartNorth-info.latitude*.01f)*world_y))};
-    return {info.name,info.note,project(town),project(berth),place<PortCount?PilotCity:PilotPoint};
+    return {info.name,info.note,location,berth,place<PortCount?PilotCity:PilotPoint};
 }
 
 bool Game::pilot_site_visible(int site) const {
     if (site<WorldPilotSite) return true;
-    if (!charted(site-WorldPilotSite)) return false;
-    const auto mark=pilot_site(site);
-    return within_patch(mark.location) || within_patch(mark.berth);
+    if (site>=CoastalPilotSite) {
+        if (pilot_site_visited(site)) return true;
+        const auto& place=PilotCoastalSites[site-CoastalPilotSite];
+        const auto found=[this](Point point) {
+            return point.x>=0 && chart_cell(point.x/(PilotAtlasUnit*ChartCell),point.y/(PilotAtlasUnit*ChartCell));
+        };
+        return found(place.location) || found(place.berth);
+    }
+    return charted(site-WorldPilotSite);
 }
 
 bool Game::pilot_site_visited(int site) const {
     if (site<WorldPilotSite) return s.pilot_visits&(1U<<site);
+    if (site>=CoastalPilotSite) return s.coast_visits&(std::uint64_t{1}<<(site-CoastalPilotSite));
     return (s.visited|s.surveyed)&place_bit(site-WorldPilotSite);
 }
 
-bool Game::pilot_near_edge() const {
-    const auto& pilot=s.pilot;
-    constexpr int margin=PilotSubcell*2;
-    return pilot.region && pilot.region<=WorldPilotIndex && !pilot.moored &&
-           (pilot.x<margin || pilot.y<margin || pilot.x>=width-margin || pilot.y>=height-margin);
+int Game::pilot_coastal_hint() const {
+    if (s.pilot.moored<=CoastalPilotSite) return -1;
+    int choice=-1, distance=1250;
+    for (int id=CoastalPilotSite;id<PilotSiteEnd;++id) {
+        if (pilot_site_visible(id) || PilotCoastalSites[id-CoastalPilotSite].berth.x<0) continue;
+        const auto approach=pilot_approach(id,{});
+        if (approach.tenths<distance) {
+            distance=approach.tenths;
+            choice=id;
+        }
+    }
+    return choice;
+}
+
+bool Game::record_pilot_coast(int site) {
+    if (site<CoastalPilotSite || site!=pilot_coastal_hint()) return false;
+    for (const bool berth : {false,true}) {
+        const auto point=pilot_atlas_site(site,berth);
+        reveal_chart({point.x/PilotAtlasUnit,point.y/PilotAtlasUnit},ChartCell);
+    }
+    notice="船工指出下一处泊地，已记在海图";
+    return true;
 }
 
 bool Game::begin_pilotage(int index,PilotWater map) {
@@ -189,38 +266,54 @@ bool Game::begin_pilotage(int index,PilotWater map) {
     s.pilot.heading=s.heading*2;
     s.pilot.moored=0;
     pilot_remainder={};
+    pilot_exit={-1,-1};
     cancel_pilot_docking();
     const auto world=pilot_to_world(region,point);
     s.helm_x=world.x;
     s.helm_y=world.y;
     s.wake_head=s.wake_count=0;
     record_wake();
+    sighting(position());
     paused=true;
     notice="已展开近岸领航图";
     return true;
 }
 
 bool Game::connect_pilotage(PilotWater map) {
-    if (!pilot_near_edge() || !map.bytes || !map.world) return false;
-    const auto previous=s.pilot;
-    const Point world{s.helm_x,s.helm_y};
-    s.pilot.region=WorldPilotIndex+1;
-    s.pilot.patch=pilot_patch_at(world);
-    const auto point=nearby_water(map,pilot_from_world(pilot_area(),world));
+    if (!pilot_exiting() || !map.bytes || !map.world) return false;
+    const auto world=pilot_exit;
+    pilot_exit={-1,-1};
+    const int patch=pilot_patch_at({world.x/8,world.y/8});
+    const auto origin=pilot_patch_origin(patch);
+    const Point point{world.x-origin.x*8,world.y-origin.y*8};
     if (!map.navigable(point)) {
-        s.pilot=previous;
-        notice="请沿水道继续向外驶";
+        paused=true;
+        notice="前方有岸，沿水道转向外海";
         return false;
     }
+    s.pilot.region=WorldPilotIndex+1;
+    s.pilot.patch=patch;
     s.pilot.x=point.x;
     s.pilot.y=point.y;
-    const auto chosen=pilot_to_world(pilot_area(),point);
-    s.helm_x=chosen.x;
-    s.helm_y=chosen.y;
-    paused=true;
+    s.helm_x=(world.x+4)/8;
+    s.helm_y=(world.y+4)/8;
     cancel_pilot_docking();
     pilot_remainder={};
-    notice="已接上下一张海图";
+    return true;
+}
+
+bool Game::refine_pilotage(int index,PilotWater map) {
+    if (s.pilot.region!=WorldPilotIndex+1 || s.pilot.moored || pilot_dock_target>=0 ||
+        index<0 || index>=WorldPilotIndex || !map.bytes || map.world) return false;
+    const auto local=pilot_from_atlas(PilotRegions[index],pilot_atlas_position());
+    constexpr int margin=2*PilotSubcell;
+    if (local.x<margin || local.x>=width-margin || local.y<margin || local.y>=height-margin ||
+        !map.navigable(local)) return false;
+    s.pilot.region=index+1;
+    s.pilot.patch=0;
+    s.pilot.x=local.x;
+    s.pilot.y=local.y;
+    pilot_remainder={};
     return true;
 }
 
@@ -249,6 +342,7 @@ bool Game::leave_pilotage(WaterTest ocean) {
     }
     const auto minutes=s.pilot.minutes;
     s.pilot={.minutes=minutes};
+    pilot_exit={-1,-1};
     cancel_pilot_docking();
     record_wake();
     paused=true;
@@ -259,8 +353,15 @@ bool Game::leave_pilotage(WaterTest ocean) {
 void Game::set_pilot_heading(int heading) {
     if (!s.pilot.region || s.pilot.moored) return;
     cancel_pilot_docking();
+    pilot_exit={-1,-1};
     s.pilot.heading=static_cast<std::uint8_t>(heading&15);
     s.heading=static_cast<std::uint8_t>(((s.pilot.heading+1)/2)&7);
+}
+
+bool Game::pilot_slow_water(PilotWater map) const {
+    if (s.pilot.moored || pilot_dock_target>=0) return true;
+    const auto& state=s.pilot;
+    return map.bytes && (map.at({state.x/PilotSubcell,state.y/PilotSubcell})==3 || pilot_berth(map)>=0);
 }
 
 int Game::pilot_speed(PilotWater map,int near_berth) const {
@@ -273,7 +374,7 @@ int Game::pilot_speed(PilotWater map,int near_berth) const {
 }
 
 void Game::pilot_tick(PilotWater map) {
-    if (!s.helm || !s.pilot.region || s.pilot.moored || paused || encounter() || !map.bytes) return;
+    if (!s.helm || !s.pilot.region || s.pilot.moored || paused || encounter() || !map.bytes || pilot_exiting()) return;
     const auto area=pilot_area();
     const bool world_mode=s.pilot.region==WorldPilotIndex+1;
     const auto last=position();
@@ -312,11 +413,20 @@ void Game::pilot_tick(PilotWater map) {
     }
     const auto [dx,dy]=movement;
     const int pieces=1+std::max(std::abs(dx),std::abs(dy))/(pilot_dock_target>=0?1:4);
+    const auto origin=world_mode?pilot_patch_origin(s.pilot.patch):Point{};
     for (int i=1;i<=pieces;++i) {
         const Point next{start.x+dx*i/pieces,start.y+dy*i/pieces};
-        if (!within_patch(next)) {
+        if (world_mode && (origin.x*8+next.x<0 || origin.x*8+next.x>=PilotAtlasWidth ||
+                           origin.y*8+next.y<0 || origin.y*8+next.y>=PilotAtlasHeight)) {
             paused=true;
-            notice=world_mode?"已到世界海图边界":"已到图边，点接图可继续";
+            notice="已到世界海图边界";
+            break;
+        }
+        if (!within_patch(next)) {
+            if (world_mode) {
+                paused=true;
+                notice="已到世界海图边界";
+            } else pilot_exit=pilot_to_atlas(area,next);
             break;
         }
         if (!map.navigable(next)) {
@@ -380,16 +490,19 @@ int Game::pilot_berth(PilotWater map,int preferred) const {
 }
 
 PilotApproach Game::pilot_approach(int site,PilotWater map) const {
-    if (!s.pilot.region) return {};
+    if (!s.pilot.region || site<0 || site>=PilotSiteEnd) return {};
     const auto area=pilot_area();
-    if (site<area.first || site>=area.first+area.count) return {};
-    const auto mark=pilot_site(site);
-    const auto aim=mark.berth.x>=0?mark.berth:mark.location;
+    const bool local=site>=area.first && site<area.first+area.count;
+    const auto location=pilot_atlas_site(site,false), berth=pilot_atlas_site(site,true);
+    const auto mark=local?pilot_site(site):PilotSite{};
+    const auto aim=local?(berth.x>=0?mark.berth:mark.location):
+                         pilot_from_atlas(area,berth.x>=0?berth:location);
     const Point here{s.pilot.x,s.pilot.y};
     const Point delta{aim.x-here.x,aim.y-here.y};
     const int bearing=pilot_bearing(delta,pilot_cell_miles(area)/north_south_miles(area));
+    const bool known=local && within_patch(mark.berth) && map.bytes;
     return {bearing,int(std::lround(std::sqrt(miles_between(area,here,aim))*10)),
-            within_patch(mark.berth) && map.bytes && clear_approach(here,aim,map)};
+            known && clear_approach(here,aim,map),known};
 }
 
 bool Game::begin_pilot_docking(PilotWater map,int preferred) {
@@ -413,9 +526,10 @@ bool Game::finish_pilot_docking(int site) {
     s.pilot.x=static_cast<std::uint16_t>(berth.x);
     s.pilot.y=static_cast<std::uint16_t>(berth.y);
     if (site<WorldPilotSite) s.pilot_visits|=1U<<site;
+    if (site>=CoastalPilotSite) s.coast_visits|=std::uint64_t{1}<<(site-CoastalPilotSite);
     paused=true;
     cancel_pilot_docking();
-    if (site>=WorldPilotSite || site==area.first) {
+    if ((site>=WorldPilotSite && site<CoastalPilotSite) || (area.port>=0 && site==area.first)) {
         const int destination=site>=WorldPilotSite?site-WorldPilotSite:area.port;
         s.chart_marks|=place_bit(destination);
         s.destination=destination;

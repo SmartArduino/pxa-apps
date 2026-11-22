@@ -26,10 +26,16 @@ struct PilotSite {
 
 inline constexpr int WorldPilotIndex=std::size(PilotRegions);
 inline constexpr int WorldPilotSite=32;
+inline constexpr int CoastalPilotSite=WorldPilotSite+PlaceCount;
+inline constexpr int PilotSiteEnd=CoastalPilotSite+std::size(PilotCoastalSites);
 inline constexpr int PilotTilesX=(ChartWidth+29)/30, PilotTilesY=(ChartHeight+13)/14;
 inline constexpr int PilotTileCount=PilotTilesX*PilotTilesY;
 inline constexpr int PilotTileBytes=PilotWidth*PilotHeight/8;
+inline constexpr int PilotAtlasUnit=128;
+inline constexpr int PilotAtlasWidth=ChartWidth*PilotAtlasUnit, PilotAtlasHeight=ChartHeight*PilotAtlasUnit;
+inline constexpr int PilotPatchWidth=30*PilotAtlasUnit, PilotPatchHeight=14*PilotAtlasUnit;
 static_assert(std::size(PilotSites)<WorldPilotSite && std::size(PilotWorldBerths)==PlaceCount);
+static_assert(std::size(PilotCoastalSites)<64 && PilotSiteEnd<=255);
 
 enum class PilotParcelStage : std::uint8_t { Waiting, Aboard, Delivered };
 
@@ -66,7 +72,7 @@ static_assert(valid_pilot_parcels());
 
 struct PilotApproach {
     int bearing=0, tenths=0;
-    bool clear=false;
+    bool clear=false, known=false;
 };
 
 struct PilotSupplies {
@@ -131,5 +137,8 @@ Point pilot_to_world(const PilotRegion& region,Point local);
 float pilot_cell_miles(const PilotRegion& region);
 Point pilot_patch_origin(int patch);
 int pilot_patch_at(Point world);
+Point pilot_from_atlas(const PilotRegion& region,Point atlas);
+Point pilot_to_atlas(const PilotRegion& region,Point local);
+int pilot_detail_at(Point atlas,int padding=0);
 
 } // namespace tide

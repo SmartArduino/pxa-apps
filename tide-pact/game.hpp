@@ -236,6 +236,7 @@ struct SeaFishery {
 struct State {
     PilotageState pilot;
     std::uint32_t pilot_visits=0;
+    std::uint64_t coast_visits=0;
     std::array<PilotParcelStage,std::size(PilotParcels)> pilot_parcels{};
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
@@ -295,7 +296,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, SaveBytes=1904;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, SaveBytes=1912;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -363,12 +364,19 @@ struct Game {
     int pilot_region() const;
     int starting_pilot_patch() const;
     PilotRegion pilot_area() const;
+    Point pilot_atlas_position() const;
+    Point pilot_atlas_site(int site,bool berth) const;
     PilotSite pilot_site(int site) const;
     bool pilot_site_visible(int site) const;
     bool pilot_site_visited(int site) const;
-    bool pilot_near_edge() const;
+    int pilot_coastal_hint() const;
+    bool record_pilot_coast(int site);
     bool begin_pilotage(int index,PilotWater map);
+    bool pilot_exiting() const { return pilot_exit.x>=0; }
+    Point pilot_exit_position() const { return pilot_exit; }
     bool connect_pilotage(PilotWater map);
+    bool refine_pilotage(int region,PilotWater map);
+    bool pilot_slow_water(PilotWater map) const;
     bool leave_pilotage(WaterTest ocean);
     void set_pilot_heading(int heading);
     int pilot_speed(PilotWater map,int near_berth=-1) const;
@@ -551,6 +559,7 @@ struct Game {
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:
+    Point pilot_exit{-1,-1};
     Point pilot_remainder{}, pilot_dock_from{};
     float pilot_dock_travel=0;
     int pilot_dock_target=-1;
