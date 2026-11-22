@@ -29,6 +29,7 @@
 - 航前计划、海图抬头栏、风况和「食物淡水」都能打开「配给」。食物与淡水可分别节用。航行中的偶数日少发一份，每项节用分别扣三点或四点士气，炎热天仍按常量发水。航前估算和途中预报会按配给计算补给和航速。配给命令随存档保留。
 - 「船坞 → 副官」可以在里斯本招募安娜、在丰沙尔招募贝阿特丽丝、在加的斯招募杜阿尔特。每次出航由一位副官当值，靠港可让其他随船同伴接任。安娜让航行更快并减轻触礁损伤，贝阿特丽丝节省淡水，杜阿尔特减轻敌炮伤害并提高接舷体力。赢得加的斯比试后，杜阿尔特会降低招募费。
 - 海战中可机动贴近并瞄准，在齐射后要装填火炮。顺风、远船距和较轻的货载有助于脱离。船距为一且有至少六名船员时，可以接舷决斗。决斗中格挡克突刺，佯攻破格挡，突刺截佯攻。
+- 自由掌舵遇到私掠船时，可选择「在海图上交战」。双方继续在同一海域移动，左、右舷炮各朝船身侧面射击。看到开炮烟、飞行中的炮弹或落水水花后，可转舵躲避。木料可用来抛浮索，近距离能接舷。
 - 里斯本的「港务 → 港口商会」可接受银铃号护航，击退追船后可去丰沙尔交船契。加的斯的码头比试可练习决斗，获胜后提升海上决斗体力。商会也可入股商栈，降低该港的买价。
 - 金色地标标出下一处主线地点，青色地标是测绘点，已到访港口的标记会加亮。地理页提供位置、坐标和注记。存档记下已踏查的海图和抄录的传闻，旧存档会保留已到访和已测绘的地点。
 - 里斯本、丰沙尔、加的斯和埃尔米纳的「港务 → 档案室」提供考察手记。抄录时开始计时，可自费出海领取全额赏金，也可先领资助并在交稿时接受较低尾款。向当地水手问话还能得到可标记在海图的地点和观测提示。
@@ -88,7 +89,7 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 港城牌匾、按钮和对话纸的纹理使用内置图像生成工具绘制。用 `tools/make_port_ui.py --help` 生成四边可缩放的图集。
 - 运单图标使用内置图像生成工具绘制。用 `tools/make_dispatch_icons.py --help` 将透明横条整理为游戏图集。
 - 晴天、炎热、雨天和骤风的图标由内置图像生成工具绘制。用 `tools/make_weather_icons.py --help` 将透明四宫格整理为天气图集。
-- 新海上事件插画、船身底图由内置图像生成工具绘制。用 `tools/make_sea_art.py` 从生成的 PNG 构建船身序列和索引图。事件、海上观察和航海纪事共用一张按需读入的插画缓冲区。船型轮廓参考葡萄牙海军博物馆与海军史资料。 [卡拉维尔船模](https://cultura.marinha.pt/pt/museumarinha_web/colecoes_web/pecasemdestaque_web/Paginas/caravela-latina.aspx) · [葡萄牙航海史](https://academia.marinha.pt/pt/edicoes/historiadamarinha/Navios%20Marinheiros%20e%20arte%20de%20navegar%201139-1499-compactado_compressed.pdf)
+- 新海上事件插画、船身底图由内置图像生成工具绘制。用 `tools/make_sea_art.py` 从生成的 PNG 构建船身序列和索引图。事件、海上观察和航海纪事共用一张按需读入的插画缓冲区。若素材目录有 `skirmish-effects.png`，同一工具会生成炮口、炮烟、水花和浮索的透明图集。船型轮廓参考葡萄牙海军博物馆与海军史资料。 [卡拉维尔船模](https://cultura.marinha.pt/pt/museumarinha_web/colecoes_web/pecasemdestaque_web/Paginas/caravela-latina.aspx) · [葡萄牙航海史](https://academia.marinha.pt/pt/edicoes/historiadamarinha/Navios%20Marinheiros%20e%20arte%20de%20navegar%201139-1499-compactado_compressed.pdf)
 - 里斯本河堤由内置图像生成工具绘制。用 `tools/make_outskirts.py --help` 生成背景图和设备纹理。城门、河堤、木料棚与旧驿道的位置定义在 `town.hpp`。
 - 自然图鉴的六幅原创插画由内置图像生成工具绘制，用 `tools/make_nature.py` 合成索引色图集。栖息地和物种特征参考当地生态资料，游戏中的时段、候潮和停船规则用于安排探索。 [马德拉自然保护机构](https://ifcn.madeira.gov.pt/pt/areas-protegidas/parque-natural-da-madeira/valores-naturais.html) · [加的斯湾保护区](https://www.juntadeandalucia.es/medioambiente/portal/documents/20151/98730912/ES0000140_bahiadecadiz.pdf/7c61f16c-6317-071e-6c70-001fcf7e1bcd) · [马德拉鲸类博物馆](https://museudabaleia.org/ciencia/baleias-e-golfinhos/d/423-golfinhocomum) · [佛得角物种名录](https://www.cms.int/country/cabo-verde)
 - 商馆的租金、信任要求和登记规则属于游戏设定。卡利卡特由扎莫林统治，已有阿拉伯商人经营海路。马林迪和蒙巴萨各有自己的商路及对外关系。亚丁商船插画由内置图像生成工具绘制。 [卡利卡特地区历史](https://kozhikode.gov.in/about-district/history/) · [达·伽马首航手稿](https://www.loc.gov/item/2021667835/) · [马林迪与蒙巴萨的史料综述](https://whc.unesco.org/uploads/nominations/1295rev.pdf) · [突尼斯旧城](https://whc.unesco.org/en/list/36)

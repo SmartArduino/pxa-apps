@@ -520,6 +520,57 @@ void continuous_helm() {
     assert(docking.s.sail_watch==1 && docking.s.helm_pulse==0);
 }
 
+void chart_skirmish() {
+    const auto ocean=[](Point) { return true; };
+    const auto land=[](Point) { return false; };
+    Game ship;
+    assert(ship.start_helm(-1));
+    ship.s.weather=Privateer;
+    ship.s.range=3;
+    ship.s.enemy=43;
+    ship.s.guns=2;
+    ship.s.cargo[Timber]=2;
+    assert(!ship.begin_skirmish(land));
+    assert(ship.begin_skirmish(ocean) && ship.paused);
+    const Point rival=ship.s.skirmish.rival;
+    assert(!ship.tick_skirmish(ocean) && ship.s.skirmish.rival.x==rival.x);
+    assert(!ship.fire_skirmish(-1));
+
+    ship.paused=false;
+    ship.s.skirmish.snared=20;
+    assert(ship.fire_skirmish(-1) && !ship.fire_skirmish(-1));
+    assert(ship.s.enemy==43 && ship.s.skirmish.shots[0].steps>0);
+    State reload;
+    assert(decode(reload,encode(ship.s)) && reload.skirmish.shots[0].steps>0);
+    ship.s=reload;
+    ship.restore();
+    assert(ship.paused);
+    ship.paused=false;
+    unsigned effects=0;
+    for (int step=0;step<10;++step) effects|=ship.tick_skirmish(ocean);
+    assert((effects&SkirmishHit) && ship.s.enemy==14);
+
+    ship.s.skirmish.rival={ship.s.helm_x,ship.s.helm_y+4};
+    const int timber=ship.s.cargo[Timber];
+    assert(ship.drop_drift_rope() && ship.s.cargo[Timber]==timber-1);
+    assert((ship.tick_skirmish(ocean)&SkirmishRope) && ship.s.skirmish.snared);
+    assert(ship.can_board_skirmish() && ship.board_skirmish());
+    assert(ship.duel() && !ship.s.skirmish.active && decode(reload,encode(ship.s)));
+
+    Game escape;
+    assert(escape.start_helm(-1));
+    escape.s.weather=Privateer;
+    escape.s.range=3;
+    escape.s.enemy=42;
+    assert(escape.begin_skirmish(ocean));
+    escape.s.skirmish.rival={escape.s.helm_x+165,escape.s.helm_y};
+    escape.paused=false;
+    const int gold=escape.s.gold;
+    assert(escape.tick_skirmish(ocean)&SkirmishEnded);
+    assert(!escape.encounter() && escape.s.gold==gold &&
+           read_sea(escape.s.sea_log[0]).choice==1);
+}
+
 void sailing_units() {
     const Game at_port;
     assert(at_port.forecast(passage(lisbon,cadiz)).days==2);
@@ -1624,6 +1675,7 @@ int main() {
     new_events_and_investment();
     free_helm();
     continuous_helm();
+    chart_skirmish();
     sailing_units();
     weather_forecasts();
     sailing_rations();

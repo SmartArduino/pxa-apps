@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PIL import Image, ImageOps
 
-from make_art import ASSETS, texture_bytes, write_texture
+from make_art import ASSETS, pack_icons, texture_bytes, write_texture
 
 FRAME_WIDTH, FRAME_HEIGHT = 40, 30
 HEAVE = (0, -1, -1, 0, 0, 1, 1, 0)
@@ -66,6 +66,9 @@ def main():
     args = parser.parse_args()
     vessels(args.generated)
     scenes(args.generated)
+    effects=args.generated / 'skirmish-effects.png'
+    if effects.is_file():
+        pack_icons(effects,'skirmish',4,2,26)
 
 
 if __name__ == "__main__":

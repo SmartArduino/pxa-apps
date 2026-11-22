@@ -201,6 +201,23 @@ struct MerchantVoyage {
     std::uint8_t port=0, destination=NoMerchantPort, good=Wine, units=0, held=0;
 };
 
+struct SeaShot {
+    Point position{};
+    std::uint8_t heading=0, steps=0;
+};
+
+struct SeaSkirmish {
+    Point rival{}, rope{};
+    std::array<SeaShot,2> shots{};
+    std::uint8_t heading=0, reload=0, enemy_reload=0, turn_delay=0, rope_ticks=0, snared=0;
+    bool active=false;
+};
+
+enum SkirmishEffect : unsigned {
+    SkirmishEnemyFire=1, SkirmishHit=2, SkirmishDamaged=4, SkirmishSplash=8,
+    SkirmishRope=16, SkirmishEnded=32,
+};
+
 struct State {
     int gold = 520, day = 0, hull = 100, stores = 74, spirits = 78;
     int ship = 0, guns = 0, crew = 12, charts = 0, renown = 0, trust = 0;
@@ -246,6 +263,7 @@ struct State {
     std::uint8_t colors=MerchantColors, royal_passes=0;
     std::array<int,CourtCount> court_hold_until{};
     std::array<std::uint8_t,ShoreTaskCount> shore_tasks{};
+    SeaSkirmish skirmish;
     DispatchRecord dispatch;
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
@@ -253,7 +271,7 @@ struct State {
 inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveBytes=352;
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
-inline constexpr std::size_t BerthSaveBytes=1664, SaveBytes=1696;
+inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SaveBytes=1760;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -364,6 +382,12 @@ struct Game {
     void chapter_choice(int choice);
     void navigator();
     void encounter_action(int action);
+    bool begin_skirmish(WaterTest water);
+    bool fire_skirmish(int side);
+    bool drop_drift_rope();
+    bool can_board_skirmish() const;
+    bool board_skirmish();
+    unsigned tick_skirmish(WaterTest water);
     bool duel() const { return s.weather==Boarding || s.weather==DockDuel; }
     bool convoy_battle() const;
     int naval_intent() const;

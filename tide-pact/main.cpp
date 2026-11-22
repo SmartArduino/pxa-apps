@@ -53,6 +53,7 @@ enum Action {
     ShowRumors, RecordRumor, MarkRumor, StartExplore,
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
     ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart, ToggleHelmView,
+    BeginSkirmish, FirePort, FireStarboard, DropRope, BoardSkirmish,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -161,7 +162,10 @@ struct VoyageApp {
     int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
     bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
     bool open_helm_view=false;
-    unsigned trim_ms=0;
+    unsigned trim_ms=0, skirmish_tick=0;
+    struct SeaFlash { Point position{}; unsigned started=0; int sprite=0; };
+    std::array<SeaFlash,4> sea_flashes{};
+    unsigned flash_slot=0;
     bool title=true, loaded=false, had_save=false, opening=false, reconfigure=true, landscape_requested=false;
     bool foreground=false, dirty=true, save_needed=false, save_active=false, save_failed=false;
     FontChoice font_choice=AutomaticFont;
@@ -340,7 +344,8 @@ struct VoyageApp {
     }
 
     bool full_helm_chart() const {
-        return open_helm_view && !title && game.s.helm && !game.encounter() && screen==Chart && modal==None;
+        return !title && screen==Chart && modal==None && game.s.helm &&
+            (game.s.skirmish.active || (open_helm_view && !game.encounter()));
     }
 
     void cycle_voyage_rate() {
@@ -375,6 +380,7 @@ struct VoyageApp {
             dirty|=modal==HarborTown;
         }
 
+        if (!title && game.s.skirmish.active) update_skirmish();
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
             const unsigned interval=voyage_interval();
@@ -584,7 +590,7 @@ struct VoyageApp {
         int x=stat(safe.x+5,CoinsIcon,game.s.gold,gold);
         x=stat(x,HullIcon,game.s.hull,ivory);
         const auto hour=format(" %02d时",game.s.sail_watch*HoursPerWatch+game.s.helm_pulse);
-        const auto date=format("第%d日%s",game.s.day+1,game.s.helm || game.s.sail_watch?hour.contents:"");
+        const auto date=format("第%d日%s",game.s.day+1,game.s.helm || game.s.sail_watch || game.s.helm_pulse?hour.contents:"");
         const int date_x=safe.right()-6-d.measure(date);
         const auto stores=format("%d/%d",game.s.stores,int(game.s.water));
         const auto compact=format("粮%d 水%d",game.s.stores,int(game.s.water));
@@ -671,8 +677,15 @@ struct VoyageApp {
     }
     Point map_point(Point p) const { return map_point(p.x,p.y); }
     void atlas_background(Draw& d) {
-        factor=zoom==0?std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight):
-            std::min(float(map.w)/LegacyChartWidth,float(map.h)/LegacyChartHeight)*std::pow(1.52f,float(zoom));
+        if (game.s.skirmish.active) {
+            const auto foe=game.s.skirmish.rival;
+            const float camera_w=std::max(12.f,std::abs(game.s.helm_x-foe.x)/16.f+3.5f);
+            const float camera_h=std::max(7.8f,std::abs(game.s.helm_y-foe.y)/16.f+4.4f);
+            factor=std::min({map.w/camera_w,map.h/camera_h,27.f});
+        } else {
+            factor=zoom==0?std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight):
+                std::min(float(map.w)/LegacyChartWidth,float(map.h)/LegacyChartHeight)*std::pow(1.52f,float(zoom));
+        }
         chart_x=std::clamp(chart_x,0.f,float(ChartWidth));
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
@@ -780,7 +793,7 @@ struct VoyageApp {
 
     void map_vessel(Draw& d, Point at, int hull, bool west, bool following) {
         const int frame=(vessel_frame()+(following?2:0))%VesselFrames;
-        const bool close=!following && full_helm_chart() && zoom>=4;
+        const bool close=!following && full_helm_chart() && zoom>=4 && !game.s.skirmish.active;
         const auto* detail=close && hull==1?sea_picture.pixels(CaravelDetail):nullptr;
         const int w=detail?std::clamp(map.w/4,60,88):
                     following?27:close?48:VesselFrameWidth;
@@ -1891,10 +1904,127 @@ struct VoyageApp {
                    !game.encounter_requirement(i).empty());
         }
     }
+    void push_sea_flash(Point position,int sprite) {
+        sea_flashes[flash_slot++%sea_flashes.size()]={position,now,sprite};
+        dirty=true;
+    }
+
+    void update_skirmish() {
+        if (game.paused) { skirmish_tick=now; return; }
+        constexpr unsigned tick_ms=55;
+        if (now-skirmish_tick<tick_ms) return;
+        skirmish_tick=now;
+        const auto before=game.s.skirmish;
+        const auto effects=game.tick_skirmish(chart_water);
+        if (effects&SkirmishEnemyFire) {
+            push_sea_flash(before.rival,0);
+            audio.cue(Sound::Broadside);
+        }
+        if (effects&SkirmishHit) push_sea_flash(before.rival,6);
+        if (effects&SkirmishDamaged) push_sea_flash({game.s.helm_x,game.s.helm_y},6);
+        if (effects&SkirmishSplash) {
+            for (int i=0;i<2;++i) {
+                const auto& shot=game.s.skirmish.shots[i];
+                if (before.shots[i].steps && !shot.steps)
+                    push_sea_flash(shot.position,2);
+            }
+        }
+        if (effects&SkirmishEnded) {
+            previous_helm={game.s.helm_x,game.s.helm_y};
+            last_day=now;
+            game.paused=game.sea();
+            open_helm_view=game.s.helm;
+            if (!game.sea()) selected=game.s.origin;
+            changed();
+        } else if (effects&(SkirmishHit|SkirmishDamaged|SkirmishRope)) changed();
+        dirty=true;
+    }
+
+    Point skirmish_point(Point position) const { return map_point(position.x/16.f,position.y/16.f); }
+
+    void skirmish_effect(Draw& d,int sprite,Point at,int width) {
+        d.image({art::skirmish},{sprite%4*26,sprite/4*26,26,26},
+                {at.x-width/2,at.y-width/2,width,width},true);
+    }
+
+    void skirmish_view(Draw& d) {
+        const auto& battle=game.s.skirmish;
+        const auto& s=game.s;
+        map={body.x,body.y,body.w,body.h-48};
+        const auto clip=d.clip;
+        d.clip=map;
+        // The camera follows the middle of both ships so the helm and target remain visible.
+        chart_x=(s.helm_x+battle.rival.x)/32.f;
+        chart_y=(s.helm_y+battle.rival.y)/32.f;
+        atlas_background(d);
+        helm_rain(d);
+        const auto player=skirmish_point({s.helm_x,s.helm_y}), enemy=skirmish_point(battle.rival);
+        const auto status=format("敌船 %d",s.enemy);
+        const auto wind=game.conditions();
+        const auto course=format("风向%s %d级",Bearings[wind.direction].data(),wind.strength);
+        const Point heading=Directions[s.heading], rival_heading=Directions[battle.heading];
+        const auto heading_mark=[&](Point at,Point direction,Color color) {
+            const Point tip{at.x+direction.x*5/4,at.y+direction.y*5/4};
+            d.line(at,tip,color);
+            d.diamond(tip,2,color);
+        };
+        if (battle.rope_ticks) skirmish_effect(d,4,skirmish_point(battle.rope),23);
+        if (battle.snared) skirmish_effect(d,5,enemy,31);
+        vessel_sprite(d,1,(vessel_frame()+3)%VesselFrames,{enemy.x-20,enemy.y-23,40,30},rival_heading.x<0);
+        map_vessel(d,player,s.ship,heading.x<0,false);
+        heading_mark(player,heading,mint);
+        heading_mark(enemy,rival_heading,vermilion);
+        if (!game.paused && !battle.reload) {
+            for (int side : {-1,1}) {
+                const auto beam=Directions[(s.heading+side*2+8)%8];
+                d.line({player.x+beam.x,player.y+beam.y},
+                       {player.x+beam.x*3/2,player.y+beam.y*3/2},quiet,true);
+            }
+        }
+        for (const auto& shot : battle.shots) {
+            if (!shot.steps) continue;
+            const auto at=skirmish_point(shot.position);
+            const auto tail=Directions[shot.heading];
+            d.line({at.x-tail.x/3,at.y-tail.y/3},at,gold);
+            d.diamond(at,2,ivory);
+        }
+        for (const auto& flash : sea_flashes) {
+            if (!flash.started || now-flash.started>=390) continue;
+            skirmish_effect(d,flash.sprite+int(now-flash.started>=145),skirmish_point(flash.position),29);
+        }
+        const Rect left{map.x+4,map.y+4,d.measure(status)+18,29};
+        skin_box(d,left,0,4);
+        d.label(left.x+5,left.y+3,status,ivory,left.w-10);
+        meter(d,{left.x+3,left.bottom()-9,left.w-6,6},s.enemy,74,true);
+        const Rect right{map.right()-d.measure(course)-12,map.y+4,d.measure(course)+8,20};
+        skin_box(d,right,0,4);
+        d.center(right,course,ivory);
+        if (game.paused)
+            d.center({map.x+4,map.bottom()-24,map.w-8,20},"战斗暂停",gold);
+        d.clip=clip;
+        d.frame(map,border);
+
+        const auto bar=[&](int index,int count,int row) {
+            const int left_edge=body.x+index*(body.w+3)/count;
+            const int right_edge=body.x+(index+1)*(body.w+3)/count-3;
+            return Rect{left_edge,map.bottom()+3+row*22,right_edge-left_edge,21};
+        };
+        button(d,bar(0,4,0),"左舵",SteerLeft);
+        button(d,bar(1,4,0),"右舵",SteerRight);
+        button(d,bar(2,4,0),s.reefed?"张帆":"缩帆",Trim,false,false,{},s.reefed?SailIcon:ReefIcon);
+        button(d,bar(3,4,0),game.paused?"继续":"停船",Pause,true);
+        const bool loading=game.paused || battle.reload;
+        button(d,bar(0,4,1),battle.reload?"装填":"左舷炮",FirePort,true,loading);
+        button(d,bar(1,4,1),battle.reload?"装填":"右舷炮",FireStarboard,true,loading);
+        button(d,bar(2,4,1),"抛浮索",DropRope,false,game.paused || battle.rope_ticks || !s.cargo[Timber]);
+        button(d,bar(3,4,1),"接舷",BoardSkirmish,false,!game.can_board_skirmish());
+    }
+
     void encounter_screen(Draw& d) {
         const auto& s=game.s;
         const auto weather=s.weather;
         if (game.duel()) { duel_screen(d); return; }
+        if (s.skirmish.active) { skirmish_view(d); return; }
         if (!sea_picture_path(weather).empty()) { illustrated_encounter(d,weather); return; }
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
@@ -1920,6 +2050,8 @@ struct VoyageApp {
                 d.image({art::broadside},{f*32,0,32,32},{x+31,ship_y-4,36,36},true);
             }
             combat_buttons(d,SailOrders);
+            if (s.helm)
+                button(d,{body.x,body.bottom()+4,body.w,23},"在海图上交战",BeginSkirmish,true);
             return;
         } else {
             d.wrap({x,body.y+29,w,body.h-66},scene.message,ivory);
@@ -3433,7 +3565,8 @@ struct VoyageApp {
             d.center({safe.x,safe.bottom()-27,safe.w,22},"已为返程预留一份粮和一份水",mist);
         else if (!full_helm_chart()) {
             if (!game.encounter() || modal!=None) footer(d);
-            else d.center({safe.x,safe.bottom()-30,safe.w,25},"选择如何应对",mist);
+            else if (!game.s.helm || game.s.weather!=Privateer)
+                d.center({safe.x,safe.bottom()-30,safe.w,25},"选择如何应对",mist);
         }
         focused=std::clamp(focused,0,std::max(0,button_count-1));
     }
@@ -4012,6 +4145,29 @@ struct VoyageApp {
                 changed();
             }
             break;
+        case BeginSkirmish:
+            if (game.begin_skirmish(chart_water)) {
+                open_helm_view=true;
+                sea_flashes={};
+                skirmish_tick=now;
+                focused=0;
+                changed();
+            } else notify();
+            break;
+        case FirePort: case FireStarboard:
+            if (game.fire_skirmish(action==FirePort?-1:1)) {
+                push_sea_flash({game.s.helm_x,game.s.helm_y},0);
+                audio.cue(Sound::Broadside);
+                audio.cue(Sound::FireCall);
+                save_needed=true;
+            }
+            break;
+        case DropRope:
+            if (game.drop_drift_rope()) changed();
+            break;
+        case BoardSkirmish:
+            if (game.board_skirmish()) changed();
+            break;
         case DockHelm:
             if (game.dock_helm(chart_water)) {
                 audio.cue(Sound::Anchor);
@@ -4210,6 +4366,10 @@ struct VoyageApp {
     bool back() {
         if (title && modal==AudioSettings) { set_modal(None); return true; }
         if (title) return false;
+        if (game.s.skirmish.active && !title) {
+            if (!game.paused) activate(Pause);
+            return true;
+        }
         if (full_helm_chart()) { open_helm_view=false; dirty=true; return true; }
         if (modal==NaturePage) { set_modal(nature_page_back); return true; }
         if (modal==NatureWatch) { set_modal(game.land_away()?LandPage:None); return true; }
@@ -4289,12 +4449,13 @@ struct VoyageApp {
             activate(buttons[focused].action);
         }
         if (controller.pressed(controller_b)) back();
-        if (game.s.helm && screen==Chart && modal==None && !game.encounter()) {
+        if (game.s.helm && screen==Chart && modal==None &&
+            (!game.encounter() || game.s.skirmish.active)) {
             if (controller.pressed(controller_x)) activate(SteerLeft);
             if (controller.pressed(controller_y)) activate(SteerRight);
         }
         if (controller.pressed(controller_start) && !title && modal==None &&
-            screen==Chart && !game.encounter())
+            screen==Chart && (!game.encounter() || game.s.skirmish.active))
             activate(game.sea() ? Pause : selected!=game.s.origin ? Sail : story_here() ? ReadStory :
                      game.expedition_here()>=0 ? OpenObservation : StartExplore);
     }
@@ -4310,7 +4471,16 @@ struct VoyageApp {
             if (at) town_go(*at);
             return;
         }
-        if (title || modal!=None || screen!=Chart || game.encounter() || !map.contains(p)) return;
+        if (title || modal!=None || screen!=Chart || !map.contains(p)) return;
+        if (game.s.skirmish.active) {
+            const auto at=skirmish_point({game.s.helm_x,game.s.helm_y});
+            if (std::abs(p.x-at.x)+std::abs(p.y-at.y)>=10) {
+                game.s.heading=static_cast<std::uint8_t>(direction_to({p.x-at.x,p.y-at.y}));
+                save_needed=true;
+            }
+            return;
+        }
+        if (game.encounter()) return;
         const int x=int(std::lround(chart_x+(p.x-map.x-map.w/2)/factor));
         const int y=int(std::lround(chart_y+(p.y-map.y-map.h/2)/factor));
         if (game.s.helm) {
