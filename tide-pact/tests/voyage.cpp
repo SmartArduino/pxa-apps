@@ -712,6 +712,20 @@ void regional_specialties_and_land_combat() {
     const int last=LandUnits-1;
     for (int round=0;round<2;++round) assert(guards.end_land_round());
     assert(guards.s.land_fight.units[last].cell==road_flag);
+
+    Game detour;
+    assert(detour.begin_land_battle(RoadEscort));
+    auto& lane=detour.s.land_fight;
+    for (auto& unit : lane.units) unit={};
+    lane.units[0]={static_cast<std::uint8_t>(land_cell({1,2})),5,0};
+    lane.units[LandFriends]={static_cast<std::uint8_t>(land_cell({1,0})),3,0};
+    const int blocked=lane.units[LandFriends].cell;
+    const auto legal=land_steps(lane,LandFriends);
+    // The tree forces a detour even though the next square is no closer in a straight line.
+    assert(detour.end_land_round());
+    const int moved=lane.units[LandFriends].cell;
+    assert(lane.kind==RoadEscort && legal[moved]==2 &&
+           land_distance(moved,lane.units[0].cell)==land_distance(blocked,lane.units[0].cell));
 }
 
 void island_settlements() {
