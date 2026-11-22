@@ -210,6 +210,8 @@ inline constexpr int NoMerchantPort=MerchantPorts.size(), MerchantLot=5, Merchan
 struct MerchantVoyage {
     int progress=0, gold=650;
     std::uint8_t port=0, destination=NoMerchantPort, good=Wine, units=0, held=0;
+    std::uint8_t sold_port=NoMerchantPort, sold_good=Wine, sold_units=0;
+    int sold_day=0;
 };
 
 struct SeaShot {
@@ -310,7 +312,7 @@ inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveB
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
 inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912;
-inline constexpr std::size_t ShoreSaveBytes=1960, SaveBytes=1984;
+inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, SaveBytes=2016;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -609,9 +611,13 @@ private:
     Point provisions_order(int food, int water) const;
     int market_price(int port, int good, bool sell, int supply, int day, bool player=true) const;
     TradeQuote quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const;
+    TradeQuote quote_market(int port, int good, bool sell, int quantity, int budget, int day,
+                            int rate=0, bool player=false) const;
+    void update_market(int port, int good, int stock_change);
     void apply_trade(int good, bool sell, TradeQuote offer);
     void merchant_day(int company);
     void plan_merchant(int company);
+    bool sell_merchant_cargo(MerchantVoyage& ship);
 
     bool advance_watch();
     void spend_day(int n);

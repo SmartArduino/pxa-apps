@@ -257,15 +257,22 @@ void merchant_trade() {
                 assert(current.progress==previous.progress && current.destination==previous.destination);
                 ++holds;
             }
-            if (previous.destination==NoMerchantPort && current.destination!=NoMerchantPort && current.units) {
-                auto& stock=expected[int(MerchantPorts[current.port])*GoodsCount+current.good];
-                stock-=current.units;
+            if (!previous.units && previous.destination==NoMerchantPort &&
+                current.destination!=NoMerchantPort && current.units) {
+                if (current.good<GoodsCount) {
+                    auto& stock=expected[int(MerchantPorts[current.port])*GoodsCount+current.good];
+                    stock-=current.units;
+                }
                 ++buys;
             }
-            if (previous.destination!=NoMerchantPort && current.destination==NoMerchantPort && current.units) {
-                assert(current.port==previous.destination && !current.progress);
-                auto& stock=expected[int(MerchantPorts[current.port])*GoodsCount+current.good];
-                stock=std::min(48,stock+current.units);
+            if (current.sold_day==game.s.day) {
+                assert(previous.units>=current.sold_units && current.units+current.sold_units==previous.units);
+                if (previous.destination!=NoMerchantPort)
+                    assert(current.port==previous.destination && !current.progress);
+                if (current.sold_good<GoodsCount) {
+                    auto& stock=expected[int(MerchantPorts[current.sold_port])*GoodsCount+current.sold_good];
+                    stock=std::min(48,stock+current.sold_units);
+                }
                 ++sales;
             }
             if (!checked_reload && current.progress>0) {
@@ -287,6 +294,53 @@ void merchant_trade() {
     game.s.merchants[0].destination=game.s.merchants[0].port;
     State invalid;
     assert(!decode(invalid,encode(game.s)));
+}
+
+void merchant_specialty_cargo() {
+    Game game;
+    game.s.origin=lisbon;
+    auto& trader=game.s.merchants[0];
+    game.s.merchants[1].gold=0;
+    trader={.progress=passage(madeira,lisbon).miles-1,.gold=350,.port=1,.destination=0,
+            .good=MadeiraSugar,.units=5};
+    game.s.day=3;
+    while (conditions_at(game.merchant_position(0),game.s.day+1).weather==Squall ||
+           conditions_at(Anchor[lisbon],game.s.day+2).weather==Squall) game.s.day+=2;
+    game.s.cargo[MadeiraSugar]=SpecialtyOrderLimit;
+    assert(game.trade(MadeiraSugar,true,SpecialtyOrderLimit).units==SpecialtyOrderLimit);
+    const int money=game.s.gold;
+
+    game.wait_at_port();
+    assert(trader.port==0 && trader.destination==NoMerchantPort && trader.good==MadeiraSugar && trader.units==3);
+    assert(trader.sold_port==0 && trader.sold_good==MadeiraSugar && trader.sold_units==2 &&
+           trader.sold_day==game.s.day && trader.gold>350);
+    assert(!game.specialty_orders(lisbon,MadeiraSugar) && game.s.gold==money && !game.s.cargo[MadeiraSugar]);
+
+    Game restored;
+    assert(decode(restored.s,encode(game.s)));
+    restored.restore();
+    assert(restored.s.merchants[0].units==3 && restored.s.merchants[0].sold_units==2);
+    game.wait_at_port();
+    restored.wait_at_port();
+    assert(encode(restored.s)==encode(game.s));
+    assert(trader.destination==1 && trader.good==MadeiraSugar && trader.units==3 &&
+           trader.sold_day==game.s.day-1 && trader.sold_units==2);
+
+    Game buying;
+    buying.s.origin=madeira;
+    buying.s.merchants[0].gold=0;
+    buying.s.day=2;
+    while (conditions_at(Anchor[madeira],buying.s.day+1).weather==Squall) ++buying.s.day;
+    for (const int port : MerchantPorts)
+        for (int good=0;good<GoodsCount;++good)
+            buying.s.stock_delta[port*GoodsCount+good]=port==madeira?-48:48;
+    Game inactive=buying;
+    inactive.s.merchants[1].gold=0;
+    buying.wait_at_port();
+    inactive.wait_at_port();
+    const auto& cargo=buying.s.merchants[1];
+    assert(cargo.destination==0 && cargo.good==MadeiraSugar && cargo.units>0);
+    assert(buying.stock(MadeiraSugar)==inactive.stock(MadeiraSugar)-cargo.units);
 }
 
 void custom_trade_quantities() {
@@ -664,6 +718,7 @@ void coastal_fishery() {
 
 void regional_specialties_and_land_combat() {
     Game trader;
+    for (auto& ship : trader.s.merchants) ship.gold=0;
     trader.s.origin=madeira;
     assert(market_access(madeira,MadeiraSugar)==MarketAccess::Producer && trader.stock(MadeiraSugar)>4);
     const int starting=trader.s.gold;
@@ -1941,6 +1996,7 @@ int main() {
     voyage_planning();
     trading_quotes();
     merchant_trade();
+    merchant_specialty_cargo();
     port_market_cycles();
     custom_trade_quantities();
     town_walks();

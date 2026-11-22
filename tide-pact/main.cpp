@@ -1819,7 +1819,7 @@ struct VoyageApp {
         page=std::clamp(page,0,pages-1);
         const int x=body.x, y=body.y, w=body.w;
         skin_box(d,body,0,6);
-        const bool regional=!specials && std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
+        const bool regional=std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
         voyage_icon(d,CargoIcon,{x+5,y+2,13,13});
         d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold,regional?w-174:w-21);
         const int right=x+w-4;
@@ -1945,7 +1945,9 @@ struct VoyageApp {
 
     void merchant_board(Draw& d) {
         page_title(d,"商队消息",SailIcon);
-        const int h=std::min(52,(body.h-34)/2);
+        const int h=std::min(67,(body.h-34)/2);
+        const bool receipt_row=h>=4*d.font.cell+6;
+        const int pitch=std::min(15,(h-d.font.cell-6)/(receipt_row?3:2));
         for (std::size_t i=0;i<game.s.merchants.size();++i) {
             const auto& ship=game.s.merchants[i];
             const bool underway=ship.destination!=NoMerchantPort;
@@ -1955,17 +1957,30 @@ struct VoyageApp {
             plate(d,card,focused_card?ActionPlate:StandardPlate);
             if (focused_card) focus_marker(d,card);
             const int x=card.x+6,w=card.w-12;
-            const Text status=ship.held?"等风":underway?"在海上":"已靠港";
+            const Text status=ship.held?"等风":underway?"在海上":ship.units?"等买家":"已靠港";
             d.label(x,card.y+4,MerchantNames[i],gold,w-65);
             d.label(card.right()-6-d.measure(status),card.y+4,status,ship.held?gold:mint);
             if (underway) {
-                d.label(x,card.y+19,format("%s → %s",Places[MerchantPorts[ship.port]].name.data(),
+                d.label(x,card.y+4+pitch,format("%s → %s",Places[MerchantPorts[ship.port]].name.data(),
                                           Places[pier].name.data()),ivory,w);
-            } else d.label(x,card.y+19,Places[pier].name,ivory,w);
-            if (ship.units)
-                d.label(x,card.y+34,format(underway?"买了%s ×%d":"已卖出%s ×%d",
-                                          GoodsNames[ship.good].data(),int(ship.units)),mist,w);
-            else d.label(x,card.y+34,underway?"空船去找货":"正在码头找货",mist,w);
+            } else d.label(x,card.y+4+pitch,Places[pier].name,ivory,w);
+            const int cargo_line=card.y+4+2*pitch;
+            if (ship.units) {
+                d.label(x,cargo_line,format("舱内 %s ×%d",GoodsNames[ship.good].data(),int(ship.units)),mist,w);
+            } else if (receipt_row || !ship.sold_units) {
+                d.label(x,cargo_line,underway?"空船去找货":"正在码头找货",mist,w);
+            }
+            if (ship.sold_units && (receipt_row || !ship.units)) {
+                const auto port_name=Places[MerchantPorts[ship.sold_port]].name;
+                const auto sale=format("%s卖出%s ×%d",port_name.data(),GoodsNames[ship.sold_good].data(),
+                                       int(ship.sold_units));
+                const auto age=ship.sold_day?format(game.s.day==ship.sold_day?"今日":"%d日前",game.s.day-ship.sold_day):
+                                             format("%s","");
+                const int y=cargo_line+(receipt_row?pitch:0), age_width=d.measure(age);
+                const bool date_fits=d.measure(sale)+age_width+9<=w;
+                d.label(x,y,sale,mint,w);
+                if (date_fits) d.label(x+w-age_width,y,age,quiet);
+            }
             if (game.charted(pier)) buttons[button_count++]={card,MarkMerchantFirst+int(i)};
         }
     }
