@@ -135,7 +135,7 @@ struct EncounterOutcome {
 
 struct VoyageApp {
     static constexpr pxa::game::LoopOptions loop_options{
-        .simulation_step_us=50000, .frame_period_ms=48, .maximum_updates=1};
+        .simulation_step_us=50000, .frame_period_ms=33, .maximum_updates=1};
     static constexpr unsigned SailingDayMs=1200, HelmWatchMs=SailingDayMs/SailingWatches;
     static constexpr unsigned HelmPulseMs=HelmWatchMs/HelmPulsesPerWatch;
 
@@ -143,6 +143,7 @@ struct VoyageApp {
     GameAudio audio;
     SeaPicture sea_picture;
     PilotAtlas pilot_atlas;
+    PilotTerrainCache pilot_terrain;
     Rect land_area{};
     LandFight land_before;
     unsigned land_frame_start=0;
@@ -527,8 +528,13 @@ struct VoyageApp {
         }
         if (!title && game.sea() && !game.paused && !game.encounter()) {
             if (!last_day) last_day=now;
-            const unsigned interval=voyage_interval();
-            if (now-last_day>=interval) {
+            // Recover a few missed pilot ticks after a slow frame. The cap
+            // prevents a long I/O stall from jumping the vessel across the chart.
+            const unsigned tick_budget=game.s.pilot.region?3:1;
+            for (unsigned tick_index=0;tick_index<tick_budget;++tick_index) {
+                const unsigned interval=voyage_interval();
+                if (now-last_day<interval || !game.sea() || game.paused ||
+                    game.encounter() || game.pilot_exiting()) break;
                 const int old_day=game.s.day;
                 const int old_hull=game.s.hull;
                 const int old_food=game.s.stores, old_water=game.s.water;
@@ -547,7 +553,8 @@ struct VoyageApp {
                 }
                 else game.advance();
                 last_day+=interval;
-                if (now-last_day>=interval) last_day=now;
+                if (now-last_day>=interval && tick_index+1==tick_budget)
+                    last_day=now-(now-last_day)%interval;
                 if (accelerated && game.sea() && !game.encounter() && !game.paused &&
                     ((old_food && !game.s.stores) || (old_water && !game.s.water))) {
                     game.paused=true;
@@ -1427,23 +1434,29 @@ struct VoyageApp {
         pilot_x=std::clamp(pilot_x,0.f,float(PilotAtlasWidth-1));
         pilot_y=std::clamp(pilot_y,0.f,float(PilotAtlasHeight-1));
         pilot_pixels_per_mile=scale_at_zoom(pilot_scales(),pilot_zoom);
-        pilot_scale_x=pilot_longitude_scale(pilot_y,pilot_pixels_per_mile);
         pilot_scale_y=pilot_pixels_per_mile*60.f/(ChartLatitudeScale*PilotAtlasUnit);
+        pilot_scale_x=pilot_terrain.stable_longitude_scale(
+            pilot_longitude_scale(pilot_y,pilot_pixels_per_mile),pilot_scale_y,map.w);
+        const Point camera{int(std::lround(pilot_x*pilot_scale_x)),int(std::lround(pilot_y*pilot_scale_y))};
         const int detail_index=visible_pilot_detail();
         const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
-        const PilotRaster raster{map,pilot_x,pilot_y,pilot_scale_x,pilot_scale_y};
         Rect detail_view{};
         PilotWater detail_water{};
         const float detail_start=detail_index>=0 && PilotRegions[detail_index].roadstead?2.5f:1.5f;
         const int detail_opacity=int(std::lround(15.f*std::clamp((pilot_zoom-detail_start)*2.f,0.f,1.f)));
         if (detail_index>=0 && detail_opacity) {
             const auto& area=PilotRegions[detail_index];
-            const auto tl=pilot_point(pilot_to_atlas(area,{0,0}));
-            const auto br=pilot_point(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
+            const auto project=[&](Point at) {
+                return Point{map.x+map.w/2+int(std::lround(at.x*pilot_scale_x))-camera.x,
+                             map.y+map.h/2+int(std::lround(at.y*pilot_scale_y))-camera.y};
+            };
+            const auto tl=project(pilot_to_atlas(area,{0,0}));
+            const auto br=project(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
             detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
             detail_water=pilot_detail_water(detail_index);
         }
-        draw_pilot_terrain(d,raster,pilot_atlas,game,detail_index,detail_water,detail_view,detail_opacity);
+        pilot_terrain.draw(d,map,camera,pilot_scale_x,pilot_scale_y,pilot_atlas,game,
+                           detail_index,detail_water,detail_view,detail_opacity);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;

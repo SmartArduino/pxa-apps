@@ -87,14 +87,20 @@ struct PilotRaster {
     int wave_strength, grid_x, grid_y;
 
     PilotRaster(Rect view,float center_x,float center_y,float x_scale,float y_scale)
-        : view(view), west(center_x-(view.w/2)/x_scale), north(center_y-(view.h/2)/y_scale),
+        : view(view), west(center_x*x_scale-view.w/2), north(center_y*y_scale-view.h/2),
           dx(1.f/x_scale), dy(1.f/y_scale),
           wave_strength(int(std::clamp(9.f-std::max(dx,dy),0.f,8.f))),
           grid_x(dx>=3.f?int(std::ceil(dx)):0), grid_y(grid_x?int(std::ceil(dy)):0) {}
 
+    PilotRaster(Rect view,Point centre,float x_scale,float y_scale)
+        : PilotRaster(view,0.f,0.f,x_scale,y_scale) {
+        west=float(centre.x-view.w/2);
+        north=float(centre.y-view.h/2);
+    }
+
     // Water samples are twice as fine as the shoreline coordinates.
-    int x(int screen) const { return int(std::floor(2.f*(west+(screen-view.x+.5f)*dx))); }
-    int y(int screen) const { return int(std::floor(2.f*(north+(screen-view.y+.5f)*dy))); }
+    int x(int screen) const { return int(std::floor(2.f*(west+screen-view.x+.5f)*dx)); }
+    int y(int screen) const { return int(std::floor(2.f*(north+screen-view.y+.5f)*dy)); }
 };
 
 struct PilotSeaLine {
@@ -426,5 +432,86 @@ inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtla
     }
     d.clip=previous;
 }
+
+class PilotTerrainCache {
+public:
+    float stable_longitude_scale(float candidate,float vertical,int visible_width) const {
+        // Reuse a projection until its change would move the map edge by half a pixel.
+        return visible_width==width && vertical==scale_y &&
+               std::abs(candidate-scale_x)*width<=scale_x?scale_x:candidate;
+    }
+
+    void draw(Draw& out,Rect view,Point centre,float sx,float sy,const PilotAtlas& atlas,const Game& game,
+              int region,PilotWater detail,Rect target,int opacity) {
+        const auto clip=out.clipped(view);
+        if (!clip.w || !clip.h) return;
+        const auto pixel_count=std::size_t(view.w)*view.h;
+        if (pixel_count>BufferPixels || clip.w!=view.w || clip.h!=view.h) {
+            draw_pilot_terrain(out,{view,centre,sx,sy},atlas,game,region,detail,target,opacity);
+            return;
+        }
+        const Rect local{0,0,view.w,view.h};
+        const int stride=view.w*sizeof(Color);
+        auto frame=std::span(bytes).first(pixel_count*sizeof(Color));
+        auto pixel_view=pxa::Rgb565Pixels::from_bytes(frame,view.w,view.h,stride);
+        if (!pixel_view) return;
+        Draw canvas(*pixel_view,frame,stride);
+        const PilotRaster raster{local,centre,sx,sy};
+        target.x-=view.x;
+        target.y-=view.y;
+        const auto paint=[&](Rect strip) {
+            if (!strip.w || !strip.h) return;
+            canvas.clip=strip;
+            draw_pilot_terrain(canvas,raster,atlas,game,region,detail,target,opacity);
+        };
+        const Point shift{centre.x-anchor.x,centre.y-anchor.y};
+        const auto& coast=game.s.coast;
+        const auto survey=region>=0 && region<WorldPilotIndex?game.s.pilot_chart[region]:decltype(surveyed){};
+        const bool aligned=width==view.w && height==view.h && sx==scale_x && sy==scale_y &&
+                           region==detail_region && detail.bytes==detail_bytes && opacity==detail_opacity &&
+                           atlas.revision()==atlas_revision && coast==charted && survey==surveyed;
+        if (!aligned || std::abs(shift.x)>=view.w || std::abs(shift.y)>=view.h) {
+            paint(local);
+        } else if (shift.x || shift.y) {
+            const int left=std::max(0,-shift.x), top=std::max(0,-shift.y);
+            const int right=view.w-std::max(0,shift.x), bottom=view.h-std::max(0,shift.y);
+            for (int row=0;row<bottom-top;++row) {
+                const int y=shift.y<0?bottom-1-row:top+row;
+                auto* dest=frame.data()+y*stride+left*sizeof(Color);
+                auto* source=dest+shift.y*stride+shift.x*int(sizeof(Color));
+                std::memmove(dest,source,(right-left)*sizeof(Color));
+            }
+            paint({0,0,view.w,top});
+            paint({0,bottom,view.w,view.h-bottom});
+            paint({0,top,left,bottom-top});
+            paint({right,top,view.w-right,bottom-top});
+        }
+        width=view.w;
+        height=view.h;
+        scale_x=sx;
+        scale_y=sy;
+        anchor=centre;
+        detail_region=region;
+        detail_bytes=detail.bytes;
+        detail_opacity=opacity;
+        atlas_revision=atlas.revision();
+        charted=coast;
+        surveyed=survey;
+        for (int y=0;y<view.h;++y)
+            std::memcpy(out.frame_bytes.data()+(view.y+y)*out.stride_bytes+view.x*sizeof(Color),
+                        frame.data()+y*stride,stride);
+    }
+
+private:
+    static constexpr std::size_t BufferPixels=64*1024;
+    std::array<std::byte,BufferPixels*sizeof(Color)> bytes;
+    decltype(State::coast) charted{};
+    std::array<std::uint32_t,PilotSurveyRows> surveyed{};
+    Point anchor{};
+    float scale_x=0, scale_y=0;
+    int width=0,height=0,detail_region=-1,detail_opacity=0;
+    const unsigned char* detail_bytes=nullptr;
+    unsigned atlas_revision=0;
+};
 
 } // namespace tide

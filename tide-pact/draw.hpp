@@ -63,6 +63,7 @@ struct FontFace {
     const unsigned char* glyph(unsigned code) const {
         const int record=3+cell*stride()+4;
         const auto* start=atlas+2;
+        if (code>=32 && code<127) return start+(code-32)*record+2;
         const int count=u16(atlas);
         int lo=0, hi=count;
         while (lo<hi) {

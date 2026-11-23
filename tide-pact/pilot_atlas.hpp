@@ -21,6 +21,7 @@ public:
     }
 
     bool failed(int patch) const { return patch==failed_patch; }
+    unsigned revision() const { return terrain_revision; }
 
     Row row(int patch,int y) const {
         Row result;
@@ -50,8 +51,10 @@ public:
     void prepare(pxa::Context& ctx,Point ship,Point camera,int priority,bool& dirty) {
         if (priority>=0 && collision_patch!=priority) {
             if (const auto* source=find(priority);source && source->size && !source->reduced) {
-                if (decode_pilot_tile(std::span(source->pixels).first(source->size),collision))
+                if (decode_pilot_tile(std::span(source->pixels).first(source->size),collision)) {
                     collision_patch=priority;
+                    ++terrain_revision;
+                }
             }
         }
         if (busy) return;
@@ -89,6 +92,7 @@ public:
                 });
                 if (replace==tiles.end()) break;
                 slot=&*replace;
+                if (slot->size) ++terrain_revision;
                 slot->patch=patch;
                 slot->size=0;
             }
@@ -201,6 +205,7 @@ private:
                 collision_patch=decode_pilot_tile(packed,collision)?tile.patch:-1;
                 if (collision_patch<0) failed_patch=tile.patch;
             }
+            ++terrain_revision;
         } else failed_patch=tile.patch;
         busy=false;
         dirty=true;
@@ -210,6 +215,7 @@ private:
     std::array<Tile,9> tiles{};
     std::array<unsigned char,PilotTileBytes> scratch{},collision{};
     int collision_patch=-1,failed_patch=-1;
+    unsigned terrain_revision=0;
     bool busy=false;
 };
 
