@@ -11,6 +11,7 @@
 #include <array>
 #include <cstdio>
 #include <optional>
+#include <span>
 
 namespace tide {
 namespace {
@@ -23,6 +24,7 @@ constexpr Text tabs[] = {"海图","市场","船坞","港务","日志"};
 constexpr int PricedButtonHeight=33;
 
 enum Screen { Chart, Market, Shipyard, Office, Journal };
+enum class MapView { None, Chart, Helm, Pilot };
 enum Plate { StandardPlate, ActionPlate };
 enum HarborPanel { HarborPlaque, HarborWood, HarborGoldWood, HarborPaper, HarborTrim };
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
@@ -97,6 +99,18 @@ enum Action {
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(TradeStartPreparation<DockService);
 
+float scale_at_zoom(std::span<const float> scales, float level) {
+    const int lower=std::min(int(level),int(scales.size())-2);
+    return std::lerp(scales[lower],scales[lower+1],level-lower);
+}
+
+float zoom_at_scale(std::span<const float> scales, float scale) {
+    if (scale<=scales.front()) return 0.f;
+    for (std::size_t i=1;i<scales.size();++i)
+        if (scale<=scales[i]) return float(i-1)+(scale-scales[i-1])/(scales[i]-scales[i-1]);
+    return float(scales.size()-1);
+}
+
 struct FormattedText {
     char contents[160]{};
     operator Text() const { return contents; }
@@ -146,6 +160,7 @@ struct VoyageApp {
     pxa::ui::DisplayMetrics input_display{};
     pxa::input::Controller controller;
     pxa::input::PointerCapture pointer_capture;
+    pxa::input::PointerCapture second_pointer;
     std::array<Button,48> buttons{};
     int button_count=0, focused=0;
     Rect safe{}, body{}, map{};
@@ -185,14 +200,21 @@ struct VoyageApp {
     int approach_port=-1;
     std::optional<Point> scout_course;
     bool officer_talk=false;
-    float chart_x=0, chart_y=0, factor=1;
+    float chart_x=0, chart_y=0, factor=1, zoom=3;
     Point previous_helm{};
-    int zoom=3, press_x=0, press_y=0, last_x=0, last_y=0;
-    bool map_press=false, panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
+    int press_x=0, press_y=0, last_x=0, last_y=0;
+    bool panning=false, follow=true, pad_focus=false, intel_from_preflight=false;
+    MapView drawn_map=MapView::None, pointer_map=MapView::None;
+    struct MapPinch {
+        Point second;
+        float span, scale, anchor_x, anchor_y;
+    };
+    std::optional<MapPinch> pinch;
     bool open_helm_view=false;
     int enclave_item=0, enclave_tab=0, raid_company=-1;
     unsigned skirmish_tick=0;
-    int pilot_pending=-1, pilot_zoom=-1, pilot_site=-1, pilot_guide=-1;
+    int pilot_pending=-1, pilot_site=-1, pilot_guide=-1;
+    float pilot_zoom=-1;
     Overlay pilot_story_back=None;
     bool pilot_follow=true;
     unsigned pilot_rate=1;
@@ -298,7 +320,7 @@ struct VoyageApp {
     void on_background(pxa::Context&) {
         foreground=false;
         audio.foreground(false);
-        pointer_capture.reset();
+        reset_pointers();
         controller.reset();
         if (!title && game.sea()) save_needed=true;
         request_save();
@@ -309,12 +331,15 @@ struct VoyageApp {
         auto display=pxa::ui::decode_display_metrics(event);
         if (!display) return std::unexpected(display.error());
         input_display=*display;
-        pointer_capture.reset();
+        reset_pointers();
         dirty=true;
         return true;
     }
     void on_window_changed(const pxa::WindowMetrics& value) {
-        reconfigure |= value.pixel_width != metrics.pixel_width || value.pixel_height != metrics.pixel_height;
+        if (value.pixel_width!=metrics.pixel_width || value.pixel_height!=metrics.pixel_height) {
+            reconfigure=true;
+            reset_pointers();
+        }
         metrics = value;
         if (!landscape_requested && std::min(value.pixel_width,value.pixel_height)>=400) {
             landscape_requested=true;
@@ -364,8 +389,8 @@ struct VoyageApp {
         chart_x=float(p.x); chart_y=float(p.y);
         dirty=true;
     }
-    void set_zoom(int n) {
-        zoom=std::clamp(n,0,7);
+    void set_zoom(float n) {
+        zoom=std::clamp(n,0.f,7.f);
         if (!zoom) center_at({ChartWidth/2,ChartHeight/2});
         dirty=true;
     }
@@ -437,6 +462,13 @@ struct VoyageApp {
     bool full_helm_chart() const {
         return !title && screen==Chart && modal==None && game.s.helm &&
             (game.s.pilot.region || game.s.skirmish.active || (open_helm_view && !game.encounter()));
+    }
+
+    MapView map_view() const {
+        if (title || screen!=Chart || modal!=None || game.encounter() || game.s.skirmish.active ||
+            game.s.land_fight.kind) return MapView::None;
+        if (pilot_view()) return MapView::Pilot;
+        return full_helm_chart()?MapView::Helm:MapView::Chart;
     }
 
     void cycle_voyage_rate() {
@@ -635,7 +667,7 @@ struct VoyageApp {
         d.nine_slice({art::port_ui},{style*64,0,64,40},r,6,edge,true);
     }
     bool pressed(Rect r) const {
-        return pointer_capture.active() && !map_press && r.contains({press_x,press_y}) &&
+        return pointer_capture.active() && pointer_map==MapView::None && r.contains({press_x,press_y}) &&
                r.contains({last_x,last_y}) && std::abs(last_x-press_x)+std::abs(last_y-press_y)<14;
     }
     void focus_marker(Draw& d, Rect r) {
@@ -837,18 +869,29 @@ struct VoyageApp {
                 map.y+map.h/2+int(std::lround((y-chart_y)*factor))};
     }
     Point map_point(Point p) const { return map_point(p.x,p.y); }
-    void atlas_background(Draw& d) {
-        if (game.s.skirmish.active || (game.s.fishery.target && full_helm_chart() && zoom>=4)) {
-            const auto& fish=game.s.fishery;
-            const auto foe=game.s.skirmish.active?game.s.skirmish.rival:
-                fish.stage==TrackingFish?fish.animal:fish.gear;
-            const float camera_w=std::max(12.f,std::abs(game.s.helm_x-foe.x)/16.f+3.5f);
-            const float camera_h=std::max(7.8f,std::abs(game.s.helm_y-foe.y)/16.f+4.4f);
-            factor=std::min({map.w/camera_w,map.h/camera_h,27.f});
-        } else {
-            factor=zoom==0?std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight):
-                std::min(float(map.w)/LegacyChartWidth,float(map.h)/LegacyChartHeight)*std::pow(1.52f,float(zoom));
+
+    float chart_focus_scale(Point target) const {
+        const float camera_w=std::max(12.f,std::abs(game.s.helm_x-target.x)/16.f+3.5f);
+        const float camera_h=std::max(7.8f,std::abs(game.s.helm_y-target.y)/16.f+4.4f);
+        return std::min({map.w/camera_w,map.h/camera_h,27.f});
+    }
+
+    std::array<float,8> chart_scales() const {
+        std::array<float,8> scales{};
+        scales[0]=std::min(float(map.w)/ChartWidth,float(map.h)/ChartHeight);
+        scales[1]=std::min(float(map.w)/LegacyChartWidth,float(map.h)/LegacyChartHeight)*1.52f;
+        for (std::size_t i=2;i<scales.size();++i) scales[i]=scales[i-1]*1.52f;
+        const auto& fish=game.s.fishery;
+        if (fish.target && full_helm_chart()) {
+            const auto target=fish.stage==TrackingFish?fish.animal:fish.gear;
+            scales[4]=std::max(scales[4],chart_focus_scale(target));
+            for (std::size_t i=5;i<scales.size();++i) scales[i]=std::max(scales[i],scales[i-1]*1.25f);
         }
+        return scales;
+    }
+
+    void atlas_background(Draw& d) {
+        factor=game.s.skirmish.active?chart_focus_scale(game.s.skirmish.rival):scale_at_zoom(chart_scales(),zoom);
         chart_x=std::clamp(chart_x,0.f,float(ChartWidth));
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
@@ -1297,6 +1340,15 @@ struct VoyageApp {
                 map.y+map.h/2+int(std::lround((atlas.y-pilot_y)*pilot_scale_y))};
     }
 
+    std::array<float,7> pilot_scales() const {
+        return {map.w/200.f,map.w/100.f,map.w/60.f,map.w/36.f,map.w/22.f,map.w/12.f,map.w/6.f};
+    }
+
+    static float pilot_longitude_scale(float camera_y, float pixels_per_mile) {
+        const float latitude=ChartNorth-camera_y/(ChartLatitudeScale*float(PilotAtlasUnit));
+        return pixels_per_mile*60.f*std::cos(latitude*.0174532925f)/(ChartLongitudeScale*PilotAtlasUnit);
+    }
+
     Point pilot_visual_ship() const {
         const auto ship=game.pilot_atlas_position();
         if (game.paused || pilot_visual_from.x<0 || game.pilot_exiting()) return ship;
@@ -1352,7 +1404,6 @@ struct VoyageApp {
         if (pilot_zoom<0) pilot_zoom=water.world?2:4;
         const auto saved_clip=d.clip;
         d.clip=d.clipped(map);
-        constexpr float widths[]{200.f,100.f,60.f,36.f,22.f,12.f,6.f};
         const auto tracked=pilot_visual_ship();
         if (pilot_follow) {
             pilot_x=tracked.x;
@@ -1360,9 +1411,8 @@ struct VoyageApp {
         }
         pilot_x=std::clamp(pilot_x,0.f,float(PilotAtlasWidth-1));
         pilot_y=std::clamp(pilot_y,0.f,float(PilotAtlasHeight-1));
-        const float latitude=ChartNorth-pilot_y/(ChartLatitudeScale*float(PilotAtlasUnit));
-        pilot_pixels_per_mile=map.w/widths[pilot_zoom];
-        pilot_scale_x=pilot_pixels_per_mile*60.f*std::cos(latitude*.0174532925f)/(ChartLongitudeScale*PilotAtlasUnit);
+        pilot_pixels_per_mile=scale_at_zoom(pilot_scales(),pilot_zoom);
+        pilot_scale_x=pilot_longitude_scale(pilot_y,pilot_pixels_per_mile);
         pilot_scale_y=pilot_pixels_per_mile*60.f/(ChartLatitudeScale*PilotAtlasUnit);
         const int detail_index=visible_pilot_detail();
         const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
@@ -4542,6 +4592,7 @@ struct VoyageApp {
 
     void render(Draw& d) {
         layout(d);
+        drawn_map=map_view();
         d.fill(d.clip,ink);
         button_count=0;
         if (!title && game.s.land_fight.kind) {
@@ -4807,7 +4858,7 @@ struct VoyageApp {
                 } else notify();
                 break;
             case PilotZoomIn: case PilotZoomOut:
-                pilot_zoom=std::clamp(pilot_zoom+(action==PilotZoomIn?1:-1),0,6);
+                pilot_zoom=std::clamp(pilot_zoom+(action==PilotZoomIn?1.f:-1.f),0.f,6.f);
                 break;
             case PilotCenter: case PilotCenterShip:
                 pilot_follow=true;
@@ -5455,7 +5506,7 @@ struct VoyageApp {
         case BeginFishery:
             if (game.begin_fishery(chart_water)) {
                 follow=true;
-                set_zoom(std::max(zoom,4));
+                set_zoom(std::max(zoom,4.f));
                 changed();
             } else notify();
             break;
@@ -5536,7 +5587,7 @@ struct VoyageApp {
                 open_helm_view=!open_helm_view;
                 if (open_helm_view) {
                     follow=true;
-                    set_zoom(std::max(zoom,4));
+                    set_zoom(std::max(zoom,4.f));
                     center_at(game.position());
                 }
             }
@@ -5878,6 +5929,47 @@ struct VoyageApp {
             dirty=true;
         }
     }
+    void reset_pointers() {
+        pointer_capture.reset();
+        second_pointer.reset();
+        pinch.reset();
+        pointer_map=MapView::None;
+    }
+
+    void begin_pinch(Point second) {
+        const float dx=(last_x+second.x)*.5f-(map.x+map.w/2);
+        const float dy=(last_y+second.y)*.5f-(map.y+map.h/2);
+        const float span=std::max(8.f,std::hypot(float(last_x-second.x),float(last_y-second.y)));
+        if (pointer_map==MapView::Pilot)
+            pinch=MapPinch{second,span,pilot_pixels_per_mile,pilot_x+dx/pilot_scale_x,pilot_y+dy/pilot_scale_y};
+        else pinch=MapPinch{second,span,factor,chart_x+dx/factor,chart_y+dy/factor};
+    }
+
+    void move_pinch() {
+        const auto& grip=*pinch;
+        const float span=std::max(8.f,std::hypot(float(last_x-grip.second.x),float(last_y-grip.second.y)));
+        const float target_scale=grip.scale*span/grip.span;
+        const float dx=(last_x+grip.second.x)*.5f-(map.x+map.w/2);
+        const float dy=(last_y+grip.second.y)*.5f-(map.y+map.h/2);
+        if (pointer_map==MapView::Pilot) {
+            const auto scales=pilot_scales();
+            pilot_zoom=zoom_at_scale(scales,target_scale);
+            const float new_scale=scale_at_zoom(scales,pilot_zoom);
+            const float vertical=new_scale*60.f/(ChartLatitudeScale*PilotAtlasUnit);
+            pilot_y=std::clamp(grip.anchor_y-dy/vertical,0.f,float(PilotAtlasHeight-1));
+            pilot_x=std::clamp(grip.anchor_x-dx/pilot_longitude_scale(pilot_y,new_scale),0.f,float(PilotAtlasWidth-1));
+            pilot_follow=false;
+        } else {
+            const auto scales=chart_scales();
+            zoom=zoom_at_scale(scales,target_scale);
+            const float new_scale=scale_at_zoom(scales,zoom);
+            chart_x=std::clamp(grip.anchor_x-dx/new_scale,0.f,float(ChartWidth));
+            chart_y=std::clamp(grip.anchor_y-dy/new_scale,0.f,float(ChartHeight));
+            follow=false;
+        }
+        dirty=true;
+    }
+
     void pointer(const pxa::ui::CanvasPointer& e) {
         using pxa::input::PointerPhase;
         const auto device_pixel=[&](int logical) {
@@ -5885,37 +5977,62 @@ struct VoyageApp {
         };
         const Point p{(device_pixel(e.x)-surface_x)/scale,
                       (device_pixel(e.y)-surface_y)/scale};
+        const bool same_map=pointer_map!=MapView::None && pointer_map==drawn_map && pointer_map==map_view();
+        if (pinch) {
+            const bool primary=pointer_capture.owns(e);
+            auto& touch=primary?pointer_capture:second_pointer;
+            if (!touch.owns(e)) return;
+            // Both contacts belong to this gesture until both are lifted or cancelled.
+            if (e.ended()) {
+                touch.release(e);
+                if (!pointer_capture.active() && !second_pointer.active()) reset_pointers();
+            } else if (e.action()==PointerPhase::move && same_map &&
+                       pointer_capture.active() && second_pointer.active()) {
+                if (primary) { last_x=p.x; last_y=p.y; }
+                else pinch->second=p;
+                move_pinch();
+            }
+            return;
+        }
         if (e.action()==PointerPhase::down) {
+            if (pointer_capture.active() && same_map && !pointer_capture.owns(e) &&
+                map.contains({last_x,last_y}) && map.contains(p) && second_pointer.try_capture(e)) {
+                begin_pinch(p);
+                return;
+            }
             if (!pointer_capture.try_capture(e)) return;
             pad_focus=false;
             press_x=last_x=p.x; press_y=last_y=p.y;
-            map_press=!title && screen==Chart && modal==None && !game.encounter() && map.contains(p);
+            pointer_map=drawn_map==map_view() && map.contains(p)?drawn_map:MapView::None;
             panning=false;
             dirty=true;
         } else if (pointer_capture.owns(e)) {
-            if (e.action()==PointerPhase::move && map_press) {
+            if (e.action()==PointerPhase::move && same_map) {
+                const bool dragging=panning;
                 panning |= std::abs(p.x-press_x)+std::abs(p.y-press_y)>5;
                 if (panning) {
-                    if (pilot_view()) {
-                        pilot_x-=(p.x-last_x)/pilot_scale_x;
-                        pilot_y-=(p.y-last_y)/pilot_scale_y;
+                    const int dx=p.x-(dragging?last_x:press_x), dy=p.y-(dragging?last_y:press_y);
+                    if (pointer_map==MapView::Pilot) {
+                        pilot_x-=dx/pilot_scale_x;
+                        pilot_y-=dy/pilot_scale_y;
                         pilot_follow=false;
                     } else {
-                        chart_x-=(p.x-last_x)/factor;
-                        chart_y-=(p.y-last_y)/factor;
+                        chart_x-=dx/factor;
+                        chart_y-=dy/factor;
                         follow=false;
                     }
-                    last_x=p.x; last_y=p.y;
                     dirty=true;
                 }
+                last_x=p.x; last_y=p.y;
             } else if (e.action()==PointerPhase::move) {
                 last_x=p.x; last_y=p.y;
                 dirty=true;
             }
             if (e.ended()) {
-                pointer_capture.release(e);
+                const bool can_tap=pointer_map==MapView::None || same_map;
+                reset_pointers();
                 dirty=true;
-                if (e.action()==PointerPhase::up && !panning &&
+                if (e.action()==PointerPhase::up && can_tap && !panning &&
                     std::abs(p.x-press_x)+std::abs(p.y-press_y)<14) tap(p);
             }
         }
