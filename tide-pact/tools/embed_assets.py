@@ -10,7 +10,7 @@ def main():
     args = cli.parse_args()
     with args.output.open("w") as out:
         out.write('#include "assets.hpp"\nnamespace tide::art {\n')
-        for name in ("chart", "relief", "chart_materials", "helm_icons", "skirmish", "fishery", "enclave", "harbor", "title_compact", "storm", "portraits", "pilot_ships", "pilot_marks", "broadside", "glyphs", "glyphs_compact", "glyphs_native", "ui_wide",
+        for name in ("chart", "relief", "chart_materials", "chart_actions", "helm_icons", "skirmish", "fishery", "enclave", "harbor", "title_compact", "storm", "portraits", "pilot_ships", "pilot_marks", "broadside", "glyphs", "glyphs_compact", "glyphs_native", "ui_wide",
                      "wordmark", "skin", "controls", "tabs", "goods", "specialty_icons", "navigation", "shore_troops", "boarding", "cadiz_duel",
                      "duel_fx", "discoveries", "officers", "voyage_icons", "driftwood",
                      "towns", "town_icons", "town_walk", "port_people", "port_ui", "dispatch_icons",

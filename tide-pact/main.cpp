@@ -46,6 +46,11 @@ enum HelmGlyph {
     HelmTurnLeft=100, HelmTurnRight, HelmGunLeft, HelmAnchor, HelmRope,
     HelmBoard, HelmNet, HelmCanvas, HelmGunRight
 };
+enum ChartActionIcon {
+    ZoomInIcon=120, ZoomOutIcon, ReturnShipIcon, ShipWheelIcon,
+    DockAnchorIcon, DestinationChartIcon, CompareScaleIcon, HarborLogIcon
+};
+constexpr int ChartActionIconSize=32;
 enum Action {
     Begin=1, OpenChart, OpenMarket, OpenShipyard, OpenOffice, OpenJournal,
     RouteList, Close, ZoomIn, ZoomOut, Center, Sail, Pause, Trim, Retreat, NextStop,
@@ -807,6 +812,15 @@ struct VoyageApp {
         d.clip=d.clipped(content);
         if (!price.empty()) {
             d.center_lines(content,text,color,price,inactive ? quiet : mist);
+        } else if (glyph>=ZoomInIcon) {
+            const int item=glyph-ZoomInIcon, cell=ChartActionIconSize;
+            const Rect sprite{item%4*cell,item/4*cell,cell,cell};
+            const int size=std::clamp(r.h-6,12,18);
+            if (text.empty()) {
+                const Rect icon{content.x+(content.w-size)/2,content.y+(content.h-size)/2,size,size};
+                d.image({art::chart_actions},sprite,icon,true);
+                if (inactive) d.darken(icon,6);
+            } else d.center_with_icon(content,text,color,{art::chart_actions},sprite,size);
         } else if (glyph>=HelmTurnLeft) {
             const bool reflected= glyph==HelmGunRight;
             const int item=(reflected?HelmGunLeft:glyph)-HelmTurnLeft;
@@ -1407,8 +1421,9 @@ struct VoyageApp {
             const int left=body.x+index*(body.w+3)/count;
             return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
         };
-        constexpr Text labels[]{"+","-","定位","海图"};
+        constexpr Text labels[]{{},{},"回船","海图"};
         constexpr int actions[]{ZoomIn,ZoomOut,Center,ToggleHelmView};
+        constexpr int icons[]{ZoomInIcon,ZoomOutIcon,ReturnShipIcon,DestinationChartIcon};
         const bool lookout=game.nature_site()!=NoNatureSite && !salvage;
         const int fishing=fish.target?NoFishery:game.fishery_available();
         const bool village=berth>=0 && game.enclave_nearby(chart_water)>=0;
@@ -1416,7 +1431,7 @@ struct VoyageApp {
         const auto clip=d.clip;
         if (chrome) {
             const std::array<int,19> key{lookout,fishing,village,salvage,berth>=0,game.s.reefed,game.paused,
-                d.font.cell,pad_focus?focused-button_count:-100};
+                zoom==0,zoom>=7,d.font.cell,pad_focus?focused-button_count:-100};
             const bool touching=pointer_capture.active() && pointer_map==MapView::None;
             const bool refresh=touching || fish.target || !chrome->controls_ready || chrome->controls!=key;
             if (refresh) d.fill({0,map.bottom(),d.clip.w,d.clip.h-map.bottom()},ink);
@@ -1424,14 +1439,15 @@ struct VoyageApp {
             chrome->controls=key;
             chrome->controls_ready=!touching && !fish.target;
         }
-        for (int i=0;i<4;++i) button(d,bar(i,count,0),labels[i],actions[i]);
+        for (int i=0;i<4;++i)
+            button(d,bar(i,count,0),labels[i],actions[i],false,(i==0 && zoom>=7) || (i==1 && zoom==0),{},icons[i]);
         int next=4;
         if (lookout) button(d,bar(next++,count,0),"观察",OpenNatureWatch,true);
         if (fishing)
             button(d,bar(next++,count,0),fishing==WhaleFishery?"寻鲸":"寻鱼",BeginFishery,true);
         if (village) button(d,bar(next++,count,0),"村镇",DockEnclave);
         button(d,bar(next,count,0),salvage?"捞木匣":"靠泊",salvage?OpenDriftRecovery:DockHelm,
-               berth>=0 || salvage,berth<0 && !salvage,{},salvage?int(LetterIcon):int(HelmAnchor));
+               berth>=0 || salvage,berth<0 && !salvage,{},salvage?int(LetterIcon):int(DockAnchorIcon));
         button(d,bar(0,4,1),"左舵",SteerLeft,false,false,{},HelmTurnLeft);
         button(d,bar(1,4,1),"右舵",SteerRight,false,false,{},HelmTurnRight);
         button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
@@ -1750,15 +1766,15 @@ struct VoyageApp {
             const int left=body.x+index*(body.w+3)/count;
             return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
         };
-        button(d,bar(0,7,0),"+",PilotZoomIn,false,pilot_zoom>=6);
-        button(d,bar(1,7,0),"-",PilotZoomOut,false,!pilot_zoom);
-        button(d,bar(2,7,0),"回船",PilotCenter,!pilot_follow);
-        button(d,bar(3,7,0),"泊地",PilotBookOpen);
+        button(d,bar(0,7,0),{},PilotZoomIn,false,pilot_zoom>=6,{},ZoomInIcon);
+        button(d,bar(1,7,0),{},PilotZoomOut,false,!pilot_zoom,{},ZoomOutIcon);
+        button(d,bar(2,7,0),"回船",PilotCenter,!pilot_follow,false,{},ReturnShipIcon);
+        button(d,bar(3,7,0),"泊地",PilotBookOpen,false,false,{},HarborLogIcon);
         button(d,bar(4,7,0),format("%u倍",pilot_rate),PilotSpeed,pilot_rate>1,slow);
         button(d,bar(5,7,0),"远航",LeavePilot,false,state.moored);
         const Text landing=landing_site.transfer?"接驳":surveying?"抵达":"靠泊";
         button(d,bar(6,7,0),state.moored?"上岸":docking?"进港":landing,state.moored?PilotStoryOpen:PilotMoor,
-               true,berth<0 || docking,{},body.w>=350?(surveying?int(AstrolabeIcon):int(HelmAnchor)):-1);
+               true,berth<0 || docking,{},surveying?int(AstrolabeIcon):int(DockAnchorIcon));
         if (state.moored) {
             button(d,bar(0,3,1),water_offer.amount?Text(format("淡水+%d %d金",water_offer.amount,water_offer.cost)):"淡水已满",
                    PilotWaterBuy,false,!water_offer.amount || game.s.gold<water_offer.cost);
@@ -1914,26 +1930,38 @@ struct VoyageApp {
         const bool zoom_to_shore=landmark>=0 && zoom<5;
         const int action_x=map.x+2*(icon_w+3)+39;
         const int action_w=map.right()-action_x;
+        const bool helm_shortcut=game.port() && !salvage && action_w>=90;
+        const int helm_w=helm_shortcut?
+            std::min({(action_w-3)/2,83,action_w-d.measure("目的地")-7}):0;
         const auto site=game.nature_site();
         const bool lookout=site!=NoNatureSite && !salvage && action_w>=68;
         const int watch_w=lookout?std::clamp(action_w/3,33,73):0;
         const bool unrecorded=lookout && !game.nature_recorded(site==MadeiraWaters?CommonDolphin:Loggerhead);
         if (chrome) {
             const std::array<int,19> key{zoom_to_shore,lookout,unrecorded,salvage,game.s.helm,game.sea(),
-                game.s.stop_next,berth>=0,d.font.cell,pad_focus?focused-button_count:-100};
+                game.s.stop_next,berth>=0,helm_shortcut,zoom==0,zoom>=7,d.font.cell,
+                pad_focus?focused-button_count:-100};
             chart_section(d,{map.x,y-2,map.w,26},key,chrome->controls,chrome->controls_ready);
         }
-        button(d,{map.x,y,icon_w,24},"+",ZoomIn);
-        button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
-        button(d,{map.x+2*(icon_w+3),y,36,24},zoom_to_shore?"近岸":"定位",Center);
+        button(d,{map.x,y,icon_w,24},{},ZoomIn,false,zoom>=7,{},ZoomInIcon);
+        button(d,{map.x+icon_w+3,y,icon_w,24},{},ZoomOut,false,zoom==0,{},ZoomOutIcon);
+        button(d,{map.x+2*(icon_w+3),y,36,24},zoom_to_shore?"近岸":"回船",Center);
         if (lookout)
             button(d,{action_x,y,watch_w,24},"观察",OpenNatureWatch,unrecorded);
         const int dock_offset=lookout?watch_w+3:0;
-        button(d,{action_x+dock_offset,y,action_w-dock_offset,24},
-               salvage?"捞木匣":game.s.helm?"靠泊":game.sea()?(game.s.stop_next?"取消停靠":"下站停靠"):"目的地",
+        const int main_action_w=action_w-dock_offset-(helm_shortcut?helm_w+3:0);
+        const Text route_picker=main_action_w>=d.measure("选目的地")+4?"选目的地":"目的地";
+        const int action_icon=salvage?int(LetterIcon):game.s.helm?int(DockAnchorIcon):
+            game.sea()?-1:int(DestinationChartIcon);
+        button(d,{action_x+dock_offset,y,main_action_w,24},
+               salvage?"捞木匣":game.s.helm?"靠泊":game.sea()?(game.s.stop_next?"取消停靠":"下站停靠"):route_picker,
                salvage?OpenDriftRecovery:game.s.helm?DockHelm:game.sea()?NextStop:RouteList,
-               salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},
-               salvage?LetterIcon:game.s.helm && action_w-dock_offset>=55?MooringIcon:-1);
+               salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},action_icon);
+        if (helm_shortcut) {
+            const bool roomy=helm_w>=d.measure("自由掌舵")+24;
+            button(d,{map.right()-helm_w,y,helm_w,24},roomy?"自由掌舵":"掌舵",StartExplore,
+                   false,false,{},ShipWheelIcon);
+        }
         d.clip=clip;
         if (!game.s.helm && (game.sea() || game.port()))
             button(d,{map.right()-50,map.bottom()-23,47,20},"精航",EnterPilot,true);
@@ -1965,7 +1993,8 @@ struct VoyageApp {
         const bool local_study=game.expedition_here()>=0;
         const bool scouting=scout_course.has_value() && !game.sea();
         const int route_info=route.count ? ShowPreflight : scouting ? ShowRumors : ShowIntel;
-        const Text route_label=route.count ? "航前" : scouting ? "传闻" : "地理";
+        const Text route_label=route.count ? "航前计划" : scouting ? "传闻" : "地理";
+        constexpr Text depart_label="按航线启航";
         const Text visit=scouting ? "循线出海" : story_here() ? "会面" : local_study ? "考察" :
                          p>=PortCount ? "测绘" : "掌舵出海";
         const int visit_action=story_here() ? ReadStory : local_study ? OpenObservation :
@@ -2010,7 +2039,7 @@ struct VoyageApp {
                 } else if (story_here())
                     d.label(info.x+5,info.y+47,"有新剧情",mint,info.w-10);
                 button(d,{info.x+4,info.bottom()-54,info.w-8,23},route_label,route_info);
-                button(d,{info.x+4,info.bottom()-27,info.w-8,23},route.count?"启航":visit,
+                button(d,{info.x+4,info.bottom()-27,info.w-8,23},route.count?depart_label:visit,
                        route.count?Sail:visit_command,true,false,{},route.count || scouting?SailIcon:-1);
             }
         } else {
@@ -2030,7 +2059,7 @@ struct VoyageApp {
                 const Text detail=shortage ? Text("水粮不足") : Text(summary);
                 d.label(info.x+5,info.y+22,route.count ? detail : scouting?Text(course):Places[p].region,
                         shortage?vermilion:mist,info.w-10);
-                pair(d,{info.x+4,info.y+43,info.w-8,25},route.count?"启航":visit,
+                pair(d,{info.x+4,info.y+43,info.w-8,25},route.count?depart_label:visit,
                      route.count?Sail:visit_command,route_label,route_info,true);
             }
         }
@@ -2067,8 +2096,10 @@ struct VoyageApp {
         }
     }
 
-    int market_pitch() const { return dense_layout()?17:19; }
-    int market_rows() const { return std::clamp((body.h-72)/market_pitch(),2,8); }
+    bool market_separate_headings() const { return body.w<298; }
+    int market_pitch() const { return dense_layout()?17:market_separate_headings()?18:19; }
+    int market_table_top() const { return market_separate_headings()?34:19; }
+    int market_rows() const { return std::clamp((body.h-54-market_table_top())/market_pitch(),2,8); }
     int market_selection_page() const { return (good>=GoodsCount?good-GoodsCount:good)/market_rows(); }
 
     static FormattedText market_prices(int buy,int sell) {
@@ -2100,35 +2131,48 @@ struct VoyageApp {
         const int x=body.x, y=body.y, w=body.w;
         skin_box(d,body,0,6);
         const bool regional=std::find(MerchantPorts.begin(),MerchantPorts.end(),s.origin)!=MerchantPorts.end();
+        const int right=body.right()-4;
+        const int quote_w=std::max(31,d.measure("买价")+4);
+        const int sell_end=right-5, buy_end=sell_end-quote_w-4, quote_start=buy_end-quote_w;
+        const bool separate_headings=market_separate_headings();
+        const int tools_end=separate_headings?right:quote_start-4;
+        const int compare_w=w>=360?56:42;
+        const int tools_extra=compare_w-42;
+        const int hold_w=tools_end-tools_extra-(regional?150:101)-x-25;
+        const auto hold=format("船舱 %d/%d",game.load(),game.capacity());
         voyage_icon(d,CargoIcon,{x+5,y+2,13,13});
-        d.label(x+21,y+2,format("船舱 %d/%d",game.load(),game.capacity()),gold,regional?w-174:w-21);
-        const int right=x+w-4;
-        if (regional) {
-            button(d,{right-150,y+1,45,18},"船讯",ShowMerchants);
-            if (w>=315) d.label(right-197,y+2,"买/卖",quiet);
-        } else if (w>=235) d.label(right-145,y+2,"买/卖",quiet);
-        button(d,{right-101,y+1,53,18},specials?"货源":"议价",specials?ShowSpecialty:ShowBargain,false,false,{},SpeechIcon);
-        button(d,{right-44,y+1,42,18},"比价",ShowPortPrices);
+        d.label(x+21,y+2,d.measure(hold)<=hold_w?hold:format("%d/%d",game.load(),game.capacity()),gold,hold_w);
+        if (regional) button(d,{tools_end-tools_extra-150,y+1,45,18},"船讯",ShowMerchants);
+        button(d,{tools_end-tools_extra-101,y+1,53,18},specials?"货源":"议价",specials?ShowSpecialty:ShowBargain,
+               false,false,{},SpeechIcon);
+        button(d,{tools_end-compare_w-2,y+1,compare_w,18},"比价",ShowPortPrices,false,false,{},CompareScaleIcon);
+        const int heading_y=y+(separate_headings?19:2);
+        d.label(buy_end-d.measure("买价"),heading_y,"买价",ivory);
+        d.label(sell_end-d.measure("卖价"),heading_y,"卖价",mint);
         for (int i=0; i<rows && page*rows+i<count; ++i) {
             const int g=first+page*rows+i;
-            const Rect item{x+3,y+19+i*market_pitch(),w-6,market_pitch()-1};
+            const Rect item{x+3,y+market_table_top()+i*market_pitch(),w-6,market_pitch()-1};
             const bool foc=pad_focus && button_count==focused;
             d.fill(item,foc ? rgb(0x3b5550) : g==good ? light : (i%2 ? rgb(0x1e3b3f) : panel));
-            if (foc || g==good) nav_icon(d,CursorIcon,{item.x+1,item.y+4,10,10});
+            if (g==good) d.fill({item.x,item.y+2,2,item.h-4},gold);
+            if (foc) nav_icon(d,CursorIcon,{item.x+2,item.y+4,10,10});
             goods_icon(d,g,{item.x+13,item.y,item.h,item.h});
             const auto access=market_access(s.origin,g);
             const int cargo_x=specials?110:83;
             d.label(item.x+34,item.y+2,GoodsNames[g],g==good?gold:access==MarketAccess::Closed?mist:ivory,cargo_x-36);
             d.label(item.x+cargo_x,item.y+2,format("%d",s.cargo[g]),mint);
-            const auto price=market_prices(game.quote(g,false),game.quote(g,true));
-            d.label(right-d.measure(price)-5,item.y+2,price,ivory);
+            const int buy=game.quote(g,false), sell=game.quote(g,true);
+            const auto buy_text=buy?format("%d",buy):format("—");
+            const auto sell_text=sell?format("%d",sell):format("—");
+            d.label(buy_end-d.measure(buy_text),item.y+2,buy_text,buy?ivory:quiet);
+            d.label(sell_end-d.measure(sell_text),item.y+2,sell_text,sell?mint:quiet);
             if (w>=220) {
                 const int stock=game.stock(g);
                 const Text supply=access==MarketAccess::Closed?"不经营":access==MarketAccess::Buyer?
                                   game.specialty_orders(s.origin,g)?"仅收购":"已收满":
                                   !stock?"售罄":access==MarketAccess::Producer?"本港出产":
                                   stock<=7?"紧缺":stock>=24?"充足":"平稳";
-                const int meta=cargo_x+27, room=right-d.measure(price)-10-item.x-meta;
+                const int meta=cargo_x+27, room=quote_start-4-item.x-meta;
                 if (room>=d.measure(supply))
                     d.label(item.x+meta,item.y+2,supply,access==MarketAccess::Producer?gold:stock?quiet:vermilion);
             }
@@ -2159,7 +2203,8 @@ struct VoyageApp {
             const int left=x+w*column/5, width=x+w*(column+1)/5-left-3;
             const Rect r{left,body.bottom()-31,width,PricedButtonHeight};
             if (column==2) {
-                button(d,r,"数量",OpenTradeQuantity,true,false,"自定");
+                if (width>=d.measure("自定数量")+4) button(d,r,"自定数量",OpenTradeQuantity,true);
+                else button(d,r,"自定",OpenTradeQuantity,true,false,"数量");
                 continue;
             }
             const int i=column<2?column:column-1;
@@ -2783,8 +2828,14 @@ struct VoyageApp {
             const auto offer=format("委托  %s ×3  →  %s",GoodsNames[item].data(),Places[dest].name.data());
             const int service_y=desk.bottom()-(archive>=0?75:51);
             const int offer_w=desk.w-16;
-            d.wrap({desk.x+8,details_y,offer_w,std::min(32,service_y-details_y)},offer,ivory);
-            const int contract_y=details_y+(d.measure(offer)<=offer_w?16:31);
+            const bool inline_offer=d.measure(offer)<=offer_w;
+            if (inline_offer) d.label(desk.x+8,details_y,offer,ivory,offer_w);
+            else {
+                d.label(desk.x+8,details_y,format("委托 %s ×3",GoodsNames[item].data()),ivory,offer_w);
+                if (details_y+16+d.font.cell<=service_y)
+                    d.label(desk.x+8,details_y+16,format("送往 %s",Places[dest].name.data()),ivory,offer_w);
+            }
+            const int contract_y=details_y+(inline_offer?16:32);
             if (valid_contract && contract_y+14<=service_y)
                 d.label(desk.x+8,contract_y,format("第 %d 日前  赏金 %d",game.s.deadline+1,game.reward(dest)),mist,offer_w);
             const int split=desk.w/2;
@@ -3652,7 +3703,7 @@ struct VoyageApp {
         button(d,{body.right()-50,y,45,20},"下页",Next,false,page+1>=pages);
     }
     void route_list(Draw& d) {
-        page_title(d,"已知航点");
+        page_title(d,"目的地");
         button(d,{body.right()-169,body.y+3,36,23},"全图",WorldChart);
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
         button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
@@ -3668,8 +3719,10 @@ struct VoyageApp {
             const int p=order[page*rows+i];
             const auto path=passage(game.s.origin,p);
             auto meta=format("%d海里",path.miles);
-            row(d,i,Places[p].name,p==game.s.origin ? "所在处" : p==target() ? "主线" : Text(meta),
-                Destination+p,p==target());
+            const bool here=p==game.s.origin;
+            const int glyph=here?(game.port()?MooringIcon:AstrolabeIcon):p==target()?LetterIcon:-1;
+            row(d,i,Places[p].name,here?"所在处":p==target()?"主线":p==selected?"已选":Text(meta),
+                Destination+p,p==selected,28,glyph);
         }
         pager(d,pages);
     }
