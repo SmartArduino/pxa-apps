@@ -314,6 +314,7 @@ struct Draw {
         }
     }
     void label(int x, int y, Text text, Color color, int max_width = 10000, int scale = 1) {
+        if (!clip.w || !clip.h) return;
         const int end = x+max_width;
         while (!text.empty()) {
             const auto code = next_char(text);

@@ -148,11 +148,15 @@ struct VoyageApp {
     struct SailingChrome {
         Rect bounds{};
         MapView mode=MapView::None;
-        std::array<int,16> header{};
+        std::array<int,18> header{};
         std::array<int,19> controls{};
+        Rect chart_area{};
+        std::array<int,25> chart_info{};
+        std::array<int,3> chart_footer{};
         std::array<char,160> notice{};
         std::size_t notice_size=0;
         bool header_ready=false, controls_ready=false;
+        bool chart_info_ready=false, chart_footer_ready=false;
     };
     std::array<SailingChrome,2> sailing_chrome{};
     Rect land_area{};
@@ -894,15 +898,15 @@ struct VoyageApp {
     }
     void sailing_header(Draw& d,SailingChrome& chrome) {
         const auto& s=game.s;
-        const bool helm=chrome.mode==MapView::Helm;
-        const std::array<int,16> key{s.gold,s.hull,s.stores,s.water,s.day,s.sail_watch,s.helm_pulse,
+        const bool actions=chrome.mode!=MapView::Pilot && game.sea();
+        const std::array<int,18> key{s.gold,s.hull,s.stores,s.water,s.day,s.sail_watch,s.helm_pulse,
             s.pilot.minutes,s.origin,d.font.cell,save_failed && !save_active,bool(saved_until),bool(notice_until),
-            int(voyage_rate),s.ration_flags,pad_focus?focused:-1};
+            int(voyage_rate),s.ration_flags,pad_focus?focused:-1,actions,s.helm};
         const Text message=notice_until?game.notice:Text{};
-        const bool touching=helm && pointer_capture.active() && pointer_map==MapView::None;
+        const bool touching=actions && pointer_capture.active() && pointer_map==MapView::None;
         if (!touching && chrome.header_ready && chrome.header==key &&
             message==Text(chrome.notice.data(),chrome.notice_size)) {
-            if (helm) {
+            if (actions) {
                 // The pixel buffer still owns the last header, but the
                 // current frame needs its three interactive buttons.
                 const auto clip=d.clip;
@@ -948,6 +952,24 @@ struct VoyageApp {
             }
             buttons[button_count++]={hit,town_return?ReturnTown:OpenChart+i};
         }
+    }
+
+    template<std::size_t N>
+    void chart_section(Draw& d,Rect area,const std::array<int,N>& key,std::array<int,N>& previous,bool& ready) {
+        const bool touching=pointer_capture.active() && pointer_map==MapView::None;
+        if (touching || !ready || previous!=key) d.fill(area,ink);
+        // Keep rebuilding the hitboxes even when this buffer already holds the pixels.
+        else d.clip={};
+        previous=key;
+        ready=!touching;
+    }
+
+    void chart_footer(Draw& d,SailingChrome& chrome) {
+        const auto clip=d.clip;
+        const std::array<int,3> key{d.font.cell,inside_town_facility,pad_focus?focused-button_count:-100};
+        chart_section(d,{safe.x,safe.bottom()-34,safe.w,34},key,chrome.chart_footer,chrome.chart_footer_ready);
+        footer(d);
+        d.clip=clip;
     }
 
     void start_screen(Draw& d) {
@@ -1851,7 +1873,7 @@ struct VoyageApp {
         }
     }
 
-    void chart(Draw& d) {
+    void chart(Draw& d,SailingChrome* chrome=nullptr) {
         if (game.encounter()) { encounter_screen(d); return; }
         if (pilot_view()) { pilot_chart(d); return; }
         if (full_helm_chart()) { chart_full_helm(d); return; }
@@ -1867,29 +1889,43 @@ struct VoyageApp {
             info={body.x,map.bottom()+31,body.w,card};
         }
         if (map.h<35) map.h=35;
+        if (chrome && chrome->chart_area!=map) {
+            chrome->chart_area=map;
+            chrome->controls_ready=false;
+            chrome->chart_info_ready=false;
+            d.fill(body,ink);
+        }
         const int berth=game.s.helm?game.nearby_anchorage(chart_water):-1;
         const bool salvage=berth<0 && game.near_drift();
         const int landmark=berth>=0?berth:game.s.helm?game.visible_landmark():-1;
         draw_map(d,landmark,berth);
 
+        const auto clip=d.clip;
         const int icon_w=28, y=map.bottom()+3;
-        button(d,{map.x,y,icon_w,24},"+",ZoomIn);
-        button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
-        button(d,{map.x+2*(icon_w+3),y,36,24},landmark>=0 && zoom<5?"近岸":"定位",Center);
+        const bool zoom_to_shore=landmark>=0 && zoom<5;
         const int action_x=map.x+2*(icon_w+3)+39;
         const int action_w=map.right()-action_x;
         const auto site=game.nature_site();
         const bool lookout=site!=NoNatureSite && !salvage && action_w>=68;
         const int watch_w=lookout?std::clamp(action_w/3,33,73):0;
+        const bool unrecorded=lookout && !game.nature_recorded(site==MadeiraWaters?CommonDolphin:Loggerhead);
+        if (chrome) {
+            const std::array<int,19> key{zoom_to_shore,lookout,unrecorded,salvage,game.s.helm,game.sea(),
+                game.s.stop_next,berth>=0,d.font.cell,pad_focus?focused-button_count:-100};
+            chart_section(d,{map.x,y-2,map.w,26},key,chrome->controls,chrome->controls_ready);
+        }
+        button(d,{map.x,y,icon_w,24},"+",ZoomIn);
+        button(d,{map.x+icon_w+3,y,icon_w,24},"-",ZoomOut);
+        button(d,{map.x+2*(icon_w+3),y,36,24},zoom_to_shore?"近岸":"定位",Center);
         if (lookout)
-            button(d,{action_x,y,watch_w,24},"观察",OpenNatureWatch,
-                   !game.nature_recorded(site==MadeiraWaters?CommonDolphin:Loggerhead));
+            button(d,{action_x,y,watch_w,24},"观察",OpenNatureWatch,unrecorded);
         const int dock_offset=lookout?watch_w+3:0;
         button(d,{action_x+dock_offset,y,action_w-dock_offset,24},
                salvage?"捞木匣":game.s.helm?"靠泊":game.sea()?(game.s.stop_next?"取消停靠":"下站停靠"):"目的地",
                salvage?OpenDriftRecovery:game.s.helm?DockHelm:game.sea()?NextStop:RouteList,
                salvage || game.s.stop_next || berth>=0,game.s.helm && berth<0 && !salvage,{},
                salvage?LetterIcon:game.s.helm && action_w-dock_offset>=55?MooringIcon:-1);
+        d.clip=clip;
         if (!game.s.helm && (game.sea() || game.port()))
             button(d,{map.right()-50,map.bottom()-23,47,20},"精航",EnterPilot,true);
         if (game.s.helm) {
@@ -1897,11 +1933,18 @@ struct VoyageApp {
             if (game.pilot_region()>=0 || pilot_pending>=0)
                 button(d,{map.right()-90,map.bottom()-23,43,20},pilot_pending>=0?"读图":"精航",
                        EnterPilot,true,pilot_pending>=0);
-            helm_panel(d,info,wide,landmark);
+            const auto weather=game.conditions();
+            const int speed=game.speed_in_tenths_of_a_knot();
+            if (chrome) {
+                const std::array<int,25> key{1,landmark,speed,game.s.heading,weather.weather,weather.direction,
+                    weather.strength,game.s.reefed,game.paused,d.font.cell,pad_focus?focused-button_count:-100};
+                chart_section(d,info,key,chrome->chart_info,chrome->chart_info_ready);
+            }
+            helm_panel(d,info,wide,landmark,weather,speed);
+            d.clip=clip;
             return;
         }
 
-        skin_box(d,info,0,5);
         const int p=game.sea()?game.sailing_target():selected;
         const auto route=game.sea()?game.route:passage(game.s.origin,p);
         const int leg_count=game.sea() && game.s.stop_next?game.s.leg+1:route.count;
@@ -1920,15 +1963,24 @@ struct VoyageApp {
                                p>=PortCount ? Survey : StartExplore;
         const int visit_command=scouting?StartExplore:visit_action;
         const auto aim=scout_course.value_or(Anchor[p]);
-        const auto course=format("拟向%s",Bearings[direction_to(
-                {aim.x-Anchor[p].x,aim.y-Anchor[p].y})].data());
-        const Text destination_name=game.charted(p)?Places[p].name:"未标记水域";
+        const int bearing=direction_to({aim.x-Anchor[p].x,aim.y-Anchor[p].y});
+        const auto course=format("拟向%s",Bearings[bearing].data());
+        const bool charted=game.charted(p);
+        const Text destination_name=charted?Places[p].name:"未标记水域";
+        const int wind=game.sea()?game.wind(game.s.leg):0;
+        const int speed=game.sea()?game.speed_in_tenths_of_a_knot():0;
+        if (chrome) {
+            const std::array<int,25> key{0,game.sea(),p,route.count,route.miles,leg_count,game.s.leg,
+                traveled,travel_end,forecast.days,shortage,scouting,pinned_rumor>=0,route_info,visit_command,
+                story_here(),bearing,charted,wind,speed,game.s.reefed,game.paused,d.font.cell,
+                pad_focus?focused-button_count:-100};
+            chart_section(d,info,key,chrome->chart_info,chrome->chart_info_ready);
+        }
+        skin_box(d,info,0,5);
         d.label(info.x+5,info.y+4,scouting?(pinned_rumor>=0?"传闻海域":"自由出海"):destination_name,gold,info.w-10);
         if (wide) {
             if (!game.sea()) d.label(info.x+5,info.y+22,scouting?Text(course):Places[p].region,quiet,info.w-10);
             if (game.sea()) {
-                const int wind=game.wind(game.s.leg);
-                const int speed=game.speed_in_tenths_of_a_knot();
                 const auto progress=format("%d/%d  %d.%d节",game.s.leg+1,leg_count,speed/10,speed%10);
                 d.label(info.x+5,info.y+22,progress,mist,info.w-10);
                 meter(d,{info.x+5,info.y+39,info.w-10,12},traveled,travel_end,true);
@@ -1954,8 +2006,6 @@ struct VoyageApp {
             }
         } else {
             if (game.sea()) {
-                const int speed=game.speed_in_tenths_of_a_knot();
-                const int wind=game.wind(game.s.leg);
                 d.label(info.x+5,info.y+22,format("%d/%d  %d.%d节 %s",game.s.leg+1,leg_count,
                         speed/10,speed%10,wind>5?"顺风":wind<-5?"逆风":"风平"),
                         mist,info.w-89);
@@ -1975,12 +2025,11 @@ struct VoyageApp {
                      route.count?Sail:visit_command,route_label,route_info,true);
             }
         }
+        d.clip=clip;
     }
 
-    void helm_panel(Draw& d, Rect info, bool wide, int landmark) {
+    void helm_panel(Draw& d,Rect info,bool wide,int landmark,SeaConditions state,int speed) {
         skin_box(d,info,0,5);
-        const auto state=game.conditions();
-        const int speed=game.speed_in_tenths_of_a_knot();
         const auto bearing=format("%s %d.%d节",Bearings[game.s.heading].data(),speed/10,speed%10);
         constexpr Text compact_weather[]{"晴","热","雨","阵"};
         const auto breeze=format("%s→%s%d级",
@@ -4764,8 +4813,7 @@ struct VoyageApp {
         layout(d);
         drawn_map=map_view();
         button_count=0;
-        if ((drawn_map==MapView::Pilot || drawn_map==MapView::Helm) && d.pixel_scale>1 &&
-            full_helm_chart() && !game.land_away()) {
+        if (drawn_map!=MapView::None && d.pixel_scale>1 && !game.land_away()) {
             if (chrome.bounds!=safe || chrome.mode!=drawn_map) {
                 chrome={};
                 chrome.bounds=safe;
@@ -4774,7 +4822,11 @@ struct VoyageApp {
             }
             sailing_header(d,chrome);
             if (drawn_map==MapView::Pilot) pilot_chart(d,&chrome);
-            else chart_full_helm(d,&chrome);
+            else if (drawn_map==MapView::Helm) chart_full_helm(d,&chrome);
+            else {
+                chart(d,&chrome);
+                chart_footer(d,chrome);
+            }
             focused=std::clamp(focused,0,std::max(0,button_count-1));
             return;
         }
