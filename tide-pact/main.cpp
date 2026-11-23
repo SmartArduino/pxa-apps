@@ -144,6 +144,15 @@ struct VoyageApp {
     SeaPicture sea_picture;
     PilotAtlas pilot_atlas;
     PilotTerrainCache pilot_terrain;
+    struct PilotChrome {
+        Rect bounds{};
+        std::array<int,13> header{};
+        std::array<int,19> controls{};
+        std::array<char,160> notice{};
+        std::size_t notice_size=0;
+        bool header_ready=false, controls_ready=false;
+    };
+    std::array<PilotChrome,2> pilot_chrome{};
     Rect land_area{};
     LandFight land_before;
     unsigned land_frame_start=0;
@@ -176,7 +185,7 @@ struct VoyageApp {
     bool inside_town_facility=false;
     bool outside=false, at_timber_river=false, inland_archive=false;
     Overlay town_facility=None;
-    int scale=1, surface_x=0, surface_y=0;
+    int scale=1, raster_scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
     bool bargain_sell=false;
     int bargain_rate=8, bargain_counter=0;
@@ -355,17 +364,23 @@ struct VoyageApp {
             if (value->revision >= metrics.revision) on_window_changed(*value);
         }
         const auto width = metrics.pixel_width, height = metrics.pixel_height;
-        const auto area = width * height;
-        const int divisor = area > 220000 ? 2 : 1;
-        const auto w = static_cast<std::uint16_t>(width/divisor);
-        const auto h = static_cast<std::uint16_t>(height/divisor);
+        const auto area = std::uint32_t(width)*height;
+        const int layout_scale = area > 220000 ? 2 : 1;
+        const bool native = layout_scale==2 && area<=420000 && !(width&1) && !(height&1);
+        int density=native?2:1;
+        const auto w = static_cast<std::uint16_t>(width/layout_scale);
+        const auto h = static_cast<std::uint16_t>(height/layout_scale);
+        pilot_terrain.reset();
+        pilot_chrome={};
         surface.reset();
         auto created = co_await context->surface().create_mapped({
-            .width=w, .height=h, .buffers=2, .max_buffer_bytes=1024*1024});
-        if (!created && area>220000) {
+            .width=std::uint16_t(w*density), .height=std::uint16_t(h*density),
+            .buffers=2, .max_buffer_bytes=native?1792u*1024:1024u*1024});
+        if (!created && native) {
+            density=1;
             created=co_await context->surface().create_mapped({
-                .width=w, .height=h, .buffers=1, .max_buffer_bytes=1024*1024});
-            if (created) (void)context->log().write(pxa::LogLevel::info,"Tide Pact using one display buffer");
+                .width=w, .height=h, .buffers=2, .max_buffer_bytes=1024*1024});
+            if (created) (void)context->log().write(pxa::LogLevel::info,"Tide Pact using scaled display");
         }
         if (!created) {
             surface_retry=now+1800;
@@ -373,9 +388,10 @@ struct VoyageApp {
             opening=false;
             co_return std::unexpected(created.error());
         }
-        auto config = co_await created->configure({.width=w,.height=h});
+        auto config = co_await created->configure({.width=std::uint16_t(w*density),.height=std::uint16_t(h*density)});
         if (config) {
-            scale=divisor;
+            scale=layout_scale;
+            raster_scale=density;
             surface_x=(width-w*scale)/2;
             surface_y=(height-h*scale)/2;
             surface.emplace(std::move(*created));
@@ -657,8 +673,8 @@ struct VoyageApp {
         if (!frame) return;
         auto pixels=frame->rgb565();
         if (!pixels) return;
-        Draw draw(*pixels,frame->pixels(),frame->stride_bytes(),small_text()?CompactFace:StandardFace);
-        render(draw);
+        Draw draw(*pixels,frame->pixels(),frame->stride_bytes(),small_text()?CompactFace:StandardFace,raster_scale);
+        render(draw,pilot_chrome[frame->buffer_index()]);
         if (frame->present(next_frame)) { ++next_frame; dirty=false; }
     }
 
@@ -830,6 +846,20 @@ struct VoyageApp {
         }
         else if (fits) meter(d,{safe.right()-60,safe.y+20,55,9},game.s.hull,100,false);
         if (!fits) d.label(safe.right()-6-d.measure(compact),safe.y+18,compact,mint);
+    }
+    void pilot_header(Draw& d,PilotChrome& chrome) {
+        const auto& s=game.s;
+        const std::array<int,13> key{s.gold,s.hull,s.stores,s.water,s.day,s.sail_watch,s.helm_pulse,
+            s.pilot.minutes,s.origin,d.font.cell,save_failed && !save_active,bool(saved_until),bool(notice_until)};
+        const Text message=notice_until?game.notice:Text{};
+        if (chrome.header_ready && chrome.header==key && message==Text(chrome.notice.data(),chrome.notice_size))
+            return;
+        chrome.header=key;
+        chrome.notice_size=std::min(message.size(),chrome.notice.size());
+        if (chrome.notice_size) std::copy_n(message.data(),chrome.notice_size,chrome.notice.data());
+        chrome.header_ready=message.size()<=chrome.notice.size();
+        d.fill({0,0,d.clip.w,body.y},ink);
+        header(d);
     }
     void footer(Draw& d) {
         skin_box(d,{safe.x,safe.bottom()-28,safe.w,28},0,5);
@@ -1045,11 +1075,13 @@ struct VoyageApp {
     int vessel_frame() const { return (now/VesselFrameMs)%VesselFrames; }
 
     void small_ship(Draw& d,int hull,int heading,bool reefed,Rect box) {
-        const auto visible=d.clipped(box);
+        auto native=d.native_pixels();
+        box=d.pixel_rect(box);
+        const auto visible=native.clipped(box);
         const auto* atlas=art::pilot_ships;
         for (int y=visible.y;y<visible.bottom();++y) {
             const int row=(hull*2+int(reefed))*SmallShipSize+(y-box.y)*SmallShipSize/box.h;
-            auto pixels=*d.pixels.row(y);
+            auto* pixels=native.row(y);
             for (int x=visible.x;x<visible.right();++x) {
                 const int column=(heading&7)*SmallShipSize+(x-box.x)*SmallShipSize/box.w;
                 const int index=row*SmallShipStride+column;
@@ -1419,10 +1451,12 @@ struct VoyageApp {
         return game.pilot_parcel_destination();
     }
 
-    void pilot_chart(Draw& d) {
+    Rect pilot_viewport() const { return {body.x,body.y,body.w,body.h-46}; }
+
+    void pilot_chart(Draw& d,PilotChrome* chrome=nullptr) {
         const auto& state=game.s.pilot;
         const auto water=pilot_water();
-        map={body.x,body.y,body.w,body.h-46};
+        map=pilot_viewport();
         if (pilot_zoom<0) pilot_zoom=water.world?2:game.pilot_area().roadstead?5:4;
         const auto saved_clip=d.clip;
         d.clip=d.clipped(map);
@@ -1435,9 +1469,13 @@ struct VoyageApp {
         pilot_y=std::clamp(pilot_y,0.f,float(PilotAtlasHeight-1));
         pilot_pixels_per_mile=scale_at_zoom(pilot_scales(),pilot_zoom);
         pilot_scale_y=pilot_pixels_per_mile*60.f/(ChartLatitudeScale*PilotAtlasUnit);
-        pilot_scale_x=pilot_terrain.stable_longitude_scale(
-            pilot_longitude_scale(pilot_y,pilot_pixels_per_mile),pilot_scale_y,map.w);
-        const Point camera{int(std::lround(pilot_x*pilot_scale_x)),int(std::lround(pilot_y*pilot_scale_y))};
+        const auto viewport=d.pixel_rect(map);
+        const int density=d.pixel_scale;
+        const float sy=pilot_scale_y*density;
+        const float sx=pilot_terrain.stable_longitude_scale(
+            pilot_longitude_scale(pilot_y,pilot_pixels_per_mile)*density,sy,viewport.w);
+        pilot_scale_x=sx/density;
+        const Point camera{int(std::lround(pilot_x*sx)),int(std::lround(pilot_y*sy))};
         const int detail_index=visible_pilot_detail();
         const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
         Rect detail_view{};
@@ -1447,16 +1485,17 @@ struct VoyageApp {
         if (detail_index>=0 && detail_opacity) {
             const auto& area=PilotRegions[detail_index];
             const auto project=[&](Point at) {
-                return Point{map.x+map.w/2+int(std::lround(at.x*pilot_scale_x))-camera.x,
-                             map.y+map.h/2+int(std::lround(at.y*pilot_scale_y))-camera.y};
+                return Point{viewport.x+viewport.w/2+int(std::lround(at.x*sx))-camera.x,
+                             viewport.y+viewport.h/2+int(std::lround(at.y*sy))-camera.y};
             };
             const auto tl=project(pilot_to_atlas(area,{0,0}));
             const auto br=project(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
             detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
             detail_water=pilot_detail_water(detail_index);
         }
-        pilot_terrain.draw(d,map,camera,pilot_scale_x,pilot_scale_y,pilot_atlas,game,
-                           detail_index,detail_water,detail_view,detail_opacity);
+        auto native=d.native_pixels();
+        pilot_terrain.draw(native,viewport,camera,sx,sy,pilot_atlas,game,
+                           detail_index,detail_water,detail_view,detail_opacity,density);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;
@@ -1614,6 +1653,23 @@ struct VoyageApp {
         d.center(detail,caption,guide>=0 || berth>=0?gold:mist);
         d.clip=saved_clip;
         d.frame(map,border);
+        const auto landing_site=berth>=0?game.pilot_site(berth):PilotSite{};
+        const bool surveying=berth>=0 && landing_site.kind==PilotPoint;
+        const bool slow=!water.bytes || game.pilot_slow_water(water);
+        const auto water_offer=state.moored?game.pilot_supply_offer(true):decltype(game.pilot_supply_offer(true)){};
+        const auto food_offer=state.moored?game.pilot_supply_offer(false):decltype(game.pilot_supply_offer(false)){};
+        if (chrome) {
+            const std::array<int,19> key{pilot_zoom>=6,!pilot_zoom,pilot_follow,int(pilot_rate),slow,
+                state.moored,landing_site.transfer,surveying,berth>=0,docking,game.s.reefed,game.paused,
+                water.bytes!=nullptr,d.font.cell,pad_focus?focused-button_count:-100,
+                water_offer.amount,food_offer.amount,water_offer.cost,food_offer.cost};
+            const bool touching=pointer_capture.active() && pointer_map==MapView::None;
+            const bool refresh=touching || state.moored || !chrome->controls_ready || chrome->controls!=key;
+            if (refresh) d.fill({0,map.bottom(),d.clip.w,d.clip.h-map.bottom()},ink);
+            else d.clip={};
+            chrome->controls=key;
+            chrome->controls_ready=!touching && !state.moored;
+        }
         const auto bar=[&](int index,int count,int row) {
             const int left=body.x+index*(body.w+3)/count;
             return Rect{left,map.bottom()+2+row*22,body.x+(index+1)*(body.w+3)/count-3-left,21};
@@ -1622,15 +1678,12 @@ struct VoyageApp {
         button(d,bar(1,7,0),"-",PilotZoomOut,false,!pilot_zoom);
         button(d,bar(2,7,0),"回船",PilotCenter,!pilot_follow);
         button(d,bar(3,7,0),"泊地",PilotBookOpen);
-        button(d,bar(4,7,0),format("%u倍",pilot_rate),PilotSpeed,pilot_rate>1,!water.bytes || game.pilot_slow_water(water));
+        button(d,bar(4,7,0),format("%u倍",pilot_rate),PilotSpeed,pilot_rate>1,slow);
         button(d,bar(5,7,0),"远航",LeavePilot,false,state.moored);
-        const auto landing_site=berth>=0?game.pilot_site(berth):PilotSite{};
-        const bool surveying=berth>=0 && landing_site.kind==PilotPoint;
         const Text landing=landing_site.transfer?"接驳":surveying?"抵达":"靠泊";
         button(d,bar(6,7,0),state.moored?"上岸":docking?"进港":landing,state.moored?PilotStoryOpen:PilotMoor,
                true,berth<0 || docking,{},body.w>=350?(surveying?int(AstrolabeIcon):int(HelmAnchor)):-1);
         if (state.moored) {
-            const auto water_offer=game.pilot_supply_offer(true), food_offer=game.pilot_supply_offer(false);
             button(d,bar(0,3,1),water_offer.amount?Text(format("淡水+%d %d金",water_offer.amount,water_offer.cost)):"淡水已满",
                    PilotWaterBuy,false,!water_offer.amount || game.s.gold<water_offer.cost);
             button(d,bar(1,3,1),food_offer.amount?Text(format("口粮+%d %d金",food_offer.amount,food_offer.cost)):"口粮已满",
@@ -1642,6 +1695,7 @@ struct VoyageApp {
             button(d,bar(2,4,1),game.s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
             button(d,bar(3,4,1),game.paused?"开船":"停船",Pause,true,!water.bytes,{},game.paused?ResumeIcon:PauseIcon);
         }
+        d.clip=saved_clip;
     }
 
     void pilot_book(Draw& d) {
@@ -4661,11 +4715,23 @@ struct VoyageApp {
         }
     }
 
-    void render(Draw& d) {
+    void render(Draw& d,PilotChrome& chrome) {
         layout(d);
         drawn_map=map_view();
-        d.fill(d.clip,ink);
         button_count=0;
+        if (drawn_map==MapView::Pilot && d.pixel_scale>1 && full_helm_chart() && !game.land_away()) {
+            if (chrome.bounds!=safe) {
+                chrome={};
+                chrome.bounds=safe;
+                d.fill(d.clip,ink);
+            }
+            pilot_header(d,chrome);
+            pilot_chart(d,&chrome);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
+        chrome={};
+        d.fill(d.clip,ink);
         if (!title && game.s.land_fight.kind) {
             land_screen(d);
             focused=std::clamp(focused,0,std::max(0,button_count-1));

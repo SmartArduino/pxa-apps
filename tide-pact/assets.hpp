@@ -18,6 +18,7 @@ extern const unsigned char pilot_marks[];
 extern const unsigned char broadside[];
 extern const unsigned char glyphs[];
 extern const unsigned char glyphs_compact[];
+extern const unsigned char glyphs_native[];
 extern const unsigned char wordmark[];
 extern const unsigned char skin[];
 extern const unsigned char controls[];

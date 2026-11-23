@@ -3,6 +3,8 @@
 #include "chart_style.hpp"
 #include "pilot_atlas.hpp"
 
+#include <memory>
+
 namespace tide {
 
 namespace pilot_sea {
@@ -86,14 +88,15 @@ struct PilotRaster {
     float west,north,dx,dy;
     int wave_strength, grid_x, grid_y;
 
-    PilotRaster(Rect view,float center_x,float center_y,float x_scale,float y_scale)
+    PilotRaster(Rect view,float center_x,float center_y,float x_scale,float y_scale,int density=1)
         : view(view), west(center_x*x_scale-view.w/2), north(center_y*y_scale-view.h/2),
           dx(1.f/x_scale), dy(1.f/y_scale),
-          wave_strength(int(std::clamp(9.f-std::max(dx,dy),0.f,8.f))),
-          grid_x(dx>=3.f?int(std::ceil(dx)):0), grid_y(grid_x?int(std::ceil(dy)):0) {}
+          wave_strength(int(std::clamp(9.f-std::max(dx,dy)*density,0.f,8.f))),
+          grid_x(dx*density>=3.f?int(std::ceil(dx*density))/density:0),
+          grid_y(grid_x?int(std::ceil(dy*density))/density:0) {}
 
-    PilotRaster(Rect view,Point centre,float x_scale,float y_scale)
-        : PilotRaster(view,0.f,0.f,x_scale,y_scale) {
+    PilotRaster(Rect view,Point centre,float x_scale,float y_scale,int density=1)
+        : PilotRaster(view,0.f,0.f,x_scale,y_scale,density) {
         west=float(centre.x-view.w/2);
         north=float(centre.y-view.h/2);
     }
@@ -155,7 +158,7 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
     for (int y=r.y;y<r.bottom();++y) {
         const bool masked=gap_left<gap_right && y>=covered.y && y<covered.bottom();
         if (masked && gap_left==r.x && gap_right==r.right()) continue;
-        auto pixels=*d.pixels.row(y);
+        auto* pixels=d.row(y);
         const int sample_y=raster.y(y);
         const int v=sample_y>>1;
         if (v<0 || v>=PilotAtlasHeight) {
@@ -338,7 +341,7 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
     };
     const Rect opaque=opacity==15?d.clipped(opaque_pilot_detail(target,blend)):Rect{};
     for (int y=r.y;y<r.bottom();++y) {
-        auto pixels=*d.pixels.row(y);
+        auto* pixels=d.row(y);
         const int v=int(std::int64_t(y-target.y)*PilotHeight*Fraction/target.h);
         const PilotSeaLine sea{raster,raster.y(y)};
         const int row=v/Fraction;
@@ -435,6 +438,11 @@ inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtla
 
 class PilotTerrainCache {
 public:
+    void reset() {
+        bytes.reset();
+        capacity=0;
+        width=0;
+    }
     float stable_longitude_scale(float candidate,float vertical,int visible_width) const {
         // Reuse a projection until its change would move the map edge by half a pixel.
         return visible_width==width && vertical==scale_y &&
@@ -442,27 +450,42 @@ public:
     }
 
     void draw(Draw& out,Rect view,Point centre,float sx,float sy,const PilotAtlas& atlas,const Game& game,
-              int region,PilotWater detail,Rect target,int opacity) {
+              int region,PilotWater detail,Rect target,int opacity,int density=1) {
         const auto clip=out.clipped(view);
         if (!clip.w || !clip.h) return;
         const auto pixel_count=std::size_t(view.w)*view.h;
-        if (pixel_count>BufferPixels || clip.w!=view.w || clip.h!=view.h) {
-            draw_pilot_terrain(out,{view,centre,sx,sy},atlas,game,region,detail,target,opacity);
+        if (!capacity) {
+            capacity=BufferPixels*density*density*sizeof(Color);
+            bytes.reset(new (std::nothrow) std::byte[capacity]);
+        }
+        if (!bytes || pixel_count*sizeof(Color)>capacity || clip.w!=view.w || clip.h!=view.h) {
+            draw_pilot_terrain(out,{view,centre,sx,sy,density},atlas,game,region,detail,target,opacity);
             return;
         }
-        const Rect local{0,0,view.w,view.h};
         const int stride=view.w*sizeof(Color);
-        auto frame=std::span(bytes).first(pixel_count*sizeof(Color));
+        auto frame=std::span(bytes.get(),pixel_count*sizeof(Color));
         auto pixel_view=pxa::Rgb565Pixels::from_bytes(frame,view.w,view.h,stride);
         if (!pixel_view) return;
         Draw canvas(*pixel_view,frame,stride);
-        const PilotRaster raster{local,centre,sx,sy};
         target.x-=view.x;
         target.y-=view.y;
         const auto paint=[&](Rect strip) {
-            if (!strip.w || !strip.h) return;
-            canvas.clip=strip;
-            draw_pilot_terrain(canvas,raster,atlas,game,region,detail,target,opacity);
+            for (int y=strip.y;y<strip.bottom();) {
+                const int row=(y+ring.y)%view.h;
+                const int rows=std::min(strip.bottom()-y,view.h-row);
+                for (int x=strip.x;x<strip.right();) {
+                    const int column=(x+ring.x)%view.w;
+                    const int columns=std::min(strip.right()-x,view.w-column);
+                    const Point offset{column-x,row-y};
+                    canvas.clip={column,row,columns,rows};
+                    const Rect projection{offset.x,offset.y,view.w,view.h};
+                    const Rect detail_view{target.x+offset.x,target.y+offset.y,target.w,target.h};
+                    draw_pilot_terrain(canvas,{projection,centre,sx,sy,density},atlas,game,region,
+                                       detail,detail_view,opacity);
+                    x+=columns;
+                }
+                y+=rows;
+            }
         };
         const Point shift{centre.x-anchor.x,centre.y-anchor.y};
         const auto& coast=game.s.coast;
@@ -471,16 +494,15 @@ public:
                            region==detail_region && detail.bytes==detail_bytes && opacity==detail_opacity &&
                            atlas.revision()==atlas_revision && coast==charted && survey==surveyed;
         if (!aligned || std::abs(shift.x)>=view.w || std::abs(shift.y)>=view.h) {
-            paint(local);
+            ring={};
+            paint({0,0,view.w,view.h});
         } else if (shift.x || shift.y) {
+            // Shift the sample origin and fill the exposed edges without moving
+            // the overlapping pixels. Each scanline is copied in at most two spans.
+            ring.x=(ring.x+shift.x+view.w)%view.w;
+            ring.y=(ring.y+shift.y+view.h)%view.h;
             const int left=std::max(0,-shift.x), top=std::max(0,-shift.y);
             const int right=view.w-std::max(0,shift.x), bottom=view.h-std::max(0,shift.y);
-            for (int row=0;row<bottom-top;++row) {
-                const int y=shift.y<0?bottom-1-row:top+row;
-                auto* dest=frame.data()+y*stride+left*sizeof(Color);
-                auto* source=dest+shift.y*stride+shift.x*int(sizeof(Color));
-                std::memmove(dest,source,(right-left)*sizeof(Color));
-            }
             paint({0,0,view.w,top});
             paint({0,bottom,view.w,view.h-bottom});
             paint({0,top,left,bottom-top});
@@ -497,17 +519,24 @@ public:
         atlas_revision=atlas.revision();
         charted=coast;
         surveyed=survey;
-        for (int y=0;y<view.h;++y)
-            std::memcpy(out.frame_bytes.data()+(view.y+y)*out.stride_bytes+view.x*sizeof(Color),
-                        frame.data()+y*stride,stride);
+        const int wrap=ring.x*sizeof(Color);
+        const int first=stride-wrap;
+        for (int y=0,row=ring.y;y<view.h;++y) {
+            const auto* source=frame.data()+row*stride;
+            auto* dest=out.frame_bytes.data()+(view.y+y)*out.stride_bytes+view.x*sizeof(Color);
+            std::memcpy(dest,source+wrap,first);
+            if (wrap) std::memcpy(dest+first,source,wrap);
+            if (++row==view.h) row=0;
+        }
     }
 
 private:
     static constexpr std::size_t BufferPixels=64*1024;
-    std::array<std::byte,BufferPixels*sizeof(Color)> bytes;
+    std::unique_ptr<std::byte[]> bytes;
+    std::size_t capacity=0;
     decltype(State::coast) charted{};
     std::array<std::uint32_t,PilotSurveyRows> surveyed{};
-    Point anchor{};
+    Point anchor{},ring{};
     float scale_x=0, scale_y=0;
     int width=0,height=0,detail_region=-1,detail_opacity=0;
     const unsigned char* detail_bytes=nullptr;

@@ -47,6 +47,7 @@ def main():
     codes = sorted(set(range(32, 127)) | {ord(c) for c in text if 127 < ord(c) <= 0xffff})
     write_font(args.ttc, codes, 14, "glyphs.pxi")
     write_font(args.compact_ttc or args.ttc, codes, 12, "glyphs_compact.pxi")
+    write_font(args.compact_ttc or args.ttc, codes, 24, "glyphs_native.pxi")
 
 
 if __name__ == "__main__":

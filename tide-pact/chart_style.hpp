@@ -83,7 +83,9 @@ inline Color surface(const Image& atlas,int u,int v,bool close) {
 
 } // namespace chart_style
 
-inline void draw_helm_chart(Draw& d,Rect destination) {
+inline void draw_helm_chart(Draw& out,Rect destination) {
+    destination=out.pixel_rect(destination);
+    auto d=out.native_pixels();
     if (destination.w<=0 || destination.h<=0) return;
     const auto visible=d.clipped(destination);
     if (!visible.w || !visible.h) return;
@@ -98,7 +100,7 @@ inline void draw_helm_chart(Draw& d,Rect destination) {
     const int initial=int(start/destination.w), phase=int(start%destination.w);
     int v=int(first_row/destination.h), y_error=int(first_row%destination.h);
     for (int y=visible.y;y<visible.bottom();++y) {
-        auto row=*d.pixels.row(y);
+        auto* row=d.row(y);
         int u=initial, error=phase;
         for (int x=visible.x;x<visible.right();++x) {
             row[x]=chart_style::surface(atlas,u,v,close);

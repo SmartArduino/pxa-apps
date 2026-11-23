@@ -5,6 +5,7 @@
 #include <pxa/pixels.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <cmath>
 #include <cstring>
 
@@ -17,6 +18,7 @@ constexpr Color rgb(unsigned v) {
 
 struct Rect {
     int x, y, w, h;
+    bool operator==(const Rect&) const = default;
     int right() const { return x+w; }
     int bottom() const { return y+h; }
     bool contains(Point p) const {
@@ -79,6 +81,7 @@ struct FontFace {
     }
 };
 inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_compact,12};
+inline constexpr FontFace NativeFace{art::glyphs_native,24};
 
 struct Draw {
     struct TextRun {
@@ -91,11 +94,29 @@ struct Draw {
     std::uint32_t stride_bytes;
     Rect clip;
     const FontFace& font;
+    int pixel_scale;
 
     explicit Draw(pxa::Rgb565Pixels image,std::span<std::byte> bytes,std::uint32_t stride,
-                  const FontFace& face=StandardFace)
+                  const FontFace& face=StandardFace,int density=1)
         : pixels(image), frame_bytes(bytes), stride_bytes(stride),
-          clip{0,0,int(image.width()),int(image.height())}, font(face) {}
+          clip{0,0,int(image.width())/density,int(image.height())/density}, font(face),
+          pixel_scale(density) {}
+
+    Rect pixel_rect(Rect rect) const {
+        return {rect.x*pixel_scale,rect.y*pixel_scale,rect.w*pixel_scale,rect.h*pixel_scale};
+    }
+    Draw native_pixels() const {
+        Draw draw(pixels,frame_bytes,stride_bytes,font);
+        draw.clip=pixel_rect(clip);
+        return draw;
+    }
+
+    Color* row(int y) const {
+        // Mapped RGB565 frames and our terrain cache both use aligned,
+        // little-endian rows. Use halfword stores in the raster loops.
+        static_assert(std::endian::native==std::endian::little);
+        return reinterpret_cast<Color*>(frame_bytes.data()+y*stride_bytes);
+    }
 
     int measure(Text text) const {
         int result=0;
@@ -109,14 +130,20 @@ struct Draw {
                 std::max(0,std::min(r.bottom(),clip.bottom())-y)};
     }
     void dot(int x, int y, Color color) {
-        if (clip.contains({x,y})) (*pixels.row(y))[x] = color;
+        if (pixel_scale==1) {
+            if (clip.contains({x,y})) row(y)[x]=color;
+        } else fill({x,y,1,1},color);
     }
     void fill(Rect rect, Color color) {
-        const auto r = clipped(rect);
-        if (!r.w) return;
-        for (int y = r.y; y < r.bottom(); ++y) {
-            auto row = *pixels.row(y);
-            for (int x = r.x; x < r.right(); ++x) row[x] = color;
+        const auto r = pixel_rect(clipped(rect));
+        if (!r.w || !r.h) return;
+        if (r.w>=32) {
+            const auto start=row(r.y)+r.x;
+            std::fill_n(start,r.w,color);
+            for (int y=r.y+1;y<r.bottom();++y)
+                std::memcpy(row(y)+r.x,start,r.w*sizeof(Color));
+        } else {
+            for (int y=r.y;y<r.bottom();++y) std::fill_n(row(y)+r.x,r.w,color);
         }
     }
     void line(Point a, Point b, Color color, bool dashed = false) {
@@ -158,6 +185,10 @@ struct Draw {
     }
 
     void image(Image img, Rect src, Rect dst, bool transparent = false, bool flip = false) {
+        auto target=native_pixels();
+        target.blit(img,src,pixel_rect(dst),transparent,flip);
+    }
+    void blit(Image img, Rect src, Rect dst, bool transparent, bool flip) {
         if (dst.w<=0 || dst.h<=0 || src.w<=0 || src.h<=0) return;
         const auto r = clipped(dst);
         if (!r.w || !r.h) return;
@@ -170,7 +201,7 @@ struct Draw {
         int previous_row=-1;
         for (int y = r.y; y < r.bottom(); ++y) {
             const int sy = src.y + (y-dst.y)*src.h/dst.h;
-            auto row = *pixels.row(y);
+            auto* scan=row(y);
             if (!packed && !transparent && sy==previous_row) {
                 auto* scanline=frame_bytes.data()+y*stride_bytes+r.x*sizeof(Color);
                 std::memcpy(scanline,scanline-stride_bytes,r.w*sizeof(Color));
@@ -189,10 +220,10 @@ struct Draw {
                     const unsigned grain=unsigned(sx)*0x9e3779b1U ^ unsigned(sy)*0x85ebca77U;
                     const auto terrain=Image::packed_terrain(indexes,offset);
                     index=terrain*4+(grid?3:distant?1:grain>>31);
-                    row[x]=img.color(index);
+                    scan[x]=img.color(index);
                 } else {
                     index=indexes[offset];
-                    if (!transparent || index != 255) row[x]=img.color(index);
+                    if (!transparent || index != 255) scan[x]=img.color(index);
                 }
                 source+=pitch;
                 error+=step;
@@ -218,10 +249,10 @@ struct Draw {
         image(img,{(img.width()-w)/2,(img.height()-h)/2,w,h},dst);
     }
     void darken(Rect box, int strength) {
-        auto r = clipped(box);
+        const auto r = pixel_rect(clipped(box));
         for (int y = r.y; y < r.bottom(); ++y) {
-            auto row = *pixels.row(y);
-            for (int x = r.x; x < r.right(); ++x) row[x] = mix(row[x], rgb(0x08181d), strength);
+            auto* scan=row(y);
+            for (int x = r.x; x < r.right(); ++x) scan[x] = mix(scan[x], rgb(0x08181d), strength);
         }
     }
     static constexpr Color mix(Color a, Color b, int opacity) {
@@ -231,6 +262,29 @@ struct Draw {
         };
         return blend(11,31) | blend(5,63) | blend(0,31);
     }
+    void native_glyph(int x,int y,unsigned code,int advance,Color color,int scale) {
+        const auto* glyph=NativeFace.glyph(code);
+        const auto ink=NativeFace.ink_bounds(glyph);
+        const int cell=font.cell*pixel_scale*scale;
+        const int u=x*pixel_scale, v=y*pixel_scale;
+        const int left=ink.x*cell/NativeFace.cell, top=ink.y*cell/NativeFace.cell;
+        const int right=std::min(advance*pixel_scale,(ink.right()*cell+NativeFace.cell-1)/NativeFace.cell);
+        const int bottom=(ink.bottom()*cell+NativeFace.cell-1)/NativeFace.cell;
+        const auto target=native_pixels();
+        const auto box=target.clipped({u+left,v+top,right-left,bottom-top});
+        if (!box.w) return;
+        const bool direct=cell==NativeFace.cell;
+        for (int j=box.y;j<box.bottom();++j) {
+            auto* scan=row(j);
+            const int sy=direct?j-v:(j-v)*NativeFace.cell/cell;
+            const auto* line=glyph+1+sy*NativeFace.stride();
+            for (int i=box.x;i<box.right();++i) {
+                const int sx=direct?i-u:(i-u)*NativeFace.cell/cell;
+                const int alpha=(line[sx/2]>>((sx&1)?0:4))&15;
+                if (alpha) scan[i]=alpha==15?color:mix(scan[i],color,alpha);
+            }
+        }
+    }
     void label(int x, int y, Text text, Color color, int max_width = 10000, int scale = 1) {
         const int end = x+max_width;
         while (!text.empty()) {
@@ -239,17 +293,22 @@ struct Draw {
             const int advance = *glyph * scale;
             if (x+advance > end) return;
             if (code != ' ') {
+                if (pixel_scale>1) {
+                    native_glyph(x,y,code,advance,color,scale);
+                    x+=advance;
+                    continue;
+                }
                 const auto* g=glyph+1;
                 if (scale==1) {
                     const auto ink=font.ink_bounds(glyph);
                     const auto box=clipped({x+ink.x,y+ink.y,ink.w,ink.h});
                     for (int j=box.y;j<box.bottom() && box.w;++j) {
-                        auto row=*pixels.row(j);
+                        auto* scan=row(j);
                         const auto* line=g+(j-y)*font.stride();
                         for (int i=box.x;i<box.right();++i) {
                             const int column=i-x;
                             const int alpha=(line[column/2]>>((column&1)?0:4))&15;
-                            if (alpha) row[i]=alpha==15?color:mix(row[i],color,alpha);
+                            if (alpha) scan[i]=alpha==15?color:mix(scan[i],color,alpha);
                         }
                     }
                     x+=advance;
@@ -263,9 +322,9 @@ struct Draw {
                         auto r = clipped({x+i*scale,y+j*scale,scale,scale});
                         if (!r.w) continue;
                         for (int yy = r.y; yy < r.bottom(); ++yy) {
-                            auto row = *pixels.row(yy);
+                            auto* scan=row(yy);
                             for (int xx = r.x; xx < r.right(); ++xx)
-                                row[xx] = alpha == 15 ? color : mix(row[xx],color,alpha);
+                                scan[xx] = alpha == 15 ? color : mix(scan[xx],color,alpha);
                         }
                     }
                 }
