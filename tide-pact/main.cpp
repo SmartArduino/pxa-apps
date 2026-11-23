@@ -28,7 +28,7 @@ enum HarborPanel { HarborPlaque, HarborWood, HarborGoldWood, HarborPaper, Harbor
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
-    Preflight, RouteStops, PortPrices, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
+    Preflight, RouteStops, PortPrices, TradePassagePage, EventReport, TowRequest, PortDesk, EscortPage, DuelInvitation, ProvisionsPage,
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
@@ -61,7 +61,7 @@ enum Action {
     ShowAudio, ToggleMusic, ToggleEffects, ToggleVoices, ShowWeather, ResumeWeather,
     ShowRations, ToggleFoodRation, ToggleWaterRation, ShowMarketNews, CycleSpeed, WorldChart, ToggleHelmView,
     BeginSkirmish, FirePort, FireStarboard, DropRope, BoardSkirmish,
-    BeginFishery, WorkFishery, CancelFishery, ShowFishBook, SellWhaleOil,
+    BeginFishery, WorkFishery, CancelFishery, ShowFishBook, SellWhaleOil, TradePreparePurchase, TradeStartPreparation,
     DockService=120, GoodsRow=200, Destination=300, AtlasEntry=400, TaleEntry=500, SeaEntry=600,
     ExpeditionEntry=700, OfficerEntry=800, RumorEntry=900,
     OpenLanguages=1000, SelectPortLanguage, SelectSecondLanguage, HireInterpreter, TakeLesson,
@@ -95,7 +95,7 @@ enum Action {
     LandBrace, LandEndRound, LandRetreat, LandCellAction, PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
-static_assert(SellWhaleOil<DockService);
+static_assert(TradeStartPreparation<DockService);
 
 struct FormattedText {
     char contents[160]{};
@@ -166,8 +166,10 @@ struct VoyageApp {
     int bargain_rate=8, bargain_counter=0;
     TradeQuote settled_bargain;
     HaggleReply bargain_reply=InvalidOffer;
+    int trade_port=-1;
     int trade_quantity=0;
     bool quantity_sell=false;
+    Overlay quantity_back=None;
     int charter_item=-1;
     int flag_item=MerchantColors, shore_item=GoldWash;
     Overlay shore_back=None;
@@ -1896,7 +1898,7 @@ struct VoyageApp {
         page_title(d,GoodsNames[good],CargoIcon);
         goods_icon(d,good,{body.x+8,body.y+35,34,34});
         d.wrap({body.x+49,body.y+32,body.w-58,body.h-73},specialty_note(good),ivory,16);
-        button(d,{body.x+5,body.bottom()-29,body.w-10,25},"查看已到访港口的收购价",ShowPortPrices,true);
+        button(d,{body.x+5,body.bottom()-29,body.w-10,25},"查看各港比价与航程",ShowPortPrices,true);
     }
 
     void trade_quantity_page(Draw& d) {
@@ -3363,9 +3365,6 @@ struct VoyageApp {
         }
         pager(d,pages);
     }
-    int supply_target(int need) const {
-        return need+2*game.daily_rations();
-    }
     Text port_contact(int port) const {
         const auto language=PortSpeech[port];
         if (game.fluency(language)==Fluent || game.crew_interpreter(language)!=NoOfficer) return "可沟通";
@@ -3406,7 +3405,8 @@ struct VoyageApp {
         button(d,{x+third+4,body.bottom()-54,third,23},"地理",ShowIntel,false,false,{},AstrolabeIcon);
         button(d,{x+(third+4)*2,body.bottom()-54,third,23},"掌舵",StartHelm,false,!ready,{},HelmIcon);
         const int half=(w-5)/2;
-        const int cost=game.resupply_cost(supply_target(forecast.provisions),supply_target(forecast.water));
+        const int cost=game.resupply_cost(game.voyage_supply_target(forecast.provisions),
+                                          game.voyage_supply_target(forecast.water));
         const auto supplement=format("补粮 %d金",cost);
         const auto repairs=format("维修 %d金",game.repair_cost());
         if (game.tow_needed()) button(d,{x,body.bottom()-27,half,23},"请求拖带",ShowTow);
@@ -3506,24 +3506,63 @@ struct VoyageApp {
         const auto title=format("%s比价",GoodsNames[good].data());
         page_title(d,title);
         button(d,{body.right()-105,body.y+3,52,23},"市况",ShowMarketNews);
-        d.label(body.x+6,body.y+28,"已到访港口的当日买价 / 卖价",quiet,body.w-12);
+        d.label(body.x+6,body.y+28,"当日买价 / 卖价",quiet,body.w-12);
         std::array<int,PortCount> order{};
         int count=0;
         for (int port=0;port<PortCount;++port)
-            if (game.s.visited & place_bit(port)) order[count++]=port;
+            if (game.charted(port)) order[count++]=port;
+        const auto visited=[&](int port){return (game.s.visited&place_bit(port))!=0;};
         std::sort(order.begin(),order.begin()+count,[&](int a,int b) {
-            return game.price_at(a,good,true)>game.price_at(b,good,true);
+            if (a==game.s.origin || b==game.s.origin) return a==game.s.origin && b!=a;
+            if (visited(a)!=visited(b)) return visited(a);
+            const int first=visited(a)?game.price_at(a,good,true):0;
+            const int second=visited(b)?game.price_at(b,good,true):0;
+            return first==second?a<b:first>second;
         });
         const int rows=std::clamp((body.h-74)/row_pitch(),1,9);
         const int pages=std::max(1,(count+rows-1)/rows);
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
             const int port=order[page*rows+i];
-            const auto prices=market_prices(game.price_at(port,good,false),game.price_at(port,good,true));
-            row(d,i,Places[port].name,prices,Destination+port,port==game.s.origin,47);
+            const bool here=port==game.s.origin;
+            if (visited(port)) {
+                const auto prices=market_prices(game.price_at(port,good,false),game.price_at(port,good,true));
+                row(d,i,Places[port].name,prices,here?0:Destination+port,here,47);
+            } else row(d,i,Places[port].name,"未到访",Destination+port,false,47);
         }
         if (pages>1) pager(d,pages);
-        else d.label(body.x+6,body.bottom()-22,"抵达后价格可能变化",quiet,body.w-12);
+        else d.label(body.x+6,body.bottom()-22,"点港口查看航程与到港估价",quiet,body.w-12);
+    }
+    void trade_passage(Draw& d) {
+        page_title(d,"贸易航程",CargoIcon);
+        const auto plan=game.trade_plan(trade_port,good);
+        const int x=body.x+7, y=body.y+28, w=body.w-14;
+        if (!plan.days) {
+            d.label(x,y,"这里暂无可用航线",quiet,w);
+            return;
+        }
+        const int pitch=std::min(17,(body.h-62)/4);
+        d.label(x,y,format("%s · %s",Places[trade_port].name.data(),GoodsNames[good].data()),gold,w);
+        d.label(x,y+pitch,format("约%d日  需粮%d 水%d",plan.days,plan.food,plan.water),ivory,w);
+        const auto cargo=plan.purchase.units?format("本港买%d件  %d金",plan.purchase.units,plan.purchase.gold):
+                                            format("舱内%d件",plan.cargo);
+        d.label(x,y+2*pitch,cargo,ivory,w);
+        const auto sale=format("估卖%d件 %d金 · 余%d件",plan.sale.units,plan.sale.gold,plan.cargo-plan.sale.units);
+        const Text receipt=plan.market==ArrivalMarket::Unknown?"未到访，抵港后问价":
+            plan.market==ArrivalMarket::Closed?"该港不经营此货":
+            plan.market==ArrivalMarket::Held?"抵港时仍暂停交易":
+            !plan.cargo?"本港暂无可买或自带货物":
+            plan.sale.units?Text(sale):"预计暂无可成交量";
+        d.label(x,y+3*pitch,receipt,plan.sale.units?mint:mist,w);
+        const bool affordable=plan.supply_gold+plan.purchase.gold<=game.s.gold;
+        const auto supplies=format("补给%d金%s",plan.supply_gold,affordable?"":" · 金币不足");
+        const Text supply_info=!plan.supplies_fit?"水粮舱装不下全程用量":
+            plan.supply_gold?Text(supplies):"水粮已备";
+        d.label(x,y+4*pitch,supply_info,plan.supplies_fit && affordable?quiet:vermilion,w);
+        const int bottom=body.bottom()-27;
+        if (plan.purchase.units) pair(d,{x,bottom,w,23},"去买货",TradePreparePurchase,
+                                     "航前计划",TradeStartPreparation);
+        else button(d,{x,bottom,w,23},"航前计划",TradeStartPreparation,true);
     }
     void market_news(Draw& d) {
         page_title(d,"各港市况",LetterIcon);
@@ -4541,6 +4580,7 @@ struct VoyageApp {
         case ForecastPage: weather_forecast(d); break;
         case RouteStops: route_stops(d); break;
         case PortPrices: port_prices(d); break;
+        case TradePassagePage: trade_passage(d); break;
         case MarketNews: market_news(d); break;
         case EventReport: event_report(d); break;
         case TowRequest: tow_request(d); break;
@@ -5008,6 +5048,7 @@ struct VoyageApp {
                 if (game.port() && screen==Market && modal==None) {
                     trade_quantity=0;
                     quantity_sell=!game.trade_limit(good,false) && game.trade_limit(good,true)>0;
+                    quantity_back=None;
                     set_modal(TradeQuantityPage);
                 }
                 break;
@@ -5023,7 +5064,7 @@ struct VoyageApp {
             case QuantityConfirm:
                 if (modal==TradeQuantityPage && trade_quantity>0 &&
                     game.trade_quote(good,quantity_sell,trade_quantity).units==trade_quantity &&
-                    market_order(quantity_sell,trade_quantity)) set_modal(None);
+                    market_order(quantity_sell,trade_quantity)) set_modal(quantity_back);
                 break;
             case ShowBargain:
                 if (game.port()) {
@@ -5239,7 +5280,13 @@ struct VoyageApp {
             return;
         }
         if (action>=Destination) {
-            if (!game.sea()) select(action-Destination);
+            const int port=action-Destination;
+            if (modal==PortPrices) {
+                if (game.port() && port<PortCount && port!=game.s.origin && game.charted(port)) {
+                    trade_port=port;
+                    set_modal(TradePassagePage);
+                }
+            } else if (!game.sea()) select(port);
             return;
         }
         if (action>=GoodsRow && action<GoodsRow+int(MarketGoodsCount)) { good=action-GoodsRow; return; }
@@ -5362,7 +5409,8 @@ struct VoyageApp {
         case ShowStops: page=0; set_modal(RouteStops); break;
         case TopUp: {
             const auto forecast=game.forecast(passage(game.s.origin,selected));
-            if (game.resupply(supply_target(forecast.provisions),supply_target(forecast.water))) changed();
+            if (game.resupply(game.voyage_supply_target(forecast.provisions),
+                              game.voyage_supply_target(forecast.water))) changed();
             else notify();
             break;
         }
@@ -5460,6 +5508,22 @@ struct VoyageApp {
             if (game.request_tow()) { select(game.s.origin); changed(); }
             break;
         case ShowPortPrices: page=0; set_modal(PortPrices); break;
+        case TradePreparePurchase:
+            if (modal==TradePassagePage && game.port()) {
+                trade_quantity=game.trade_plan(trade_port,good).purchase.units;
+                quantity_sell=false;
+                if (trade_quantity) {
+                    quantity_back=TradePassagePage;
+                    set_modal(TradeQuantityPage);
+                }
+            }
+            break;
+        case TradeStartPreparation:
+            if (modal==TradePassagePage && game.trade_plan(trade_port,good).days) {
+                select(trade_port);
+                set_modal(Preflight);
+            }
+            break;
         case ShowMarketNews: page=0; set_modal(MarketNews); break;
         case NextStop:
             game.s.stop_next=1-game.s.stop_next;
@@ -5699,6 +5763,8 @@ struct VoyageApp {
             else if (modal==LanguageDesk) set_modal(language_back);
             else if (modal==TideLedger) set_modal(LanguageDesk);
             else if (modal==MarketNews) { page=0; set_modal(PortPrices); }
+            else if (modal==TradePassagePage) set_modal(PortPrices);
+            else if (modal==TradeQuantityPage) set_modal(quantity_back);
             else if (modal==PortPrices || modal==SpecialtyInfo) { page=market_selection_page(); set_modal(None); }
             else set_modal(None);
         } else if (screen!=Chart) { screen=Chart; focused=0; dirty=true; }

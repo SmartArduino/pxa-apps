@@ -440,6 +440,38 @@ TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
     return quote_order(good,sell,quantity,0,true);
 }
 
+TradePlan Game::trade_plan(int destination,int good) const {
+    if (!port() || !charted(destination) || destination>=PortCount || destination==s.origin ||
+        good<0 || good>=MarketGoodsCount) return {};
+    const auto path=passage(s.origin,destination);
+    if (!path.count) return {};
+    TradePlan plan;
+    if (!s.cargo[good]) plan.purchase=trade_quote(good,false,TradeLot);
+    plan.cargo=s.cargo[good]+plan.purchase.units;
+    const auto voyage=forecast(path,plan.purchase.units);
+    plan.days=voyage.days;
+    plan.food=voyage.provisions;
+    plan.water=voyage.water;
+    const int food_target=voyage_supply_target(plan.food), water_target=voyage_supply_target(plan.water);
+    const auto order=provisions_order(food_target,water_target);
+    plan.supplies_fit=s.stores+order.x>=plan.food && s.water+order.y>=plan.water;
+    plan.supply_gold=resupply_cost(food_target,water_target);
+    if (!(s.visited&place_bit(destination))) return plan;
+    if (market_access(destination,good)==MarketAccess::Closed) {
+        plan.market=ArrivalMarket::Closed;
+        return plan;
+    }
+    const int arrival=std::min(99999,s.day+plan.days);
+    if (port_hold_until(destination)>arrival) {
+        plan.market=ArrivalMarket::Held;
+        return plan;
+    }
+    plan.market=ArrivalMarket::Open;
+    const int cash=std::max(0,s.gold-plan.purchase.gold-plan.supply_gold);
+    plan.sale=quote_market(destination,good,true,plan.cargo,999999-cash,arrival,0,true);
+    return plan;
+}
+
 int Game::trade_limit(int good, bool sell) const {
     const int regular=trade_quote(good,sell,capacity()).units;
     if (good>=0 && good<GoodsCount && !sell && regular<TradeLot && s.bargain_good==good+1 &&
@@ -2392,8 +2424,12 @@ void Game::wear_company_hull(int loss) {
 }
 
 int Game::port_hold_until() const {
-    if (s.origin==calicut) return s.calicut_hold_until;
-    const auto court=port_court(s.origin);
+    return port_hold_until(s.origin);
+}
+
+int Game::port_hold_until(int port) const {
+    if (port==calicut) return s.calicut_hold_until;
+    const auto court=port_court(port);
     return court==NoCourt?0:std::max(s.court_hold_until[court],s.sea_warrant[court]);
 }
 

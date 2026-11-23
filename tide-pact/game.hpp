@@ -174,6 +174,13 @@ struct TradeQuote {
     int stock_change=0;
     int saved=0;
 };
+enum class ArrivalMarket { Unknown, Closed, Held, Open };
+struct TradePlan {
+    int days=0, food=0, water=0, cargo=0, supply_gold=0;
+    bool supplies_fit=false;
+    ArrivalMarket market=ArrivalMarket::Unknown;
+    TradeQuote purchase, sale;
+};
 inline constexpr int TradeLot=5;
 inline constexpr int BargainUsed=GoodsCount+1;
 inline constexpr int HagglePatience=3, MaxHaggleRate=18;
@@ -334,6 +341,7 @@ struct Game {
     int specialty_orders(int port, int good) const;
     Point merchant_position(int company) const;
     TradeQuote trade_quote(int good, bool sell, int quantity) const;
+    TradePlan trade_plan(int destination, int good) const;
     int trade_limit(int good, bool sell) const;
     int negotiation_rate() const;
     Text bargain_block(int good, bool sell) const;
@@ -375,6 +383,7 @@ struct Game {
     bool tow_needed() const;
     bool request_tow();
     int resupply_cost(int food, int water) const;
+    int voyage_supply_target(int need) const { return need+2*daily_rations(); }
     bool resupply(int food, int water);
     bool unload_provisions(bool water);
     SeaConditions conditions() const { return conditions_at(position(),s.day); }
@@ -609,6 +618,7 @@ private:
     void lose_duel(bool yielded);
     void log_encounter(int choice);
     Point provisions_order(int food, int water) const;
+    int port_hold_until(int port) const;
     int market_price(int port, int good, bool sell, int supply, int day, bool player=true) const;
     TradeQuote quote_order(int good, bool sell, int quantity, int rate, bool limit_gold) const;
     TradeQuote quote_market(int port, int good, bool sell, int quantity, int budget, int day,

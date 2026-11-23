@@ -364,6 +364,57 @@ void custom_trade_quantities() {
     assert(old_deal.trade_limit(Wine,false)==TradeLot);
 }
 
+void trade_passage_planning() {
+    Game buyer;
+    buyer.s.visited|=place_bit(madeira);
+    buyer.s.stores=0;
+    buyer.s.water=0;
+    buyer.s.bargain_good=Wine+1;
+    buyer.s.bargain_rate=8;
+    const auto before=encode(buyer.s);
+    const auto plan=buyer.trade_plan(madeira,Wine);
+    const auto quote=buyer.trade_quote(Wine,false,TradeLot);
+    assert(plan.purchase.units==TradeLot && plan.cargo==TradeLot && plan.purchase.gold==quote.gold &&
+           plan.purchase.saved==quote.saved && quote.saved>0);
+    const auto forecast=buyer.forecast(passage(lisbon,madeira),plan.cargo);
+    assert(forecast.days>0 && forecast.days==plan.days && forecast.provisions==plan.food && forecast.water==plan.water);
+    assert(plan.supplies_fit && plan.supply_gold>0 && plan.supply_gold==
+           buyer.resupply_cost(buyer.voyage_supply_target(plan.food),buyer.voyage_supply_target(plan.water)));
+    assert(plan.market==ArrivalMarket::Open && plan.sale.units>0 && encode(buyer.s)==before);
+    buyer.s.visited&=~place_bit(madeira);
+    buyer.s.chart_marks|=place_bit(madeira);
+    const auto unvisited=buyer.trade_plan(madeira,Wine);
+    assert(unvisited.days==plan.days && unvisited.market==ArrivalMarket::Unknown && !unvisited.sale.units);
+    assert(!buyer.trade_plan(lisbon,Wine).days && !buyer.trade_plan(-1,Wine).days &&
+           !buyer.trade_plan(madeira,MarketGoodsCount).days);
+
+    Game seller;
+    for (auto& ship : seller.s.merchants) ship.gold=0;
+    seller.s.cargo[MadeiraSugar]=SpecialtyOrderLimit;
+    assert(seller.trade(MadeiraSugar,true,SpecialtyOrderLimit).units==SpecialtyOrderLimit);
+    assert(!seller.specialty_orders(lisbon,MadeiraSugar));
+    seller.s.origin=madeira;
+    seller.s.cargo[MadeiraSugar]=SpecialtyOrderLimit;
+    const auto resale=seller.trade_plan(lisbon,MadeiraSugar);
+    assert(resale.days>0 && !resale.purchase.units && resale.cargo==SpecialtyOrderLimit);
+    assert(resale.market==ArrivalMarket::Open && resale.sale.units>0 && resale.sale.units<resale.cargo);
+
+    seller.s.sea_warrant[Portugal]=seller.s.day+resale.days+1;
+    const auto blocked=seller.trade_plan(lisbon,MadeiraSugar);
+    assert(blocked.market==ArrivalMarket::Held && !blocked.sale.units);
+    --seller.s.sea_warrant[Portugal];
+    assert(seller.trade_plan(lisbon,MadeiraSugar).market==ArrivalMarket::Open);
+    for (int day=0;day<resale.days;++day) seller.wait_at_port();
+    seller.s.origin=lisbon;
+    const auto arrived=seller.trade_quote(MadeiraSugar,true,SpecialtyOrderLimit);
+    assert(arrived.units==resale.sale.units && arrived.gold==resale.sale.gold);
+
+    seller.s.visited|=place_bit(santo_domingo);
+    const auto closed=seller.trade_plan(santo_domingo,MadeiraSugar);
+    assert(closed.days>0 && closed.market==ArrivalMarket::Closed && !closed.sale.units);
+    assert(seller.depart(madeira) && !seller.trade_plan(santo_domingo,MadeiraSugar).days);
+}
+
 void port_market_cycles() {
     Game game;
     for (auto& ship : game.s.merchants) ship.gold=0;
@@ -1999,6 +2050,7 @@ int main() {
     merchant_specialty_cargo();
     port_market_cycles();
     custom_trade_quantities();
+    trade_passage_planning();
     town_walks();
     port_stories();
     port_dispatches();
