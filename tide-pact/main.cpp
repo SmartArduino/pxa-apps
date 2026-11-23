@@ -2225,7 +2225,7 @@ struct VoyageApp {
     }
 
     void trade_quantity_page(Draw& d) {
-        page_title(d,GoodsNames[good],CargoIcon);
+        page_title(d,GoodsNames[good]);
         const int x=body.x+7, y=body.y, right=body.right()-7;
         const int pad_width=std::min(body.w/2,165);
         const int pad_x=right-pad_width, width=pad_x-x-7;
@@ -2236,21 +2236,32 @@ struct VoyageApp {
         const int half=(width-4)/2;
         button(d,{x,y+28,half,22},"买入",QuantityBuy,!quantity_sell);
         button(d,{x+half+4,y+28,width-half-4,22},"卖出",QuantitySell,quantity_sell);
-        d.label(x,y+55,format("数量 %d",trade_quantity),over?vermilion:ivory,width);
-        d.label(x,y+72,format("最多 %d 件",maximum),mist,width);
-        const auto total=format("%s %d金",quantity_sell?"收取":"支付",quote.gold);
-        d.label(x,y+89,ready?Text(total):over?"超出可成交量":maximum?"请输入数量":"暂无可成交量",
-                ready?mint:over?vermilion:mist,width);
-        button(d,{x,body.bottom()-28,width,23},quantity_sell?"确认卖出":"确认买入",QuantityConfirm,true,!ready);
+        const Rect confirm{x,body.bottom()-PricedButtonHeight-4,width,PricedButtonHeight};
+        const Rect receipt{x,y+54,width,confirm.y-y-59};
+        harbor_panel(d,receipt,HarborPlaque,4);
+        const int icon=width>=116?std::min({38,width/4,receipt.h-8}):0;
+        if (icon>0)
+            goods_icon(d,good,{receipt.x+6,receipt.y+(receipt.h-icon)/2,icon,icon});
+        const int inset=icon>0?icon+12:6;
+        const int summary_y=receipt.y+(receipt.h-2*d.font.cell-3)/2;
+        d.label(receipt.x+inset,summary_y,format("数量 %d",trade_quantity),
+                over?vermilion:ivory,receipt.w-inset-5);
+        d.label(receipt.x+inset,summary_y+d.font.cell+3,format("最多 %d 件",maximum),
+                mist,receipt.w-inset-5);
+        const auto total=format("%s %d金",quantity_sell?"应收":"应付",quote.gold);
+        const Text detail=ready?Text(total):over?"超出上限":maximum?"先选数量":"暂无可成交量";
+        button(d,confirm,quantity_sell?"确认卖出":"确认买入",QuantityConfirm,true,!ready,detail);
 
         constexpr Text keys[]{"1","2","3","4","5","6","7","8","9","退格","0","最大"};
-        const int key_height=std::min(27,(body.h-31)/4-3);
+        constexpr int gap=3;
+        const int keys_w=pad_width-2*gap, keys_h=confirm.bottom()-y-28-3*gap;
         for (int i=0;i<int(std::size(keys));++i) {
             const int column=i%3, row=i/3;
-            const int left=pad_x+column*pad_width/3;
+            const int left=column*keys_w/3, top=row*keys_h/4;
+            const Rect key{pad_x+left+column*gap,y+28+top+row*gap,
+                           (column+1)*keys_w/3-left,(row+1)*keys_h/4-top};
             const int action=i<9?QuantityDigit+i+1:i==9?QuantityBackspace:i==10?QuantityDigit:QuantityMaximum;
-            button(d,{left,y+28+row*(key_height+3),pad_x+(column+1)*pad_width/3-left-3,key_height},
-                   keys[i],action,i==11,i==11?maximum==0:i==9 && trade_quantity==0);
+            button(d,key,keys[i],action,i==11,i==11?maximum==0:i==9 && trade_quantity==0);
         }
     }
 
@@ -3738,48 +3749,88 @@ struct VoyageApp {
         button(d,{body.right()-105,body.y+3,52,23},"风况",ShowWeather);
         const auto path=passage(game.s.origin,selected);
         const auto forecast=game.forecast(path);
-        const int x=body.x+7, w=body.w-14;
-        if (selected<PortCount) {
-            const auto status=port_contact(selected);
-            const int start=x+w-d.measure(status)-16;
-            voyage_icon(d,SpeechIcon,{start,body.y+29,14,14});
-            d.label(start+16,body.y+30,status,mist);
-            d.label(x,body.y+30,Places[selected].name,gold,start-x-4);
-        } else d.label(x,body.y+30,Places[selected].name,gold,w);
+        const int x=body.x+7, y=body.y, w=body.w-14;
+        const int controls_y=body.bottom()-54;
+        const Text contact=selected<PortCount?port_contact(selected):Text{};
         Text timing;
         if (game.s.dispatch.number && game.dispatch_target()==selected) {
-            if (selected!=DispatchOrders[game.dispatch_order()].to) timing=" · 中途停靠";
-            else timing=game.s.day+forecast.days>game.s.dispatch.due?" · 将逾期":" · 可按期";
+            if (selected!=DispatchOrders[game.dispatch_order()].to) timing="中途停靠";
+            else timing=game.s.day+forecast.days>game.s.dispatch.due?"将逾期":"可按期";
         }
-        d.label(x,body.y+48,format("%d海里  预计%d日%.*s",path.miles,forecast.days,int(timing.size()),
-                timing.empty()?"":timing.data()),ivory,w);
-        const int surplus=std::min(game.s.stores-forecast.provisions,int(game.s.water)-forecast.water);
-        const int ship_ok=game.s.hull>12;
+        const auto estimate=format("%d海里 · 预计%d日",path.miles,forecast.days);
+        const int food=game.s.stores, water=game.s.water;
+        const bool shortage=food<forecast.provisions || water<forecast.water;
+        if (body.w>=300 && body.h>=146) {
+            const Rect route_card{x,y+28,w*47/100,controls_y-y-32};
+            harbor_panel(d,route_card,HarborPlaque,4);
+            const int label_x=route_card.x+6, label_w=route_card.w-12;
+            const auto route_name=format("%s → %s",Places[game.s.origin].name.data(),Places[selected].name.data());
+            d.label(label_x,route_card.y+5,d.measure(route_name)<=label_w?Text(route_name):Places[selected].name,
+                    gold,label_w);
+            d.label(label_x,route_card.y+23,path.count?Text(estimate):"暂无可用航线",ivory,label_w);
+            const auto status=format("%.*s%s%.*s",int(contact.size()),contact.empty()?"":contact.data(),
+                                     !contact.empty() && !timing.empty()?" · ":"",
+                                     int(timing.size()),timing.empty()?"":timing.data());
+            d.label(label_x,route_card.y+40,status,timing=="将逾期"?vermilion:mist,label_w);
+            if (route_card.h>=75 && game.s.first_mate!=NoOfficer)
+                d.label(label_x,route_card.y+57,format("当值副官  %s",Officers[game.s.first_mate].name.data()),
+                        quiet,label_w);
+
+            const int supply_x=route_card.right()+5, supply_w=x+w-supply_x;
+            const int card_y=y+31+d.font.cell, card_h=controls_y-card_y-4;
+            d.center({supply_x,y+28,supply_w,d.font.cell+2},"现有 / 航程所需",mist);
+            const int half=(supply_w-4)/2;
+            const auto provision=[&](Rect card,Text label,int glyph,int available,int needed) {
+                harbor_panel(d,card,HarborPlaque,4);
+                const auto color=available<needed?vermilion:mint;
+                const Rect sprite{glyph%3*32,glyph/3*32,32,32};
+                d.center_with_icon({card.x+4,card.y+2,card.w-8,d.font.cell+1},label,ivory,
+                                   {art::voyage_icons},sprite,13);
+                d.center({card.x+4,card.y+d.font.cell+3,card.w-8,d.font.cell},format("%d / %d",available,needed),color);
+                meter(d,{card.x+5,card.bottom()-9,card.w-10,7},available,needed,available<needed);
+            };
+            provision({supply_x,card_y,half,card_h},"口粮",RationIcon,food,forecast.provisions);
+            provision({supply_x+half+4,card_y,supply_w-half-4,card_h},"淡水",FlaskIcon,water,forecast.water);
+        } else {
+            const int contact_w=contact.empty()?0:d.measure(contact)+20;
+            d.label(x,y+30,Places[selected].name,gold,w-contact_w);
+            if (contact_w) {
+                const int start=x+w-contact_w;
+                voyage_icon(d,SpeechIcon,{start,y+29,14,14});
+                d.label(start+16,y+30,contact,mist);
+            }
+            const auto summary=format("%s%s%.*s",estimate.contents,timing.empty()?"":" · ",
+                                      int(timing.size()),timing.empty()?"":timing.data());
+            d.label(x,y+48,path.count?Text(summary):"暂无可用航线",ivory,w);
+            const int half=w/2;
+            d.label(x,y+65,format("粮有%d 需%d",food,forecast.provisions),food<forecast.provisions?vermilion:mint,half-3);
+            d.label(x+half,y+65,format("水有%d 需%d",water,forecast.water),water<forecast.water?vermilion:mint,w-half);
+            if (body.h>=160 && game.s.first_mate!=NoOfficer)
+                d.label(x,y+84,format("当值副官  %s",Officers[game.s.first_mate].name.data()),quiet,w);
+        }
+        const bool ship_ok=game.s.hull>12;
         const bool ready=path.count && ship_ok && game.s.stores>=game.daily_rations() &&
                          game.s.water>=game.daily_water(Fair);
-        d.label(x,body.y+65,format("粮 %d/%d  水 %d/%d",forecast.provisions,game.s.stores,
-                                 forecast.water,int(game.s.water)),surplus<0?vermilion:mint,w);
-        if (body.h>=160 && game.s.first_mate!=NoOfficer)
-            d.label(x,body.y+84,format("当值副官  %s",Officers[game.s.first_mate].name.data()),quiet,w);
         const int third=(w-8)/3;
-        button(d,{x,body.bottom()-54,third,23},"停靠点",ShowStops,false,false,{},MooringIcon);
-        button(d,{x+third+4,body.bottom()-54,third,23},"地理",ShowIntel,false,false,{},AstrolabeIcon);
-        button(d,{x+(third+4)*2,body.bottom()-54,third,23},"掌舵",StartHelm,false,!ready,{},HelmIcon);
+        button(d,{x,controls_y,third,23},"停靠点",ShowStops,false,false,{},DockAnchorIcon);
+        button(d,{x+third+4,controls_y,third,23},"地理",ShowIntel,false,false,{},AstrolabeIcon);
+        button(d,{x+(third+4)*2,controls_y,third,23},"掌舵",StartHelm,false,!ready,{},ShipWheelIcon);
         const int half=(w-5)/2;
         const int cost=game.resupply_cost(game.voyage_supply_target(forecast.provisions),
                                           game.voyage_supply_target(forecast.water));
-        const auto supplement=format("补粮 %d金",cost);
-        const auto repairs=format("维修 %d金",game.repair_cost());
-        if (game.tow_needed()) button(d,{x,body.bottom()-27,half,23},"请求拖带",ShowTow);
-        else if (!game.port()) button(d,{x,body.bottom()-27,half,23},"返海图",Close);
+        const Rect service{x,body.bottom()-27,half,23};
+        if (game.tow_needed()) button(d,service,"请求拖带",ShowTow);
+        else if (!game.port()) button(d,service,"返海图",Close);
         else if (!ship_ok && game.s.gold>=game.repair_cost())
-            button(d,{x,body.bottom()-27,half,23},repairs,DockService+1);
+            button(d,service,format("维修 %d金",game.repair_cost()),DockService+1);
         else if (!ship_ok || (cost>game.s.gold && !ready))
-            button(d,{x,body.bottom()-27,half,23},"去船坞",OpenShipyard);
-        else button(d,{x,body.bottom()-27,half,23},cost?Text(supplement):"水粮已备",TopUp,false,
-                    !cost || cost>game.s.gold);
-        button(d,{x+half+5,body.bottom()-27,w-half-5,23},
-               surplus<0 ? "仍要启航" : "启航",ConfirmSail,true,!ready,{},SailIcon);
+            button(d,service,"去船坞",OpenShipyard);
+        else if (cost)
+            button(d,service,format("补水粮 %d金",cost),TopUp,false,cost>game.s.gold,{},RationIcon);
+        else if (path.count)
+            d.center(service,shortage?"补给舱不足":"全程水粮齐备",shortage?vermilion:mint);
+        button(d,{x+half+5,service.y,w-half-5,service.h},
+               shortage?"仍要启航":"按航线启航",ConfirmSail,true,!ready,{},SailIcon);
     }
     void weather_forecast(Draw& d) {
         const bool manual=game.s.helm;
