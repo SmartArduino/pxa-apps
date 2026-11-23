@@ -284,6 +284,7 @@ struct State {
     std::uint64_t chart_marks=StartingChart;
     std::uint32_t heard_rumors=0;
     std::array<std::uint8_t, ChartBytes> coast{};
+    std::array<std::array<std::uint32_t,PilotSurveyRows>,WorldPilotIndex> pilot_chart{};
     std::array<Point,WakeCapacity> wake{};
     std::uint8_t wake_head=0, wake_count=0;
     std::uint32_t language_skills=0;
@@ -319,7 +320,8 @@ inline constexpr std::size_t LegacySaveBytes=320, CombatSaveBytes=336, HelmSaveB
 inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveBytes=1216;
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
 inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912;
-inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, SaveBytes=2016;
+inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, CargoSaveBytes=2016;
+inline constexpr std::size_t SaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -394,6 +396,8 @@ struct Game {
     Point pilot_atlas_site(int site,bool berth) const;
     PilotSite pilot_site(int site) const;
     bool pilot_site_visible(int site) const;
+    bool pilot_charted(int region,Point local) const;
+    bool reveal_pilot_chart();
     bool pilot_site_visited(int site) const;
     int pilot_coastal_hint() const;
     bool record_pilot_coast(int site);
@@ -406,7 +410,7 @@ struct Game {
     bool leave_pilotage(WaterTest ocean);
     void set_pilot_heading(int heading);
     int pilot_speed(PilotWater map,int near_berth=-1) const;
-    void pilot_tick(PilotWater map);
+    bool pilot_tick(PilotWater map);
     int pilot_berth(PilotWater map,int preferred=-1) const;
     PilotApproach pilot_approach(int site,PilotWater map) const;
     bool begin_pilot_docking(PilotWater map,int preferred);
@@ -598,6 +602,7 @@ private:
     float pilot_dock_travel=0;
     int pilot_dock_target=-1;
     bool finish_pilot_docking(int site);
+    bool reveal_pilot_area(int index,Point center,float radius);
     PassageForecast forecast_from(const Passage& path, int first_leg, int progress, int end, int cargo) const;
     int next_route_pace() const;
     unsigned roll(unsigned range);

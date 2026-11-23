@@ -45,7 +45,7 @@ inline Rect opaque_pilot_detail(Rect target) {
     return {target.x+left,target.y+top,right-left,bottom-top};
 }
 
-inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas,Rect covered,
+inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas,const Game& game,Rect covered,
                              std::span<const int> columns) {
     const auto rect=raster.view;
     const auto r=d.clipped(rect);
@@ -70,12 +70,22 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
         const int tile_row=v/PilotPatchHeight;
         const int gy=v/PilotAtlasUnit;
         int current_column=-1;
+        int chart_column=-1;
+        bool charted=false;
         Point origin{};
         const CoastRows* rows=nullptr;
+        int last_sample=-1;
+        unsigned corners=0;
         const auto segment=[&](int left,int right) {
             for (int x=left;x<right;++x) {
                 const int u=columns[x-r.x];
                 if (u<0 || u>=PilotAtlasWidth) { pixels[x]=beyond; continue; }
+                const int cell_column=u/(PilotAtlasUnit*ChartCell);
+                if (cell_column!=chart_column) {
+                    chart_column=cell_column;
+                    charted=game.chart_cell(chart_column,gy/ChartCell);
+                }
+                if (!charted) { pixels[x]=chart_style::Uncharted; continue; }
                 const int column=u/PilotPatchWidth;
                 if (column!=current_column) {
                     const int id=tile_row*PilotTilesX+column;
@@ -87,21 +97,56 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
                     }
                     rows=&cache;
                     current_column=column;
+                    last_sample=-1;
                 }
-                const int cell=(u-origin.x*8)/PilotSubcell;
+                const int local_x=u-origin.x*8, local_y=v-origin.y*8;
+                const int cell=local_x/PilotSubcell;
                 const int gx=u/PilotAtlasUnit;
                 const bool loaded=rows->middle.loaded;
                 const int coarse=loaded?0:overview.index(gx,gy);
-                const bool land=loaded?rows->middle.land(cell):coarse>=2;
-                if (land) {
+                int coverage=coarse>=2?256:0;
+                int shelf_alpha=coarse==1?8:0;
+                if (loaded) {
+                    // Interpolate across the centres of the navigation samples.
+                    const int sample=(local_x+8)/16;
+                    if (sample!=last_sample) {
+                        const int west=sample-1;
+                        const bool north_half=(local_y&15)<8;
+                        const auto& north=north_half?rows->above:rows->middle;
+                        const auto& south=north_half?rows->middle:rows->below;
+                        corners=unsigned(north.land(west))|(unsigned(north.land(west+1))<<1)|
+                            (unsigned(south.land(west))<<2)|(unsigned(south.land(west+1))<<3);
+                        last_sample=sample;
+                    }
+                    if (corners==15) coverage=256;
+                    else if (corners) {
+                        const int fx=(local_x+8)&15, fy=(local_y+8)&15;
+                        const int a=(corners&1?16-fx:0)+(corners&2?fx:0);
+                        const int b=(corners&4?16-fx:0)+(corners&8?fx:0);
+                        coverage=a*(16-fy)+b*fy;
+                    }
+                    if (coverage) shelf_alpha=8;
+                    else {
+                        const int fx=local_x&15, fy=local_y&15;
+                        if (rows->middle.land(cell-1)) shelf_alpha=std::max(shelf_alpha,(16-fx)/2);
+                        if (rows->middle.land(cell+1)) shelf_alpha=std::max(shelf_alpha,fx/2);
+                        if (rows->above.land(cell)) shelf_alpha=std::max(shelf_alpha,(16-fy)/2);
+                        if (rows->below.land(cell)) shelf_alpha=std::max(shelf_alpha,fy/2);
+                    }
+                }
+                if (coverage>=168) {
                     const int height=Draw::relief_level(gx,gy);
                     const int grain=chart_style::texture(height>=10?3:2,u>>2,v>>2);
                     pixels[x]=chart_style::Palette[3+height][grain];
                 } else {
-                    const bool bank=loaded?(rows->middle.land(cell-1) || rows->middle.land(cell+1) ||
-                                            rows->above.land(cell) || rows->below.land(cell)):coarse==1;
                     const auto deep=raster.sea(u,v);
-                    pixels[x]=bank?Draw::mix(deep,coast,8):deep;
+                    const auto shelf=shelf_alpha?Draw::mix(deep,coast,shelf_alpha):deep;
+                    if (coverage<=86) pixels[x]=shelf;
+                    else {
+                        const int height=Draw::relief_level(gx,gy);
+                        const int grain=chart_style::texture(2,u>>2,v>>2);
+                        pixels[x]=Draw::mix(shelf,chart_style::Palette[3+height][grain],(coverage-86)*15/82);
+                    }
                 }
             }
         };
@@ -111,7 +156,8 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
 }
 
 inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRaster& raster,
-                              std::span<const int> columns,int opacity) {
+                              std::span<const int> columns,int opacity,
+                              const std::array<std::uint32_t,PilotSurveyRows>& surveyed) {
     const auto r=d.clipped(target);
     if (r.w<=0 || r.h<=0 || !water.bytes || target.w<=0 || target.h<=0) return;
     constexpr std::array<unsigned,16> colors{
@@ -125,7 +171,8 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
                 result[terrain][shade]=chart_style::tint(colors[terrain],(shade-8)*(terrain<4?1:3));
         return result;
     }();
-    const int width=PilotWidth*4;
+    constexpr int fraction=16;
+    const int width=PilotWidth*fraction;
     const auto offset=std::int64_t(r.x-target.x)*width;
     const int step=width/target.w, remainder=width%target.w;
     std::array<std::uint16_t,PilotStripWidth> texture_x;
@@ -139,17 +186,41 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
     const Rect opaque=opacity==15?d.clipped(opaque_pilot_detail(target)):Rect{};
     for (int y=r.y;y<r.bottom();++y) {
         auto pixels=*d.pixels.row(y);
-        const int v=int(std::int64_t(y-target.y)*PilotHeight*4/target.h);
+        const int v=int(std::int64_t(y-target.y)*PilotHeight*fraction/target.h);
         const int latitude=raster.y(y);
-        const int vertical_edge=std::min(v/4,PilotHeight-1-v/4);
-        const auto* terrain_row=water.bytes+4+(v/4)*(PilotWidth/2);
+        const int row=v/fraction;
+        const int vertical_edge=std::min(row,PilotHeight-1-row);
+        const int dy=2*(v&(fraction-1))-(fraction-1);
+        const int neighbour_row=std::clamp(row+(dy<0?-1:1),0,PilotHeight-1);
+        const auto known=surveyed[row/PilotSurveyCell];
+        const auto neighbour_known=surveyed[neighbour_row/PilotSurveyCell];
+        const auto* terrain_row=water.bytes+4+row*(PilotWidth/2);
+        const auto* adjacent_row=water.bytes+4+neighbour_row*(PilotWidth/2);
+        const auto terrain_at=[](int cell,std::uint32_t mask,const unsigned char* data) {
+            return mask&(std::uint32_t{1}<<(cell/PilotSurveyCell)) ? (data[cell/2]>>(4*(cell&1)))&15 : -1;
+        };
         const auto segment=[&]<bool Blend>(int left,int right) {
             for (int x=left;x<right;++x) {
-                const int tex=texture_x[x-r.x], cell=tex/4;
-                const int terrain=(terrain_row[cell/2]>>(4*(cell&1)))&15;
-                const int material=terrain<5?1:terrain<=9?2:3;
-                const auto shaded=terrain==0?raster.sea(columns[x-d.clip.x],latitude):
-                    palette[terrain][chart_style::texture(material,tex,v)];
+                const int tex=texture_x[x-r.x], cell=tex/fraction;
+                Color shaded=chart_style::Uncharted;
+                if (known&(std::uint32_t{1}<<(cell/PilotSurveyCell))) {
+                    const auto color=[&](int terrain) {
+                        if (terrain<0) return chart_style::Uncharted;
+                        if (!terrain) return raster.sea(columns[x-d.clip.x],latitude);
+                        const int material=terrain<5?1:terrain<=9?2:3;
+                        return palette[terrain][chart_style::texture(material,tex/4,v/4)];
+                    };
+                    const int terrain=(terrain_row[cell/2]>>(4*(cell&1)))&15;
+                    shaded=color(terrain);
+                    const int dx=2*(tex&(fraction-1))-(fraction-1);
+                    const int edge=std::max(std::abs(dx),std::abs(dy));
+                    if (edge>3) {
+                        const int adjacent=std::abs(dx)>std::abs(dy)?
+                            terrain_at(std::clamp(cell+(dx<0?-1:1),0,PilotWidth-1),known,terrain_row):
+                            terrain_at(cell,neighbour_known,adjacent_row);
+                        if (adjacent!=terrain) shaded=Draw::mix(shaded,color(adjacent),edge/2);
+                    }
+                }
                 if constexpr (Blend) {
                     const int edge=std::min({cell,PilotWidth-1-cell,vertical_edge});
                     pixels[x]=Draw::mix(pixels[x],shaded,std::min(opacity,edge*2));
@@ -164,10 +235,11 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
     }
 }
 
-inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas,
-                               PilotWater detail,Rect target,int opacity) {
+inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtlas& atlas,const Game& game,
+                               int region,PilotWater detail,Rect target,int opacity) {
     const Rect previous=d.clip, visible=d.clipped(raster.view);
-    const Rect covered=detail.bytes && opacity==15?opaque_pilot_detail(target):Rect{};
+    const bool draw_detail=region>=0 && region<WorldPilotIndex && opacity && detail.bytes;
+    const Rect covered=draw_detail && opacity==15?opaque_pilot_detail(target):Rect{};
     std::array<int,PilotStripWidth> columns;
     for (int left=visible.x;left<visible.right();) {
         const int width=std::min(visible.right()-left,int(columns.size()));
@@ -175,8 +247,8 @@ inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtla
         // The atlas source column is shared by every scanline and both terrain layers.
         for (int i=0;i<width;++i) columns[i]=raster.x(left+i);
         const auto samples=std::span(columns).first(width);
-        draw_pilot_world(d,raster,atlas,covered,samples);
-        if (opacity && detail.bytes) draw_pilot_detail(d,detail,target,raster,samples,opacity);
+        draw_pilot_world(d,raster,atlas,game,covered,samples);
+        if (draw_detail) draw_pilot_detail(d,detail,target,raster,samples,opacity,game.s.pilot_chart[region]);
         left+=width;
     }
     d.clip=previous;

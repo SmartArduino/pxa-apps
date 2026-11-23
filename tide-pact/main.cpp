@@ -450,8 +450,10 @@ struct VoyageApp {
             }
         } else if (!game.paused && game.s.pilot.region==WorldPilotIndex+1) {
             const int detail=pilot_detail_at(ship);
-            if (detail>=0 && game.refine_pilotage(detail,{sea_picture.pixels(PilotPictureBase+detail)}))
+            if (detail>=0 && game.refine_pilotage(detail,{sea_picture.pixels(PilotPictureBase+detail)})) {
+                save_needed=true;
                 dirty=true;
+            }
         }
     }
 
@@ -533,7 +535,7 @@ struct VoyageApp {
                     previous_helm={game.s.helm_x,game.s.helm_y};
                     if (game.s.pilot.region) {
                         pilot_visual_from=game.pilot_atlas_position();
-                        game.pilot_tick(pilot_water());
+                        save_needed|=game.pilot_tick(pilot_water());
                     }
                     else game.helm_pulses(chart_water,voyage_rate);
                 }
@@ -896,18 +898,14 @@ struct VoyageApp {
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
         const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
         const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
+        const bool helm=full_helm_chart();
         d.fill(map,ocean);
-        if (full_helm_chart()) {
-            draw_helm_chart(d,chart_area);
-            if (!zoom && !game.s.skirmish.active) d.frame(chart_area,border);
-            return;
-        }
-        if (!zoom) {
+        if (!zoom && !helm) {
             d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
             return;
         }
-        constexpr auto uncharted=rgb(0x293c3c), grid=rgb(0x374b49);
-        d.fill(chart_area,uncharted);
+        constexpr auto grid=rgb(0x374b49);
+        d.fill(chart_area,chart_style::Uncharted);
         const int left=std::max(0,int((chart_x-map.w/(2*factor))/ChartCell)-1);
         const int right=std::min(ChartColumns-1,int((chart_x+map.w/(2*factor))/ChartCell)+1);
         const int top=std::max(0,int((chart_y-map.h/(2*factor))/ChartCell)-1);
@@ -929,10 +927,14 @@ struct VoyageApp {
                 const auto b=map_point({std::min(x*ChartCell,ChartWidth),
                                         std::min((y+1)*ChartCell,ChartHeight)});
                 d.clip=d.clipped({a.x,a.y,b.x-a.x,b.y-a.y});
-                if (d.clip.w && d.clip.h) d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
+                if (d.clip.w && d.clip.h) {
+                    if (helm) draw_helm_chart(d,chart_area);
+                    else d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
+                }
                 d.clip=clip;
             }
         }
+        if (!zoom && helm && !game.s.skirmish.active) d.frame(chart_area,border);
     }
     Rect chart_scale_box() const { return {map.right()-78,map.bottom()-23,74,20}; }
 
@@ -1186,7 +1188,7 @@ struct VoyageApp {
         }
         for (auto& n:names) {
             const Point source=chart_point(n.lon,n.lat);
-            if (zoom && !game.chart_cell(source.x/ChartCell,source.y/ChartCell) &&
+            if ((zoom || full_helm_chart()) && !game.chart_cell(source.x/ChartCell,source.y/ChartCell) &&
                 (n.associated_port<0 || !game.charted(n.associated_port))) continue;
             auto p=map_point(source);
             draw_label({p.x-d.measure(n.label)/2,p.y},n.label,zoom && n.land?rgb(0x293e37):ivory,
@@ -1363,7 +1365,8 @@ struct VoyageApp {
 
     template<class F>
     void pilot_visible_sites(F visit) const {
-        for (int id=0;id<int(std::size(PilotSites));++id) visit(id);
+        for (int id=0;id<int(std::size(PilotSites));++id)
+            if (game.pilot_site_visible(id)) visit(id);
         for (int id=WorldPilotSite;id<PilotSiteEnd;++id) {
             const bool duplicate=id<CoastalPilotSite && std::any_of(std::begin(PilotRegions),std::end(PilotRegions),
                 [&](const PilotRegion& region) { return region.port==id-WorldPilotSite; });
@@ -1433,7 +1436,7 @@ struct VoyageApp {
             detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
             detail_water={sea_picture.pixels(PilotPictureBase+detail_index)};
         }
-        draw_pilot_terrain(d,raster,pilot_atlas,detail_water,detail_view,detail_opacity);
+        draw_pilot_terrain(d,raster,pilot_atlas,game,detail_index,detail_water,detail_view,detail_opacity);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;

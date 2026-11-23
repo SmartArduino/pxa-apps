@@ -58,6 +58,8 @@ void check_legacy(const State& state,std::uint8_t version) {
            loaded.pilot.moored==state.pilot.moored && loaded.pilot_visits==state.pilot_visits &&
            loaded.pilot.patch==state.pilot.patch && !loaded.coast_visits);
     for (const auto stage : loaded.pilot_parcels) assert(stage==PilotParcelStage::Waiting);
+    for (const auto& area : loaded.pilot_chart)
+        for (const auto row : area) assert(!row);
 }
 
 } // namespace
@@ -77,8 +79,14 @@ int main() {
         }
         Game ship;
         ship.s.origin=area.port;
+        const auto main_berth=PilotSites[area.first].berth;
+        const auto unexplored=Point{main_berth.x<2048?4095:0,main_berth.y<1024?2047:0};
+        assert(!ship.pilot_charted(index,main_berth));
+        assert(!ship.pilot_site_visible(area.first+1));
         assert(ship.start_helm(-1));
         assert(ship.pilot_region()==index && ship.begin_pilotage(index,water));
+        assert(ship.pilot_charted(index,main_berth) && !ship.pilot_charted(index,unexplored));
+        assert(!ship.reveal_pilot_chart());
         assert(ship.paused && ship.pilot_berth(water)==area.first && !ship.dock_helm(ocean));
         const int heading=ship.s.pilot.heading, x=ship.s.pilot.x, y=ship.s.pilot.y;
         ship.set_pilot_heading(heading+1);
@@ -86,8 +94,9 @@ int main() {
         const auto advanced=ship;
         State loaded;
         assert(decode(loaded,encode(advanced.s)) && loaded.pilot.x==x &&
-               loaded.pilot.y==y && loaded.pilot.region==index+1);
+               loaded.pilot.y==y && loaded.pilot.region==index+1 && loaded.pilot_chart==ship.s.pilot_chart);
         check_legacy<PilotSaveBytes>(advanced.s,0x4a);
+        check_legacy<CargoSaveBytes>(advanced.s,0x4f);
         const auto fixed=pilot_to_world(area,{x,y});
         assert(fixed.x==ship.s.helm_x && fixed.y==ship.s.helm_y);
 
@@ -116,6 +125,7 @@ int main() {
                 const auto approach=harbour.pilot_approach(sender,water);
                 has_channel=approach.clear && approach.tenths>=6 && approach.tenths<=22;
             }
+        harbour.reveal_pilot_chart();
         assert(has_channel && harbour.begin_pilot_docking(water,sender) && harbour.pilot_docking()==sender);
         const int hull=harbour.s.hull;
         for (int tick=0;tick<100 && !harbour.paused;++tick) harbour.pilot_tick(water);

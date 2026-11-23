@@ -1299,6 +1299,12 @@ void Game::restore() {
     }
     reveal_chart(Anchor[lisbon],34);
     reveal_chart(position(),24);
+    for (int i=0;i<WorldPilotIndex;++i) {
+        const auto& area=PilotRegions[i];
+        for (int id=area.first;id<area.first+area.count;++id)
+            if (pilot_site_visited(id)) reveal_pilot_area(i,PilotSites[id].berth,1.8f);
+    }
+    reveal_pilot_chart();
     if (s.helm && !s.wake_count) record_wake();
 }
 
@@ -2885,7 +2891,7 @@ constexpr int BerthSaveFields=5+1+4;
 constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
-static_assert(SaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
+static_assert(CargoSaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
               (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+(2+SpecialtyBuyerSlots)*SpecialtyCount+5+3*LandUnits+7*MerchantNames.size());
 
 constexpr int migrate_place(int place) {
@@ -2921,7 +2927,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x4f445054);
+    put(0x50445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3038,6 +3044,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(ship.sold_day);
         for (auto value : {ship.sold_port,ship.sold_good,ship.sold_units}) bytes[offset++]=std::byte(value);
     }
+    offset=CargoSaveBytes-4;
+    for (const auto& area : s.pilot_chart)
+        for (const auto row : area) put(row);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -3053,7 +3062,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
         bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
-        bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3063,7 +3072,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool cargo_records=version==0x4f445054 && bytes.size()==SaveBytes;
+    const bool pilot_chart=version==0x50445054 && bytes.size()==SaveBytes;
+    const bool cargo_records=pilot_chart || (version==0x4f445054 && bytes.size()==CargoSaveBytes);
     const bool local_orders=cargo_records || (version==0x4e445054 && bytes.size()==LocalOrdersSaveBytes);
     const bool shore_campaign=local_orders || (version==0x4d445054 && bytes.size()==ShoreSaveBytes);
     const bool coast_ports=shore_campaign || (version==0x4c445054 && bytes.size()==CoastalSaveBytes);
@@ -3498,6 +3508,11 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                         (ship.sold_port!=NoMerchantPort || date))) return false;
                 ship.sold_day=int(date);
             }
+        }
+        if (pilot_chart) {
+            offset=CargoSaveBytes-4;
+            for (auto& area : s.pilot_chart)
+                for (auto& row : area) row=get();
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

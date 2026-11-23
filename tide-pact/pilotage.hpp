@@ -3,6 +3,9 @@
 namespace tide {
 
 inline constexpr int PilotWidth=256, PilotHeight=128, PilotSubcell=16;
+inline constexpr int PilotSurveyCell=8;
+inline constexpr int PilotSurveyColumns=PilotWidth/PilotSurveyCell, PilotSurveyRows=PilotHeight/PilotSurveyCell;
+static_assert(PilotSurveyColumns==32);
 inline constexpr int PilotMapBytes=4+PilotWidth*PilotHeight/2;
 inline constexpr int PilotTickMinutes=3;
 inline constexpr unsigned PilotTickMilliseconds=275;

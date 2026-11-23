@@ -207,7 +207,21 @@ PilotSite Game::pilot_site(int site) const {
 }
 
 bool Game::pilot_site_visible(int site) const {
-    if (site<WorldPilotSite) return true;
+    if (site<0 || site>=PilotSiteEnd) return false;
+    if (site<WorldPilotSite) {
+        if (site>=int(std::size(PilotSites))) return false;
+        if (pilot_site_visited(site)) return true;
+        for (int i=0;i<WorldPilotIndex;++i) {
+            const auto& area=PilotRegions[i];
+            if (site<area.first || site>=area.first+area.count) continue;
+            if (site==area.first && charted(area.port)) return true;
+            if (site==area.first+PilotParcels[i].recipient && s.pilot_parcels[i]==PilotParcelStage::Aboard)
+                return true;
+            const auto& mark=PilotSites[site];
+            return pilot_charted(i,mark.location) || pilot_charted(i,mark.berth);
+        }
+        return false;
+    }
     if (site>=CoastalPilotSite) {
         if (pilot_site_visited(site)) return true;
         const auto& place=PilotCoastalSites[site-CoastalPilotSite];
@@ -217,6 +231,40 @@ bool Game::pilot_site_visible(int site) const {
         return found(place.location) || found(place.berth);
     }
     return charted(site-WorldPilotSite);
+}
+
+bool Game::pilot_charted(int region,Point local) const {
+    if (region<0 || region>=WorldPilotIndex || !within_patch(local)) return false;
+    constexpr int cell=PilotSurveyCell*PilotSubcell;
+    return s.pilot_chart[region][local.y/cell]&(std::uint32_t{1}<<(local.x/cell));
+}
+
+bool Game::reveal_pilot_area(int index,Point center,float radius) {
+    if (!within_patch(center)) return false;
+    constexpr int cell=PilotSurveyCell*PilotSubcell;
+    const auto& area=PilotRegions[index];
+    const float step_x=pilot_cell_miles(area)/PilotSubcell, step_y=north_south_miles(area)/PilotSubcell;
+    const int reach_x=int(std::ceil(radius/step_x)), reach_y=int(std::ceil(radius/step_y));
+    bool discovered=false;
+    for (int y=std::max(0,(center.y-reach_y)/cell);y<=std::min(PilotSurveyRows-1,(center.y+reach_y)/cell);++y) {
+        auto& row=s.pilot_chart[index][y];
+        const auto before=row;
+        const float dy=(y*cell+cell/2-center.y)*step_y;
+        for (int x=std::max(0,(center.x-reach_x)/cell);x<=std::min(PilotSurveyColumns-1,(center.x+reach_x)/cell);++x) {
+            const float dx=(x*cell+cell/2-center.x)*step_x;
+            if (dx*dx+dy*dy<=radius*radius) row|=std::uint32_t{1}<<x;
+        }
+        discovered|=row!=before;
+    }
+    return discovered;
+}
+
+bool Game::reveal_pilot_chart() {
+    const int index=s.pilot.region-1;
+    if (index<0 || index>=WorldPilotIndex) return false;
+    const auto weather=conditions().weather;
+    const float range=weather==Squall?3.5f:weather==Rain?4.5f:6.f;
+    return reveal_pilot_area(index,{s.pilot.x,s.pilot.y},range+(s.first_mate==Pilot?1.5f:0.f));
 }
 
 bool Game::pilot_site_visited(int site) const {
@@ -277,6 +325,7 @@ bool Game::begin_pilotage(int index,PilotWater map) {
     s.wake_head=s.wake_count=0;
     record_wake();
     sighting(position());
+    reveal_pilot_chart();
     paused=true;
     notice="已展开近岸领航图";
     return true;
@@ -317,6 +366,7 @@ bool Game::refine_pilotage(int index,PilotWater map) {
     s.pilot.x=local.x;
     s.pilot.y=local.y;
     pilot_remainder={};
+    reveal_pilot_chart();
     return true;
 }
 
@@ -376,8 +426,8 @@ int Game::pilot_speed(PilotWater map,int near_berth) const {
     return near_berth>=0?std::min(safe,32):safe;
 }
 
-void Game::pilot_tick(PilotWater map) {
-    if (!s.helm || !s.pilot.region || s.pilot.moored || paused || encounter() || !map.bytes || pilot_exiting()) return;
+bool Game::pilot_tick(PilotWater map) {
+    if (!s.helm || !s.pilot.region || s.pilot.moored || paused || encounter() || !map.bytes || pilot_exiting()) return false;
     const auto area=pilot_area();
     const bool world_mode=s.pilot.region==WorldPilotIndex+1;
     const auto last=position();
@@ -398,11 +448,11 @@ void Game::pilot_tick(PilotWater map) {
             cancel_pilot_docking();
             paused=true;
             notice="进港路线受阻，请沿水道调整";
-            return;
+            return false;
         }
         const Point delta{aim.x-pilot_dock_from.x,aim.y-pilot_dock_from.y};
         const float distance=std::sqrt(miles_between(area,pilot_dock_from,aim));
-        if (distance-pilot_dock_travel<=berth_radius) { finish_pilot_docking(pilot_dock_target); return; }
+        if (distance-pilot_dock_travel<=berth_radius) { finish_pilot_docking(pilot_dock_target); return false; }
         pilot_dock_travel+=miles;
         const float part=std::min(1.f,pilot_dock_travel/distance);
         s.pilot.heading=pilot_bearing(delta,x_scale/y_scale);
@@ -434,7 +484,7 @@ void Game::pilot_tick(PilotWater map) {
         }
         if (!map.navigable(next)) {
             if (pilot_dock_target<0) s.hull-=s.reefed?1:3;
-            if (s.hull<=0) { rescue(); return; }
+            if (s.hull<=0) { rescue(); return false; }
             paused=true;
             notice=pilot_dock_target>=0?"进港路线受阻，请沿水道调整":"碰到岸边，转舵后再开船";
             break;
@@ -457,10 +507,10 @@ void Game::pilot_tick(PilotWater map) {
             pilot_dock_from.y+=shift.y;
             s.pilot.patch=patch;
         }
-        const auto here=position();
-        if ((here.x!=last.x || here.y!=last.y) && sighting(here)>=0)
-            notice="发现新航点，已记入泊地";
     }
+    const auto here=position();
+    if ((here.x!=last.x || here.y!=last.y) && sighting(here)>=0)
+        notice="发现新航点，已记入泊地";
     if (paused) { pilot_remainder={}; cancel_pilot_docking(); }
     s.pilot.minutes+=PilotTickMinutes;
     if (s.pilot.minutes>=60) {
@@ -468,6 +518,7 @@ void Game::pilot_tick(PilotWater map) {
         s.helm_pulse=(s.helm_pulse+1)%HelmPulsesPerWatch;
         if (!s.helm_pulse && advance_watch()) consume_day(conditions());
     }
+    return reveal_pilot_chart();
 }
 
 int Game::pilot_berth(PilotWater map,int preferred) const {
@@ -528,6 +579,7 @@ bool Game::finish_pilot_docking(int site) {
     const auto berth=pilot_site(site).berth;
     s.pilot.x=static_cast<std::uint16_t>(berth.x);
     s.pilot.y=static_cast<std::uint16_t>(berth.y);
+    reveal_pilot_chart();
     if (site<WorldPilotSite) s.pilot_visits|=1U<<site;
     if (site>=CoastalPilotSite) s.coast_visits|=std::uint64_t{1}<<(site-CoastalPilotSite);
     paused=true;

@@ -6,6 +6,7 @@ namespace tide {
 
 namespace chart_style {
 
+inline constexpr Color Uncharted=rgb(0x293c3c);
 inline constexpr int TileSize=32;
 inline constexpr std::array<unsigned,16> Land{
     0x536947,0x5a7049,0x61744c,0x68784d,0x707b4d,0x788050,0x838451,0x8d8952,
