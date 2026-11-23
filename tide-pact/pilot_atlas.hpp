@@ -21,7 +21,20 @@ public:
     }
 
     bool failed(int patch) const { return patch==failed_patch; }
-    unsigned revision() const { return terrain_revision; }
+    struct Revision {
+        int patch=-1;
+        unsigned generation=0;
+        bool operator==(const Revision&) const = default;
+    };
+    using Revisions=std::array<Revision,10>;
+
+    Revisions revisions() const {
+        Revisions result{};
+        for (std::size_t i=0;i<tiles.size();++i)
+            if (tiles[i].size) result[i]={tiles[i].patch,tiles[i].revision};
+        if (collision_patch>=0) result.back()={collision_patch,collision_revision};
+        return result;
+    }
 
     Row row(int patch,int y) const {
         Row result;
@@ -48,12 +61,13 @@ public:
         return result;
     }
 
-    void prepare(pxa::Context& ctx,Point ship,Point camera,int priority,bool& dirty) {
+    void prepare(pxa::Context& ctx,Point ship,Point camera,int priority,bool& dirty,
+                 Point northwest={-1,-1},Point southeast={-1,-1},bool steering_view=false) {
         if (priority>=0 && collision_patch!=priority) {
             if (const auto* source=find(priority);source && source->size && !source->reduced) {
                 if (decode_pilot_tile(std::span(source->pixels).first(source->size),collision)) {
                     collision_patch=priority;
-                    ++terrain_revision;
+                    collision_revision=++terrain_revision;
                 }
             }
         }
@@ -77,22 +91,36 @@ public:
         const int ship_patch=pilot_patch_at({ship.x/8,ship.y/8});
         const int camera_patch=pilot_patch_at({camera.x/8,camera.y/8});
         add(priority);
-        add(ship_patch);
-        add(camera_patch);
-        neighbours(camera_patch);
-        neighbours(ship_patch);
+        // A distant drag can pass several tiles before its next frame.
+        // Prioritise the collision tile and let the visible chart settle.
+        if (!steering_view) {
+            add(ship_patch);
+            add(camera_patch);
+            if (northwest.x>=0) {
+                for (int y=northwest.y;y<=southeast.y;++y)
+                    for (int x=northwest.x;x<=southeast.x;++x)
+                        add(y*PilotTilesX+x);
+            } else {
+                neighbours(camera_patch);
+                neighbours(ship_patch);
+            }
+        }
         for (const int patch : std::span(wanted).first(count)) {
             if (patch==failed_patch) continue;
             auto* slot=find(patch);
             const bool physics=patch==priority && collision_patch!=patch;
             if (slot && !physics) continue;
             if (!slot) {
-                auto replace=std::find_if(tiles.begin(),tiles.end(),[&](auto& tile) {
-                    return std::find(wanted.begin(),wanted.begin()+count,tile.patch)==wanted.begin()+count;
-                });
-                if (replace==tiles.end()) break;
-                slot=&*replace;
-                if (slot->size) ++terrain_revision;
+                for (auto& tile:tiles) {
+                    if (std::find(wanted.begin(),wanted.begin()+count,tile.patch)!=wanted.begin()+count)
+                        continue;
+                    if (!tile.size) {
+                        slot=&tile;
+                        break;
+                    }
+                    if (!slot || tile.revision<slot->revision) slot=&tile;
+                }
+                if (!slot) break;
                 slot->patch=patch;
                 slot->size=0;
             }
@@ -112,6 +140,7 @@ private:
         std::array<Run,PilotHeight/16> index{};
         int patch=-1;
         std::uint16_t size=0;
+        unsigned revision=0;
         bool reduced=false;
     };
 
@@ -204,8 +233,9 @@ private:
             if (physics) {
                 collision_patch=decode_pilot_tile(packed,collision)?tile.patch:-1;
                 if (collision_patch<0) failed_patch=tile.patch;
+                collision_revision=++terrain_revision;
             }
-            ++terrain_revision;
+            tile.revision=++terrain_revision;
         } else failed_patch=tile.patch;
         busy=false;
         dirty=true;
@@ -215,7 +245,7 @@ private:
     std::array<Tile,9> tiles{};
     std::array<unsigned char,PilotTileBytes> scratch{},collision{};
     int collision_patch=-1,failed_patch=-1;
-    unsigned terrain_revision=0;
+    unsigned terrain_revision=0,collision_revision=0;
     bool busy=false;
 };
 

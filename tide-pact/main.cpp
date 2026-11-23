@@ -27,6 +27,7 @@ enum Screen { Chart, Market, Shipyard, Office, Journal };
 enum class MapView { None, Chart, Helm, Pilot };
 enum Plate { StandardPlate, ActionPlate };
 enum HarborPanel { HarborPlaque, HarborWood, HarborGoldWood, HarborPaper, HarborTrim };
+constexpr int WidePlateWidth=128, WidePlateHeight=56, WidePlateEdge=10, WideBarHeight=20;
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
@@ -143,16 +144,17 @@ struct VoyageApp {
     GameAudio audio;
     SeaPicture sea_picture;
     PilotAtlas pilot_atlas;
-    PilotTerrainCache pilot_terrain;
-    struct PilotChrome {
+    ChartTerrainCache chart_terrain;
+    struct SailingChrome {
         Rect bounds{};
-        std::array<int,13> header{};
+        MapView mode=MapView::None;
+        std::array<int,16> header{};
         std::array<int,19> controls{};
         std::array<char,160> notice{};
         std::size_t notice_size=0;
         bool header_ready=false, controls_ready=false;
     };
-    std::array<PilotChrome,2> pilot_chrome{};
+    std::array<SailingChrome,2> sailing_chrome{};
     Rect land_area{};
     LandFight land_before;
     unsigned land_frame_start=0;
@@ -370,8 +372,8 @@ struct VoyageApp {
         int density=native?2:1;
         const auto w = static_cast<std::uint16_t>(width/layout_scale);
         const auto h = static_cast<std::uint16_t>(height/layout_scale);
-        pilot_terrain.reset();
-        pilot_chrome={};
+        chart_terrain.reset();
+        sailing_chrome={};
         surface.reset();
         auto created = co_await context->surface().create_mapped({
             .width=std::uint16_t(w*density), .height=std::uint16_t(h*density),
@@ -456,7 +458,18 @@ struct VoyageApp {
         if (game.pilot_exiting()) priority=pilot_patch_at({crossing.x/8,crossing.y/8});
         else if (pilot_pending==WorldPilotIndex) priority=game.starting_pilot_patch();
         else if (game.s.pilot.region==WorldPilotIndex+1) priority=game.s.pilot.patch;
-        pilot_atlas.prepare(*context,ship,camera,priority,dirty);
+        Point northwest{-1,-1},southeast{-1,-1};
+        if (drawn_map==MapView::Pilot && pilot_zoom>=0.f && pilot_zoom<2.f &&
+            pilot_scale_x>0.f && pilot_scale_y>0.f) {
+            const int x=int(std::ceil(map.w*.5f/pilot_scale_x));
+            const int y=int(std::ceil(map.h*.5f/pilot_scale_y));
+            const auto column=[](int u) { return std::clamp(u/PilotPatchWidth,0,PilotTilesX-1); };
+            const auto row=[](int v) { return std::clamp(v/PilotPatchHeight,0,PilotTilesY-1); };
+            northwest={column(camera.x-x),row(camera.y-y)};
+            southeast={column(camera.x+x),row(camera.y+y)};
+        }
+        const bool dragging=drawing_pilot_drag();
+        pilot_atlas.prepare(*context,ship,camera,priority,dirty,northwest,southeast,dragging && pilot_zoom<2.f);
         if (game.pilot_exiting() && !game.paused) {
             const auto water=pilot_atlas.water(priority);
             if (water.bytes) {
@@ -674,7 +687,7 @@ struct VoyageApp {
         auto pixels=frame->rgb565();
         if (!pixels) return;
         Draw draw(*pixels,frame->pixels(),frame->stride_bytes(),small_text()?CompactFace:StandardFace,raster_scale);
-        render(draw,pilot_chrome[frame->buffer_index()]);
+        render(draw,sailing_chrome[frame->buffer_index()]);
         if (frame->present(next_frame)) { ++next_frame; dirty=false; }
     }
 
@@ -689,13 +702,29 @@ struct VoyageApp {
     }
 
     void skin_box(Draw& d, Rect r, int tile, int edge) {
+        if (d.pixel_scale>1) {
+            wide_plate(d,r,tile,WidePlateEdge,edge);
+            return;
+        }
         d.nine_slice({art::skin},{tile*72,0,72,72},r,8,edge);
     }
     void plate(Draw& d, Rect r, Plate style, int edge=4) {
+        if (d.pixel_scale>1) {
+            wide_plate(d,r,2+style,8,edge);
+            return;
+        }
         d.nine_slice({art::controls},{style*96,0,96,32},r,edge,edge,true);
     }
     void harbor_panel(Draw& d, Rect r, HarborPanel style, int edge=6) {
+        if (d.pixel_scale>1) {
+            wide_plate(d,r,4+style,WidePlateEdge,edge,style==HarborTrim);
+            return;
+        }
         d.nine_slice({art::port_ui},{style*64,0,64,40},r,6,edge,true);
+    }
+    void wide_plate(Draw& d,Rect r,int tile,int source_edge,int edge,bool trim=false) {
+        d.nine_slice({art::ui_wide},{tile*WidePlateWidth,0,WidePlateWidth,WidePlateHeight},
+                     r,source_edge,edge,true,trim?Draw::SliceCenter::Transparent:Draw::SliceCenter::Tile);
     }
     bool pressed(Rect r) const {
         return pointer_capture.active() && pointer_map==MapView::None && r.contains({press_x,press_y}) &&
@@ -707,6 +736,22 @@ struct VoyageApp {
         d.diamond(cue,2,ivory);
     }
     void meter(Draw& d, Rect r, int value, int maximum, bool voyage) {
+        if (d.pixel_scale>1) {
+            auto native=d.native_pixels();
+            r=d.pixel_rect(r);
+            const Image atlas{art::ui_wide};
+            native.nine_slice(atlas,{0,WidePlateHeight,WidePlateWidth,WideBarHeight},r,4,4);
+            const Rect track=r.inset(4);
+            if (track.w<1 || track.h<1) return;
+            maximum=std::max(1,maximum);
+            const int width=int(std::int64_t(track.w)*std::clamp(value,0,maximum)/maximum);
+            if (!width) return;
+            native.clip=native.clipped({track.x,track.y,width,track.h});
+            native.blit(atlas,{WidePlateWidth*(voyage?2:1),WidePlateHeight,WidePlateWidth,WideBarHeight},
+                        track,false,false);
+            native.fill({track.x+width-1,track.y,1,track.h},voyage?gold:mint);
+            return;
+        }
         plate(d,r,StandardPlate,2);
         const Rect fill=r.inset(2);
         if (fill.w<1 || fill.h<1) return;
@@ -847,17 +892,30 @@ struct VoyageApp {
         else if (fits) meter(d,{safe.right()-60,safe.y+20,55,9},game.s.hull,100,false);
         if (!fits) d.label(safe.right()-6-d.measure(compact),safe.y+18,compact,mint);
     }
-    void pilot_header(Draw& d,PilotChrome& chrome) {
+    void sailing_header(Draw& d,SailingChrome& chrome) {
         const auto& s=game.s;
-        const std::array<int,13> key{s.gold,s.hull,s.stores,s.water,s.day,s.sail_watch,s.helm_pulse,
-            s.pilot.minutes,s.origin,d.font.cell,save_failed && !save_active,bool(saved_until),bool(notice_until)};
+        const bool helm=chrome.mode==MapView::Helm;
+        const std::array<int,16> key{s.gold,s.hull,s.stores,s.water,s.day,s.sail_watch,s.helm_pulse,
+            s.pilot.minutes,s.origin,d.font.cell,save_failed && !save_active,bool(saved_until),bool(notice_until),
+            int(voyage_rate),s.ration_flags,pad_focus?focused:-1};
         const Text message=notice_until?game.notice:Text{};
-        if (chrome.header_ready && chrome.header==key && message==Text(chrome.notice.data(),chrome.notice_size))
+        const bool touching=helm && pointer_capture.active() && pointer_map==MapView::None;
+        if (!touching && chrome.header_ready && chrome.header==key &&
+            message==Text(chrome.notice.data(),chrome.notice_size)) {
+            if (helm) {
+                // The pixel buffer still owns the last header, but the
+                // current frame needs its three interactive buttons.
+                const auto clip=d.clip;
+                d.clip={};
+                header(d);
+                d.clip=clip;
+            }
             return;
+        }
         chrome.header=key;
         chrome.notice_size=std::min(message.size(),chrome.notice.size());
         if (chrome.notice_size) std::copy_n(message.data(),chrome.notice_size,chrome.notice.data());
-        chrome.header_ready=message.size()<=chrome.notice.size();
+        chrome.header_ready=!touching && message.size()<=chrome.notice.size();
         d.fill({0,0,d.clip.w,body.y},ink);
         header(d);
     }
@@ -939,45 +997,15 @@ struct VoyageApp {
         factor=game.s.skirmish.active?chart_focus_scale(game.s.skirmish.rival):scale_at_zoom(chart_scales(),zoom);
         chart_x=std::clamp(chart_x,0.f,float(ChartWidth));
         chart_y=std::clamp(chart_y,0.f,float(ChartHeight));
-        const auto tl=map_point({0,0}), br=map_point({ChartWidth,ChartHeight});
-        const Rect chart_area{tl.x,tl.y,br.x-tl.x,br.y-tl.y};
+        auto native=d.native_pixels();
+        const auto view=d.pixel_rect(map);
+        const float density_scale=factor*d.pixel_scale;
+        const Rect world{view.x+view.w/2-int(std::lround(chart_x*density_scale)),
+                         view.y+view.h/2-int(std::lround(chart_y*density_scale)),
+                         int(std::lround(ChartWidth*density_scale)),int(std::lround(ChartHeight*density_scale))};
         const bool helm=full_helm_chart();
-        d.fill(map,ocean);
-        if (!zoom && !helm) {
-            d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
-            return;
-        }
-        constexpr auto grid=rgb(0x374b49);
-        d.fill(chart_area,chart_style::Uncharted);
-        const int left=std::max(0,int((chart_x-map.w/(2*factor))/ChartCell)-1);
-        const int right=std::min(ChartColumns-1,int((chart_x+map.w/(2*factor))/ChartCell)+1);
-        const int top=std::max(0,int((chart_y-map.h/(2*factor))/ChartCell)-1);
-        const int bottom=std::min(ChartRows-1,int((chart_y+map.h/(2*factor))/ChartCell)+1);
-        for (int x=(left+3)/4*4;x<=right;x+=4)
-            d.fill({map_point({x*ChartCell,0}).x,tl.y,1,chart_area.h},grid);
-        for (int y=(top+3)/4*4;y<=bottom;y+=4)
-            d.fill({tl.x,map_point({0,y*ChartCell}).y,chart_area.w,1},grid);
-
-        // Keep the texture transform fixed while clipping the blit to explored spans.
-        const auto clip=d.clip;
-        for (int y=top;y<=bottom;++y) {
-            int x=left;
-            while (x<=right) {
-                if (!game.chart_cell(x,y)) { ++x; continue; }
-                const int first=x++;
-                while (x<=right && game.chart_cell(x,y)) ++x;
-                const auto a=map_point({first*ChartCell,y*ChartCell});
-                const auto b=map_point({std::min(x*ChartCell,ChartWidth),
-                                        std::min((y+1)*ChartCell,ChartHeight)});
-                d.clip=d.clipped({a.x,a.y,b.x-a.x,b.y-a.y});
-                if (d.clip.w && d.clip.h) {
-                    if (helm) draw_helm_chart(d,chart_area);
-                    else d.image({art::chart},{0,0,ChartWidth,ChartHeight},chart_area);
-                }
-                d.clip=clip;
-            }
-        }
-        if (!zoom && helm && !game.s.skirmish.active) d.frame(chart_area,border);
+        chart_terrain.draw_chart(native,view,world,game,d.pixel_scale,helm,!zoom && !helm,
+                                 !zoom && helm && !game.s.skirmish.active);
     }
     Rect chart_scale_box() const { return {map.right()-78,map.bottom()-23,74,20}; }
 
@@ -1326,7 +1354,7 @@ struct VoyageApp {
         }
     }
 
-    void chart_full_helm(Draw& d) {
+    void chart_full_helm(Draw& d,SailingChrome* chrome=nullptr) {
         const auto& fish=game.s.fishery;
         map={body.x,body.y,body.w,body.h-(fish.target?69:47)};
         const int berth=game.nearby_anchorage(chart_water);
@@ -1354,6 +1382,17 @@ struct VoyageApp {
         const int fishing=fish.target?NoFishery:game.fishery_available();
         const bool village=berth>=0 && game.enclave_nearby(chart_water)>=0;
         const int count=5+int(lookout)+int(fishing!=NoFishery)+int(village);
+        const auto clip=d.clip;
+        if (chrome) {
+            const std::array<int,19> key{lookout,fishing,village,salvage,berth>=0,game.s.reefed,game.paused,
+                d.font.cell,pad_focus?focused-button_count:-100};
+            const bool touching=pointer_capture.active() && pointer_map==MapView::None;
+            const bool refresh=touching || fish.target || !chrome->controls_ready || chrome->controls!=key;
+            if (refresh) d.fill({0,map.bottom(),d.clip.w,d.clip.h-map.bottom()},ink);
+            else d.clip={};
+            chrome->controls=key;
+            chrome->controls_ready=!touching && !fish.target;
+        }
         for (int i=0;i<4;++i) button(d,bar(i,count,0),labels[i],actions[i]);
         int next=4;
         if (lookout) button(d,bar(next++,count,0),"观察",OpenNatureWatch,true);
@@ -1380,6 +1419,7 @@ struct VoyageApp {
             button(d,{body.x+width+body.w/4+1,label.y,body.w-width-body.w/4-1,21},
                    "召回",CancelFishery);
         }
+        d.clip=clip;
     }
 
     Point pilot_point(float x,float y) const {
@@ -1395,6 +1435,9 @@ struct VoyageApp {
     static float pilot_longitude_scale(float camera_y, float pixels_per_mile) {
         const float latitude=ChartNorth-camera_y/(ChartLatitudeScale*float(PilotAtlasUnit));
         return pixels_per_mile*60.f*std::cos(latitude*.0174532925f)/(ChartLongitudeScale*PilotAtlasUnit);
+    }
+    bool drawing_pilot_drag() const {
+        return panning && pointer_map==MapView::Pilot && !pinch && pilot_scale_x>0.f;
     }
 
     struct PilotPosition { float x,y; };
@@ -1453,7 +1496,7 @@ struct VoyageApp {
 
     Rect pilot_viewport() const { return {body.x,body.y,body.w,body.h-46}; }
 
-    void pilot_chart(Draw& d,PilotChrome* chrome=nullptr) {
+    void pilot_chart(Draw& d,SailingChrome* chrome=nullptr) {
         const auto& state=game.s.pilot;
         const auto water=pilot_water();
         map=pilot_viewport();
@@ -1472,7 +1515,9 @@ struct VoyageApp {
         const auto viewport=d.pixel_rect(map);
         const int density=d.pixel_scale;
         const float sy=pilot_scale_y*density;
-        const float sx=pilot_terrain.stable_longitude_scale(
+        // Keep scale fixed under the finger. Reprojecting at each latitude
+        // during a drag discards every cached pixel even when zoom is unchanged.
+        const float sx=drawing_pilot_drag()?pilot_scale_x*density:chart_terrain.stable_longitude_scale(
             pilot_longitude_scale(pilot_y,pilot_pixels_per_mile)*density,sy,viewport.w);
         pilot_scale_x=sx/density;
         const Point camera{int(std::lround(pilot_x*sx)),int(std::lround(pilot_y*sy))};
@@ -1494,7 +1539,7 @@ struct VoyageApp {
             detail_water=pilot_detail_water(detail_index);
         }
         auto native=d.native_pixels();
-        pilot_terrain.draw(native,viewport,camera,sx,sy,pilot_atlas,game,
+        chart_terrain.draw(native,viewport,camera,sx,sy,pilot_atlas,game,
                            detail_index,detail_water,detail_view,detail_opacity,density);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
@@ -4715,18 +4760,21 @@ struct VoyageApp {
         }
     }
 
-    void render(Draw& d,PilotChrome& chrome) {
+    void render(Draw& d,SailingChrome& chrome) {
         layout(d);
         drawn_map=map_view();
         button_count=0;
-        if (drawn_map==MapView::Pilot && d.pixel_scale>1 && full_helm_chart() && !game.land_away()) {
-            if (chrome.bounds!=safe) {
+        if ((drawn_map==MapView::Pilot || drawn_map==MapView::Helm) && d.pixel_scale>1 &&
+            full_helm_chart() && !game.land_away()) {
+            if (chrome.bounds!=safe || chrome.mode!=drawn_map) {
                 chrome={};
                 chrome.bounds=safe;
+                chrome.mode=drawn_map;
                 d.fill(d.clip,ink);
             }
-            pilot_header(d,chrome);
-            pilot_chart(d,&chrome);
+            sailing_header(d,chrome);
+            if (drawn_map==MapView::Pilot) pilot_chart(d,&chrome);
+            else chart_full_helm(d,&chrome);
             focused=std::clamp(focused,0,std::max(0,button_count-1));
             return;
         }

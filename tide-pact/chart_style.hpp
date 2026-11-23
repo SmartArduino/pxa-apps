@@ -114,4 +114,51 @@ inline void draw_helm_chart(Draw& out,Rect destination) {
     }
 }
 
+inline void draw_chart_background(Draw& d,Rect world,const Game& game,bool helm,bool reveal_all,
+                                  bool frame) {
+    constexpr Image atlas{art::chart};
+    constexpr auto sea=rgb(0x173d46), grid=rgb(0x374b49);
+    d.fill(d.clip,sea);
+    const auto outer=d.clip;
+    const auto visible=d.clipped(world);
+    if (!visible.w || !visible.h) return;
+    if (reveal_all) {
+        d.blit(atlas,{0,0,ChartWidth,ChartHeight},world,false,false);
+        return;
+    }
+    d.fill(visible,chart_style::Uncharted);
+    const auto project=[](int cell,int count,int size) {
+        return int((std::int64_t(std::min(cell*ChartCell,count))*size+count/2)/count);
+    };
+    const auto column=[&](int x) { return world.x+project(x,ChartWidth,world.w); };
+    const auto row=[&](int y) { return world.y+project(y,ChartHeight,world.h); };
+    const int left=std::max(0,int(std::int64_t(visible.x-world.x)*ChartWidth/world.w)/ChartCell-1);
+    const int right=std::min(ChartColumns-1,int(std::int64_t(visible.right()-world.x)*ChartWidth/world.w)/ChartCell+1);
+    const int top=std::max(0,int(std::int64_t(visible.y-world.y)*ChartHeight/world.h)/ChartCell-1);
+    const int bottom=std::min(ChartRows-1,int(std::int64_t(visible.bottom()-world.y)*ChartHeight/world.h)/ChartCell+1);
+    d.clip=visible;
+    for (int x=(left+3)/4*4;x<=right;x+=4)
+        d.fill({column(x),visible.y,1,visible.h},grid);
+    for (int y=(top+3)/4*4;y<=bottom;y+=4)
+        d.fill({visible.x,row(y),visible.w,1},grid);
+    for (int y=top;y<=bottom;++y) {
+        const int north=row(y), south=row(y+1);
+        for (int x=left;x<=right;) {
+            if (!game.chart_cell(x,y)) { ++x; continue; }
+            const int first=x++;
+            while (x<=right && game.chart_cell(x,y)) ++x;
+            const int west=column(first);
+            d.clip=visible;
+            d.clip=d.clipped({west,north,column(x)-west,south-north});
+            if (d.clip.w && d.clip.h) {
+                if (helm && world.w>ChartWidth) draw_helm_chart(d,world);
+                else d.blit(atlas,{0,0,ChartWidth,ChartHeight},world,false,false);
+            }
+        }
+    }
+    d.clip=visible;
+    if (frame) d.frame(world,rgb(0x497172));
+    d.clip=outer;
+}
+
 } // namespace tide

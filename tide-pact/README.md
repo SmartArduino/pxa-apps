@@ -104,6 +104,7 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 - 港区插画按四座港口的地景绘制，街道和建筑为游戏布局。用 `tools/make_town_art.py --help` 查看地图、设施图标和角色行走帧的预处理方式。
 - 港城见闻使用内置图像生成工具绘制的四人头像。用 `tools/make_port_people.py --help` 将四宫格整理为运行时图集。
 - 港城牌匾、按钮和对话纸的纹理使用内置图像生成工具绘制。用 `tools/make_port_ui.py --help` 生成四边可缩放的图集。
+- 宽屏原生界面使用 `art/ui_wide.pxi` 的按钮、面板和进度条。用 `python tools/make_wide_ui.py plates-source.png port-ui-materials.png` 从控制框原画与材质样片重新生成。
 - 运单图标使用内置图像生成工具绘制。用 `tools/make_dispatch_icons.py --help` 将透明横条整理为游戏图集。
 - 晴天、炎热、雨天和骤风的图标由内置图像生成工具绘制。用 `tools/make_weather_icons.py --help` 将透明四宫格整理为天气图集。
 - 新海上事件插画、船身底图由内置图像生成工具绘制。用 `tools/make_sea_art.py` 从生成的 PNG 构建船身序列和索引图。事件、海上观察和航海纪事共用一张按需读入的插画缓冲区。若素材目录有 `skirmish-effects.png`，同一工具会生成炮口、炮烟、水花和浮索的透明图集。船型轮廓参考葡萄牙海军博物馆与海军史资料。 [卡拉维尔船模](https://cultura.marinha.pt/pt/museumarinha_web/colecoes_web/pecasemdestaque_web/Paginas/caravela-latina.aspx) · [葡萄牙航海史](https://academia.marinha.pt/pt/edicoes/historiadamarinha/Navios%20Marinheiros%20e%20arte%20de%20navegar%201139-1499-compactado_compressed.pdf)

@@ -84,6 +84,7 @@ inline constexpr FontFace StandardFace{art::glyphs,14}, CompactFace{art::glyphs_
 inline constexpr FontFace NativeFace{art::glyphs_native,24};
 
 struct Draw {
+    enum class SliceCenter { Scale, Tile, Transparent };
     struct TextRun {
         Text text;
         Rect ink;
@@ -231,17 +232,44 @@ struct Draw {
             }
         }
     }
-    void nine_slice(Image img, Rect src, Rect dst, int source_edge, int edge, bool transparent = false) {
+    void tile(Image img, Rect src, Rect dst, bool transparent) {
+        const auto r=clipped(dst);
+        if (!r.w || !r.h) return;
+        const int first=(r.x-dst.x)%src.w;
+        int offset_y=(r.y-dst.y)%src.h;
+        for (int y=r.y;y<r.bottom();++y) {
+            auto* scan=row(y);
+            const auto* source=img.bytes+516+(src.y+offset_y)*img.width()+src.x;
+            for (int x=r.x,offset=first;x<r.right();offset=0) {
+                const int count=std::min(src.w-offset,r.right()-x);
+                for (int i=0;i<count;++i) {
+                    const auto index=source[offset+i];
+                    if (!transparent || index!=255) scan[x+i]=img.color(index);
+                }
+                x+=count;
+            }
+            if (++offset_y==src.h) offset_y=0;
+        }
+    }
+    void nine_slice(Image img, Rect src, Rect dst, int source_edge, int edge, bool transparent = false,
+                    SliceCenter center=SliceCenter::Scale) {
         edge=std::min({edge,dst.w/3,dst.h/3});
-        if (edge<1) return;
+        const auto visible=clipped(dst);
+        if (edge<1 || !visible.w || !visible.h) return;
+        auto target=native_pixels();
+        dst=pixel_rect(dst);
+        edge*=pixel_scale;
         const int x[]{dst.x,dst.x+edge,dst.right()-edge,dst.right()};
         const int y[]{dst.y,dst.y+edge,dst.bottom()-edge,dst.bottom()};
         const int u[]{src.x,src.x+source_edge,src.right()-source_edge,src.right()};
         const int v[]{src.y,src.y+source_edge,src.bottom()-source_edge,src.bottom()};
-        for (int j=0; j<3; ++j)
-            for (int i=0; i<3; ++i)
-                image(img,{u[i],v[j],u[i+1]-u[i],v[j+1]-v[j]},
-                      {x[i],y[j],x[i+1]-x[i],y[j+1]-y[j]},transparent);
+        for (int j=0;j<3;++j) for (int i=0;i<3;++i) {
+            const Rect from{u[i],v[j],u[i+1]-u[i],v[j+1]-v[j]};
+            const Rect to{x[i],y[j],x[i+1]-x[i],y[j+1]-y[j]};
+            if (i==1 && j==1 && center!=SliceCenter::Scale) {
+                if (center==SliceCenter::Tile) target.tile(img,from,to,false);
+            } else target.blit(img,from,to,transparent,false);
+        }
     }
     void cover(Image img, Rect dst) {
         const int w = std::min(img.width(),img.height()*dst.w/std::max(1,dst.h));

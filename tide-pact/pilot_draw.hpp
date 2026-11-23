@@ -436,7 +436,7 @@ inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtla
     d.clip=previous;
 }
 
-class PilotTerrainCache {
+class ChartTerrainCache {
 public:
     void reset() {
         bytes.reset();
@@ -445,12 +445,76 @@ public:
     }
     float stable_longitude_scale(float candidate,float vertical,int visible_width) const {
         // Reuse a projection until its change would move the map edge by half a pixel.
-        return visible_width==width && vertical==scale_y &&
+        return mode==Pilot && visible_width==width && vertical==scale_y &&
                std::abs(candidate-scale_x)*width<=scale_x?scale_x:candidate;
     }
 
     void draw(Draw& out,Rect view,Point centre,float sx,float sy,const PilotAtlas& atlas,const Game& game,
               int region,PilotWater detail,Rect target,int opacity,int density=1) {
+        const auto revisions=atlas.revisions();
+        const auto& coast=game.s.coast;
+        const auto survey=region>=0 && region<WorldPilotIndex?game.s.pilot_chart[region]:decltype(surveyed){};
+        const bool aligned=mode==Pilot && sx==scale_x && sy==scale_y &&
+                           region==detail_region && detail.bytes==detail_bytes && opacity==detail_opacity &&
+                           coast==charted && survey==surveyed &&
+                           same_pilot_tiles(view,centre,sx,sy,density,revisions);
+        draw_scrolled(out,view,centre,density,aligned,[&](Draw& d,Point offset) {
+            const Rect projection{view.x+offset.x,view.y+offset.y,view.w,view.h};
+            const Rect detail_view{target.x+offset.x,target.y+offset.y,target.w,target.h};
+            draw_pilot_terrain(d,{projection,centre,sx,sy,density},atlas,game,region,detail,detail_view,opacity);
+        });
+        mode=Pilot;
+        scale_x=sx;
+        scale_y=sy;
+        detail_region=region;
+        detail_bytes=detail.bytes;
+        detail_opacity=opacity;
+        atlas_revision=revisions;
+        charted=coast;
+        surveyed=survey;
+    }
+
+    void draw_chart(Draw& out,Rect view,Rect world,const Game& game,int density,bool helm,
+                    bool reveal_all,bool frame) {
+        const int style=int(helm)|(int(reveal_all)<<1)|(int(frame)<<2);
+        const bool aligned=mode==Chart && world.w==chart_width && world.h==chart_height &&
+                           style==chart_style && (reveal_all || charted==game.s.coast);
+        draw_scrolled(out,view,{view.x-world.x,view.y-world.y},density,aligned,[&](Draw& d,Point offset) {
+            draw_chart_background(d,{world.x+offset.x,world.y+offset.y,world.w,world.h},
+                                  game,helm,reveal_all,frame);
+        });
+        mode=Chart;
+        chart_width=world.w;
+        chart_height=world.h;
+        chart_style=style;
+        charted=game.s.coast;
+    }
+
+private:
+    bool same_pilot_tiles(Rect view,Point centre,float sx,float sy,int density,
+                          const PilotAtlas::Revisions& revisions) const {
+        if (revisions==atlas_revision) return true;
+        const Point shift{centre.x-anchor.x,centre.y-anchor.y};
+        const int left=view.x+std::max(0,-shift.x), right=view.right()-std::max(0,shift.x);
+        const int top=view.y+std::max(0,-shift.y), bottom=view.bottom()-std::max(0,shift.y);
+        if (left>=right || top>=bottom) return false;
+        const PilotRaster projection{view,centre,sx,sy,density};
+        const int west=projection.x(left)/(2*PilotPatchWidth), east=projection.x(right-1)/(2*PilotPatchWidth);
+        const int north=projection.y(top)/(2*PilotPatchHeight), south=projection.y(bottom-1)/(2*PilotPatchHeight);
+        const auto touches=[&](int patch) {
+            if (patch<0) return false;
+            const int x=patch%PilotTilesX,y=patch/PilotTilesX;
+            return x>=west && x<=east && y>=north && y<=south;
+        };
+        for (std::size_t i=0;i<revisions.size();++i) {
+            if (revisions[i]!=atlas_revision[i] &&
+                (touches(revisions[i].patch) || touches(atlas_revision[i].patch))) return false;
+        }
+        return true;
+    }
+
+    template<class Paint>
+    void draw_scrolled(Draw& out,Rect view,Point centre,int density,bool aligned,Paint paint_pixels) {
         const auto clip=out.clipped(view);
         if (!clip.w || !clip.h) return;
         const auto pixel_count=std::size_t(view.w)*view.h;
@@ -459,7 +523,11 @@ public:
             bytes.reset(new (std::nothrow) std::byte[capacity]);
         }
         if (!bytes || pixel_count*sizeof(Color)>capacity || clip.w!=view.w || clip.h!=view.h) {
-            draw_pilot_terrain(out,{view,centre,sx,sy,density},atlas,game,region,detail,target,opacity);
+            width=0;
+            const auto previous=out.clip;
+            out.clip=clip;
+            paint_pixels(out,{});
+            out.clip=previous;
             return;
         }
         const int stride=view.w*sizeof(Color);
@@ -467,8 +535,6 @@ public:
         auto pixel_view=pxa::Rgb565Pixels::from_bytes(frame,view.w,view.h,stride);
         if (!pixel_view) return;
         Draw canvas(*pixel_view,frame,stride);
-        target.x-=view.x;
-        target.y-=view.y;
         const auto paint=[&](Rect strip) {
             for (int y=strip.y;y<strip.bottom();) {
                 const int row=(y+ring.y)%view.h;
@@ -476,24 +542,15 @@ public:
                 for (int x=strip.x;x<strip.right();) {
                     const int column=(x+ring.x)%view.w;
                     const int columns=std::min(strip.right()-x,view.w-column);
-                    const Point offset{column-x,row-y};
                     canvas.clip={column,row,columns,rows};
-                    const Rect projection{offset.x,offset.y,view.w,view.h};
-                    const Rect detail_view{target.x+offset.x,target.y+offset.y,target.w,target.h};
-                    draw_pilot_terrain(canvas,{projection,centre,sx,sy,density},atlas,game,region,
-                                       detail,detail_view,opacity);
+                    paint_pixels(canvas,{column-x-view.x,row-y-view.y});
                     x+=columns;
                 }
                 y+=rows;
             }
         };
         const Point shift{centre.x-anchor.x,centre.y-anchor.y};
-        const auto& coast=game.s.coast;
-        const auto survey=region>=0 && region<WorldPilotIndex?game.s.pilot_chart[region]:decltype(surveyed){};
-        const bool aligned=width==view.w && height==view.h && sx==scale_x && sy==scale_y &&
-                           region==detail_region && detail.bytes==detail_bytes && opacity==detail_opacity &&
-                           atlas.revision()==atlas_revision && coast==charted && survey==surveyed;
-        if (!aligned || std::abs(shift.x)>=view.w || std::abs(shift.y)>=view.h) {
+        if (!aligned || width!=view.w || height!=view.h || std::abs(shift.x)>=view.w || std::abs(shift.y)>=view.h) {
             ring={};
             paint({0,0,view.w,view.h});
         } else if (shift.x || shift.y) {
@@ -510,15 +567,7 @@ public:
         }
         width=view.w;
         height=view.h;
-        scale_x=sx;
-        scale_y=sy;
         anchor=centre;
-        detail_region=region;
-        detail_bytes=detail.bytes;
-        detail_opacity=opacity;
-        atlas_revision=atlas.revision();
-        charted=coast;
-        surveyed=survey;
         const int wrap=ring.x*sizeof(Color);
         const int first=stride-wrap;
         for (int y=0,row=ring.y;y<view.h;++y) {
@@ -530,17 +579,18 @@ public:
         }
     }
 
-private:
     static constexpr std::size_t BufferPixels=64*1024;
     std::unique_ptr<std::byte[]> bytes;
     std::size_t capacity=0;
     decltype(State::coast) charted{};
     std::array<std::uint32_t,PilotSurveyRows> surveyed{};
     Point anchor{},ring{};
+    enum { Empty, Pilot, Chart } mode=Empty;
     float scale_x=0, scale_y=0;
     int width=0,height=0,detail_region=-1,detail_opacity=0;
+    int chart_width=0,chart_height=0,chart_style=0;
     const unsigned char* detail_bytes=nullptr;
-    unsigned atlas_revision=0;
+    PilotAtlas::Revisions atlas_revision{};
 };
 
 } // namespace tide
