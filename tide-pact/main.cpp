@@ -925,11 +925,15 @@ struct VoyageApp {
         header(d);
     }
     void footer(Draw& d) {
-        skin_box(d,{safe.x,safe.bottom()-28,safe.w,28},0,5);
-        for (int i=0;i<5;++i) {
-            const int left=safe.x+i*safe.w/5, right=safe.x+(i+1)*safe.w/5;
+        constexpr int tab_count=std::size(tabs), tab_gap=4, padding=2;
+        const int tabs_width=safe.w-tab_gap*(tab_count-1);
+        // All labels have two glyphs. Size the icons for the narrowest tab.
+        const int inline_icon=std::min(20,tabs_width/tab_count-2*(padding+d.font.cell)-4);
+        for (int i=0;i<tab_count;++i) {
+            const int left=safe.x+i*safe.w/tab_count, right=safe.x+(i+1)*safe.w/tab_count;
             const Rect hit{left,safe.bottom()-32,right-left,32};
-            const Rect r{hit.x+1,hit.y,hit.w-2,hit.h};
+            const int start=i*tabs_width/tab_count, end=(i+1)*tabs_width/tab_count;
+            const Rect r{safe.x+start+i*tab_gap,hit.y,end-start,hit.h};
             const bool focused_tab=pad_focus && button_count==focused;
             const bool active=screen==i;
             const bool town_return=inside_town_facility && i==Office;
@@ -941,9 +945,9 @@ struct VoyageApp {
             const Color label=active ? gold : ivory;
             const Image images{art::tabs};
             const Rect sprite{i*32,0,32,32};
-            const Rect content=r.inset(2);
-            if (r.w>=30+d.measure(title)) {
-                d.center_with_icon(content,title,label,images,sprite,20);
+            const Rect content=r.inset(padding);
+            if (inline_icon>=14) {
+                d.center_with_icon(content,title,label,images,sprite,inline_icon);
             } else {
                 const auto caption=d.fit(title,content.w,1);
                 const int size=std::min(14,content.h-caption.ink.h-1);
