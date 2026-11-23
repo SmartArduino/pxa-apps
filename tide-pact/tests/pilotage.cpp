@@ -45,7 +45,9 @@ struct WorldAtlas {
 
 template<std::size_t Bytes>
 void check_legacy(const State& state,std::uint8_t version) {
-    const auto current=encode(state);
+    auto source=state;
+    if (source.pilot.region==WorldPilotIndex+1) source.pilot.region=LegacyPilotRegionCount+1;
+    const auto current=encode(source);
     std::array<std::byte,Bytes> old{};
     std::copy_n(current.begin(),old.size()-4,old.begin());
     old[3]=std::byte{version};
@@ -58,8 +60,10 @@ void check_legacy(const State& state,std::uint8_t version) {
            loaded.pilot.moored==state.pilot.moored && loaded.pilot_visits==state.pilot_visits &&
            loaded.pilot.patch==state.pilot.patch && !loaded.coast_visits);
     for (const auto stage : loaded.pilot_parcels) assert(stage==PilotParcelStage::Waiting);
-    for (const auto& area : loaded.pilot_chart)
-        for (const auto row : area) assert(!row);
+    for (int i=0;i<WorldPilotIndex;++i)
+        for (int y=0;y<PilotSurveyRows;++y)
+            assert(loaded.pilot_chart[i][y]==
+                   (Bytes==FirstSurveySaveBytes && i<LegacyPilotRegionCount?state.pilot_chart[i][y]:0));
 }
 
 } // namespace
@@ -72,10 +76,10 @@ int main() {
         auto file=std::ifstream(std::string(area.asset),std::ios::binary);
         assert(file.read(reinterpret_cast<char*>(bytes.data()),bytes.size()));
         assert(file.peek()==EOF && bytes[0]=='P' && bytes[1]=='C' && bytes[2]=='H' && bytes[3]=='1');
-        const PilotWater water{bytes.data()};
+        const PilotWater water{bytes.data(),false,area.roadstead};
         for (int site=area.first;site<area.first+area.count;++site) {
             const auto& mark=PilotSites[site];
-            if (mark.berth.x>=0) check_shoreline(water,mark.berth);
+            if (mark.berth.x>=0 && !area.roadstead) check_shoreline(water,mark.berth);
         }
         Game ship;
         ship.s.origin=area.port;
@@ -95,8 +99,11 @@ int main() {
         State loaded;
         assert(decode(loaded,encode(advanced.s)) && loaded.pilot.x==x &&
                loaded.pilot.y==y && loaded.pilot.region==index+1 && loaded.pilot_chart==ship.s.pilot_chart);
-        check_legacy<PilotSaveBytes>(advanced.s,0x4a);
-        check_legacy<CargoSaveBytes>(advanced.s,0x4f);
+        if (index<LegacyPilotRegionCount) {
+            check_legacy<PilotSaveBytes>(advanced.s,0x4a);
+            check_legacy<CargoSaveBytes>(advanced.s,0x4f);
+            check_legacy<FirstSurveySaveBytes>(advanced.s,0x50);
+        }
         const auto fixed=pilot_to_world(area,{x,y});
         assert(fixed.x==ship.s.helm_x && fixed.y==ship.s.helm_y);
 
@@ -110,6 +117,18 @@ int main() {
             if (moved) assert(course.s.pilot.minutes==PilotTickMinutes);
         }
         assert(moved);
+        if (area.roadstead) {
+            const auto fort=PilotSites[area.first].location, lagoon=PilotSites[area.first+1].location;
+            assert(water.at({fort.x/PilotSubcell,fort.y/PilotSubcell})>=4);
+            assert(water.at({lagoon.x/PilotSubcell,lagoon.y/PilotSubcell})==3);
+            assert(!water.navigable(lagoon) && water.navigable(main_berth));
+            assert(ship.pilot_site_visible(area.first+1) && ship.pilot_parcel_destination()<0);
+            const auto water_point=ship.pilot_atlas_site(area.first,true);
+            const auto general=ship.pilot_atlas_site(WorldPilotSite+elmina,true);
+            assert(water_point.x==general.x && water_point.y==general.y);
+            assert(ship.begin_pilot_docking(water,area.first) && ship.s.origin==elmina && !ship.sea());
+            continue;
+        }
         Game harbour=ship;
         const auto& parcel=PilotParcels[index];
         const int sender=area.first+parcel.sender, recipient=area.first+parcel.recipient;
@@ -165,7 +184,7 @@ int main() {
     };
     for (int port=0;port<PortCount;++port) {
         Game ship;
-        check_world_berth(ship.pilot_atlas_site(port+WorldPilotSite,true));
+        if (port!=elmina) check_world_berth(ship.pilot_atlas_site(port+WorldPilotSite,true));
         ship.s.origin=port;
         assert(ship.start_helm(-1));
         if (ship.pilot_region()!=WorldPilotIndex) continue;
@@ -175,6 +194,11 @@ int main() {
         assert(water.navigable(berth) && ship.pilot_site_visible(port+WorldPilotSite));
         State loaded;
         assert(decode(loaded,encode(ship.s)) && loaded.pilot.patch==ship.s.pilot.patch);
+        if (port==bristol) {
+            State old=ship.s;
+            old.pilot_chart[0][0]=0x10;
+            check_legacy<FirstSurveySaveBytes>(old,0x50);
+        }
         assert(ship.begin_pilot_docking(water,port+WorldPilotSite) && ship.s.origin==port && !ship.sea());
     }
     Game crossing;

@@ -321,6 +321,8 @@ inline constexpr std::size_t OfficerSaveBytes=376, CoastSaveBytes=960, WakeSaveB
 inline constexpr std::size_t LanguageSaveBytes=1232, MerchantSaveBytes=1264, NatureSaveBytes=1648;
 inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, SkirmishSaveBytes=1760, FisherySaveBytes=1792, EnclaveSaveBytes=1840, SeaLawSaveBytes=1872, PilotSaveBytes=1896, WorldPilotSaveBytes=1904, CoastalSaveBytes=1912;
 inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, CargoSaveBytes=2016;
+inline constexpr int LegacyPilotRegionCount=5;
+inline constexpr std::size_t FirstSurveySaveBytes=CargoSaveBytes+LegacyPilotRegionCount*PilotSurveyRows*sizeof(std::uint32_t);
 inline constexpr std::size_t SaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);

@@ -417,7 +417,11 @@ struct VoyageApp {
     PilotWater pilot_water() const {
         const int region=game.s.pilot.region;
         if (region==WorldPilotIndex+1) return pilot_atlas.water(game.s.pilot.patch);
-        return {region?sea_picture.pixels(PilotPictureBase+region-1):nullptr};
+        return region?pilot_detail_water(region-1):PilotWater{};
+    }
+
+    PilotWater pilot_detail_water(int index) const {
+        return {sea_picture.pixels(PilotPictureBase+index),false,PilotRegions[index].roadstead};
     }
 
     int visible_pilot_detail() const {
@@ -448,9 +452,11 @@ struct VoyageApp {
                 game.notice="海图读取失败，停船后可重试";
                 notify();
             }
-        } else if (!game.paused && game.s.pilot.region==WorldPilotIndex+1) {
+        } else if (game.s.pilot.region==WorldPilotIndex+1) {
             const int detail=pilot_detail_at(ship);
-            if (detail>=0 && game.refine_pilotage(detail,{sea_picture.pixels(PilotPictureBase+detail)})) {
+            if (detail>=0 && (!game.paused || PilotRegions[detail].roadstead) &&
+                game.refine_pilotage(detail,pilot_detail_water(detail))) {
+                if (game.paused && pilot_follow) pilot_zoom=5;
                 save_needed=true;
                 dirty=true;
             }
@@ -605,7 +611,7 @@ struct VoyageApp {
             const bool world=pilot_pending==WorldPilotIndex;
             const int asset=PilotPictureBase+pilot_pending;
             const int patch=world?game.starting_pilot_patch():-1;
-            const auto water=world?pilot_atlas.water(patch):PilotWater{sea_picture.pixels(asset)};
+            const auto water=world?pilot_atlas.water(patch):pilot_detail_water(pilot_pending);
             if (water.bytes) {
                 if (game.begin_pilotage(pilot_pending,water)) {
                     pilot_zoom=-1;
@@ -1410,7 +1416,7 @@ struct VoyageApp {
         const auto& state=game.s.pilot;
         const auto water=pilot_water();
         map={body.x,body.y,body.w,body.h-46};
-        if (pilot_zoom<0) pilot_zoom=water.world?2:4;
+        if (pilot_zoom<0) pilot_zoom=water.world?2:game.pilot_area().roadstead?5:4;
         const auto saved_clip=d.clip;
         d.clip=d.clipped(map);
         const auto tracked=pilot_visual_ship();
@@ -1428,13 +1434,14 @@ struct VoyageApp {
         const PilotRaster raster{map,pilot_x,pilot_y,pilot_scale_x,pilot_scale_y};
         Rect detail_view{};
         PilotWater detail_water{};
-        const int detail_opacity=int(std::lround(15.f*std::clamp((pilot_zoom-1.5f)*2.f,0.f,1.f)));
+        const float detail_start=detail_index>=0 && PilotRegions[detail_index].roadstead?2.5f:1.5f;
+        const int detail_opacity=int(std::lround(15.f*std::clamp((pilot_zoom-detail_start)*2.f,0.f,1.f)));
         if (detail_index>=0 && detail_opacity) {
             const auto& area=PilotRegions[detail_index];
             const auto tl=pilot_point(pilot_to_atlas(area,{0,0}));
             const auto br=pilot_point(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
             detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
-            detail_water={sea_picture.pixels(PilotPictureBase+detail_index)};
+            detail_water=pilot_detail_water(detail_index);
         }
         draw_pilot_terrain(d,raster,pilot_atlas,game,detail_index,detail_water,detail_view,detail_opacity);
         const int guide=pilot_target();
@@ -1611,7 +1618,7 @@ struct VoyageApp {
         const int region=game.s.pilot.region-1;
         const auto area=game.pilot_area();
         const bool world=region==WorldPilotIndex;
-        const auto stage=world?PilotParcelStage::Delivered:game.s.pilot_parcels[region];
+        const auto stage=region>=int(std::size(PilotParcels))?PilotParcelStage::Delivered:game.s.pilot_parcels[region];
         struct Nearby { int id, distance; };
         std::array<Nearby,PilotSiteEnd> sites{};
         int visible=0;

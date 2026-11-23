@@ -30,9 +30,10 @@ Point nearby_water(PilotWater map,Point at) {
     for (int j=std::max(0,y-reach);j<=std::min(PilotHeight-1,y+reach);++j)
         for (int i=std::max(0,x-reach);i<=std::min(PilotWidth-1,x+reach);++i) {
             const int radius=(i-x)*(i-x)+(j-y)*(j-y);
-            if (radius<shortest && map.at({i,j})<4) {
+            const Point center{i*PilotSubcell+8,j*PilotSubcell+8};
+            if (radius<shortest && map.navigable(center)) {
                 shortest=radius;
-                best={i*PilotSubcell+8,j*PilotSubcell+8};
+                best=center;
             }
         }
     return best;
@@ -181,6 +182,11 @@ Point Game::pilot_atlas_site(int site,bool berth) const {
         return berth?place.berth:place.location;
     }
     const int place=site-WorldPilotSite;
+    for (const auto& region : PilotRegions)
+        if (region.roadstead && region.port==place) {
+            const auto& mark=PilotSites[region.first];
+            return pilot_to_atlas(region,berth?mark.berth:mark.location);
+        }
     if (berth) return {PilotWorldBerths[place].x*8,PilotWorldBerths[place].y*8};
     if (place<PortCount) return PilotWorldPortMarks[place];
     const auto& info=Places[place];
@@ -215,7 +221,8 @@ bool Game::pilot_site_visible(int site) const {
             const auto& area=PilotRegions[i];
             if (site<area.first || site>=area.first+area.count) continue;
             if (site==area.first && charted(area.port)) return true;
-            if (site==area.first+PilotParcels[i].recipient && s.pilot_parcels[i]==PilotParcelStage::Aboard)
+            if (i<int(std::size(PilotParcels)) && site==area.first+PilotParcels[i].recipient &&
+                s.pilot_parcels[i]==PilotParcelStage::Aboard)
                 return true;
             const auto& mark=PilotSites[site];
             return pilot_charted(i,mark.location) || pilot_charted(i,mark.berth);
@@ -357,7 +364,15 @@ bool Game::connect_pilotage(PilotWater map) {
 bool Game::refine_pilotage(int index,PilotWater map) {
     if (s.pilot.region!=WorldPilotIndex+1 || s.pilot.moored || pilot_dock_target>=0 ||
         index<0 || index>=WorldPilotIndex || !map.bytes || map.world) return false;
-    const auto local=pilot_from_atlas(PilotRegions[index],pilot_atlas_position());
+    const auto& area=PilotRegions[index];
+    const auto atlas=pilot_atlas_position();
+    auto local=pilot_from_atlas(area,atlas);
+    if (area.roadstead && !map.navigable(local)) {
+        // A save made before this chart may be parked at the coarse atlas berth.
+        const auto coarse=PilotWorldBerths[area.port];
+        if (std::abs(atlas.x-coarse.x*8)<=8 && std::abs(atlas.y-coarse.y*8)<=8)
+            local=PilotSites[area.first].berth;
+    }
     constexpr int margin=2*PilotSubcell;
     if (local.x<margin || local.x>=width-margin || local.y<margin || local.y>=height-margin ||
         !map.navigable(local)) return false;
@@ -365,6 +380,9 @@ bool Game::refine_pilotage(int index,PilotWater map) {
     s.pilot.patch=0;
     s.pilot.x=local.x;
     s.pilot.y=local.y;
+    const auto world=pilot_to_world(area,local);
+    s.helm_x=world.x;
+    s.helm_y=world.y;
     pilot_remainder={};
     reveal_pilot_chart();
     return true;
@@ -624,15 +642,15 @@ bool Game::pilot_supplies(bool water) {
 }
 
 int Game::pilot_parcel_destination() const {
-    if (!s.pilot.region || s.pilot.region>WorldPilotIndex) return -1;
     const int index=s.pilot.region-1;
+    if (index<0 || index>=int(std::size(PilotParcels))) return -1;
     if (s.pilot_parcels[index]!=PilotParcelStage::Aboard) return -1;
     return PilotRegions[index].first+PilotParcels[index].recipient;
 }
 
 bool Game::pilot_parcel_at(int site) const {
-    if (!s.pilot.region || s.pilot.region>WorldPilotIndex || site<0 || s.pilot.moored!=site+1) return false;
     const int index=s.pilot.region-1;
+    if (index<0 || index>=int(std::size(PilotParcels)) || site<0 || s.pilot.moored!=site+1) return false;
     const auto& stage=s.pilot_parcels[index];
     const auto& parcel=PilotParcels[index];
     const int place=site-PilotRegions[index].first;

@@ -5,6 +5,7 @@ inline constexpr PilotRegion PilotRegions[]{
     {"马德拉南岸", "assets/sea/pilot-madeira.bin", madeira, 13, 7, -17.30000f, 32.91000f, -16.60000f, 32.52000f},
     {"大加那利岛", "assets/sea/pilot-canaria.bin", canaries, 20, 6, -15.88000f, 28.23000f, -15.28000f, 27.68000f},
     {"直布罗陀海峡", "assets/sea/pilot-strait.bin", gibraltar, 26, 4, -6.07000f, 36.25000f, -5.16000f, 35.77000f},
+    {"埃尔米纳近岸", "assets/sea/pilot-elmina.bin", elmina, 30, 2, -1.42500f, 5.13500f, -1.28000f, 5.03500f, true},
 };
 inline constexpr PilotSite PilotSites[]{
     {"里斯本", "沿塔霍河进城，可到码头、商会和档案室。", {2621,847}, {2648,856}, PilotCity},
@@ -37,4 +38,6 @@ inline constexpr PilotSite PilotSites[]{
     {"塔里法", "镇子守在北岸突出的岬角，水手常在这里等能穿过海峡的风。", {2093,1015}, {2136,1032}, PilotCity},
     {"休达", "南岸港口已由葡萄牙控制。进湾前先辨清伸向海里的狭长地形。", {3398,1536}, {3368,1512}, PilotCity},
     {"阿尔赫西拉斯旧址", "旧城在十五世纪末已荒废。这片湾岸可作认路的地标。", {2813,503}, {-1,-1}, PilotPoint},
+    {"埃尔米纳", "圣乔治堡立在岩岬上，埃迪纳的渔村在堡西。大船停在湾外，乘小舟上岸。", {2172,1073}, {2696,1368}, PilotCity},
+    {"本亚潟湖", "潟湖沿半岛北侧伸展，东口接海。浅滩挡住吃水深的船，渔民用独木舟进出。", {1873,1042}, {-1,-1}, PilotPoint},
 };

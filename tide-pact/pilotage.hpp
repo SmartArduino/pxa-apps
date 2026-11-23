@@ -16,6 +16,7 @@ struct PilotRegion {
     Text name, asset;
     int port, first, count;
     float west,north,east,south;
+    bool roadstead=false;
 };
 
 struct PilotSite {
@@ -38,7 +39,7 @@ inline constexpr int PilotTileBytes=PilotWidth*PilotHeight/8;
 inline constexpr int PilotAtlasUnit=128;
 inline constexpr int PilotAtlasWidth=ChartWidth*PilotAtlasUnit, PilotAtlasHeight=ChartHeight*PilotAtlasUnit;
 inline constexpr int PilotPatchWidth=30*PilotAtlasUnit, PilotPatchHeight=14*PilotAtlasUnit;
-static_assert(std::size(PilotSites)<WorldPilotSite && std::size(PilotWorldBerths)==PlaceCount);
+static_assert(std::size(PilotSites)<=WorldPilotSite && std::size(PilotWorldBerths)==PlaceCount);
 static_assert(std::size(PilotWorldPortMarks)==PortCount);
 static_assert(std::size(PilotCoastalSites)<64 && PilotSiteEnd<=255);
 
@@ -63,7 +64,7 @@ inline constexpr PilotParcel PilotParcels[]{
 };
 
 constexpr bool valid_pilot_parcels() {
-    if (std::size(PilotParcels)!=std::size(PilotRegions)) return false;
+    if (std::size(PilotParcels)>std::size(PilotRegions)) return false;
     for (int i=0;i<int(std::size(PilotParcels));++i) {
         const auto& region=PilotRegions[i];
         const auto& parcel=PilotParcels[i];
@@ -93,6 +94,7 @@ struct PilotageState {
 struct PilotWater {
     const unsigned char* bytes=nullptr;
     bool world=false;
+    bool roadstead=false;
 
     int at(Point pixel) const {
         if (!bytes || pixel.x<0 || pixel.x>=PilotWidth || pixel.y<0 || pixel.y>=PilotHeight) return 15;
@@ -102,7 +104,7 @@ struct PilotWater {
     }
 
     bool navigable(Point fixed) const {
-        return fixed.x>=0 && fixed.y>=0 && at({fixed.x/PilotSubcell,fixed.y/PilotSubcell})<4;
+        return fixed.x>=0 && fixed.y>=0 && at({fixed.x/PilotSubcell,fixed.y/PilotSubcell})<(roadstead?3:4);
     }
 };
 

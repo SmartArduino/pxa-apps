@@ -2927,7 +2927,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x50445054);
+    put(0x51445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3062,7 +3062,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=FisherySaveBytes && bytes.size()!=EnclaveSaveBytes && bytes.size()!=SeaLawSaveBytes &&
         bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
-        bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
+        bytes.size()!=FirstSurveySaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3072,7 +3073,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool pilot_chart=version==0x50445054 && bytes.size()==SaveBytes;
+    const bool extended_survey=version==0x51445054 && bytes.size()==SaveBytes;
+    const bool pilot_chart=extended_survey || (version==0x50445054 && bytes.size()==FirstSurveySaveBytes);
     const bool cargo_records=pilot_chart || (version==0x4f445054 && bytes.size()==CargoSaveBytes);
     const bool local_orders=cargo_records || (version==0x4e445054 && bytes.size()==LocalOrdersSaveBytes);
     const bool shore_campaign=local_orders || (version==0x4d445054 && bytes.size()==ShoreSaveBytes);
@@ -3432,12 +3434,15 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             s.pilot_visits=get();
             for (auto* field : {&s.pilot.region,&s.pilot.heading,&s.pilot.moored,&s.pilot.minutes})
                 *field=std::to_integer<std::uint8_t>(bytes[offset++]);
-            if (s.pilot.region>WorldPilotIndex+1 || (!parcels && s.pilot.region>WorldPilotIndex) || s.pilot.heading>=16 ||
+            const int regions=extended_survey?WorldPilotIndex:LegacyPilotRegionCount;
+            if (s.pilot.region>regions+int(parcels) || s.pilot.heading>=16 ||
                 s.pilot.x>=PilotWidth*PilotSubcell || s.pilot.y>=PilotHeight*PilotSubcell ||
                 s.pilot.minutes>=60 || s.pilot.minutes%PilotTickMinutes ||
-                (s.pilot_visits>>std::size(PilotSites)) ||
+                std::bit_width(s.pilot_visits)>std::size(PilotSites) ||
                 (!s.pilot.region && (s.pilot.moored || s.pilot.x || s.pilot.y || s.pilot.heading)))
                 return false;
+            if (!extended_survey && s.pilot.region==LegacyPilotRegionCount+1)
+                s.pilot.region=WorldPilotIndex+1;
             if (s.pilot.region) {
                 if (!s.helm || s.weather!=Calm) return false;
                 if (s.pilot.moored) {
@@ -3511,7 +3516,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         }
         if (pilot_chart) {
             offset=CargoSaveBytes-4;
-            for (auto& area : s.pilot_chart)
+            const auto regions=extended_survey?WorldPilotIndex:LegacyPilotRegionCount;
+            for (auto& area : std::span(s.pilot_chart).first(regions))
                 for (auto& row : area) row=get();
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||

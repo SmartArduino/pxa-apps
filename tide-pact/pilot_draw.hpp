@@ -118,18 +118,18 @@ struct PilotSeaLine {
     }
 };
 
-// The regional chart blends over eight terrain cells on each edge.
 inline constexpr int PilotDetailBlend=8;
+inline constexpr int PilotRoadsteadBlend=24;
 inline constexpr int PilotStripWidth=512;
-inline Rect opaque_pilot_detail(Rect target) {
+inline Rect opaque_pilot_detail(Rect target,int blend) {
     if (target.w<=0 || target.h<=0) return {};
     const auto project=[](int cell,int pixels,int count) {
         return int((std::int64_t(cell)*pixels+count-1)/count);
     };
-    const int left=project(PilotDetailBlend,target.w,PilotWidth);
-    const int right=project(PilotWidth-PilotDetailBlend,target.w,PilotWidth);
-    const int top=project(PilotDetailBlend,target.h,PilotHeight);
-    const int bottom=project(PilotHeight-PilotDetailBlend,target.h,PilotHeight);
+    const int left=project(blend,target.w,PilotWidth);
+    const int right=project(PilotWidth-blend,target.w,PilotWidth);
+    const int top=project(blend,target.h,PilotHeight);
+    const int bottom=project(PilotHeight-blend,target.h,PilotHeight);
     return {target.x+left,target.y+top,right-left,bottom-top};
 }
 
@@ -265,6 +265,18 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
                 result[terrain][shade]=chart_style::tint(colors[terrain],(shade-8)*(terrain<4?1:3));
         return result;
     }();
+    constexpr auto roadstead_palette=[] {
+        std::array<std::array<Color,16>,16> result{};
+        for (int terrain=0;terrain<4;++terrain) {
+            constexpr int shelf[]{0,1,4,10};
+            result[terrain]=pilot_sea::Palette[shelf[terrain]];
+        }
+        for (int terrain=4;terrain<16;++terrain)
+            result[terrain]=chart_style::Palette[3+terrain-4];
+        return result;
+    }();
+    const auto& shades=water.roadstead?roadstead_palette:palette;
+    const int blend=water.roadstead?PilotRoadsteadBlend:PilotDetailBlend;
     constexpr int fraction=16;
     const int width=PilotWidth*fraction;
     const auto offset=std::int64_t(r.x-target.x)*width;
@@ -277,7 +289,7 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
         error+=remainder;
         if (error>=target.w) { error-=target.w; ++u; }
     }
-    const Rect opaque=opacity==15?d.clipped(opaque_pilot_detail(target)):Rect{};
+    const Rect opaque=opacity==15?d.clipped(opaque_pilot_detail(target,blend)):Rect{};
     for (int y=r.y;y<r.bottom();++y) {
         auto pixels=*d.pixels.row(y);
         const int v=int(std::int64_t(y-target.y)*PilotHeight*fraction/target.h);
@@ -301,9 +313,9 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
                     const auto color=[&](int terrain) {
                         if (terrain<0) return chart_style::Uncharted;
                         if (!terrain) return sea.color(columns[x-d.clip.x]);
-                        if (terrain<4) return palette[terrain][sea.shade(columns[x-d.clip.x])];
+                        if (terrain<4) return shades[terrain][sea.shade(columns[x-d.clip.x])];
                         const int material=terrain==4?1:terrain<=9?2:3;
-                        return palette[terrain][chart_style::texture(material,tex/4,v/4)];
+                        return shades[terrain][chart_style::texture(material,tex/4,v/4)];
                     };
                     const int terrain=(terrain_row[cell/2]>>(4*(cell&1)))&15;
                     shaded=color(terrain);
@@ -318,7 +330,8 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
                 }
                 if constexpr (Blend) {
                     const int edge=std::min({cell,PilotWidth-1-cell,vertical_edge});
-                    pixels[x]=Draw::mix(pixels[x],shaded,std::min(opacity,edge*2));
+                    const int feather=water.roadstead?edge*15/PilotRoadsteadBlend:edge*2;
+                    pixels[x]=Draw::mix(pixels[x],shaded,std::min(opacity,feather));
                 } else pixels[x]=shaded;
             }
         };
@@ -334,7 +347,8 @@ inline void draw_pilot_terrain(Draw& d,const PilotRaster& raster,const PilotAtla
                                int region,PilotWater detail,Rect target,int opacity) {
     const Rect previous=d.clip, visible=d.clipped(raster.view);
     const bool draw_detail=region>=0 && region<WorldPilotIndex && opacity && detail.bytes;
-    const Rect covered=draw_detail && opacity==15?opaque_pilot_detail(target):Rect{};
+    const int blend=detail.roadstead?PilotRoadsteadBlend:PilotDetailBlend;
+    const Rect covered=draw_detail && opacity==15?opaque_pilot_detail(target,blend):Rect{};
     std::array<int,PilotStripWidth> columns;
     for (int left=visible.x;left<visible.right();) {
         const int width=std::min(visible.right()-left,int(columns.size()));
