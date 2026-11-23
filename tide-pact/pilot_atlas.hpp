@@ -25,6 +25,11 @@ public:
     Row row(int patch,int y) const {
         Row result;
         if (y<0 || y>=PilotHeight) return result;
+        if (collision_patch==patch) {
+            std::copy_n(collision.begin()+y*(PilotWidth/8),PilotWidth/8,result.bits.begin());
+            result.loaded=true;
+            return result;
+        }
         const auto* tile=find(patch);
         if (!tile || !tile->size) return result;
         if (tile->reduced) {

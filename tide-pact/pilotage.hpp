@@ -19,6 +19,7 @@ struct PilotSite {
     Text name, note;
     Point location, berth;
     PilotSiteKind kind;
+    bool transfer=false;
 };
 
 #include "pilotage_data.hpp"
@@ -35,6 +36,7 @@ inline constexpr int PilotAtlasUnit=128;
 inline constexpr int PilotAtlasWidth=ChartWidth*PilotAtlasUnit, PilotAtlasHeight=ChartHeight*PilotAtlasUnit;
 inline constexpr int PilotPatchWidth=30*PilotAtlasUnit, PilotPatchHeight=14*PilotAtlasUnit;
 static_assert(std::size(PilotSites)<WorldPilotSite && std::size(PilotWorldBerths)==PlaceCount);
+static_assert(std::size(PilotWorldPortMarks)==PortCount);
 static_assert(std::size(PilotCoastalSites)<64 && PilotSiteEnd<=255);
 
 enum class PilotParcelStage : std::uint8_t { Waiting, Aboard, Delivered };

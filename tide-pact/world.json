@@ -39,6 +39,12 @@
     ["madagascar","马达加斯加西岸",43.25,-22.28,42.73,-22.23,"岛与非洲大陆隔着宽阔海峡。岛上已有自己的航海和贸易网络。"],
     ["mandeb","曼德海峡",43.36,12.66,43.62,12.43,"红海南端的海峡连通亚丁湾。它距尼罗河三角洲仍很远，两片海不能直接通航。"]
   ],
+  "pilot_transfers": {
+    "bristol": [-2.72, 51.51],
+    "bruges": [3.38, 51.36],
+    "bordeaux": [-1.05, 45.57],
+    "tunis": [10.30, 36.81]
+  },
   "links": [
     ["lisbon","bordeaux"],["lisbon","cadiz"],["lisbon","azores"],["lisbon","madeira"],
     ["bordeaux","bristol"],["bristol","bruges"],["bordeaux","bruges"],["azores","madeira"],

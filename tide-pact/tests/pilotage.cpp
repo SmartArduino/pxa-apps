@@ -12,6 +12,18 @@ using namespace tide;
 
 namespace {
 
+void check_shoreline(PilotWater water, Point berth) {
+    assert(water.navigable(berth));
+    bool shore=false;
+    for (const Point step : {Point{-PilotSubcell,0},Point{PilotSubcell,0},
+                             Point{0,-PilotSubcell},Point{0,PilotSubcell}}) {
+        const Point near{berth.x+step.x,berth.y+step.y};
+        if (near.x>=0 && near.x<PilotWidth*PilotSubcell && near.y>=0 && near.y<PilotHeight*PilotSubcell)
+            shore |= !water.navigable(near);
+    }
+    assert(shore);
+}
+
 struct WorldAtlas {
     std::ifstream file{"assets/sea/pilot-world.bin",std::ios::binary};
     std::vector<unsigned char> data{std::istreambuf_iterator<char>(file),{}};
@@ -61,7 +73,7 @@ int main() {
         const PilotWater water{bytes.data()};
         for (int site=area.first;site<area.first+area.count;++site) {
             const auto& mark=PilotSites[site];
-            if (mark.berth.x>=0) assert(water.navigable(mark.berth));
+            if (mark.berth.x>=0) check_shoreline(water,mark.berth);
         }
         Game ship;
         ship.s.origin=area.port;
@@ -136,8 +148,14 @@ int main() {
     }
     WorldAtlas atlas;
     for (int i=0;i<PilotTileCount;++i) atlas.read(i);
+    const auto check_world_berth=[&](Point at) {
+        const int patch=pilot_patch_at({at.x/8,at.y/8});
+        const auto origin=pilot_patch_origin(patch);
+        check_shoreline(atlas.read(patch),{at.x-origin.x*8,at.y-origin.y*8});
+    };
     for (int port=0;port<PortCount;++port) {
         Game ship;
+        check_world_berth(ship.pilot_atlas_site(port+WorldPilotSite,true));
         ship.s.origin=port;
         assert(ship.start_helm(-1));
         if (ship.pilot_region()!=WorldPilotIndex) continue;
@@ -194,6 +212,7 @@ int main() {
     for (int id=CoastalPilotSite;id<PilotSiteEnd;++id) {
         const auto& site=PilotCoastalSites[id-CoastalPilotSite];
         if (site.berth.x<0) continue;
+        check_world_berth(site.berth);
         Game visitor;
         assert(visitor.start_helm(-1));
         visitor.s.helm_x=site.berth.x/8;
@@ -205,6 +224,12 @@ int main() {
         State loaded;
         assert(decode(loaded,encode(visitor.s)) && loaded.pilot.moored==id+1 &&
                loaded.coast_visits==visitor.s.coast_visits);
+        Game restored;
+        restored.s=loaded;
+        restored.s.pilot.x^=1;
+        restored.restore();
+        const auto anchored=restored.pilot_atlas_position();
+        assert(anchored.x==site.berth.x && anchored.y==site.berth.y && restored.paused);
         const int next=visitor.pilot_coastal_hint();
         if (next>=0) {
             assert(visitor.record_pilot_coast(next) && visitor.pilot_site_visible(next));

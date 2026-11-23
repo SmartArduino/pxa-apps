@@ -591,7 +591,7 @@ struct VoyageApp {
         } else last_day=now;
         if (notice_until && now >= notice_until) { notice_until=0; dirty=true; }
         if (saved_until && now >= saved_until) { saved_until=0; dirty=true; }
-        if (!title && screen==Chart && modal==None && game.sea()) {
+        if (!title && screen==Chart && modal==None && game.sea() && !game.s.pilot.region) {
             const unsigned frame=now/VesselFrameMs;
             if (frame!=presented_vessel_frame) {
                 presented_vessel_frame=frame;
@@ -1335,10 +1335,11 @@ struct VoyageApp {
         }
     }
 
-    Point pilot_point(Point atlas) const {
-        return {map.x+map.w/2+int(std::lround((atlas.x-pilot_x)*pilot_scale_x)),
-                map.y+map.h/2+int(std::lround((atlas.y-pilot_y)*pilot_scale_y))};
+    Point pilot_point(float x,float y) const {
+        return {map.x+map.w/2+int(std::lround((x-pilot_x)*pilot_scale_x)),
+                map.y+map.h/2+int(std::lround((y-pilot_y)*pilot_scale_y))};
     }
+    Point pilot_point(Point atlas) const { return pilot_point(atlas.x,atlas.y); }
 
     std::array<float,7> pilot_scales() const {
         return {map.w/200.f,map.w/100.f,map.w/60.f,map.w/36.f,map.w/22.f,map.w/12.f,map.w/6.f};
@@ -1349,13 +1350,15 @@ struct VoyageApp {
         return pixels_per_mile*60.f*std::cos(latitude*.0174532925f)/(ChartLongitudeScale*PilotAtlasUnit);
     }
 
-    Point pilot_visual_ship() const {
+    struct PilotPosition { float x,y; };
+    PilotPosition pilot_visual_ship() const {
         const auto ship=game.pilot_atlas_position();
-        if (game.paused || pilot_visual_from.x<0 || game.pilot_exiting()) return ship;
+        if (game.paused || pilot_visual_from.x<0 || game.pilot_exiting())
+            return {float(ship.x),float(ship.y)};
         const auto period=voyage_interval();
-        const int elapsed=std::min(now-last_day,period);
-        return {ship.x+(pilot_visual_from.x-ship.x)*int(period-elapsed)/int(period),
-                ship.y+(pilot_visual_from.y-ship.y)*int(period-elapsed)/int(period)};
+        const float fraction=float(std::min(now-last_day,period))/period;
+        return {std::lerp(float(pilot_visual_from.x),float(ship.x),fraction),
+                std::lerp(float(pilot_visual_from.y),float(ship.y),fraction)};
     }
 
     template<class F>
@@ -1374,21 +1377,24 @@ struct VoyageApp {
     }
 
     void pilot_distance(Draw& d) {
-        const float pixels=pilot_pixels_per_mile;
-        int miles=1;
-        for (const int candidate : {1,2,5,10,20,50,100}) {
-            if (candidate*pixels>54) break;
-            miles=candidate;
+        const float pixels_per_tenth=pilot_pixels_per_mile*.1f;
+        const int limit=std::clamp(map.w/4,16,56);
+        int tenths=1;
+        for (const int candidate : {1,2,5,10,20,50,100,200,500,1000}) {
+            if (candidate*pixels_per_tenth>limit) break;
+            tenths=candidate;
         }
         const int end=map.right()-7, y=map.bottom()-8;
-        const int start=end-std::min(map.w/3,std::max(1,int(miles*pixels+.5f)));
-        const auto text=format("%d海里",miles);
+        const int start=end-std::max(1,int(tenths*pixels_per_tenth+.5f));
+        const auto text=tenths<10?format("0.%d海里",tenths):format("%d海里",tenths/10);
         const int x=end-d.measure(text);
         d.label(x+1,y-14,text,ink);
         d.label(x,y-15,text,ivory);
+        d.line({start,y+1},{end,y+1},ink);
         d.line({start,y},{end,y},gold);
         d.line({start,y-3},{start,y},gold);
         d.line({end,y-3},{end,y},gold);
+        if (end-start>=16) d.dot((start+end)/2,y-1,gold);
     }
 
     int pilot_target() const {
@@ -1416,28 +1422,32 @@ struct VoyageApp {
         pilot_scale_y=pilot_pixels_per_mile*60.f/(ChartLatitudeScale*PilotAtlasUnit);
         const int detail_index=visible_pilot_detail();
         const Text area_name=game.s.pilot.region<=WorldPilotIndex?game.pilot_area().name:"精航海图";
-        const PilotRaster raster{map,{int(pilot_x),int(pilot_y)},pilot_scale_x,pilot_scale_y};
+        const PilotRaster raster{map,pilot_x,pilot_y,pilot_scale_x,pilot_scale_y};
         Rect detail_view{};
         PilotWater detail_water{};
-        if (detail_index>=0 && pilot_zoom>=2) {
+        const int detail_opacity=int(std::lround(15.f*std::clamp((pilot_zoom-1.5f)*2.f,0.f,1.f)));
+        if (detail_index>=0 && detail_opacity) {
             const auto& area=PilotRegions[detail_index];
             const auto tl=pilot_point(pilot_to_atlas(area,{0,0}));
             const auto br=pilot_point(pilot_to_atlas(area,{PilotWidth*PilotSubcell,PilotHeight*PilotSubcell}));
             detail_view={tl.x,tl.y,br.x-tl.x,br.y-tl.y};
             detail_water={sea_picture.pixels(PilotPictureBase+detail_index)};
         }
-        draw_pilot_world(d,raster,pilot_atlas,opaque_pilot_detail(detail_water.bytes?detail_view:Rect{}));
-        draw_pilot_detail(d,detail_water,detail_view,raster);
+        draw_pilot_terrain(d,raster,pilot_atlas,detail_water,detail_view,detail_opacity);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;
-        const auto ship=pilot_point(tracked);
+        const auto ship=pilot_point(tracked.x,tracked.y);
         const auto approach=game.pilot_approach(guide,water);
         const auto caption=[&]() {
             if (guide<0 && berth<0 && state.moored==0) return format("%s","点海面转舵");
             const auto site=game.pilot_site(guide>=0?guide:berth);
             if (docking) return format("%s 进港中",site.name.data());
-            if (berth>=0 && !state.moored) return format("可泊 %s",game.pilot_site(berth).name.data());
+            if (berth>=0 && !state.moored) {
+                const auto landing=game.pilot_site(berth);
+                const Text action=landing.transfer?"接驳":landing.kind==PilotPoint?"测绘点":"可泊";
+                return format("%s %s",action.data(),landing.name.data());
+            }
             if (guide<0 || berth==guide) return format("%s",site.name.data());
             if (site.kind!=PilotPoint && approach.known && !approach.clear)
                 return format("%s 绕行",site.name.data());
@@ -1450,6 +1460,9 @@ struct VoyageApp {
         const auto course=format("%s  %d.%d节",PilotBearings[state.heading].data(),
                                  current_speed/10,current_speed%10);
         const Rect course_box{compass.x-7-d.measure(course),map.y+5,d.measure(course)+5,20};
+        struct Mark { Rect bounds; Point at; Text name; int priority; };
+        std::array<Mark,PilotSiteEnd> marks;
+        int mark_count=0;
         std::array<Rect,16> labels{};
         int used=0;
         labels[used++]=title_box;
@@ -1458,52 +1471,65 @@ struct VoyageApp {
         labels[used++]={map.right()-65,map.bottom()-26,65,24};
         labels[used++]=detail;
         labels[used++]={ship.x-12,ship.y-12,25,25};
-        auto place_label=[&](Point anchor,Text text,Color color) {
-            const int w=d.measure(text)+3;
-            Point candidates[]{{anchor.x+8,anchor.y-12},{anchor.x-w-8,anchor.y-12},
-                               {anchor.x-w/2,anchor.y+10},{anchor.x-w/2,anchor.y-24}};
+        const auto overlaps=[](Rect a,Rect b) {
+            return a.x<b.right() && a.right()>b.x && a.y<b.bottom() && a.bottom()>b.y;
+        };
+        auto place_label=[&](const Mark& mark) {
+            if (used>=int(labels.size())) return;
+            const int w=d.measure(mark.name)+3;
+            const Point anchor=mark.at;
+            const int gap=mark.bounds.w/2+3;
+            Point candidates[]{{anchor.x+gap,anchor.y-d.font.cell/2},{anchor.x-w-gap,anchor.y-d.font.cell/2},
+                               {anchor.x-w/2,anchor.y+gap},{anchor.x-w/2,anchor.y-gap-d.font.cell}};
             for (const auto at : candidates) {
                 const Rect place{at.x,at.y,w,d.font.cell+1};
                 if (place.x<map.x+2 || place.right()>map.right()-2 ||
                     place.y<map.y+2 || place.bottom()>map.bottom()-2) continue;
-                bool open=true;
-                for (int i=0;i<used;++i) {
-                    const auto other=labels[i];
-                    if (place.x<other.right() && place.right()>other.x &&
-                        place.y<other.bottom() && place.bottom()>other.y) { open=false; break; }
-                }
-                if (!open) continue;
-                if (used<int(labels.size())) labels[used++]=place;
-                d.label(at.x-1,at.y+1,text,ink);
-                d.label(at.x+1,at.y+1,text,ink);
-                d.label(at.x,at.y,text,color);
+                if (std::any_of(labels.begin(),labels.begin()+used,[&](Rect other){ return overlaps(place,other); }) ||
+                    std::any_of(marks.begin(),marks.begin()+mark_count,[&](const Mark& other){ return overlaps(place,other.bounds); }))
+                    continue;
+                labels[used++]=place;
+                d.label(at.x-1,at.y+1,mark.name,ink);
+                d.label(at.x+1,at.y+1,mark.name,ink);
+                d.label(at.x,at.y,mark.name,mark.priority<=1?gold:ivory);
                 return;
             }
         };
         {
             if (guide>=0 && approach.clear)
                 d.line(ship,pilot_point(game.pilot_atlas_site(guide,true)),mint,true);
+            const int zoom_growth=int(std::lround(std::clamp((pilot_zoom-2.f)*.5f,0.f,1.f)*4.f));
             auto draw_site=[&](int i) {
                 const auto site=game.pilot_site(i);
                 const bool marked=i==guide;
+                const auto mark=pilot_point(game.pilot_atlas_site(i,false));
                 const auto anchorage=game.pilot_atlas_site(i,true);
                 if (anchorage.x>=0) {
                     const auto dock=pilot_point(anchorage);
-                    if (map.contains(dock) && site.kind==PilotCity && pilot_zoom>=4) pilot_mark(d,2,dock,11);
+                    if (map.contains(dock) && site.kind!=PilotPoint && (marked || pilot_zoom>=4)) {
+                        const int distance=std::abs(mark.x-dock.x)+std::abs(mark.y-dock.y);
+                        if ((marked || i==berth) && map.contains(mark) && distance>15 && distance<95)
+                            d.line(dock,mark,quiet,true);
+                        pilot_mark(d,2,dock,11);
+                    }
                     d.diamond(dock,i==berth || marked?3:2,i==berth || marked?gold:mint);
                 }
-                const auto mark=pilot_point(game.pilot_atlas_site(i,false));
                 if (!map.contains(mark)) return;
                 if (pilot_zoom<=2 && site.kind!=PilotCity && !marked && i!=berth) {
                     d.diamond(mark,2,quiet);
+                    marks[mark_count++]={{mark.x-2,mark.y-2,5,5},mark,{},4};
                     return;
                 }
-                pilot_mark(d,site.kind==PilotPoint?3:site.kind,mark,
-                           site.kind==PilotCity?(pilot_zoom>=4?18:13):(pilot_zoom>=4?14:10));
-                place_label(mark,site.name,i==berth || marked?gold:ivory);
+                const int size=(site.kind==PilotCity?14:10)+zoom_growth;
+                pilot_mark(d,site.kind==PilotPoint?3:site.kind,mark,size);
+                marks[mark_count++]={{mark.x-size/2,mark.y-size/2,size,size},mark,site.name,
+                                     marked?0:i==berth?1:site.kind==PilotCity?2:3};
             };
             if (guide>=0) draw_site(guide);
             pilot_visible_sites([&](int i) { if (i!=guide) draw_site(i); });
+            for (int priority=0;priority<=3;++priority)
+                for (const auto& mark:std::span(marks).first(mark_count))
+                    if (mark.priority==priority) place_label(mark);
             const int size=pilot_zoom>=4?22:20;
             const auto motion=PilotDirections[state.heading];
             if (map.inset(15).contains(ship)) {
@@ -1557,8 +1583,11 @@ struct VoyageApp {
         button(d,bar(3,7,0),"泊地",PilotBookOpen);
         button(d,bar(4,7,0),format("%u倍",pilot_rate),PilotSpeed,pilot_rate>1,!water.bytes || game.pilot_slow_water(water));
         button(d,bar(5,7,0),"远航",LeavePilot,false,state.moored);
-        button(d,bar(6,7,0),state.moored?"上岸":docking?"进港":"靠泊",state.moored?PilotStoryOpen:PilotMoor,
-               true,berth<0 || docking,{},body.w>=350?HelmAnchor:-1);
+        const auto landing_site=berth>=0?game.pilot_site(berth):PilotSite{};
+        const bool surveying=berth>=0 && landing_site.kind==PilotPoint;
+        const Text landing=landing_site.transfer?"接驳":surveying?"抵达":"靠泊";
+        button(d,bar(6,7,0),state.moored?"上岸":docking?"进港":landing,state.moored?PilotStoryOpen:PilotMoor,
+               true,berth<0 || docking,{},body.w>=350?(surveying?int(AstrolabeIcon):int(HelmAnchor)):-1);
         if (state.moored) {
             const auto water_offer=game.pilot_supply_offer(true), food_offer=game.pilot_supply_offer(false);
             button(d,bar(0,3,1),water_offer.amount?Text(format("淡水+%d %d金",water_offer.amount,water_offer.cost)):"淡水已满",
@@ -1673,7 +1702,8 @@ struct VoyageApp {
             } else pilot_guide=selected_site;
             return;
         }
-        const auto at=pilot_point(pilot_visual_ship());
+        const auto tracked=pilot_visual_ship();
+        const auto at=pilot_point(tracked.x,tracked.y);
         const Point delta{touch.x-at.x,touch.y-at.y};
         if (std::abs(delta.x)+std::abs(delta.y)>7 && !state.moored) {
             game.set_pilot_heading(pilot_bearing(delta));

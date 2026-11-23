@@ -1267,6 +1267,21 @@ void Game::wait_at_port() {
 
 void Game::restore() {
     cancel_pilot_docking();
+    if (s.pilot.region && s.pilot.moored) {
+        const int site=s.pilot.moored-1;
+        if (s.pilot.region==WorldPilotIndex+1 && site>=CoastalPilotSite) {
+            const auto berth=pilot_atlas_site(site,true);
+            if (berth.x>=0) s.pilot.patch=pilot_patch_at({berth.x/8,berth.y/8});
+        }
+        const auto berth=pilot_site(site).berth;
+        if (berth.x>=0 && berth.x<PilotWidth*PilotSubcell && berth.y>=0 && berth.y<PilotHeight*PilotSubcell) {
+            s.pilot.x=berth.x;
+            s.pilot.y=berth.y;
+            const auto world=pilot_to_world(pilot_area(),berth);
+            s.helm_x=world.x;
+            s.helm_y=world.y;
+        }
+    }
     pilot_exit={-1,-1};
     pilot_remainder={};
     route=s.helm?Passage{}:passage(s.origin,s.destination);

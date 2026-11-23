@@ -5,6 +5,7 @@ import math
 from pathlib import Path
 
 from PIL import Image
+from pilot_berths import edge_water, settlement_mark, shoreline_berth
 
 ROOT = Path(__file__).resolve().parents[1]
 WIDTH, HEIGHT, FRACTION = 256, 128, 16
@@ -43,18 +44,18 @@ def compile_area(region, directory):
         return (round((x - west) / (east - west) * WIDTH * FRACTION),
                 round((north - y) / (north - south) * HEIGHT * FRACTION))
 
-    def safe_berth(x, y):
-        x, y = locate(x, y)
-        column, row = x // FRACTION, y // FRACTION
-        candidates = []
-        for j in range(max(0, row - 12), min(HEIGHT, row + 13)):
-            for i in range(max(0, column - 12), min(WIDTH, column + 13)):
-                score = (i - column) ** 2 + (j - row) ** 2
-                if heights[j * WIDTH + i] < -1:
-                    candidates.append((score, i, j))
-        if not candidates:
-            raise ValueError(f"Missing berth in {region['key']} at {column},{row}")
-        _, i, j = min(candidates)
+    def wet(x, y):
+        return terrain[y * WIDTH + x] < 4
+
+    connected = edge_water((0, 0, WIDTH, HEIGHT), wet)
+
+    def aspect(lat):
+        return (east - west) * HEIGHT * math.cos(math.radians(lat)) / ((north - south) * WIDTH)
+
+    def safe_berth(lon, lat):
+        x, y = locate(lon, lat)
+        i, j = shoreline_berth(x / FRACTION, y / FRACTION, 14, (WIDTH, HEIGHT), wet, connected,
+                               aspect(lat), lambda u, v: heights[v * WIDTH + u] < -1)
         return i * FRACTION + 8, j * FRACTION + 8
 
     def quoted(value):
@@ -65,6 +66,9 @@ def compile_area(region, directory):
         mark_x, mark_y = locate(x, y)
         if not (0 <= mark_x < WIDTH * FRACTION and 0 <= mark_y < HEIGHT * FRACTION):
             raise ValueError(f"Site {name} is outside its region")
+        if kind != "point":
+            u, v = settlement_mark(mark_x / FRACTION, mark_y / FRACTION, (WIDTH, HEIGHT), wet, aspect(y))
+            mark_x, mark_y = round(u * FRACTION), round(v * FRACTION)
         bx, by = safe_berth(*dock[0]) if dock else (-1, -1)
         sites.append(f"    {{{quoted(name)}, {quoted(note)}, {{{mark_x},{mark_y}}}, {{{bx},{by}}}, Pilot{kind.title()}}},")
     edges = ", ".join(f"{value:.5f}f" for value in region["bounds"])
