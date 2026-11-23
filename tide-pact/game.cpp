@@ -565,7 +565,7 @@ LandLeg Game::land_cost(LandAction action) const {
 
 bool Game::cadiz_low_tide() const {
     // A lunar semidiurnal cycle is approximately 12 h 25 min.
-    const int phase=((s.day*HoursPerDay+s.sail_watch*HoursPerWatch+s.helm_pulse)*60+35)%745;
+    const int phase=((s.day*HoursPerDay+s.sail_watch*HoursPerWatch+s.helm_pulse)*60+35)%LunarTideMinutes;
     return phase<185 || phase>=560;
 }
 

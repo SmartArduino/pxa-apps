@@ -444,6 +444,29 @@ int Game::pilot_speed(PilotWater map,int near_berth) const {
     return near_berth>=0?std::min(safe,32):safe;
 }
 
+PilotCurrent Game::pilot_current() const {
+    if (!s.pilot.region || s.pilot.region>WorldPilotIndex || PilotRegions[s.pilot.region-1].port!=lisbon)
+        return {};
+    const auto [x,y]=Point{s.pilot.x,s.pilot.y};
+    // Follow the river from the outer bar into the widening estuary east of Lisbon.
+    constexpr int mouth=1024, lisbon_bend=2530;
+    const int centre=1190-(x-mouth)*2/11;
+    const int width=180+std::max(0,x-lisbon_bend)/4;
+    const int exposure=std::min({15,(x-mouth)/24,(width-std::abs(y-centre))/12});
+    if (exposure<=0) return {};
+    const int hours=s.day*HoursPerDay+s.sail_watch*HoursPerWatch+s.helm_pulse;
+    const int phase=(hours*60+s.pilot.minutes+90)%LunarTideMinutes;
+    // Flood lasts longer. The shorter ebb reaches a higher current.
+    constexpr int flood_minutes=402;
+    const bool flood=phase<flood_minutes;
+    const int span=flood?flood_minutes:LunarTideMinutes-flood_minutes;
+    const int elapsed=flood?phase:phase-flood_minutes;
+    const int peak=flood?10:15;
+    const int strength=(4*peak*elapsed*(span-elapsed)+span*span/2)/(span*span);
+    const int upstream=x<lisbon_bend?3:2;
+    return {true,flood,(upstream+(flood?0:8))&15,(strength*exposure+7)/15};
+}
+
 bool Game::pilot_tick(PilotWater map) {
     if (!s.helm || !s.pilot.region || s.pilot.moored || paused || encounter() || !map.bytes || pilot_exiting()) return false;
     const auto area=pilot_area();
@@ -479,8 +502,11 @@ bool Game::pilot_tick(PilotWater map) {
                   pilot_dock_from.y+int(delta.y*part)-start.y};
     } else {
         const auto bearing=PilotDirections[s.pilot.heading];
-        movement={advance(miles*bearing.x/(100.f*x_scale),pilot_remainder.x),
-                  advance(miles*bearing.y/(100.f*y_scale),pilot_remainder.y)};
+        const auto current=pilot_current();
+        const auto flow=PilotDirections[current.bearing];
+        const float drift=current.tenths*PilotTickMinutes/600.f;
+        movement={advance((miles*bearing.x+drift*flow.x)/(100.f*x_scale),pilot_remainder.x),
+                  advance((miles*bearing.y+drift*flow.y)/(100.f*y_scale),pilot_remainder.y)};
     }
     const auto [dx,dy]=movement;
     const int pieces=1+std::max(std::abs(dx),std::abs(dy))/(pilot_dock_target>=0?1:4);

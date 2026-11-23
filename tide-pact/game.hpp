@@ -412,6 +412,7 @@ struct Game {
     bool leave_pilotage(WaterTest ocean);
     void set_pilot_heading(int heading);
     int pilot_speed(PilotWater map,int near_berth=-1) const;
+    PilotCurrent pilot_current() const;
     bool pilot_tick(PilotWater map);
     int pilot_berth(PilotWater map,int preferred=-1) const;
     PilotApproach pilot_approach(int site,PilotWater map) const;

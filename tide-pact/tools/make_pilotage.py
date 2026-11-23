@@ -12,7 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 WIDTH, HEIGHT, FRACTION = 256, 128, 16
 
 
-def relief(elevation):
+def relief(elevation, elevation_step=4.5):
     if elevation < -65:
         return 0
     if elevation < -19:
@@ -23,7 +23,7 @@ def relief(elevation):
         return 3
     if elevation < 3:
         return 4
-    return min(15, 5 + int(math.sqrt(elevation) / 4.5))
+    return min(15, 5 + int(math.sqrt(elevation) / elevation_step))
 
 
 def roadstead_terrain(heights, region, project):
@@ -54,6 +54,22 @@ def roadstead_terrain(heights, region, project):
             for height, material, steps in zip(heights, surface, distance)]
 
 
+def restore_tidal_flats(terrain, outlines, project):
+    # Sample the digitized reaches at cell centres. Existing deeper channels survive.
+    mask = Image.new("1", (WIDTH * FRACTION, HEIGHT * FRACTION))
+    draw = ImageDraw.Draw(mask)
+    for outline in outlines.values():
+        draw.polygon([project(*point) for point in outline], fill=1)
+    restored = set()
+    for y in range(HEIGHT):
+        for x in range(WIDTH):
+            i = y * WIDTH + x
+            if terrain[i] > 3 and mask.getpixel((x * FRACTION + FRACTION // 2, y * FRACTION + FRACTION // 2)):
+                terrain[i] = 3
+                restored.add((x, y))
+    return restored
+
+
 def compile_area(region, directory):
     with Image.open(directory / (region["tile"] + ".tif")) as tile:
         sx, sy, _ = tile.tag_v2[33550]
@@ -69,7 +85,11 @@ def compile_area(region, directory):
                 round((north - y) / (north - south) * HEIGHT * FRACTION))
 
     roadstead = region.get("roadstead", False)
-    terrain = roadstead_terrain(heights, region, locate) if roadstead else [relief(height) for height in heights]
+    elevation_step = region.get("elevation_step", 4.5)
+    terrain = (roadstead_terrain(heights, region, locate) if roadstead else
+               [relief(height, elevation_step) for height in heights])
+    outlines = region.get("tidal_flats")
+    restored = restore_tidal_flats(terrain, outlines, locate) if outlines else set()
     data = bytes(a | (b << 4) for a, b in zip(terrain[::2], terrain[1::2]))
     asset = "pilot-" + region["key"] + ".bin"
 
@@ -92,7 +112,7 @@ def compile_area(region, directory):
                 raise ValueError(f"Roadstead at {lon}, {lat} is outside navigable water")
             return i * FRACTION + 8, j * FRACTION + 8
         i, j = shoreline_berth(x / FRACTION, y / FRACTION, 14, (WIDTH, HEIGHT), wet, connected,
-                               aspect(lat), lambda u, v: heights[v * WIDTH + u] < -1)
+                               aspect(lat), lambda u, v: (u, v) in restored or heights[v * WIDTH + u] < -1)
         return i * FRACTION + 8, j * FRACTION + 8
 
     def quoted(value):

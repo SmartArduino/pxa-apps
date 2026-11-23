@@ -92,6 +92,28 @@ int main() {
         assert(ship.pilot_charted(index,main_berth) && !ship.pilot_charted(index,unexplored));
         assert(!ship.reveal_pilot_chart());
         assert(ship.paused && ship.pilot_berth(water)==area.first && !ship.dock_helm(ocean));
+        if (area.port==lisbon) {
+            const Point restelo=PilotSites[area.first+1].berth;
+            assert(restelo.y<952 && water.at({restelo.x/PilotSubcell,restelo.y/PilotSubcell})==3);
+            Game flood=ship;
+            flood.s.pilot.x=2350;
+            flood.s.pilot.y=958;
+            flood.s.helm_pulse=2;
+            flood.set_pilot_heading(4);
+            flood.paused=false;
+            assert(water.navigable({flood.s.pilot.x,flood.s.pilot.y}));
+            auto ebb=flood;
+            ebb.s.sail_watch=1;
+            const auto incoming=flood.pilot_current(), outgoing=ebb.pilot_current();
+            assert(incoming.in_channel && incoming.flood && incoming.tenths>0);
+            assert(outgoing.in_channel && !outgoing.flood && outgoing.tenths>incoming.tenths &&
+                   outgoing.bearing==((incoming.bearing+8)&15));
+            flood.pilot_tick(water);
+            ebb.pilot_tick(water);
+            assert(!flood.paused && !ebb.paused && flood.s.pilot.x>ebb.s.pilot.x);
+            flood.s.pilot.x=880;
+            assert(!flood.pilot_current().in_channel);
+        }
         const int heading=ship.s.pilot.heading, x=ship.s.pilot.x, y=ship.s.pilot.y;
         ship.set_pilot_heading(heading+1);
         assert(ship.s.pilot.heading==(heading+1)%16);

@@ -223,7 +223,7 @@ struct Draw {
             for (int x = r.x; x < r.right(); ++x) row[x] = mix(row[x], rgb(0x08181d), strength);
         }
     }
-    static Color mix(Color a, Color b, int opacity) {
+    static constexpr Color mix(Color a, Color b, int opacity) {
         const int inv = 15-opacity;
         const auto blend = [&](int shift, int mask) {
             return ((((a >> shift) & mask)*inv + ((b >> shift) & mask)*opacity + 7) / 15) << shift;

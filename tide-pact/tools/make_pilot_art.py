@@ -3,16 +3,17 @@ import argparse
 import struct
 from pathlib import Path
 
-from PIL import Image, ImageOps
+from PIL import Image
 
 from make_art import ASSETS, pack_icons
 
 
 def ships(path):
-    size = 16
+    size = 20
     original = Image.open(path).convert("RGBA")
     sheet = Image.new("RGBA", (8 * size, 6 * size))
-    for hull, bounds in enumerate(((8, 13), (10, 14), (13, 14))):
+    for hull, bounds in enumerate(((8, 17), (10, 18), (13, 19))):
+        frames = []
         for reefed in range(2):
             x = original.width // 3
             y = original.height // 2
@@ -21,7 +22,13 @@ def ships(path):
             crop = alpha.point(lambda a: 255 if a >= 132 else 0).getbbox()
             if crop is None or alpha.getextrema()[0] >= 132:
                 raise ValueError("Expected a transparent ship in each of the six atlas cells")
-            sprite = ImageOps.contain(sprite.crop(crop), bounds, Image.Resampling.LANCZOS)
+            frames.append(sprite.crop(crop))
+        width = max(sprite.width for sprite in frames)
+        height = max(sprite.height for sprite in frames)
+        for reefed, sprite in enumerate(frames):
+            # Use the same hull scale in both sail states.
+            dimensions = (round(bounds[0] * sprite.width / width), round(bounds[1] * sprite.height / height))
+            sprite = sprite.resize(dimensions, Image.Resampling.LANCZOS)
             tile = Image.new("RGBA", (size, size))
             tile.paste(sprite, ((size - sprite.width) // 2, (size - sprite.height) // 2))
             for heading in range(8):
@@ -41,10 +48,11 @@ def ships(path):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("ships", type=Path)
-    parser.add_argument("marks", type=Path)
+    parser.add_argument("marks", type=Path, nargs="?")
     args = parser.parse_args()
     ships(args.ships)
-    pack_icons(args.marks, "pilot_marks", 3, 2, 22, alpha_cutoff=136)
+    if args.marks:
+        pack_icons(args.marks, "pilot_marks", 3, 2, 22, alpha_cutoff=136)
 
 
 if __name__ == "__main__":

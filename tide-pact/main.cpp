@@ -1466,10 +1466,23 @@ struct VoyageApp {
         const Rect detail{map.x+5,map.bottom()-23,std::min(map.w-75,d.measure(caption)+13),19};
         const Rect title_box{map.x+5,map.y+5,d.measure(area_name)+25,20};
         const Rect compass{map.right()-29,map.y+4,24,24};
-        const int current_speed=game.paused?0:game.pilot_speed(water,berth);
+        const auto current=game.pilot_current();
+        int current_speed=game.paused?0:game.pilot_speed(water,berth);
+        if (current_speed && current.tenths && !docking) {
+            const auto way=PilotDirections[state.heading], flow=PilotDirections[current.bearing];
+            const int east=way.x*current_speed+flow.x*current.tenths;
+            const int south=way.y*current_speed+flow.y*current.tenths;
+            current_speed=int(std::lround(std::sqrt(float(east*east+south*south))/100));
+        }
         const auto course=format("%s  %d.%d节",PilotBearings[state.heading].data(),
                                  current_speed/10,current_speed%10);
         const Rect course_box{compass.x-7-d.measure(course),map.y+5,d.measure(course)+5,20};
+        const auto tide_status=current.tenths?
+            format("%s %s %d.%d节",current.flood?"涨潮":"退潮",PilotBearings[current.bearing].data(),
+                   current.tenths/10,current.tenths%10):
+            format("%s","潮流缓");
+        const int tide_width=d.measure(tide_status)+12;
+        const Rect tide_box{map.right()-5-tide_width,map.y+28,tide_width,18};
         struct Mark { Rect bounds; Point at; Text name; int priority; };
         std::array<Mark,PilotSiteEnd> marks;
         int mark_count=0;
@@ -1478,6 +1491,7 @@ struct VoyageApp {
         labels[used++]=title_box;
         labels[used++]=compass;
         labels[used++]=course_box;
+        if (current.in_channel) labels[used++]=tide_box;
         labels[used++]={map.right()-65,map.bottom()-26,65,24};
         labels[used++]=detail;
         labels[used++]={ship.x-12,ship.y-12,25,25};
@@ -1550,7 +1564,7 @@ struct VoyageApp {
                                {ship.x-motion.x*(15+turn)/100-motion.y*beam/19,
                                 ship.y-motion.y*(15+turn)/100+motion.x*beam/19},rgb(0x85c4bf),true);
                 }
-                for (int i=0;i<16;++i) {
+                for (int i=1;i<16;i+=4) {
                     const auto a=PilotDirections[i], b=PilotDirections[(i+1)&15];
                     d.line({ship.x+a.x*14/100,ship.y+a.y*14/100},
                            {ship.x+b.x*14/100,ship.y+b.y*14/100},ink);
@@ -1559,7 +1573,7 @@ struct VoyageApp {
                 }
                 small_ship(d,game.s.ship,((state.heading+1)/2)&7,game.s.reefed || docking,
                            {ship.x-size/2,ship.y-size/2,size,size});
-                d.diamond({ship.x+motion.x/7,ship.y+motion.y/7},3,mint);
+                d.diamond({ship.x+motion.x*16/100,ship.y+motion.y*16/100},2,mint);
             } else {
                 const Point edge{std::clamp(ship.x,map.x+23,map.right()-23),
                                  std::clamp(ship.y,map.y+31,map.bottom()-28)};
@@ -1579,6 +1593,10 @@ struct VoyageApp {
         nav_icon(d,CompassIcon,compass);
         skin_box(d,course_box,0,4);
         d.center(course_box,course,ivory);
+        if (current.in_channel) {
+            skin_box(d,tide_box,0,4);
+            d.center(tide_box,tide_status,mint);
+        }
         skin_box(d,detail,0,4);
         d.center(detail,caption,guide>=0 || berth>=0?gold:mist);
         d.clip=saved_clip;

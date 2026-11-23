@@ -249,36 +249,62 @@ inline void draw_pilot_world(Draw& d,const PilotRaster& raster,const PilotAtlas&
     }
 }
 
+namespace pilot_detail {
+
+inline constexpr int Fraction=16, Bands=8, BandScale=Fraction*Fraction/Bands;
+inline constexpr int DepthShift=9, HeightShift=19;
+inline constexpr unsigned Unsurveyed=1U<<31;
+using Palette=std::array<std::array<Color,16>,16*Bands>;
+
+inline constexpr auto Shades=[] {
+    constexpr std::array<unsigned,16> colors{
+        0x153d53,0x1c4f64,0x286a7b,0x388080,0xa99869,0x82905e,0x758556,0x6f8052,
+        0x707b51,0x7b7b53,0x8a8057,0x9b8962,0xa38c6c,0xb2977e,0xc1ab8e,0xd2c6ac
+    };
+    std::array<Palette,2> palettes{};
+    for (int band=0;band<16*Bands;++band) {
+        const int base=band/Bands, part=band%Bands;
+        const int next=std::min(base+1,base<4?3:15);
+        const auto channel=[&](int shift) {
+            return (((colors[base]>>shift)&255)*(Bands-part)+((colors[next]>>shift)&255)*part+Bands/2)/Bands;
+        };
+        const auto color=channel(16)<<16 | channel(8)<<8 | channel(0);
+        for (int shade=0;shade<16;++shade) {
+            palettes[0][band][shade]=chart_style::tint(color,(shade-8)*(base<4?1:2));
+            if (base<4) {
+                constexpr int shelf[]{0,1,4,10};
+                const int bank=(shelf[base]*(Bands-part)+shelf[next]*part+Bands/2)/Bands;
+                palettes[1][band][shade]=pilot_sea::Palette[bank][shade];
+            } else
+                palettes[1][band][shade]=Draw::mix(chart_style::Palette[base-1][shade],
+                                                    chart_style::Palette[next-1][shade],(15*part+Bands/2)/Bands);
+        }
+    }
+    return palettes;
+}();
+
+// After two 16-point interpolations the three fields occupy 9, 10, and 12 bits.
+// Keeping them in separate lanes lets one interpolation carry the shoreline,
+// water depth, and land elevation together.
+inline constexpr auto TerrainFields=[] {
+    std::array<unsigned,16> values{};
+    for (unsigned terrain=0;terrain<values.size();++terrain)
+        values[terrain]=unsigned(terrain>=4) | (std::min(terrain,3U)<<DepthShift) |
+                        ((std::max(terrain,4U)-4)<<HeightShift);
+    return values;
+}();
+
+} // namespace pilot_detail
+
 inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRaster& raster,
                               std::span<const int> columns,int opacity,
                               const std::array<std::uint32_t,PilotSurveyRows>& surveyed) {
+    using namespace pilot_detail;
     const auto r=d.clipped(target);
     if (r.w<=0 || r.h<=0 || !water.bytes || target.w<=0 || target.h<=0) return;
-    constexpr std::array<unsigned,16> colors{
-        0x153d53,0x1c4f64,0x286a7b,0x388080,0xc5b37d,0xa49a63,0x82925c,0x6e8350,
-        0x687749,0x7b774b,0x8a7f57,0xa18d64,0x9d8365,0xad9377,0xc1ab8e,0xd2c6ac
-    };
-    constexpr auto palette=[colors] {
-        std::array<std::array<Color,16>,16> result{};
-        for (int terrain=0;terrain<16;++terrain)
-            for (int shade=0;shade<16;++shade)
-                result[terrain][shade]=chart_style::tint(colors[terrain],(shade-8)*(terrain<4?1:3));
-        return result;
-    }();
-    constexpr auto roadstead_palette=[] {
-        std::array<std::array<Color,16>,16> result{};
-        for (int terrain=0;terrain<4;++terrain) {
-            constexpr int shelf[]{0,1,4,10};
-            result[terrain]=pilot_sea::Palette[shelf[terrain]];
-        }
-        for (int terrain=4;terrain<16;++terrain)
-            result[terrain]=chart_style::Palette[3+terrain-4];
-        return result;
-    }();
-    const auto& shades=water.roadstead?roadstead_palette:palette;
+    const auto& shades=Shades[water.roadstead];
     const int blend=water.roadstead?PilotRoadsteadBlend:PilotDetailBlend;
-    constexpr int fraction=16;
-    const int width=PilotWidth*fraction;
+    const int width=PilotWidth*Fraction;
     const auto offset=std::int64_t(r.x-target.x)*width;
     const int step=width/target.w, remainder=width%target.w;
     std::array<std::uint16_t,PilotStripWidth> texture_x;
@@ -289,44 +315,82 @@ inline void draw_pilot_detail(Draw& d,PilotWater water,Rect target,const PilotRa
         error+=remainder;
         if (error>=target.w) { error-=target.w; ++u; }
     }
+    const int first_cell=std::max(0,(texture_x.front()+Fraction/2)/Fraction-1);
+    const int last_cell=std::min(PilotWidth-1,(texture_x[r.w-1]+Fraction/2)/Fraction);
+    struct TerrainRow { int index=-1; std::array<unsigned,PilotWidth> fields; };
+    std::array<TerrainRow,2> row_cache;
+    const auto fields_at=[&](int row) -> const std::array<unsigned,PilotWidth>& {
+        auto& cached=row_cache[row&1];
+        if (cached.index==row) return cached.fields;
+        cached.index=row;
+        const auto known=surveyed[row/PilotSurveyCell];
+        const auto* bytes=water.bytes+4+row*(PilotWidth/2);
+        for (int cell=first_cell;cell<=last_cell;++cell)
+            cached.fields[cell]=known&(1U<<(cell/PilotSurveyCell))?
+                TerrainFields[(bytes[cell/2]>>(4*(cell&1)))&15]:Unsurveyed;
+        return cached.fields;
+    };
     const Rect opaque=opacity==15?d.clipped(opaque_pilot_detail(target,blend)):Rect{};
     for (int y=r.y;y<r.bottom();++y) {
         auto pixels=*d.pixels.row(y);
-        const int v=int(std::int64_t(y-target.y)*PilotHeight*fraction/target.h);
+        const int v=int(std::int64_t(y-target.y)*PilotHeight*Fraction/target.h);
         const PilotSeaLine sea{raster,raster.y(y)};
-        const int row=v/fraction;
+        const int row=v/Fraction;
         const int vertical_edge=std::min(row,PilotHeight-1-row);
-        const int dy=2*(v&(fraction-1))-(fraction-1);
-        const int neighbour_row=std::clamp(row+(dy<0?-1:1),0,PilotHeight-1);
+        const int north=(v+Fraction/2)/Fraction-1, fy=(v+Fraction/2)&(Fraction-1);
+        const int top=std::max(0,north), bottom=std::min(PilotHeight-1,north+1);
         const auto known=surveyed[row/PilotSurveyCell];
-        const auto neighbour_known=surveyed[neighbour_row/PilotSurveyCell];
-        const auto* terrain_row=water.bytes+4+row*(PilotWidth/2);
-        const auto* adjacent_row=water.bytes+4+neighbour_row*(PilotWidth/2);
-        const auto terrain_at=[](int cell,std::uint32_t mask,const unsigned char* data) {
-            return mask&(std::uint32_t{1}<<(cell/PilotSurveyCell)) ? (data[cell/2]>>(4*(cell&1)))&15 : -1;
-        };
+        const auto& north_row=fields_at(top);
+        const auto& south_row=fields_at(bottom);
+        int last_pair=-1;
+        unsigned left_fields=0,right_fields=0;
+        int west_light=8*Fraction, east_light=8*Fraction;
         const auto segment=[&]<bool Blend>(int left,int right) {
             for (int x=left;x<right;++x) {
-                const int tex=texture_x[x-r.x], cell=tex/fraction;
+                const int tex=texture_x[x-r.x], cell=tex/Fraction;
                 Color shaded=chart_style::Uncharted;
                 if (known&(std::uint32_t{1}<<(cell/PilotSurveyCell))) {
-                    const auto color=[&](int terrain) {
-                        if (terrain<0) return chart_style::Uncharted;
-                        if (!terrain) return sea.color(columns[x-d.clip.x]);
-                        if (terrain<4) return shades[terrain][sea.shade(columns[x-d.clip.x])];
-                        const int material=terrain==4?1:terrain<=9?2:3;
-                        return shades[terrain][chart_style::texture(material,tex/4,v/4)];
-                    };
-                    const int terrain=(terrain_row[cell/2]>>(4*(cell&1)))&15;
-                    shaded=color(terrain);
-                    const int dx=2*(tex&(fraction-1))-(fraction-1);
-                    const int edge=std::max(std::abs(dx),std::abs(dy));
-                    if (edge>3) {
-                        const int adjacent=std::abs(dx)>std::abs(dy)?
-                            terrain_at(std::clamp(cell+(dx<0?-1:1),0,PilotWidth-1),known,terrain_row):
-                            terrain_at(cell,neighbour_known,adjacent_row);
-                        if (adjacent!=terrain) shaded=Draw::mix(shaded,color(adjacent),edge/2);
+                    const int pair=(tex+Fraction/2)/Fraction;
+                    if (pair!=last_pair) {
+                        const int west=std::max(0,pair-1), east=std::min(PilotWidth-1,pair);
+                        unsigned nw=north_row[west], ne=north_row[east];
+                        unsigned sw=south_row[west], se=south_row[east];
+                        // Do not blend colours or terrain from behind the survey fog.
+                        if ((nw|ne|sw|se)&Unsurveyed) {
+                            const unsigned fallback=nw!=Unsurveyed?nw:ne!=Unsurveyed?ne:sw!=Unsurveyed?sw:se;
+                            if (nw==Unsurveyed) nw=fallback;
+                            if (ne==Unsurveyed) ne=fallback;
+                            if (sw==Unsurveyed) sw=fallback;
+                            if (se==Unsurveyed) se=fallback;
+                        }
+                        left_fields=nw*(Fraction-fy)+sw*fy;
+                        right_fields=ne*(Fraction-fy)+se*fy;
+                        if ((nw|ne|sw|se)&1U) {
+                            // Light the north-west slopes and soften the gradient across each pair.
+                            const int east_rise=int(right_fields>>HeightShift)-int(left_fields>>HeightShift);
+                            west_light=8*Fraction+east_rise+8*(int(sw>>HeightShift)-int(nw>>HeightShift));
+                            east_light=8*Fraction+east_rise+8*(int(se>>HeightShift)-int(ne>>HeightShift));
+                        }
+                        last_pair=pair;
                     }
+                    const int fx=(tex+Fraction/2)&(Fraction-1);
+                    const unsigned fields=left_fields*(Fraction-fx)+right_fields*fx;
+                    const int coast=fields&((1U<<DepthShift)-1);
+                    const auto land=[&] {
+                        const int band=4*Bands+int(((fields>>HeightShift)+BandScale/2)/BandScale);
+                        const int material=band<5*Bands?1:band<=9*Bands?2:3;
+                        const int grain=chart_style::texture(material,tex/2+v/64,v/2+tex/64);
+                        const int light=(west_light*(Fraction-fx)+east_light*fx)/(Fraction*Fraction);
+                        return shades[band][std::clamp(light+(grain-8)*3/4,0,15)];
+                    };
+                    const auto ocean=[&] {
+                        const int band=(((fields>>DepthShift)&1023)+BandScale/2)/BandScale;
+                        const int u=columns[x-d.clip.x];
+                        return band?shades[band][sea.shade(u)]:sea.color(u);
+                    };
+                    if (coast<=108) shaded=ocean();
+                    else if (coast>=148) shaded=land();
+                    else shaded=Draw::mix(ocean(),land(),(coast-108)*15/40);
                 }
                 if constexpr (Blend) {
                     const int edge=std::min({cell,PilotWidth-1-cell,vertical_edge});

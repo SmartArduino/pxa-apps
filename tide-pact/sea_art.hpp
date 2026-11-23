@@ -26,7 +26,7 @@ inline int harbor_picture(int port) {
 inline int harbor_street_picture(int port) {
     return port==venice?VeniceStreetPicture:port==kilwa?KilwaStreetPicture:Calm;
 }
-inline constexpr int PilotMarkSize=22, SmallShipSize=16, SmallShipStride=8*SmallShipSize;
+inline constexpr int PilotMarkSize=22, SmallShipSize=20, SmallShipStride=8*SmallShipSize;
 
 inline bool pilot_picture(int kind) {
     return kind>=PilotPictureBase && kind<PilotPictureBase+int(std::size(PilotRegions));

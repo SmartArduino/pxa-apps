@@ -9,6 +9,7 @@ static_assert(PilotSurveyColumns==32);
 inline constexpr int PilotMapBytes=4+PilotWidth*PilotHeight/2;
 inline constexpr int PilotTickMinutes=3;
 inline constexpr unsigned PilotTickMilliseconds=275;
+inline constexpr int LunarTideMinutes=745;
 
 enum PilotSiteKind { PilotCity, PilotVillage, PilotPoint };
 
@@ -83,6 +84,13 @@ struct PilotApproach {
 
 struct PilotSupplies {
     int amount=0, cost=0;
+};
+
+struct PilotCurrent {
+    bool in_channel=false;
+    bool flood=false;
+    int bearing=0;
+    int tenths=0;
 };
 
 struct PilotageState {
