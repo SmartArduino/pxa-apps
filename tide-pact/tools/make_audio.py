@@ -14,6 +14,7 @@ target=app/'assets/audio'
 target.mkdir(parents=True,exist_ok=True)
 spec=json.loads((app/'tools/audio-cues.json').read_text())
 rate=16000
+vorbis_quality='7'
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -21,7 +22,8 @@ def digest(path):
 def load(name, highpass):
     path=source/f'{name}.flac'
     data=subprocess.check_output(['ffmpeg','-v','error','-i',str(path),'-af',
-                f'highpass=f={highpass},lowpass=f=7100','-ac','1','-ar',str(rate),'-f','f32le','-'])
+                f'highpass=f={highpass},aresample={rate}:resampler=soxr:precision=28:cutoff=0.95',
+                '-ac','1','-ar',str(rate),'-f','f32le','-'])
     a=np.frombuffer(data,dtype='<f4').copy()
     assert len(a) and np.isfinite(a).all()
     return a
@@ -36,7 +38,8 @@ def result(path,a):
             'peak':round(float(np.max(np.abs(a))),4),'rms':round(float(np.sqrt(np.mean(a*a))),4),
             'sha256':digest(path)}
 
-report={'music':{},'effects':{},'voices':{},'source':{p.name:digest(p) for p in sorted(source.glob('*.flac'))}}
+report={'music':{},'effects':{},'voices':{},'sample_rate':rate,'vorbis_quality':int(vorbis_quality),
+        'source':{p.name:digest(p) for p in sorted(source.glob('*.flac'))}}
 for name,info in spec['music'].items():
     wave=load(name,40)
     size=round(4*info['bars']*60/info['bpm']*rate)
@@ -55,7 +58,7 @@ for name,info in spec['music'].items():
     loop=normalize(loop,.76,.19)
     path=target/f'{name}.ogg'
     subprocess.run(['ffmpeg','-v','error','-y','-f','f32le','-ac','1','-ar',str(rate),
-                    '-i','-','-c:a','libvorbis','-q:a','3',str(path)],input=loop.tobytes(),check=True)
+                    '-i','-','-c:a','libvorbis','-q:a',vorbis_quality,str(path)],input=loop.tobytes(),check=True)
     report['music'][name]=dict(result(path,loop),loop_step=round(abs(float(loop[0]-loop[-1])),5))
     # Compare the actual encoded loop seam as decoded on normal players.
     decoded=subprocess.check_output(['ffmpeg','-v','error','-i',str(path),'-f','f32le','-'])

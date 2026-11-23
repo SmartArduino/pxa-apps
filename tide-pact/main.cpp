@@ -492,7 +492,7 @@ struct VoyageApp {
     void on_frame(pxa::Context&, pxa::game::FrameTick tick) {
         if (!foreground) return;
         now=unsigned(tick.timestamp_us / 1000);
-        const bool battle=game.s.weather==Privateer || game.duel() || game.s.land_fight.kind;
+        const bool battle=!title && (game.s.weather==Privateer || game.duel() || game.s.land_fight.kind);
         audio.tick(tick.timestamp_us,battle?Score::Battle:!title && game.sea()?Score::Voyage:Score::Harbor);
         if ((reconfigure || !surface) && !opening && now>=surface_retry) {
             opening=true;

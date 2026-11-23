@@ -62,7 +62,7 @@
 
 ## 构建与维护
 
-标题或日志中的「设置」可单独打开或关闭配乐、航海音效和船员语音。港口、航行与战斗使用不同的配乐，PXA Host 流式播放单声道 Ogg，短音效和语音按需载入。游戏把内嵌美术保存在 `art/`，音频资源保存在 `assets/audio/`。
+标题或日志中的「设置」可单独打开或关闭配乐、航海音效和船员语音。港口、航行与战斗使用不同的配乐。PXA Host 流式播放 16 kHz 单声道 Ogg Vorbis，短音效和语音按需载入 16 位 PCM。源码音频处理使用 FFmpeg 的 libsoxr 和 libvorbis，游戏资源保存在 `assets/audio/`。
 
 音频提示词与台词位于 [tools/audio-cues.json](tools/audio-cues.json)。可用 `python tools/make_audio.py 原始FLAC目录 处理记录路径` 重新生成游戏资源。模型在工作站生成，设备包只包含音乐和短录音。 [ACE-Step 1.5](https://huggingface.co/ACE-Step/Ace-Step1.5) · [Stable Audio 3 Small SFX](https://huggingface.co/stabilityai/stable-audio-3-small-sfx) · [Qwen3-TTS VoiceDesign](https://huggingface.co/Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign)
 

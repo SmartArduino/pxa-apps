@@ -32,8 +32,9 @@ struct GameAudio {
 
     arcade::AudioBank bank;
     std::array<Cue,2> pending{};
-    std::uint64_t now=0, instance=0, retry_at=0;
-    Score playing=Score::Harbor;
+    std::array<Sound,2> prepared{Sound::None,Sound::None};
+    std::uint64_t now=0, instance=0, retry_at=0, scene_since=0;
+    Score playing=Score::Harbor, scene=Score::Harbor;
     std::uint8_t options=All;
     bool loaded=false, opening=false, active=false, dirty=false, writing=false;
 
@@ -79,12 +80,14 @@ struct GameAudio {
 
     void discard(unsigned track) {
         const auto sound=pending[track].sound;
-        if (sound!=Sound::None) bank.release(std::uint8_t(sound));
+        if (sound!=Sound::None && sound!=prepared[track]) bank.release(std::uint8_t(sound));
         pending[track]={};
     }
 
     void stop_track(unsigned track) {
         discard(track);
+        if (prepared[track]!=Sound::None) bank.release(std::uint8_t(prepared[track]));
+        prepared[track]=Sound::None;
         if (bank.session) (void)bank.session->control_sound(pxa::SoundTrack(track),pxa::MusicAction::stop);
     }
 
@@ -142,6 +145,12 @@ struct GameAudio {
         if (update->instance==instance) {
             if (update->state==pxa::PlaybackState::ready) log("music",Scores[unsigned(playing)]);
             else if (update->state!=pxa::PlaybackState::replaced) {
+                if (update->state==pxa::PlaybackState::error) {
+                    char message[112];
+                    std::snprintf(message,sizeof(message),"tide-pact audio music error=%ld %s",
+                                  static_cast<long>(update->status),Scores[unsigned(playing)]);
+                    (void)bank.context->log().write(pxa::LogLevel::warning,message);
+                }
                 instance=0;
                 retry_at=now+2000000;
             }
@@ -156,6 +165,11 @@ struct GameAudio {
             writing=true;
         }
         if (!active || !bank.session) return;
+        if (score!=scene) {
+            scene=score;
+            scene_since=now;
+            retry_at=0;
+        }
         for (unsigned track=0;track<pending.size();++track) {
             const auto cue=pending[track];
             if (cue.sound==Sound::None) continue;
@@ -164,12 +178,17 @@ struct GameAudio {
             const auto* clip=bank.prepare(id,Clips[id]);
             if (!clip) continue;
             const auto started=bank.session->sound_track(*clip,pxa::SoundTrack(track),false,(track?-4:-8)*256);
-            if (started) log(track?"voice":"effect",Clips[id]);
-            else if (arcade::transient_audio_error(started.error())) continue;
+            if (started) {
+                // Keep one ready clip per track for consecutive uses of the same cue.
+                const auto previous=prepared[track];
+                if (previous!=Sound::None && previous!=cue.sound) bank.release(std::uint8_t(previous));
+                prepared[track]=cue.sound;
+                log(track?"voice":"effect",Clips[id]);
+            } else if (arcade::transient_audio_error(started.error())) continue;
             discard(track);
         }
-        if (!enabled(Music) || (instance && playing==score) || now<retry_at) return;
-        stop_music();
+        if (!enabled(Music) || now<retry_at || (instance && (playing==score || now-scene_since<320000))) return;
+        // Accepted replacements are atomic. Retain the old track if the Host is busy.
         const auto started=bank.session->music(Scores[unsigned(score)],true,(score==Score::Battle?-14:-13)*256);
         if (!started) { retry_at=now+1500000; return; }
         instance=*started;
