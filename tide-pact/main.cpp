@@ -51,7 +51,11 @@ enum ChartActionIcon {
     ZoomInIcon=120, ZoomOutIcon, ReturnShipIcon, ShipWheelIcon,
     DockAnchorIcon, DestinationChartIcon, CompareScaleIcon, HarborLogIcon
 };
-constexpr int ChartActionIconSize=32;
+enum JournalIcon {
+    PortStoryIcon=140, SeaRecordIcon, ShoreNewsIcon, DiscoveryIcon,
+    NatureBookIcon, HandbookIcon, ExpeditionBookIcon, SettlementIcon
+};
+constexpr int ActionIconSize=32;
 enum Action {
     Begin=1, OpenChart, OpenMarket, OpenShipyard, OpenOffice, OpenJournal,
     RouteList, Close, ZoomIn, ZoomOut, Center, Sail, Pause, Trim, Retreat, NextStop,
@@ -814,14 +818,17 @@ struct VoyageApp {
         if (!price.empty()) {
             d.center_lines(content,text,color,price,inactive ? quiet : mist);
         } else if (glyph>=ZoomInIcon) {
-            const int item=glyph-ZoomInIcon, cell=ChartActionIconSize;
+            const bool journal_icon=glyph>=PortStoryIcon;
+            const Image atlas{journal_icon?art::journal_icons:art::chart_actions};
+            const int base=journal_icon?int(PortStoryIcon):int(ZoomInIcon);
+            const int item=glyph-base, cell=ActionIconSize;
             const Rect sprite{item%4*cell,item/4*cell,cell,cell};
             const int size=std::clamp(r.h-6,12,18);
             if (text.empty()) {
                 const Rect icon{content.x+(content.w-size)/2,content.y+(content.h-size)/2,size,size};
-                d.image({art::chart_actions},sprite,icon,true);
+                d.image(atlas,sprite,icon,true);
                 if (inactive) d.darken(icon,6);
-            } else d.center_with_icon(content,text,color,{art::chart_actions},sprite,size);
+            } else d.center_with_icon(content,text,color,atlas,sprite,size);
         } else if (glyph>=HelmTurnLeft) {
             const bool reflected= glyph==HelmGunRight;
             const int item=(reflected?HelmGunLeft:glyph)-HelmTurnLeft;
@@ -2931,27 +2938,33 @@ struct VoyageApp {
             button(d,{body.right()-112,body.y+2,51,20},"运单",OpenDispatch,bool(s.dispatch.number),
                    false,{},LetterIcon);
         d.label(body.x+5,body.y+23,"主线",quiet);
+        const Rect chapter_action{body.x+4,body.y+64,half,25};
         if (s.ending) {
             d.label(body.x+58,body.y+22,s.ending==1 ? "航图为众人所有" : "商号的独家合约",ivory,body.w-63);
-            pair(d,{body.x+4,body.y+64,body.w-8,25},"重读结局",ShowEnding,"考察簿",ShowExpeditions,true);
+            button(d,chapter_action,"重读结局",ShowEnding,true,false,{},HarborLogIcon);
         } else {
             d.label(body.x+58,body.y+23,Story[s.chapter].title,ivory,body.w-63);
             d.label(body.x+5,body.y+44,format("下一站  %s",Places[target()].name.data()),mist,body.w-68);
-            button(d,{body.x+4,body.y+64,half,25},
-                   story_here() ? "会面" : "在海图上标记",story_here()?ReadStory:Destination+target(),true,game.sea());
-            button(d,{body.x+9+half,body.y+64,body.w-13-half,25},"考察簿",ShowExpeditions);
+            const bool local=story_here();
+            button(d,chapter_action,local?"会面":"在海图上标记",local?ReadStory:Destination+target(),
+                   true,game.sea(),{},local?int(SpeechIcon):int(DestinationChartIcon));
         }
-        button(d,{body.right()-64,body.y+40,60,22},"据点",OpenEnclaves,false,false,{},MooringIcon);
+        button(d,{body.x+9+half,chapter_action.y,body.w-13-half,25},"考察簿",
+               ShowExpeditions,false,false,{},ExpeditionBookIcon);
+        button(d,{body.right()-64,body.y+40,60,22},"据点",OpenEnclaves,false,false,{},SettlementIcon);
         if (s.contract>=0 && body.h>=177)
             d.label(body.x+5,body.y+99,format("委托  %s / %s",
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
         const int third=(body.w-16)/3, row=body.bottom()-27;
-        button(d,{body.x+4,row-26,third,23},"港口故事",ShowTales);
-        button(d,{body.x+8+third,row-26,third,23},"海上纪事",ShowSeaLog);
-        button(d,{body.x+12+third*2,row-26,body.w-16-third*2,23},"岸上见闻",OpenShoreJournal);
-        button(d,{body.x+4,row,third,23},"发现图鉴",ShowAtlas);
-        button(d,{body.x+8+third,row,third,23},"自然图鉴",OpenNatureAlbum);
-        button(d,{body.x+12+third*2,row,body.w-16-third*2,23},"操作帮助",ShowHelp);
+        constexpr Text labels[]{"港口故事","海上纪事","岸上见闻","发现图鉴","自然图鉴","操作帮助"};
+        constexpr int actions[]{ShowTales,ShowSeaLog,OpenShoreJournal,ShowAtlas,OpenNatureAlbum,ShowHelp};
+        constexpr int icons[]{PortStoryIcon,SeaRecordIcon,ShoreNewsIcon,DiscoveryIcon,NatureBookIcon,HandbookIcon};
+        for (int i=0;i<int(std::size(labels));++i) {
+            const int col=i%3;
+            const int width=col<2?third:body.w-16-third*2;
+            button(d,{body.x+4+col*(third+4),row-(1-i/3)*26,width,23},labels[i],
+                   actions[i],false,false,{},icons[i]);
+        }
     }
 
     void nature_art(Draw& d, int entry, Rect picture) {
@@ -3093,10 +3106,16 @@ struct VoyageApp {
         button(d,{actions.x+half+5,actions.y,actions.w-half-5,actions.h},
                officer_talk?"查看专长":"交谈",OfficerTalk);
     }
+    int guild_illustration_width() const {
+        const int room=body.w-12;
+        const int width=std::min(room*42/100,room-170);
+        return body.h>=134 && width>=70?width:0;
+    }
     int visible_sea_picture() const {
         if (title) return Calm;
         if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
         if (modal==PortStoryPage) return harbor_street_picture(PortStories[port_story_id].port);
+        if (modal==PortDesk && guild_illustration_width()) return guild_picture(game.s.origin);
         if (screen==Office && modal==None && game.port() && !game.s.land_fight.kind)
             return harbor_picture(game.s.origin);
         if (const int detail=visible_pilot_detail();detail>=0) return PilotPictureBase+detail;
@@ -4141,29 +4160,40 @@ struct VoyageApp {
         page_title(d,"港口商会");
         if (game.dispatch_board_here())
             button(d,{body.right()-124,body.y+3,70,23},"港际运单",OpenDispatch,true);
+        Rect desk{body.x+6,body.y+28,body.w-12,body.h-34};
+        const int picture=guild_picture(game.s.origin);
+        const int art_width=picture==Calm?0:guild_illustration_width();
+        if (art_width) {
+            sea_picture_panel(d,picture,{desk.x,desk.y,art_width,desk.h});
+            desk.x+=art_width+5;
+            desk.w-=art_width+5;
+        }
         const bool invested=game.guild_stake(game.s.origin);
         const auto cost=format("入股 %d金",game.guild_cost());
-        if (game.market_held()) {
-            row(d,0,"港务留案","暂停交易",OpenPortCase,true);
-            d.label(body.x+7,body.y+52,"商会等港务处结案再开市。",mist,body.w-14);
-        } else {
-            row(d,0,"本港商栈",invested?"已入股":Text(cost),InvestPort,invested);
-            d.label(body.x+7,body.y+52,"入股后在本港买货约省6%",mist,body.w-14);
-        }
+        const bool held=game.market_held();
+        button(d,{desk.x,desk.y,desk.w,PricedButtonHeight},held?"港务留案":"本港商栈",
+               held?OpenPortCase:InvestPort,!invested || held,false,held?"暂停交易":invested?"已入股":Text(cost));
+        const int y=body.bottom()-28, hint_y=desk.y+PricedButtonHeight+5;
+        const Rect story{desk.x,y-26,desk.w,22};
+        if (hint_y+d.font.cell<=story.y)
+            d.label(desk.x+3,hint_y,held?"结案后恢复交易":invested?"本港买货约省6%":"入股后买货约省6%",
+                    held?quiet:mist,desk.w-6);
         if (game.s.origin==madeira ||
             (game.s.origin==cadiz && game.s.drift_stage>=DriftRecovered)) {
-            pair(d,{body.x+4,body.y+74,body.w-8,21},
-                 game.s.origin==madeira?"银铃护航":"码头决斗",
+            pair(d,story,game.s.origin==madeira?"银铃护航":"码头决斗",
                  game.s.origin==madeira?ShowEscort:ShowDuel,"红漆木匣",ShowDriftStory);
         } else if (game.s.origin==lisbon)
-            row(d,2,"银铃护航","航海故事",ShowEscort,true);
+            button(d,story,"银铃护航",ShowEscort,false,false,{},PortStoryIcon);
         else if (game.s.origin==cadiz)
-            row(d,2,"加的斯的旧誓",game.s.cadiz_victory?"已完成":"码头决斗",ShowDuel,true);
+            button(d,story,game.s.cadiz_victory?"加的斯的旧誓 · 已完成":"加的斯的旧誓",
+                   ShowDuel,false,false,{},PortStoryIcon);
         else if (game.s.origin==tunis)
-            row(d,2,"优素福","招募领航",Recruit,true);
-        if (game.shore_task_here()>=0 && game.tale_here()>=0)
-            row(d,2,Tales[game.tale_here()].title,"港口故事",PortTaleAction,true);
-        pair(d,{body.x+6,body.bottom()-28,body.w-12,24},"打听传闻",ShowRumors,"口译与学话",OpenLanguages);
+            button(d,story,"招募优素福",Recruit,false,false,{},CrewIcon);
+        else if (const int tale=game.tale_here();game.shore_task_here()>=0 && tale>=0)
+            button(d,story,Tales[tale].title,PortTaleAction,true,false,{},PortStoryIcon);
+        const int half=(desk.w-5)/2;
+        button(d,{desk.x,y,half,24},"打听传闻",ShowRumors,false,false,{},SpeechIcon);
+        button(d,{desk.x+half+5,y,desk.w-half-5,24},"口译与学话",OpenLanguages,false,false,{},PhrasebookIcon);
     }
     void dispatch_board(Draw& d) {
         const auto& record=game.s.dispatch;

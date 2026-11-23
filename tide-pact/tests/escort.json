@@ -6,7 +6,7 @@
     {"name":"office","action":"tap","x":197,"y":216},
     {"name":"desk","action":"tap","x":73,"y":151},
     {"name":"desk-options","action":"screenshot"},
-    {"name":"escort","action":"tap","x":120,"y":136},
+    {"name":"escort","action":"tap","x":161,"y":151},
     {"name":"briefing","action":"screenshot"},
     {"name":"accept-escort","action":"tap","x":148,"y":178},
     {"name":"depart","action":"tap","x":234,"y":178},
@@ -27,7 +27,7 @@
     {"name":"return-to-port-2","action":"wait","ms":1800},
     {"name":"madeira-office","action":"tap","x":197,"y":216},
     {"name":"madeira-desk","action":"tap","x":73,"y":151},
-    {"name":"delivery-story","action":"tap","x":120,"y":136},
+    {"name":"delivery-story","action":"tap","x":120,"y":151},
     {"name":"publish-ship-charter","action":"tap","x":83,"y":178},
     {"name":"escort-epilogue","action":"screenshot"}
   ]
