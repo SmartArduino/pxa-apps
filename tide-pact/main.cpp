@@ -788,9 +788,10 @@ struct VoyageApp {
     void port_scene(Draw& d, Rect area, int port) {
         if (port<0 || port>=PortCount || area.w<1 || area.h<1) return;
         if (const auto* view=sea_picture.pixels(harbor_picture(port))) {
-            const int width=std::min(SeaPictureWidth,SeaPictureHeight*area.w/area.h);
-            const int height=std::min(SeaPictureHeight,SeaPictureWidth*area.h/area.w);
-            d.image({view},{(SeaPictureWidth-width)/2,(SeaPictureHeight-height)*2/5,width,height},area);
+            const Image picture{view};
+            const int width=std::min(picture.width(),picture.height()*area.w/area.h);
+            const int height=std::min(picture.height(),picture.width()*area.h/area.w);
+            d.image(picture,{(picture.width()-width)/2,(picture.height()-height)*2/5,width,height},area);
         } else d.fill(area,ocean);
     }
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
@@ -972,8 +973,12 @@ struct VoyageApp {
         d.clip=clip;
     }
 
+    bool wide_title() const {
+        return wide_display() && (safe.w?safe.w:int(metrics.pixel_width)/scale-16)>=345;
+    }
+
     void start_screen(Draw& d) {
-        const bool horizontal=wide_display() && safe.w>=345;
+        const bool horizontal=wide_title();
         d.cover({horizontal?art::harbor:art::title_compact},d.clip);
         const Image logo{art::wordmark};
         const int logo_w=horizontal?std::min(288,safe.w*51/100):std::min(218,safe.w-36);
@@ -2726,49 +2731,77 @@ struct VoyageApp {
         skin_box(d,body,0,6);
         const int archive=game.archive_here();
         const bool observation=game.expedition_here()>=0;
-        int banner=34;
-        if (game.port()) {
-            banner=std::clamp(body.h-(archive>=0?119:100)-(valid_contract?7:0),35,190);
-            Rect display{body.x+4,body.y+4,body.w-8,banner-2};
-            port_scene(d,display,game.s.origin);
-            d.darken({display.x,display.y,display.w,std::min(34,display.h)},9);
+        const bool at_port=game.port();
+        const bool side_by_side=at_port && body.w>=290 && body.h>=137;
+        Rect desk=body;
+        int details_y=body.y+42;
+        if (side_by_side) {
+            const int view_w=body.w*44/100;
+            desk.x=body.x+view_w+10;
+            desk.w=body.right()-desk.x-4;
+            const Rect illustration{body.x+5,body.y+4,view_w,body.h-8};
+            port_scene(d,illustration,game.s.origin);
+            d.frame(illustration,border);
+            d.darken({illustration.x+1,illustration.bottom()-32,illustration.w-2,31},12);
+            d.label(illustration.x+6,illustration.bottom()-30,p.name,gold,illustration.w-12);
+            d.label(illustration.x+6,illustration.bottom()-15,p.region,ivory,illustration.w-12);
+            details_y=desk.y+34;
+        } else {
+            int banner=34;
+            if (at_port) {
+                banner=std::clamp(body.h-(archive>=0?119:100)-(valid_contract?7:0),36,190);
+                const Rect illustration{body.x+4,body.y+4,body.w-8,banner-2};
+                port_scene(d,illustration,game.s.origin);
+                const int caption_w=std::min(illustration.w,
+                    std::max(d.measure(p.name),d.measure(p.region))+12);
+                d.darken({illustration.x,illustration.y,caption_w,std::min(33,illustration.h)},12);
+            }
+            d.label(body.x+9,body.y+6,p.name,gold,body.w-82);
+            d.label(body.x+9,body.y+22,p.region,ivory,body.w-18);
+            details_y=body.y+banner+8;
         }
-        const bool has_town=game.port() && town_index(game.s.origin)>=0;
+        const bool has_town=at_port && town_index(game.s.origin)>=0;
         const bool village=game.enclave_here()>=0;
-        const bool escort=game.port() && game.s.origin==lisbon && !(game.s.shore_campaign&1);
-        d.label(body.x+9,body.y+6,p.name,gold,body.w-(has_town?87:18)-(village?62:0));
-        d.label(body.x+9,body.y+22,p.region,ivory,body.w-18);
-        if (has_town) button(d,{body.right()-66,body.y+6,58,22},"进城",OpenTown,true);
-        if (village) button(d,{body.right()-(has_town?128:66),body.y+6,58,22},"村镇",ShowLocalEnclave);
-        if (escort) button(d,{body.right()-128,body.y+6,58,22},"陆战",OpenLandBriefing);
-        const int y=body.y+banner+8;
-        if (game.port()) {
+        const bool escort=at_port && game.s.origin==lisbon && !(game.s.shore_campaign&1);
+        int next=desk.right()-5;
+        if (has_town) {
+            button(d,{next-58,desk.y+6,58,22},"进城",OpenTown,true);
+            next-=62;
+        }
+        if (village) {
+            button(d,{next-58,desk.y+6,58,22},"村镇",ShowLocalEnclave);
+            next-=62;
+        }
+        if (escort) button(d,{next-58,desk.y+6,58,22},"陆战",OpenLandBriefing);
+        if (at_port) {
             const int dest=valid_contract ? game.s.contract : game.proposal();
             const int item=valid_contract ? game.s.contract_good : game.proposal_good();
             const auto offer=format("委托  %s ×3  →  %s",GoodsNames[item].data(),Places[dest].name.data());
-            d.wrap({body.x+8,y,body.w-16,32},offer,ivory);
-            const int contract_y=y+(d.measure(offer)<=body.w-16?16:31);
-            if (valid_contract && contract_y+14<=body.bottom()-(archive>=0?75:51))
-                d.label(body.x+8,contract_y,format("第 %d 日前  赏金 %d",game.s.deadline+1,game.reward(dest)),mist,body.w-10);
-            const int split=body.w/2;
+            const int service_y=desk.bottom()-(archive>=0?75:51);
+            const int offer_w=desk.w-16;
+            d.wrap({desk.x+8,details_y,offer_w,std::min(32,service_y-details_y)},offer,ivory);
+            const int contract_y=details_y+(d.measure(offer)<=offer_w?16:31);
+            if (valid_contract && contract_y+14<=service_y)
+                d.label(desk.x+8,contract_y,format("第 %d 日前  赏金 %d",game.s.deadline+1,game.reward(dest)),mist,offer_w);
+            const int split=desk.w/2;
             const int local_tale=game.tale_here();
             if (archive>=0)
-                button(d,{body.x+3,body.bottom()-75,body.w-6,21},
+                button(d,{desk.x+3,desk.bottom()-75,desk.w-6,21},
                        game.s.expeditions[archive].stage==HasEvidence?"档案室 · 交考察记录":"档案室",
                        OpenArchive,true);
-            button(d,{body.x+3,body.bottom()-51,split-6,21},"港口商会",OpenDesk);
+            button(d,{desk.x+3,desk.bottom()-51,split-6,21},"港口商会",OpenDesk);
             if (game.shore_task_here()>=0)
-                button(d,{body.x+split+2,body.bottom()-51,body.w-split-5,21},"岸上见闻",OpenShoreTask,true);
+                button(d,{desk.x+split+2,desk.bottom()-51,desk.w-split-5,21},"岸上见闻",OpenShoreTask,true);
             else if (local_tale>=0)
-                button(d,{body.x+split+2,body.bottom()-51,body.w-split-5,21},
+                button(d,{desk.x+split+2,desk.bottom()-51,desk.w-split-5,21},
                        Tales[local_tale].title,PortTaleAction,true);
-            button(d,{body.x+3,body.bottom()-26,split-6,24},
+            button(d,{desk.x+3,desk.bottom()-26,split-6,24},
                 valid_contract ? "交付委托" : "接行会委托",valid_contract ? Deliver : Accept,false,
                 valid_contract && game.s.origin!=dest);
-            button(d,{body.x+split+2,body.bottom()-26,body.w-split-5,24},
+            button(d,{desk.x+split+2,desk.bottom()-26,desk.w-split-5,24},
                 story_here() ? "会面" : "等候一日",story_here() ? ReadStory : WaitDay,story_here());
         } else {
-            d.wrap({body.x+5,y,body.w-10,body.h-70},p.note,mist);
+            d.wrap({body.x+5,details_y,body.w-10,body.h-70},p.note,mist);
             pair(d,{body.x+4,body.bottom()-28,body.w-8,25},"测绘",Survey,
                  story_here() ? "读蜡封信" : game.tow_needed() ? "请求拖带" : observation ? "考察" : "海图",
                  story_here()?ReadStory:game.tow_needed()?ShowTow:observation?OpenObservation:OpenChart,true);
@@ -2953,6 +2986,7 @@ struct VoyageApp {
     int visible_sea_picture() const {
         if (title) return Calm;
         if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
+        if (modal==PortStoryPage) return harbor_street_picture(PortStories[port_story_id].port);
         if (screen==Office && modal==None && game.port() && !game.s.land_fight.kind)
             return harbor_picture(game.s.origin);
         if (const int detail=visible_pilot_detail();detail>=0) return PilotPictureBase+detail;
@@ -2968,9 +3002,7 @@ struct VoyageApp {
     void sea_picture_panel(Draw& d, int kind, Rect illustration) {
         if (illustration.w<=0 || illustration.h<=0) return;
         if (const auto* pixels=sea_picture.pixels(kind)) {
-            const int crop_w=std::min(SeaPictureWidth,SeaPictureHeight*illustration.w/illustration.h);
-            const int crop_h=std::min(SeaPictureHeight,SeaPictureWidth*illustration.h/illustration.w);
-            d.image({pixels},{(SeaPictureWidth-crop_w)/2,(SeaPictureHeight-crop_h)/2,crop_w,crop_h},illustration);
+            d.cover({pixels},illustration);
         } else {
             skin_box(d,illustration,0,4);
             voyage_icon(d,SeaChartIcon,{illustration.x+(illustration.w-24)/2,
@@ -3216,8 +3248,11 @@ struct VoyageApp {
         constexpr int scene_w=288, scene_h=136;
         if (outside) d.image({art::outskirts},{0,0,scene_w,scene_h},view);
         else if (const int picture=harbor_street_picture(Towns[city].port); picture!=Calm) {
-            if (const auto* image=sea_picture.pixels(picture))
-                d.image({image},{0,0,SeaPictureWidth,SeaPictureHeight},view);
+            if (const auto* bytes=sea_picture.pixels(picture)) {
+                const Image image{bytes};
+                d.image(image,{0,0,image.width(),image.height()},view);
+            } else if (picture==LisbonStreetPicture)
+                d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
             else d.fill(view,ocean);
         }
         else if (Towns[city].port==calicut) d.image({art::calicut},{0,0,scene_w,scene_h},view);
@@ -4831,7 +4866,7 @@ struct VoyageApp {
             return;
         }
         chrome={};
-        d.fill(d.clip,ink);
+        if (!title || modal==AudioSettings) d.fill(d.clip,ink);
         if (!title && game.s.land_fight.kind) {
             land_screen(d);
             focused=std::clamp(focused,0,std::max(0,button_count-1));

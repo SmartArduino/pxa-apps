@@ -2,6 +2,7 @@
 
 #include "draw.hpp"
 #include <pxa/app.hpp>
+#include <memory>
 
 namespace tide {
 
@@ -12,6 +13,7 @@ inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=1
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
 inline constexpr int HarborPictureBase=160;
 inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture=HarborPictureBase+9;
+inline constexpr int LisbonStreetPicture=HarborPictureBase+10;
 
 inline int harbor_picture(int port) {
     switch (port) {
@@ -24,7 +26,12 @@ inline int harbor_picture(int port) {
 }
 
 inline int harbor_street_picture(int port) {
-    return port==venice?VeniceStreetPicture:port==kilwa?KilwaStreetPicture:Calm;
+    switch (port) {
+    case lisbon: return LisbonStreetPicture;
+    case venice: return VeniceStreetPicture;
+    case kilwa: return KilwaStreetPicture;
+    default: return Calm;
+    }
 }
 inline constexpr int PilotMarkSize=22, SmallShipSize=20, SmallShipStride=8*SmallShipSize;
 
@@ -37,7 +44,7 @@ inline Text sea_picture_path(int kind) {
     constexpr Text ports[]{"assets/ports/atlantic.pxi","assets/ports/mediterranean.pxi",
         "assets/ports/islands.pxi","assets/ports/indian.pxi","assets/ports/lisbon.pxi",
         "assets/ports/venice.pxi","assets/ports/kilwa.pxi","assets/ports/calicut.pxi",
-        "assets/ports/venice-streets.pxi","assets/ports/kilwa-streets.pxi"};
+        "assets/ports/venice-streets.pxi","assets/ports/kilwa-streets.pxi","assets/ports/lisbon-streets.pxi"};
     if (kind>=HarborPictureBase && kind<HarborPictureBase+int(std::size(ports)))
         return ports[kind-HarborPictureBase];
     switch (kind) {
@@ -65,46 +72,71 @@ public:
             wanted_=kind;
             failed_=false;
         }
-        if (ready_==kind || busy_ || failed_ || sea_picture_path(kind).empty()) return;
-        busy_=true;
-        if (!ctx.tasks().start(load(ctx.assets(),kind,dirty))) busy_=false;
+        if (ready_==kind || loading_!=Calm || failed_) return;
+        const Text path=sea_picture_path(kind);
+        if (path.empty() && !large_) return;
+        large_.reset();
+        ready_=Calm;
+        if (path.empty()) return;
+        loading_=kind;
+        if (!ctx.tasks().start(load(ctx.assets(),kind,path,dirty))) loading_=Calm;
     }
 
     bool failed(int kind) const { return wanted_==kind && failed_; }
 
     const unsigned char* pixels(int kind) const {
-        return kind!=Calm && ready_==kind?bytes_.data():nullptr;
+        return kind!=Calm && ready_==kind?(large_?large_.get():bytes_.data()):nullptr;
     }
 
 private:
-    pxa::Task<void> load(pxa::AssetService assets, int kind, bool& dirty) {
-        ready_=Calm;
-        const bool nearshore=pilot_picture(kind);
-        const auto count=nearshore?PilotMapBytes:int(bytes_.size());
-        auto output=std::as_writable_bytes(std::span(bytes_)).first(count);
+    static std::size_t image_size(std::span<const std::byte,4> header,bool nearshore) {
+        if (nearshore) {
+            constexpr std::array magic{std::byte{'P'},std::byte{'C'},std::byte{'H'},std::byte{'1'}};
+            return std::equal(header.begin(),header.end(),magic.begin())?PilotMapBytes:0;
+        }
+        const auto width=pxa::wire::get16(header.data()),height=pxa::wire::get16(header.data()+2);
+        return width && width<=576 && height && height<=272?516+std::size_t(width)*height:0;
+    }
+
+    pxa::Task<void> load(pxa::AssetService assets,int kind,Text path,bool& dirty) {
+        std::array<std::byte,4> header{};
+        const auto first=co_await assets.read(path,0,header);
+        const auto size=first && first->bytes==header.size()?image_size(header,pilot_picture(kind)):0;
+        std::span<std::byte> output;
+        if (size && size==first->total_bytes && wanted_==kind) {
+            if (size<=bytes_.size()) output=std::as_writable_bytes(std::span(bytes_)).first(size);
+            else {
+                large_.reset(new (std::nothrow) unsigned char[size]);
+                if (large_) output=std::as_writable_bytes(std::span(large_.get(),size));
+            }
+        }
         std::size_t offset=0;
-        while (offset<output.size()) {
+        if (!output.empty()) {
+            std::copy(header.begin(),header.end(),output.begin());
+            offset=header.size();
+        }
+        while (offset<output.size() && wanted_==kind) {
             const auto length=std::min<std::size_t>(output.size()-offset,4064);
-            auto read=co_await assets.read(sea_picture_path(kind),offset,output.subspan(offset,length));
-            if (!read || read->total_bytes!=output.size() || !read->bytes) break;
+            auto read=co_await assets.read(path,offset,output.subspan(offset,length));
+            if (!read || read->total_bytes!=output.size() || !read->bytes || read->bytes>length) break;
             offset+=read->bytes;
         }
-        const Image image{bytes_.data()};
-        const auto valid=nearshore?
-            bytes_[0]=='P' && bytes_[1]=='C' && bytes_[2]=='H' && bytes_[3]=='1':
-            !image.packed() && image.width()==SeaPictureWidth && image.height()==SeaPictureHeight;
-        const bool complete=offset==output.size() && valid;
+        const bool complete=offset && offset==output.size() && wanted_==kind;
         if (complete) ready_=kind;
-        else if (wanted_==kind) failed_=true;
-        busy_=false;
+        else {
+            large_.reset();
+            if (wanted_==kind) failed_=true;
+        }
+        loading_=Calm;
         dirty=true;
         co_return pxa::Result<void>{};
     }
 
-    // Only the active illustration or close-up sprite sheet occupies linear memory.
+    // A single streamed picture or pilotage grid is resident at a time.
     std::array<unsigned char,516+SeaPictureWidth*SeaPictureHeight> bytes_{};
-    int wanted_=Calm, ready_=Calm;
-    bool busy_=false, failed_=false;
+    std::unique_ptr<unsigned char[]> large_;
+    int wanted_=Calm,ready_=Calm,loading_=Calm;
+    bool failed_=false;
 };
 
 } // namespace tide

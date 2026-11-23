@@ -37,7 +37,7 @@ def pack_views(harbors, towns):
     named = zip(("lisbon", "venice", "kilwa", "calicut"), split_image(harbors, 2, 2), strict=True)
     fallback = zip(("atlantic", "mediterranean", "islands", "indian"), split_image(ASSETS / "port-scenes.jpg", 4, 1), strict=True)
     for name, source in [*named, *fallback]:
-        view = source.convert("RGB").resize((160, 104), Image.Resampling.LANCZOS)
+        view = source.convert("RGB").resize((352, 224), Image.Resampling.LANCZOS)
         (destination / f"{name}.pxi").write_bytes(texture_bytes(view))
     for name, source in zip(("venice-streets", "kilwa-streets"), split_image(towns, 2, 1), strict=True):
         view = ImageOps.crop(source.convert("RGB"), (2, int(source.height * .06), 2, int(source.height * .025)))
