@@ -28,6 +28,7 @@ enum class MapView { None, Chart, Helm, Pilot };
 enum Plate { StandardPlate, ActionPlate };
 enum HarborPanel { HarborPlaque, HarborWood, HarborGoldWood, HarborPaper, HarborTrim };
 constexpr int WidePlateWidth=128, WidePlateHeight=56, WidePlateEdge=10, WideBarHeight=20;
+constexpr int ShipPortraitWidth=112, ShipPortraitHeight=80;
 enum FontChoice : std::uint8_t { AutomaticFont, SmallFont, LargeFont, FontChoices };
 enum Overlay {
     None, Routes, StoryPage, Intel, Help, Atlas, EndingPage, TaleList, TalePage, SeaLog,
@@ -2403,35 +2404,78 @@ struct VoyageApp {
         d.center({body.x,body.y,body.w,body.h-27},reason,mist);
         button(d,{body.x+5,body.bottom()-30,body.w-10,25},"返回海图",OpenChart,true);
     }
+    void ship_portrait(Draw& d, Rect area) {
+        const int h=std::min(area.h,area.w*ShipPortraitHeight/ShipPortraitWidth);
+        const int w=h*ShipPortraitWidth/ShipPortraitHeight;
+        d.image({art::ship_portraits},{game.s.ship*ShipPortraitWidth,0,ShipPortraitWidth,ShipPortraitHeight},
+                {area.x+(area.w-w)/2,area.y+(area.h-h)/2,w,h},true);
+    }
     void shipyard(Draw& d) {
+        const auto& s=game.s;
         if (!game.port()) {
             if (!game.sea() || game.encounter()) { no_port(d,"靠港后才能整备船只"); return; }
             skin_box(d,body,0,6);
-            d.label(body.x+7,body.y+7,HullNames[game.s.ship],gold);
-            d.label(body.x+7,body.y+28,game.s.in_company?"两船随行":"单船航行",mist);
+            const int left=body.x+body.w/2;
+            ship_portrait(d,{body.x+5,body.y+4,body.w/2-10,body.h-38});
+            d.label(left,body.y+16,HullNames[s.ship],gold,body.right()-left-5);
+            d.label(left,body.y+36,s.in_company?"两船随行":"单船航行",mist,body.right()-left-5);
+            d.label(left,body.y+54,format("船体 %d%%",s.hull),s.hull<40?vermilion:ivory,body.right()-left-5);
             button(d,{body.x+7,body.bottom()-29,body.w-14,25},"查看旗号",OpenFlags,true,false,{},PennantIcon);
             return;
         }
-        const auto& s=game.s;
         skin_box(d,body,0,6);
-        d.label(body.x+5,body.y+4,HullNames[s.ship],gold,body.w-139);
-        button(d,{body.right()-128,body.y+2,54,20},"泊位",OpenCharterDesk,game.at_berth());
-        button(d,{body.right()-71,body.y+2,67,20},"副官",ShowOfficers,s.first_mate!=NoOfficer,false,{},CrewIcon);
-        d.label(body.x+5,body.y+22,format("船员 %d/%d  士气 %d  炮 %d",s.crew,
-            game.crew_limit(),s.spirits,s.guns),mist,body.w-67);
-        button(d,{body.right()-58,body.y+20,54,17},"旗号",OpenFlags,false);
-        int height=std::clamp((body.h-36)/4-3,20,34);
-        const auto fill=format("补给 %d金",game.ration_cost());
-        const auto repair=format("维修 %d金",game.repair_cost());
+        Rect desk=body.inset(4);
+        const bool split=body.w>=298 && body.h>=137;
+        Rect toolbar{desk.right()-114,desk.y,114,20};
+        const auto hull=format("船体 %d%%",s.hull);
+        const auto crew=format("船员 %d/%d",s.crew,game.crew_limit());
+        const auto morale=format("士气 %d  炮 %d",s.spirits,s.guns);
+        if (split) {
+            const Rect card{desk.x,desk.y,body.w*37/100,desk.h};
+            desk.x=card.right()+5;
+            desk.w=body.right()-4-desk.x;
+            toolbar={desk.x,desk.y,desk.w,23};
+            harbor_panel(d,card,HarborPlaque,5);
+            d.center({card.x+5,card.y+5,card.w-10,17},HullNames[s.ship],gold);
+            const int stats=card.bottom()-60;
+            ship_portrait(d,{card.x+4,card.y+23,card.w-8,stats-card.y-26});
+            d.label(card.x+7,stats,hull,s.hull<40?vermilion:ivory,card.w-14);
+            meter(d,{card.x+7,stats+17,card.w-14,8},s.hull,100,s.hull<40);
+            d.label(card.x+7,stats+29,crew,mist,card.w-14);
+            d.label(card.x+7,stats+45,morale,mist,card.w-14);
+        } else {
+            ship_portrait(d,{desk.x,desk.y,33,32});
+            const int name_x=desk.x+36;
+            d.label(name_x,desk.y+3,HullNames[s.ship],gold,toolbar.x-name_x-4);
+            d.label(name_x,desk.y+20,format("船体%d  船员%d  士气%d  炮%d",s.hull,s.crew,s.spirits,s.guns),
+                    s.hull<40?vermilion:mist,desk.right()-name_x);
+        }
+        const int tool=(toolbar.w-6)/3;
+        button(d,{toolbar.x,toolbar.y,tool,toolbar.h},"泊位",OpenCharterDesk,game.at_berth(),false,{},DockAnchorIcon);
+        button(d,{toolbar.x+tool+3,toolbar.y,tool,toolbar.h},"副官",ShowOfficers,s.first_mate!=NoOfficer,false,{},CrewIcon);
+        button(d,{toolbar.x+2*(tool+3),toolbar.y,toolbar.w-2*(tool+3),toolbar.h},"旗号",
+               OpenFlags,false,false,{},PennantIcon);
+
+        const int food_cost=game.ration_cost(), repair_cost=game.repair_cost(), hire_cost=game.sailor_hire_cost();
+        const auto fill=format("补满水粮 %d金",food_cost);
+        const auto refill=format("补满 %d金",food_cost);
+        const auto repair=format("修船 %d金",repair_cost);
+        const auto crew_cost=format("雇%d人 %d金",game.recruitable_sailors(),hire_cost);
         const auto guns=format("加炮 %d金",145+s.guns*120);
         const auto upgrade=format("换购 %d金",s.ship==0?800:1850);
-        const Text titles[]{fill,repair,"休整 24金","雇本港水手",s.ship<2?Text(upgrade):"已是商船",
+        const int half=(desk.w-4)/2;
+        const Text titles[]{food_cost?Text(d.measure(fill)+4<=half?fill:refill):"水粮已满",
+                            repair_cost?Text(repair):"船体完好",s.spirits<100?"休整 24金":"士气已满",
+                            hire_cost?Text(crew_cost):"水手满员",s.ship<2?Text(upgrade):"已是商船",
                             s.guns<3?Text(guns):"火炮已满","应急信贷","食物淡水"};
-        constexpr int glyphs[]{RationIcon,RepairIcon,-1,CrewIcon,SailIcon,-1,-1,FlaskIcon};
+        const bool inactive[]{!food_cost,!repair_cost,s.spirits==100,!hire_cost,s.ship==2,s.guns==3,false,false};
+        constexpr int glyphs[]{RationIcon,RepairIcon,-1,CrewIcon,SailIcon,HelmGunLeft,LetterIcon,FlaskIcon};
+        const int y=desk.y+(split?29:35), rows_h=desk.bottom()-y-9;
         for (int i=0;i<8;++i) {
-            int x=body.x+(i%2)*(body.w/2+2);
-            button(d,{x,body.y+37+(i/2)*(height+3),body.w/2-3,height},titles[i],
-                   i==7?OpenProvisions:DockService+i,i==0,(i==4 && s.ship==2)||(i==5 && s.guns==3),{},glyphs[i]);
+            const int row=i/2, top=row*rows_h/4;
+            const Rect r{desk.x+(i%2)*(half+4),y+top+3*row,i%2?desk.w-half-4:half,
+                         (row+1)*rows_h/4-top};
+            button(d,r,titles[i],i==7?OpenProvisions:DockService+i,i==0,inactive[i],{},glyphs[i]);
         }
     }
     void charter_desk(Draw& d) {
@@ -4001,29 +4045,40 @@ struct VoyageApp {
         else d.label(body.x+6,body.bottom()-22,"点选消息可在海图上标记港口",quiet,body.w-12);
     }
     void provisions_page(Draw& d) {
-        page_title(d,"食物与淡水");
+        page_title(d,"食物与淡水",RationIcon);
         button(d,{body.right()-105,body.y+3,52,23},"配给",ShowRations,game.s.ration_flags!=0);
         const int x=body.x+7, w=body.w-14, half=(w-5)/2;
         const int food=game.s.stores, water=game.s.water;
         const int food_cap=game.food_capacity(), water_cap=game.water_capacity();
-        d.label(x,body.y+28,format("补给舱 %d/%d",food+water,2*game.max_stores()),mist,w);
-        voyage_icon(d,RationIcon,{x,body.y+45,15,15});
-        voyage_icon(d,FlaskIcon,{x,body.y+63,15,15});
-        d.label(x+18,body.y+46,format("食物 %d/%d",food,food_cap),ivory,w-18);
-        d.label(x+18,body.y+64,format("淡水 %d/%d",water,water_cap),ivory,w-18);
-        if (w>=208) {
-            const int bar=w/3;
-            meter(d,{x+w-bar,body.y+50,bar,8},food,food_cap,false);
-            meter(d,{x+w-bar,body.y+68,bar,8},water,water_cap,true);
-        }
-        button(d,{x,body.bottom()-54,half,20},"卸食物",UnloadFood,false,!food);
-        button(d,{x+half+5,body.bottom()-54,w-half-5,20},"卸淡水",UnloadWater,false,!water);
-        const auto food_cost=game.resupply_cost(food+10,water);
-        const auto water_cost=game.resupply_cost(food,water+10);
-        button(d,{x,body.bottom()-32,half,PricedButtonHeight},format("食物 +%d",std::min(10,food_cap-food)),
-               BuyFood,true,!food_cost || game.s.gold<food_cost,format("%d金",food_cost));
-        button(d,{x+half+5,body.bottom()-32,w-half-5,PricedButtonHeight},format("淡水 +%d",std::min(10,water_cap-water)),
-               BuyWater,true,!water_cost || game.s.gold<water_cost,format("%d金",water_cost));
+        const int cap=2*game.max_stores();
+        const auto shared=format("共用补给舱 %d/%d",food+water,cap);
+        const int bar_x=x+d.measure(shared)+9;
+        d.label(x,body.y+29,shared,ivory,w);
+        if (x+w-bar_x>=32)
+            meter(d,{bar_x,body.y+32,x+w-bar_x,8},food+water,cap,false);
+
+        const int cards_y=body.y+47, cards_h=body.bottom()-60-cards_y;
+        const auto supply=[&](int left,int width,Text name,int glyph,int amount,int limit,int cost,bool drink) {
+            const Rect card{left,cards_y,width,cards_h};
+            harbor_panel(d,card,HarborPlaque,4);
+            const auto load=format("%s %d/%d",name.data(),amount,limit);
+            const Rect sprite{glyph%3*32,glyph/3*32,32,32};
+            d.center_with_icon({card.x+4,card.y+3,card.w-8,d.font.cell+3},load,ivory,
+                               {art::voyage_icons},sprite,15);
+            if (card.h>=d.font.cell+16)
+                meter(d,{card.x+5,card.bottom()-10,card.w-10,7},amount,limit,drink);
+
+            const auto unload=format("卸%s %d份",name.data(),std::min(10,amount));
+            button(d,{left,body.bottom()-57,width,20},unload,drink?UnloadWater:UnloadFood,false,!amount);
+            const int count=std::min(10,limit-amount);
+            const auto title=count?format("添%s +%d",name.data(),count):format("%s已满",name.data());
+            const auto price=format("%d金",cost);
+            const Text detail=!cost?"":cost>game.s.gold?"金币不足":Text(price);
+            button(d,{left,body.bottom()-PricedButtonHeight-2,width,PricedButtonHeight},title,
+                   drink?BuyWater:BuyFood,true,!cost || game.s.gold<cost,detail);
+        };
+        supply(x,half,"口粮",RationIcon,food,food_cap,game.resupply_cost(food+10,water),false);
+        supply(x+half+5,w-half-5,"淡水",FlaskIcon,water,water_cap,game.resupply_cost(food,water+10),true);
     }
 
     void rations_page(Draw& d) {

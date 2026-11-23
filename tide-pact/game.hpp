@@ -340,6 +340,8 @@ struct Game {
     int food_capacity() const;
     int water_capacity() const;
     int crew_limit() const;
+    int recruitable_sailors() const;
+    int sailor_hire_cost() const { return recruitable_sailors()*12; }
     int quote(int good, bool sell) const;
     int price_at(int port, int good, bool sell) const;
     int specialty_orders(int port, int good) const;

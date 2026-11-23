@@ -237,6 +237,9 @@ int Game::water_capacity() const {
     return std::min(max_stores()+20,2*max_stores()-s.stores);
 }
 int Game::crew_limit() const { return berths[s.ship]; }
+int Game::recruitable_sailors() const {
+    return std::clamp(std::min(crew_limit()-s.crew,berths[2]-s.crew-s.berth.sailors),0,3);
+}
 
 int Game::load() const {
     int all = dispatch_space()+s.whale_oil+s.whale_blubber+(s.migrant_site?3:0);
@@ -1810,10 +1813,9 @@ void Game::service(int action) {
         if (pay(24)) { spend_day(2); s.spirits = 100; notice = "船员休整完毕"; }
         break;
     case 3: {
-        const int room=std::min(crew_limit()-s.crew,berths[2]-s.crew-s.berth.sailors);
-        if (room<=0) { notice = "水手已满员"; break; }
-        const int recruits=std::min(3,room);
-        if (pay(12*recruits)) {
+        const int recruits=recruitable_sailors();
+        if (!recruits) { notice = "水手已满员"; break; }
+        if (pay(sailor_hire_cost())) {
             s.crew+=recruits;
             notice="受雇的本港水手已登船";
         }
