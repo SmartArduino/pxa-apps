@@ -105,7 +105,7 @@ enum Action {
     PilotWaterBuy, PilotFoodBuy, PilotBookOpen, PilotStoryOpen, PilotGuide, PilotAim, PilotOpenParcel,
     PilotHandleParcel, PilotSpeed, PilotCenterShip, PilotCoastHint,
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
-    LandBrace, LandEndRound, LandRetreat, LandCellAction, PilotSiteEntry=LandCellAction+LandCells
+    LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, LandCellAction, PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(TradeStartPreparation<DockService);
@@ -200,6 +200,7 @@ struct VoyageApp {
     unsigned town_frame=0, town_hint_until=0;
     bool inside_town_facility=false;
     bool outside=false, at_timber_river=false, inland_archive=false;
+    Overlay land_return=None;
     Overlay town_facility=None;
     int scale=1, raster_scale=1, surface_x=0, surface_y=0;
     int selected=madeira, good=Wine, page=0, atlas_item=0, tale_item=0, sea_item=-1;
@@ -257,7 +258,7 @@ struct VoyageApp {
     unsigned font_retry_at=0;
     unsigned now=0, last_day=0, last_step=0, notice_until=0, flash_until=0, saved_until=0;
     unsigned surface_retry=0, duel_flash_until=0;
-    unsigned voyage_rate=1, presented_vessel_frame=0;
+    unsigned voyage_rate=1, presented_vessel_frame=0, presented_weather_frame=0;
     int duel_animation=0;
     unsigned long long next_frame=1;
     Screen screen=Chart;
@@ -656,6 +657,13 @@ struct VoyageApp {
                 dirty=true;
             }
         }
+        if (!title && weather_animation()>=0 && !panning && !pinch) {
+            const unsigned frame=now/180;
+            if (frame!=presented_weather_frame) {
+                presented_weather_frame=frame;
+                dirty=true;
+            }
+        }
         sea_picture.show(*context,visible_sea_picture(),dirty);
         if (pilot_pending>=0 && !title) {
             const bool world=pilot_pending==WorldPilotIndex;
@@ -792,7 +800,45 @@ struct VoyageApp {
     void voyage_icon(Draw& d, int icon, Rect r) {
         d.image({art::voyage_icons},{icon%3*32,icon/3*32,32,32},r,true);
     }
+    int weather_animation() const {
+        if (modal==LandPage && !inland_archive) {
+            switch (game.land_weather()) {
+            case DryHeat: return 2;
+            case WetTrail: case FloodedTrail: return 0;
+            case SnowTrail: case Whiteout: return 1;
+            default: return -1;
+            }
+        }
+        if (modal!=None || screen!=Chart || !pilot_view()) return -1;
+        const auto weather=game.conditions().weather;
+        return weather==Snow?1:weather==Rain || weather==Squall?0:-1;
+    }
+
+    void weather_marks(Draw& d,Rect area,int effect,int columns,int rows) {
+        if (effect<0 || area.w<28 || area.h<24) return;
+        const auto clip=d.clip;
+        d.clip=d.clipped(area);
+        columns=std::min(columns,std::max(1,area.w/33));
+        rows=std::min(rows,std::max(1,area.h/29));
+        const int pitch_x=area.w/columns, pitch_y=area.h/rows;
+        for (int y=0;y<rows;++y) {
+            for (int x=0;x<columns;++x) {
+                const int phase=(presented_weather_frame+x+2*y)%4;
+                const int dx=(x*17+y*13)%11-5;
+                const int dy=(x*7+y*11)%9-4;
+                const Rect mark{area.x+x*pitch_x+(pitch_x-28)/2+dx,
+                                area.y+y*pitch_y+(pitch_y-24)/2+dy,28,24};
+                d.image({art::weather_motion},{phase*32,effect*28,32,28},mark,true);
+            }
+        }
+        d.clip=clip;
+    }
+
     void weather_icon(Draw& d, SeaWeather weather, Rect r) {
+        if (weather==Snow) {
+            d.image({art::weather_motion},{0,28,32,28},r,true);
+            return;
+        }
         d.image({art::weather_icons},{int(weather)*32,0,32,32},r,true);
     }
     void port_scene(Draw& d, Rect area, int port) {
@@ -1596,6 +1642,7 @@ struct VoyageApp {
         auto native=d.native_pixels();
         chart_terrain.draw(native,viewport,camera,sx,sy,pilot_atlas,game,
                            detail_index,detail_water,detail_view,detail_opacity,density);
+        if (!panning && !pinch) weather_marks(d,map,weather_animation(),6,3);
         const int guide=pilot_target();
         const int berth=game.pilot_berth(water,guide);
         const bool docking=game.pilot_docking()>=0;
@@ -2077,7 +2124,7 @@ struct VoyageApp {
     void helm_panel(Draw& d,Rect info,bool wide,int landmark,SeaConditions state,int speed) {
         skin_box(d,info,0,5);
         const auto bearing=format("%s %d.%d节",Bearings[game.s.heading].data(),speed/10,speed%10);
-        constexpr Text compact_weather[]{"晴","热","雨","阵"};
+        constexpr Text compact_weather[]{"晴","热","雨","阵","雪"};
         const auto breeze=format("%s→%s%d级",
                                   (wide?compact_weather[state.weather]:SeaWeatherNames[state.weather]).data(),
                                   Bearings[state.direction].data(),state.strength);
@@ -2873,11 +2920,18 @@ struct VoyageApp {
         }
         const bool has_town=at_port && town_index(game.s.origin)>=0;
         const bool village=game.enclave_here()>=0;
+        const int survey=regional_survey_at(game.s.origin);
+        const bool field=at_port && survey>=OriginalRegionalSurveys;
         const bool escort=at_port && game.s.origin==lisbon && !(game.s.shore_campaign&1);
         int next=desk.right()-5;
         if (has_town) {
             button(d,{next-58,desk.y+6,58,22},"进城",OpenTown,true);
             next-=62;
+        }
+        if (field) {
+            const bool report=game.land_stage()==LandNotes || game.land_stage()==LandFullNotes;
+            button(d,{next-70,desk.y+6,70,22},report?"交考察图":"城外考察",OpenFieldSurvey,report);
+            next-=74;
         }
         if (village) {
             button(d,{next-58,desk.y+6,58,22},"村镇",ShowLocalEnclave);
@@ -3031,7 +3085,7 @@ struct VoyageApp {
             const int art_w=std::min({168,w*46/100,(bottom-y-21)*3/2});
             const Rect picture{x,y,art_w,art_w*2/3};
             nature_art(d,nature_item,picture);
-            const int text_x=picture.right()+8, text_w=x+w-text_x;
+            const int text_x=picture.w?picture.right()+8:x, text_w=x+w-text_x;
             d.label(text_x,y,nature_site_name(specimen.site),gold,text_w);
             d.wrap({text_x,y+20,text_w,bottom-y-43},specimen.note,ivory,17);
             d.label(x,bottom-20,specimen.scientific,quiet,w);
@@ -3440,7 +3494,7 @@ struct VoyageApp {
                           town.entrance==CityGateTarget);
         } else if (regional_survey_at(layout.port)>=0) {
             const auto gate=town_on_screen(layout.field_gate);
-            const Text field=layout.port==madeira?"去水渠":"去盐田";
+            const Text field=layout.port==madeira?"去水渠":layout.port==cadiz?"去盐田":"去胡椒园";
             harbor_button(d,{town_area.right()-62,gate.y+4,60,21},field,WalkRegionalTrail,
                           town.entrance==RegionalTrailTarget);
         }
@@ -3511,9 +3565,16 @@ struct VoyageApp {
         const int bottom=body.bottom(), row=bottom-37;
         const bool tidal=!inland_archive && stage==LandUnvisited && game.s.origin==cadiz;
         const bool low_tide=tidal && game.cadiz_low_tide();
-        const int picture_width=std::min(128,w/3);
-        const Rect picture{x,y,picture_width,std::min(picture_width*104/160,bottom-y-(tidal?65:44))};
-        const int text_x=picture.right()+8, text_w=x+w-text_x;
+        const auto condition=game.land_weather();
+        const bool new_survey=region>=OriginalRegionalSurveys;
+        const bool weather_closed=!inland_archive && new_survey && stage==LandUnvisited && shortcut_closed(condition);
+        const bool narrow_warning=weather_closed && w<320;
+        const int art_width=w*(w>=320?45:33)/100;
+        const int available_height=bottom-y-(tidal || narrow_warning?65:51);
+        const int image_height=std::clamp(available_height,0,std::min(192,art_width)*4/5);
+        const int picture_width=std::min(art_width,image_height*7/4);
+        const Rect picture{x,y,picture_width,image_height};
+        const int text_x=picture.w?picture.right()+8:x, text_w=x+w-text_x;
         const bool filed=stage>=LandFiled;
         const bool full=stage==LandFullNotes || stage==LandFullFiled;
         const int reward=survey?(full?survey->full_reward:survey->sketch_reward):(full?215:150);
@@ -3521,9 +3582,26 @@ struct VoyageApp {
                    inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
         if (!inland_archive && game.nature_site()!=NoNatureSite)
             button(d,{body.right()-77,body.y+3,73,23},"自然观察",OpenNatureWatch,true);
-        const auto* scene=game.s.origin==madeira?art::levada:game.s.origin==cadiz?art::marsh:art::inland;
-        d.image({scene},{0,0,160,104},picture);
-        d.frame(picture,border);
+        const unsigned char* scenes[]{art::levada,art::marsh,art::expedition_forest,
+                                      art::expedition_wadi,art::expedition_vardo,art::expedition_malabar,
+                                      art::expedition_sabaki};
+        const auto season=game.land_season();
+        const auto* landscape=survey?scenes[survey->environment]:inland_archive?art::inland:art::expedition_estuary;
+        if (survey && survey->environment==BarentsCoast && season!=Winter) landscape=art::expedition_vardo_thaw;
+        if (survey && survey->environment==MalabarHills && season!=SouthwestMonsoon) landscape=art::expedition_malabar_dry;
+        const Image scene{landscape};
+        if (picture.h && picture.w) {
+            const int width=std::min(scene.width(),scene.height()*picture.w/picture.h);
+            const int height=std::min(scene.height(),scene.width()*picture.h/picture.w);
+            d.image(scene,{(scene.width()-width)/2,(scene.height()-height)/2,width,height},picture);
+            weather_marks(d,picture,weather_animation(),3,2);
+            if (!inland_archive) {
+                const Rect status{picture.x+1,picture.bottom()-17,picture.w-2,16};
+                d.darken(status,11);
+                d.center(status,LandConditionNames[condition],shortcut_closed(condition)?gold:ivory);
+            }
+            d.frame(picture,border);
+        }
         Text story;
         if (inland_archive) {
             if (survey) story=full?survey->archive_full:survey->archive_sketch;
@@ -3545,11 +3623,19 @@ struct VoyageApp {
             case LandRidge: story=survey?survey->junction:"路碑的字还认得。拓碑就能交图。翻上望台，还能把背坡的岔路画进去。"; break;
             case LandInscription: story=survey?survey->sketch:"你拓下几处地名和里程。把拓片和草图带回里斯本吧。"; break;
             case LandLookout: story=survey?survey->full:"从望台上能看见背坡的两条路。你辨出通向村子的那条，添在图上。"; break;
-            case LandNotes: case LandFullNotes: story="考察已经结束。进城去档案室交稿吧。"; break;
+            case LandNotes: case LandFullNotes:
+                story=new_survey?"考察图已画好。回港务，交给当地管事。":"考察已经结束。进城去档案室交稿吧。";
+                break;
             default: story="这处地形已经画进档案室的图册。"; break;
             }
         }
-        d.wrap({text_x,y,text_w,bottom-y-(tidal?67:53)},story,ivory,15);
+        if (!inland_archive) {
+            const auto date=calendar_date(game.s.day);
+            const auto season_line=format("%d月%d日  %s",date.month,date.day,ClimateSeasonNames[season].data());
+            d.label(text_x,y,season_line,gold,text_w);
+        }
+        const int narrative_y=inland_archive?y:y+16;
+        d.wrap({text_x,narrative_y,text_w,row-narrative_y-(tidal || weather_closed?23:5)},story,ivory,15);
         const auto leg_button=[&](Rect rect, LandAction step, Text label, int action, bool accent=false) {
             const auto cost=game.land_cost(step);
             const bool blocked=!game.land_requirement(step).empty();
@@ -3562,7 +3648,9 @@ struct VoyageApp {
             button(d,{x,row,w,PricedButtonHeight},"查看港际运单",OpenDispatch,true);
         } else if (game.s.nature_hike) {
             leg_button({x,row,w,PricedButtonHeight},ReturnToCity,"回城",WalkLandBack,true);
-        } else if (!inland_archive && survey && stage>=LandNotes) {
+        } else if (!inland_archive && new_survey && (stage==LandNotes || stage==LandFullNotes)) {
+            button(d,{x,row,w,PricedButtonHeight},"查看考察图",OpenFieldSurvey,true);
+        } else if (!inland_archive && !new_survey && survey && stage>=LandNotes) {
             leg_button({x,row,w,PricedButtonHeight},FollowStream,
                        game.s.origin==madeira?"再访林地":"再访盐田",WalkLandStream,true);
         } else if (filed) {
@@ -3576,9 +3664,12 @@ struct VoyageApp {
             if (tidal) {
                 d.label(x,row-21,low_tide?"低潮，可走潮滩":"涨潮，潮滩不通",low_tide?mint:gold,w-61);
                 if (!low_tide) button(d,{x+w-58,row-24,58,21},"候潮",WaitLandTide);
-            } else if (!game.land_requirement(FollowStream).empty() ||
-                       (short_path && !game.land_requirement(CrossPass).empty())) {
-                d.center({x,row-17,w,15},"水粮不足，记得留返程份额",vermilion);
+            } else if (weather_closed) {
+                const int warning_x=narrow_warning?x:text_x;
+                d.label(warning_x,row-20,game.land_requirement(CrossPass),gold,x+w-warning_x-73);
+                button(d,{x+w-66,row-24,66,21},"等一日",WaitLandWeather);
+            } else if (const Text blocked=game.land_requirement(FollowStream); !blocked.empty()) {
+                d.center({x,row-17,w,15},blocked,vermilion);
             }
         } else if (!inland_archive && stage==LandRidge) {
             const int third=(w-8)/3;
@@ -3652,6 +3743,7 @@ struct VoyageApp {
         }
         if (id==PostRoadTarget || id==RegionalTrailTarget) {
             inland_archive=false;
+            land_return=HarborTown;
             set_modal(LandPage);
             return;
         }
@@ -3906,8 +3998,11 @@ struct VoyageApp {
         const Text sail=game.s.reefed?"已缩帆":"全帆";
         const int sail_x=right-d.measure(sail);
         d.label(sail_x,body.y+29,sail,quiet);
+        const auto date=calendar_date(game.s.day);
+        const auto season=local_season(game.position(),game.s.day);
+        const auto season_line=format("%d月%d日  %s",date.month,date.day,ClimateSeasonNames[season].data());
         if (manual) {
-            d.label(x,body.y+29,"按眼下海域推算",gold,sail_x-x-6);
+            d.label(x,body.y+29,season_line,gold,sail_x-x-6);
             d.label(x,body.y+45,"掌舵驶离后，风况会变",mist,w);
         } else {
             const int destination=underway?game.sailing_target():selected;
@@ -3917,7 +4012,11 @@ struct VoyageApp {
             const auto food=format("粮 %d/%d",forecast.provisions,game.s.stores);
             const auto water=format("水 %d/%d",forecast.water,int(game.s.water));
             d.label(x,body.y+45,food,forecast.provisions>game.s.stores?vermilion:mint);
-            d.label(x+d.measure(food)+12,body.y+45,water,forecast.water>game.s.water?vermilion:mint);
+            const int water_x=x+d.measure(food)+12;
+            d.label(water_x,body.y+45,water,forecast.water>game.s.water?vermilion:mint);
+            const int season_x=right-d.measure(season_line);
+            if (season_x>=water_x+d.measure(water)+8)
+                d.label(season_x,body.y+45,season_line,gold);
         }
 
         const auto outlook=manual?game.local_forecast():forecast.outlook;
@@ -4784,8 +4883,10 @@ struct VoyageApp {
             const bool large=body.h>=174 || w>=290;
             const int art_w=large?std::min(w/3,126):46;
             const int art_y=y+25, art_h=art_w/2;
-            d.image({art::discoveries},{expedition_item*160,0,160,80},
-                    {x+w-art_w,art_y,art_w,art_h});
+            const Rect picture{x+w-art_w,art_y,art_w,art_h};
+            if (on_site && expedition_item==BirdsAtLowWater)
+                d.image({art::expedition_arguin},{0,0,320,160},picture);
+            else d.image({art::discoveries},{expedition_item*160,0,160,80},picture);
             d.frame({x+w-art_w,art_y,art_w,art_h},border);
             if (on_site) {
                 const auto block=game.observation_block(expedition_item);
@@ -5155,8 +5256,11 @@ struct VoyageApp {
             }
             break;
         }
-        if (game.land_away())
-            d.center({safe.x,safe.bottom()-27,safe.w,22},"已为返程预留一份粮和一份水",mist);
+        if (game.land_away()) {
+            const auto reserve=game.land_cost(ReturnToCity);
+            d.center({safe.x,safe.bottom()-27,safe.w,22},
+                     format("返程预留 粮%d 水%d",reserve.food,reserve.water),mist);
+        }
         else if (!full_helm_chart()) {
             if (!game.encounter() || modal!=None) footer(d);
             else if (!game.s.helm || game.s.weather!=Privateer)
@@ -5662,12 +5766,24 @@ struct VoyageApp {
                 if (modal==HarborTown && !outside && regional_survey_at(game.s.origin)>=0)
                     town_go(Towns[town_id].field_gate,RegionalTrailTarget);
                 break;
+            case OpenFieldSurvey:
+                if (game.port() && regional_survey_at(game.s.origin)>=OriginalRegionalSurveys &&
+                    (modal==LandPage || (modal==None && screen==Office))) {
+                    if (modal!=LandPage) land_return=None;
+                    inland_archive=game.land_stage()>=LandNotes;
+                    set_modal(LandPage);
+                }
+                break;
+            case WaitLandWeather:
+                if (modal==LandPage && !inland_archive && game.wait_land_weather()) changed();
+                break;
             case WaitLandTide:
                 if (modal==LandPage && game.wait_land_tide()) changed();
                 break;
             case OpenLandReport:
                 if (modal==ExpeditionPage && game.archive_here()==expedition_item && game.land_stage()>=LandNotes) {
                     inland_archive=true;
+                    land_return=ExpeditionPage;
                     set_modal(LandPage);
                 }
                 break;
@@ -5676,8 +5792,13 @@ struct VoyageApp {
                     if (game.explore_land(static_cast<LandAction>(action-WalkLandStream))) {
                         if (action==WalkLandBack) {
                             if (regional_survey_at(game.s.origin)>=0) {
-                                show_town();
-                                town.at=Towns[town_id].field_gate;
+                                if (land_return==HarborTown && town_index(game.s.origin)>=0) {
+                                    show_town();
+                                    town.at=Towns[town_id].field_gate;
+                                } else {
+                                    screen=Office;
+                                    set_modal(None);
+                                }
                             } else if (!outside) {
                                 show_town();
                                 change_outskirts(true);
@@ -5822,6 +5943,8 @@ struct VoyageApp {
             else if (game.land_away()) {
                 screen=Office;
                 inland_archive=false;
+                const int region=regional_survey_at(game.s.origin);
+                land_return=region<OriginalRegionalSurveys?HarborTown:None;
                 set_modal(LandPage);
             }
             break;
@@ -6256,7 +6379,7 @@ struct VoyageApp {
             else if (modal==PilotStory) set_modal(pilot_story_back);
             else if (modal==PilotParcelPage) set_modal(PilotStory);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
-            else if (modal==LandPage) set_modal(inland_archive?ExpeditionPage:HarborTown);
+            else if (modal==LandPage) set_modal(land_return);
             else if (modal==HarborTown && outside) change_outskirts(false);
             else if (modal==DispatchBoard) {
                 if (dispatch_page!=DispatchList) {

@@ -270,7 +270,7 @@ bool Game::reveal_pilot_chart() {
     const int index=s.pilot.region-1;
     if (index<0 || index>=WorldPilotIndex) return false;
     const auto weather=conditions().weather;
-    const float range=weather==Squall?3.5f:weather==Rain?4.5f:6.f;
+    const float range=weather==Squall || weather==Snow?3.5f:weather==Rain?4.5f:6.f;
     return reveal_pilot_area(index,{s.pilot.x,s.pilot.y},range+(s.first_mate==Pilot?1.5f:0.f));
 }
 

@@ -26,6 +26,7 @@ constexpr Point chart_point(float lon, float lat) {
 
 } // namespace tide
 
+#include "climate.hpp"
 #include "expeditions.hpp"
 #include "dispatch.hpp"
 #include "languages.hpp"
@@ -124,14 +125,14 @@ struct Passage {
     int miles = 0;
 };
 
-enum SeaWeather { Fair, Heat, Rain, Squall };
+enum SeaWeather { Fair, Heat, Rain, Squall, Snow };
 struct SeaConditions {
     int direction, strength;
     SeaWeather weather;
 };
 inline constexpr Point Directions[]{{0,-16},{11,-11},{16,0},{11,11},{0,16},{-11,11},{-16,0},{-11,-11}};
 inline constexpr Text Bearings[]{"北","东北","东","东南","南","西南","西","西北"};
-inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风"};
+inline constexpr Text SeaWeatherNames[]{"晴","炎热","降雨","骤风","降雪"};
 inline constexpr int HoursPerDay=24, SailingWatches=4, HoursPerWatch=HoursPerDay/SailingWatches;
 inline constexpr int HelmPulsesPerWatch=6;
 enum DriftStage : std::uint8_t { DriftUnheard, DriftSearching, DriftRecovered, DriftReturned, DriftFiled };
@@ -359,6 +360,9 @@ struct Game {
     int land_stage() const;
     bool land_away() const { return s.nature_hike || (land_stage()>=LandRidge && land_stage()<=LandLookout); }
     LandLeg land_cost(LandAction action) const;
+    ClimateSeason land_season() const;
+    LandCondition land_weather() const;
+    bool wait_land_weather();
     bool cadiz_low_tide() const;
     bool wait_land_tide();
     bool knows_land_pass() const;

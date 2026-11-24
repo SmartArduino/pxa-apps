@@ -1978,7 +1978,60 @@ void expanded_world_and_land() {
     assert(salt.s.gold==680 && decode(saved,encode(salt.s)) && saved.inland_stages[1]==LandFiled);
 }
 
+void seasonal_field_surveys() {
+    assert(calendar_date(0).month==1 && calendar_date(0).day==1);
+    assert(calendar_date(365+59).month==3 && calendar_date(365+59).day==1);
+    assert(local_season(Anchor[lisbon],0)==Winter && local_season(Anchor[cape],0)==Summer);
+    assert(local_season(Anchor[elmina],120)==WetSeason && local_season(Anchor[elmina],0)==DrySeason);
+    assert(conditions_at(Anchor[calicut],181).direction==1);
+    assert(conditions_at(Anchor[calicut],334).direction==5);
+    bool snow=false;
+    for (int day=0;day<59;++day) snow|=conditions_at(Anchor[vardo],day).weather==Snow;
+    assert(snow);
+    for (int day=151;day<243;++day)
+        assert(conditions_at(Anchor[vardo],day).weather!=Heat);
+
+    for (int region=OriginalRegionalSurveys;region<int(std::size(RegionalSurveys));++region) {
+        const auto& survey=RegionalSurveys[region];
+        Game game;
+        game.s.origin=survey.port;
+        int day=0;
+        while (day<365 && !shortcut_closed(game.land_weather())) game.s.day=++day;
+        assert(day<365);
+        const int stores=game.s.stores, water=game.s.water;
+        assert(!game.land_requirement(CrossPass).empty());
+        assert(game.wait_land_weather() && game.s.day==day+1);
+        assert(game.s.stores==stores && game.s.water==water);
+        assert(game.explore_land(FollowStream) && game.land_away());
+        State recovered;
+        assert(decode(recovered,encode(game.s)));
+        assert(recovered.inland_stages[region]==LandRidge);
+        assert(!game.wait_land_weather());
+        assert(game.explore_land(SurveyLookout) && game.explore_land(ReturnToCity));
+        const int gold=game.s.gold;
+        assert(game.file_land_report() && game.s.gold==gold+survey.full_reward);
+        assert(!game.file_land_report() && !game.explore_land(FollowStream));
+        assert(decode(recovered,encode(game.s)) && recovered.inland_stages[region]==LandFullFiled);
+    }
+
+    Game desert;
+    desert.s.origin=muscat;
+    const auto reserve=desert.land_cost(ReturnToCity);
+    int day=120;
+    while (day<230 && desert.land_weather()!=DryHeat) desert.s.day=++day;
+    assert(day<230);
+    assert(desert.land_cost(FollowStream).water==RegionalSurveys[regional_survey_at(muscat)].legs[FollowStream].water+1);
+    assert(desert.land_cost(ReturnToCity).water==reserve.water);
+}
+
 int main() {
+    for (int port=0;port<PortCount;++port) {
+        Game game;
+        game.s.origin=port;
+        const int destination=game.proposal();
+        assert(destination>=0 && destination<PortCount && passage(port,destination).count>0);
+    }
+    seasonal_field_surveys();
     expanded_world_and_land();
     for (int from=0; from<PlaceCount; ++from)
         for (int to=0; to<PlaceCount; ++to) {

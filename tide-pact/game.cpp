@@ -25,10 +25,11 @@ int length(Point a, Point b) {
     return std::max(1, static_cast<int>(std::sqrt(float(x*x+y*y)) * 10));
 }
 
-int sailing_wind(const Leg& leg, bool reverse, int month) {
+int sailing_wind(const Leg& leg, bool reverse, int day) {
+    const auto monsoon=monsoon_season(annual_day(day));
     if (leg.from==malindi && leg.to==calicut) {
-        const bool southwest=month>=4 && month<=8;
-        return southwest!=reverse?18:-14;
+        if (monsoon==BetweenMonsoons) return 0;
+        return (monsoon==SouthwestMonsoon)!=reverse?18:-14;
     }
     if (leg.from==canaries && leg.to==santo_domingo) return reverse?-13:15;
     auto a = Anchor[reverse ? leg.to : leg.from], b = Anchor[reverse ? leg.from : leg.to];
@@ -37,7 +38,10 @@ int sailing_wind(const Leg& leg, bool reverse, int month) {
     a.x-=LegacyMapX; b.x-=LegacyMapX;
     if (latitude >= 37 || latitude < -31) return dx > 10 ? 15 : (dx < -10 ? -13 : 0);
     if (latitude < 6 && b.x < 450 && latitude > -6) return -28;
-    if (a.x > 563 && b.x > 563) return (month >= 4 && month <= 8) == (dy < 0) ? 18 : -14;
+    if (a.x>563 && b.x>563 && latitude>=-6 && latitude<24) {
+        if (monsoon==BetweenMonsoons) return 0;
+        return (monsoon==SouthwestMonsoon)==(dy<0)?18:-14;
+    }
     if (latitude > 6 && a.x < 282 && b.x < 282) return dy > 8 ? 18 : (dy < -8 ? -13 : 0);
     if (latitude < -14 && a.x < 447) return dy > 8 ? -14 : 12;
     return 0;
@@ -49,7 +53,7 @@ int sailing_miles_per_day(const State& ship, int load, int spirits, int wind, Se
     const int companion=ship.in_company?ship.berth.vessel-1:ship.ship;
     const int pace=std::min(hull_pace[ship.ship],hull_pace[companion])-
                    (ship.in_company?7+(100-ship.berth.hull)/8:0);
-    const int seas=weather==Squall?(ship.reefed?9:24):weather==Rain?5:0;
+    const int seas=weather==Squall?(ship.reefed?9:24):weather==Snow?9:weather==Rain?5:0;
     return std::clamp(pace+std::min(18,ship.crew)+(spirits-60)/5-drag+wind
                      -seas-(ship.reefed?24:0)+(ship.allies&1?6:0)+(ship.allies&2?4:0)
                      +(ship.first_mate==Pilot?12:0),35,170);
@@ -64,7 +68,7 @@ int route_wind(const Passage& path, int leg, int day, SeaConditions weather) {
     const auto& edge=Legs[path.edge[leg]];
     const bool reverse=path.reverse[leg];
     const auto from=Anchor[reverse?edge.to:edge.from], to=Anchor[reverse?edge.from:edge.to];
-    return sailing_wind(edge,reverse,(day/30)%12)+wind_along(direction_to({to.x-from.x,to.y-from.y}),weather)/2;
+    return sailing_wind(edge,reverse,day)+wind_along(direction_to({to.x-from.x,to.y-from.y}),weather)/2;
 }
 
 SeaConditions route_weather(const Passage& path, int leg, int progress, int day) {
@@ -106,22 +110,31 @@ bool open_water(Point from, Point to, WaterTest water_at) {
 }
 
 SeaConditions conditions_at(Point p, int day) {
-    const int latitude=ChartNorth-p.y/8;
-    p.x-=LegacyMapX; p.y-=LegacyMapY;
-    const unsigned cell=unsigned(p.x/54+1)*73856093U ^ unsigned(p.y/60+1)*19349663U ^
-                        unsigned(day/2+1)*83492791U;
+    const int latitude=ChartNorth-p.y/ChartLatitudeScale;
+    const auto season=local_season(p,day);
+    const unsigned cell=unsigned((p.x-LegacyMapX)/54+1)*73856093U ^
+                        unsigned((p.y-LegacyMapY)/60+1)*19349663U ^ unsigned(day/2+1)*83492791U;
     const unsigned sample=(cell^(cell>>13))%100U;
     SeaConditions out{
         latitude>=34 || latitude<-34 ? (latitude>=34?3:1) : latitude>=0?5:7,
         2+int((cell>>7)%4U),Fair
     };
-    if (p.x>=575 && latitude<22 && latitude>-23)
-        out.direction=(day/30)%12>=4 && (day/30)%12<=8 ? 1 : 5;
-    if (sample<12 && (latitude<-27 || latitude>28 || sample<5)) {
+    if (season==SouthwestMonsoon) out.direction=1;
+    if (season==NortheastMonsoon) out.direction=5;
+    if (season==BetweenMonsoons) out.strength=std::max(1,out.strength-1);
+    const bool winter_seas=season==Winter && std::abs(latitude)>28;
+    const bool rain_season=season==WetSeason || season==SouthwestMonsoon;
+    const unsigned gale=winter_seas?17:rain_season?11:(latitude<-27 || latitude>28)?9:5;
+    const unsigned precipitation=rain_season?58:season==DrySeason || season==NortheastMonsoon?17:29;
+    if (sample<gale) {
         out.weather=Squall;
         out.strength=6;
-    } else if (sample<28) out.weather=Rain;
-    else if (std::abs(latitude)<24 && sample<78) out.weather=Heat;
+    } else if (sample<precipitation) {
+        out.weather=latitude>=57 && season==Winter?Snow:Rain;
+    } else if ((std::abs(latitude)<24 || (season==Summer && std::abs(latitude)<48)) &&
+               sample<(rain_season?68:78)) {
+        out.weather=Heat;
+    }
     return out;
 }
 
@@ -559,9 +572,52 @@ int Game::land_stage() const {
     return s.origin==lisbon?int(s.land_stage):region>=0?int(s.inland_stages[region]):int(LandUnvisited);
 }
 
+ClimateSeason Game::land_season() const {
+    return s.origin==muscat?temperate_season(s.day,false):local_season(Anchor[s.origin],s.day);
+}
+
+LandCondition Game::land_weather() const {
+    const int region=regional_survey_at(s.origin);
+    const auto season=land_season();
+    const auto sea=conditions_at(Anchor[s.origin],s.day).weather;
+    const bool rain=sea==Rain || sea==Squall;
+    if (region>=OriginalRegionalSurveys) {
+        switch (RegionalSurveys[region].environment) {
+        case OmanWadi: {
+            // Muscat lies north of the summer monsoon's regular land rains.
+            const unsigned sample=((unsigned(s.day/2+1)*2654435761U)>>20)%100;
+            if (sample<3) return FloodedTrail;
+            if (sample<(season==Winter?12U:6U)) return WetTrail;
+            return season==Winter?ClearTrail:DryHeat;
+        }
+        case BarentsCoast:
+            if (season==Winter && sea==Squall) return Whiteout;
+            if (season==Winter) return SnowTrail;
+            break;
+        default:
+            if (sea==Squall || (rain && (season==WetSeason || season==SouthwestMonsoon)))
+                return FloodedTrail;
+            break;
+        }
+    }
+    if (rain) return WetTrail;
+    return sea==Heat?DryHeat:ClearTrail;
+}
+
+bool Game::wait_land_weather() {
+    if (!port() || regional_survey_at(s.origin)<OriginalRegionalSurveys ||
+        !shortcut_closed(land_weather()) || s.day>=99999) return false;
+    spend_day(1);
+    s.sail_watch=1;
+    notice=shortcut_closed(land_weather())?"近路还没通，高路可以走":"天气好转，近路可以走";
+    return true;
+}
+
 LandLeg Game::land_cost(LandAction action) const {
     const int region=regional_survey_at(s.origin);
     auto leg=region>=0?RegionalSurveys[region].legs[action]:LandLegs[action];
+    if (region>=OriginalRegionalSurveys && (action==FollowStream || action==CrossPass) &&
+        land_weather()==DryHeat) ++leg.water;
     if (s.first_mate==Quartermaster) leg.water=std::max(1,leg.water-1);
     return leg;
 }
@@ -581,7 +637,7 @@ bool Game::wait_land_tide() {
 
 bool Game::knows_land_pass() const {
     if (s.origin==cadiz) return cadiz_low_tide();
-    if (s.origin==madeira) return true;
+    if (regional_survey_at(s.origin)>=0) return !shortcut_closed(land_weather());
     return s.timber_trail!=TrailUnknown || s.first_mate==Pilot;
 }
 
@@ -590,11 +646,15 @@ Text Game::land_requirement(LandAction action) const {
         (s.origin!=lisbon && regional_survey_at(s.origin)<0) || sea() || encounter())
         return "要从考察所在港出发";
     const bool outward=action==FollowStream || action==CrossPass;
-    const bool revisiting=regional_survey_at(s.origin)>=0 && land_stage()>=LandNotes;
+    const int region=regional_survey_at(s.origin);
+    const bool revisiting=region>=0 && region<OriginalRegionalSurveys && land_stage()>=LandNotes;
     if (outward ? land_away() || (land_stage()!=LandUnvisited && !revisiting) : !land_away())
         return "这段路走不了了";
-    if (action==CrossPass && !knows_land_pass())
+    if (action==CrossPass && !knows_land_pass()) {
+        if (region>=OriginalRegionalSurveys)
+            return land_weather()==Whiteout?"风雪遮住外岬，走内湾":"低处积水，改走高处";
         return s.origin==cadiz?"等潮退再走潮滩":"需要货签背面的线索，或请安娜领路";
+    }
     if ((action==CopyMilestone || action==SurveyLookout) && land_stage()!=LandRidge)
         return "已经记下这处地形";
     const auto leg=land_cost(action);
@@ -807,8 +867,10 @@ PassageForecast Game::forecast_from(const Passage& path, int first_leg, int prog
 
 int Game::proposal() const {
     constexpr int outbound[] = {madeira, bordeaux, cadiz, canaries, ribeira, elmina,
-                                tangier, valencia, tunis, genoa, malindi, lisbon,
-                                ribeira, elmina, mpinda, elmina, kilwa, malindi, aden, kilwa};
+                                tangier, valencia, valencia, genoa, malindi, lisbon,
+                                ribeira, elmina, mpinda, elmina, kilwa, malindi, aden, kilwa,
+                                bruges, bergen, hormuz, muscat, malindi, canaries};
+    static_assert(std::size(outbound)==PortCount);
     return outbound[s.origin];
 }
 int Game::proposal_good() const { return (s.origin + s.day / 60) % GoodsCount; }
@@ -2894,7 +2956,7 @@ constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
 constexpr int SeaLawSaveFields=3+2*CourtCount*4;
 static_assert(CargoSaveBytes>=OldWakeRecordBytes+9+13*MerchantNames.size()+1+8+3+4+
-              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+std::size(RegionalSurveys)+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+(2+SpecialtyBuyerSlots)*SpecialtyCount+5+3*LandUnits+7*MerchantNames.size());
+              (ChartBytes-OldChartBytes)+AddedPorts*GoodsCount+12+OriginalRegionalSurveys+1+BerthSaveFields+3+4*CourtCount+ShoreTaskCount+1+SkirmishSaveFields+FisherySaveFields+EnclaveSaveFields+SeaLawSaveFields+12+std::size(PilotParcels)+2+8+4+(2+SpecialtyBuyerSlots)*SpecialtyCount+5+3*LandUnits+7*MerchantNames.size()+NewSurveySaveBytes);
 
 constexpr int migrate_place(int place) {
     return place>=LegacyPortCount?place+AddedPorts:place;
@@ -2981,7 +3043,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     bytes[offset++]=std::byte(s.ration_flags);
     bytes[offset++]=std::byte(s.bargain_warnings|(s.timber_trail<<2)|(s.land_stage<<4)|
                               (s.road_delivery?0x80:0));
-    for (auto stage : s.inland_stages) bytes[offset++]=std::byte(stage);
+    for (auto stage : std::span(s.inland_stages).first(OriginalRegionalSurveys))
+        bytes[offset++]=std::byte(stage);
     bytes[offset++]=std::byte(s.nature_records|(s.nature_hike?NatureHikeBit:0));
     for (auto field : {s.berth.port,s.berth.vessel,s.berth.hull,s.berth.guns,s.berth.sailors})
         bytes[offset++]=std::byte(field);
@@ -3046,6 +3109,10 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(ship.sold_day);
         for (auto value : {ship.sold_port,ship.sold_good,ship.sold_units}) bytes[offset++]=std::byte(value);
     }
+    // Keep the original coastal survey offset and all earlier save fields fixed.
+    for (int i=0;i<NewRegionalSurveys;++i)
+        bytes[CargoSaveBytes-4-NewSurveySaveBytes+i/2]|=
+            std::byte(s.inland_stages[OriginalRegionalSurveys+i]<<((i%2)*4));
     offset=CargoSaveBytes-4;
     for (const auto& area : s.pilot_chart)
         for (const auto row : area) put(row);
@@ -3288,7 +3355,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             (s.origin!=lisbon || s.helm || s.destination>=0 || s.weather!=Calm ||
              s.stores<LandLegs[ReturnToCity].food || s.water<LandLegs[ReturnToCity].water)) return false;
         if (expanded) {
-            for (int i=0;i<int(s.inland_stages.size());++i) {
+            for (int i=0;i<OriginalRegionalSurveys;++i) {
                 auto& stage=s.inland_stages[i];
                 stage=std::to_integer<std::uint8_t>(bytes[offset++]);
                 if (stage>LandFullFiled) return false;
@@ -3302,7 +3369,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             s.nature_hike=(nature&NatureHikeBit)!=0;
             if (s.nature_hike) {
                 const int region=regional_survey_at(s.origin);
-                if (region<0 || s.inland_stages[region]<LandNotes || s.helm || s.destination>=0 ||
+                if (region<0 || region>=OriginalRegionalSurveys || s.inland_stages[region]<LandNotes || s.helm || s.destination>=0 ||
                     s.weather!=Calm || s.stores<1 || s.water<1) return false;
             }
         }
@@ -3514,6 +3581,21 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                         ship.sold_units>MerchantLot || market_access(MerchantPorts[ship.sold_port],ship.sold_good)==MarketAccess::Closed):
                         (ship.sold_port!=NoMerchantPort || date))) return false;
                 ship.sold_day=int(date);
+            }
+        }
+        if (extended_survey) {
+            for (int i=0;i<NewRegionalSurveys;++i) {
+                const int code=std::to_integer<int>(bytes[CargoSaveBytes-4-NewSurveySaveBytes+i/2]);
+                const int stage=(code>>((i%2)*4))&15;
+                const int region=OriginalRegionalSurveys+i;
+                if (stage>LandFullFiled) return false;
+                if (stage>=LandRidge && stage<=LandLookout) {
+                    const auto reserve=RegionalSurveys[region].legs[ReturnToCity];
+                    if (s.origin!=RegionalSurveys[region].port || s.helm || s.destination>=0 || s.weather!=Calm ||
+                        s.stores<reserve.food || s.water<std::max(1,reserve.water-int(s.first_mate==Quartermaster)))
+                        return false;
+                }
+                s.inland_stages[region]=std::uint8_t(stage);
             }
         }
         if (pilot_chart) {
