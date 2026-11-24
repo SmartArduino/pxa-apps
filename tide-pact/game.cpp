@@ -293,7 +293,7 @@ static_assert(std::all_of(std::begin(specialties),std::end(specialties),[](const
 }));
 
 int specialty_buyer_slot(int port,int index) {
-    if (port<0 || port>=PortCount) return -1;
+    if (!is_port(port)) return -1;
     const auto bit=place_bit(port), buyers=specialties[index].buyers;
     return (buyers&bit)?std::popcount(buyers&(bit-1)):-1;
 }
@@ -315,7 +315,7 @@ int specialty_price(int port,int good,bool sell,int supply,int demand,int day) {
 
 int stock_base(int port, int good, int day, int road_timber) {
     constexpr int seasonal[]{-2,0,3,1};
-    return 17+Bias[port][good]*6+seasonal[(day/29+port+good)%4]+(port==lisbon && good==Timber?road_timber:0);
+    return 17+Bias[port_index(port)][good]*6+seasonal[(day/29+port+good)%4]+(port==lisbon && good==Timber?road_timber:0);
 }
 
 int stock_limit(int port, int good, int day, int road_timber) {
@@ -327,7 +327,7 @@ int daily_stock_change(int port, int good, int delta, int day, int road_timber) 
     const int supply=std::clamp(base+delta,0,stock_limit(port,good,day,road_timber));
     const auto* news=market_notice(port,good,day);
     const int target=std::max(0,base+(news?news->reserve_shift:0));
-    const bool exports=Bias[port][good]>0;
+    const bool exports=Bias[port_index(port)][good]>0;
     const int interval=news?1:supply<target && !exports?5:3;
     if ((day+port+good*2)%interval!=0) return delta;
     const int step=news || (exports && supply<target)?2:1;
@@ -336,14 +336,14 @@ int daily_stock_change(int port, int good, int delta, int day, int road_timber) 
 }
 
 MarketAccess market_access(int port,int good) {
-    if (port<0 || port>=PortCount || good<0 || good>=MarketGoodsCount) return MarketAccess::Closed;
+    if (!is_port(port) || good<0 || good>=MarketGoodsCount) return MarketAccess::Closed;
     if (good>=GoodsCount) {
         const auto& special=specialties[good-GoodsCount];
         if (port==special.source) return MarketAccess::Producer;
         return special.buyers&place_bit(port)?MarketAccess::Buyer:MarketAccess::Closed;
     }
     if ((good==Porcelain && (port==vardo || port==santo_domingo)) ||
-        (good==Wool && port==mpinda)) return MarketAccess::Closed;
+        (good==Wool && (port==mpinda || port==gresik))) return MarketAccess::Closed;
     return MarketAccess::Trading;
 }
 
@@ -358,7 +358,7 @@ int Game::market_stock(int port, int good) const {
         const int index=good-GoodsCount;
         return std::clamp(specialty_stock_base(index,s.day)+s.specialty_stock[index],0,24);
     }
-    return std::clamp(stock_base(port,good,s.day,road_timber_bonus())+s.stock_delta[port*GoodsCount+good],0,65);
+    return std::clamp(stock_base(port,good,s.day,road_timber_bonus())+s.stock_delta[port_index(port)*GoodsCount+good],0,65);
 }
 
 int Game::stock(int good) const {
@@ -367,7 +367,7 @@ int Game::stock(int good) const {
 
 int Game::market_price(int port, int good, bool sell, int supply, int day, bool player) const {
     const auto* news=market_notice(port,good,day);
-    const int market=base[good]*(100-Bias[port][good]*15+
+    const int market=base[good]*(100-Bias[port_index(port)][good]*15+
                      ((day/29+good+port*3)%7-3)*3+(news?news->price_percent:0))/100;
     const int pressure=17-supply+2*std::max(0,8-supply);
     const int price=std::max(7,market+pressure*std::max(1,base[good]/52)+
@@ -429,7 +429,7 @@ TradeQuote Game::quote_market(int port, int good, bool sell, int quantity, int b
     const int timber=road_timber_bonus();
     const int base_stock=stock_base(port,good,day,timber);
     const int stock_cap=stock_limit(port,good,day,timber);
-    int reserve=s.stock_delta[port*GoodsCount+good];
+    int reserve=s.stock_delta[port_index(port)*GoodsCount+good];
     for (int date=s.day+1;date<=day;++date) reserve=daily_stock_change(port,good,reserve,date,timber);
     TradeQuote offer{.stock_change=reserve};
     int supply=std::clamp(base_stock+reserve,0,65);
@@ -459,7 +459,7 @@ TradeQuote Game::trade_quote(int good, bool sell, int quantity) const {
 }
 
 TradePlan Game::trade_plan(int destination,int good) const {
-    if (!port() || !charted(destination) || destination>=PortCount || destination==s.origin ||
+    if (!port() || !charted(destination) || !is_port(destination) || destination==s.origin ||
         good<0 || good>=MarketGoodsCount) return {};
     const auto path=passage(s.origin,destination);
     if (!path.count) return {};
@@ -499,7 +499,7 @@ int Game::trade_limit(int good, bool sell) const {
 
 int Game::negotiation_rate() const {
     if (!port()) return 0;
-    const auto language=PortSpeech[s.origin];
+    const auto language=port_language(s.origin);
     return understands(language)?8:fluency(language)==Phrases?4:0;
 }
 
@@ -871,12 +871,21 @@ int Game::proposal() const {
     constexpr int outbound[] = {madeira, bordeaux, cadiz, canaries, ribeira, elmina,
                                 tangier, valencia, valencia, genoa, malindi, lisbon,
                                 ribeira, elmina, mpinda, elmina, kilwa, malindi, aden, kilwa,
-                                bruges, bergen, hormuz, muscat, malindi, canaries};
+                                bruges, bergen, hormuz, muscat, malindi, canaries,
+                                venice, ragusa, calicut, calicut};
     static_assert(std::size(outbound)==PortCount);
-    return outbound[s.origin];
+    return outbound[port_index(s.origin)];
 }
-int Game::proposal_good() const { return (s.origin + s.day / 60) % GoodsCount; }
-int Game::reward(int port) const { return 230 + base[s.contract_good]*4 + Zone[port]*34; }
+int Game::proposal_good() const {
+    switch (s.origin) {
+    case ragusa: return Salt;
+    case candia: return Wine;
+    case diu: return Cloth;
+    case gresik: return Pepper;
+    default: return (s.origin + s.day / 60) % GoodsCount;
+    }
+}
+int Game::reward(int port) const { return 230 + base[s.contract_good]*4 + Zone[port_index(port)]*34; }
 
 Point Game::provisions_order(int food, int water) const {
     const int more_food=std::max(0,std::min(food,food_capacity())-s.stores);
@@ -893,7 +902,7 @@ int Game::resupply_cost(int food, int water) const {
     const int count=order.x+order.y;
     if (!count) return 0;
     const int price=(count+7)/8;
-    if (port() && Zone[s.origin]==3 && s.tales[Monsoon]==Shared) return (price*3+3)/4;
+    if (port() && Zone[port_index(s.origin)]==3 && s.tales[Monsoon]==Shared) return (price*3+3)/4;
     const auto court=colors_court(s.colors);
     if (port() && court!=NoCourt && court==port_court(s.origin) && has_royal_pass(court) && !market_held())
         return (price*4+4)/5;
@@ -928,7 +937,7 @@ bool Game::unload_provisions(bool water) {
 
 int Game::repair_cost() const {
     const int price = (100-s.hull)*2+(s.in_company?(100-s.berth.hull)*2:0);
-    const bool helpers=port() && ((Zone[s.origin]==1 && s.tales[Chartmakers]==Shared) ||
+    const bool helpers=port() && ((Zone[port_index(s.origin)]==1 && s.tales[Chartmakers]==Shared) ||
                                  (s.origin==cadiz && s.drift_stage==DriftReturned));
     return helpers?(price*3+3)/4:at_berth()?(price*4+4)/5:price;
 }
@@ -1018,7 +1027,7 @@ bool Game::heard_rumor(int id) const {
 bool Game::hear_rumor(int id) {
     if (!port() || id<0 || id>=RumorCount || heard_rumor(id) || s.origin!=Rumors[id].port)
         return false;
-    if (!understands(PortSpeech[s.origin])) return false;
+    if (!understands(port_language(s.origin))) return false;
     s.heard_rumors|=1U<<id;
     notice="传闻已记在航海簿上";
     return true;
@@ -1278,10 +1287,10 @@ void Game::spend_day(int days) {
             for (auto& buyers : s.specialty_demand)
                 for (auto& demand : buyers) demand=std::max(0,int(demand)-2);
         }
-        for (int port=0;port<PortCount;++port)
+        for (int index=0;index<PortCount;++index)
             for (int good=0;good<GoodsCount;++good) {
-                auto& delta=s.stock_delta[port*GoodsCount+good];
-                delta=daily_stock_change(port,good,delta,s.day,road_timber_bonus());
+                auto& delta=s.stock_delta[index*GoodsCount+good];
+                delta=daily_stock_change(port_place(index),good,delta,s.day,road_timber_bonus());
             }
         if (s.day>=2)
             for (std::size_t company=0;company<s.merchants.size();++company) merchant_day(company);
@@ -1623,7 +1632,7 @@ void Game::helm_move(WaterTest water_at, int pulses) {
     const bool changed_cell=last_cell.x!=first_cell.x || last_cell.y!=first_cell.y;
     const int found=changed_cell || through==HelmPulsesPerWatch?sighting(last_cell):-1;
     if (found>=0) {
-        notice=found<PortCount?"发现新港":"发现测绘点";
+        notice=is_port(found)?"发现新港":"发现测绘点";
         paused=true;
     }
     if (reached_berth) {
@@ -1787,8 +1796,10 @@ void Game::rescue() {
     s.whale_blubber/=2;
     const auto here = position();
     int nearest = 0;
-    for (int p = 1; p < PortCount; ++p)
-        if (length(here, Anchor[p]) < length(here, Anchor[nearest])) nearest = p;
+    for (int i=1;i<PortCount;++i) {
+        const int p=port_place(i);
+        if (length(here,Anchor[p])<length(here,Anchor[nearest])) nearest=p;
+    }
     s.origin = nearest;
     s.destination = -1;
     s.leg=s.progress=0;
@@ -1816,7 +1827,8 @@ bool Game::tow_needed() const {
 bool Game::request_tow() {
     if (!tow_needed()) return false;
     int nearby=-1, distance=std::numeric_limits<int>::max();
-    for (int p=0;p<PortCount;++p) {
+    for (int i=0;i<PortCount;++i) {
+        const int p=port_place(i);
         const auto route=passage(s.origin,p);
         if (route.count==0 || route.miles>=distance) continue;
         nearby=p;
@@ -1856,7 +1868,7 @@ void Game::apply_trade(int good, bool sell, TradeQuote offer) {
 }
 
 void Game::update_market(int port,int good,int stock_change) {
-    if (good<GoodsCount) s.stock_delta[port*GoodsCount+good]=static_cast<std::int8_t>(stock_change);
+    if (good<GoodsCount) s.stock_delta[port_index(port)*GoodsCount+good]=static_cast<std::int8_t>(stock_change);
     else if (const int slot=specialty_buyer_slot(port,good-GoodsCount);slot>=0)
         s.specialty_demand[good-GoodsCount][slot]=stock_change;
     else s.specialty_stock[good-GoodsCount]=stock_change;
@@ -2018,7 +2030,7 @@ bool Game::deliver_dispatch() {
     if (id==RoadFreight) {
         const int base=stock_base(s.origin,Timber,s.day,road_timber_bonus());
         const int cap=stock_limit(s.origin,Timber,s.day,road_timber_bonus());
-        s.stock_delta[s.origin*GoodsCount+Timber]=std::min(cap,stock(Timber)+rate.space)-base;
+        s.stock_delta[port_index(s.origin)*GoodsCount+Timber]=std::min(cap,stock(Timber)+rate.space)-base;
         s.road_delivery=true;
     }
     finish_dispatch(on_time?DispatchOnTime:DispatchLate);
@@ -2085,7 +2097,7 @@ bool Game::hunt_field(int study) {
 }
 
 bool Game::has_shore_supply() const {
-    return !sea() && !encounter() && s.origin>=PreviousPlaceCount &&
+    return !sea() && !encounter() && !is_port(s.origin) && s.origin>=PreviousPlaceCount &&
            s.origin!=shetlands && s.origin!=galapagos && s.origin!=horn && s.origin!=kimberley;
 }
 
@@ -2173,7 +2185,7 @@ int Game::crew_interpreter(Language language) const {
 
 bool Game::can_study(Language language) const {
     return language<LanguageCount && port() &&
-           (language==PortSpeech[s.origin] || language==port_second_language(s.origin));
+           (language==port_language(s.origin) || language==port_second_language(s.origin));
 }
 
 bool Game::local_interpreter(Language language) const {
@@ -2475,16 +2487,16 @@ bool Game::deliver_escort(bool publish) {
 }
 
 bool Game::guild_stake(int port) const {
-    return port>=0 && port<PortCount && (s.guild_stakes & (1U<<port));
+    return is_port(port) && (s.guild_stakes & (1U<<port_index(port)));
 }
 
-int Game::guild_cost() const { return port()?240+Zone[s.origin]*40:0; }
+int Game::guild_cost() const { return port()?240+Zone[port_index(s.origin)]*40:0; }
 
 bool Game::invest() {
     if (!port() || market_held() || guild_stake(s.origin)) return false;
     if (s.gold<guild_cost()) { notice="金币不足"; return false; }
     earn(-guild_cost());
-    s.guild_stakes |= 1U<<s.origin;
+    s.guild_stakes |= 1U<<port_index(s.origin);
     ++s.renown;
     notice="商栈已入股，本港买价下调";
     return true;
@@ -3033,7 +3045,7 @@ static_assert(CoastSaveBytes>=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+Old
 constexpr auto OldWakeRecordBytes=LegacySaveBytes-4+7+4+12+6*ExpeditionCount+2+8+OldChartBytes+2+4*WakeCapacity;
 static_assert(WakeSaveBytes>=OldWakeRecordBytes+4);
 static_assert(LanguageSaveBytes>=OldWakeRecordBytes+9+4);
-constexpr int AddedPorts=PortCount-LegacyPortCount;
+constexpr int AddedPorts=BasePortCount-LegacyPortCount;
 constexpr int BerthSaveFields=5+1+4;
 constexpr int SkirmishSaveFields=2*8+2*(8+2)+7, FisherySaveFields=2*8+6+2*4;
 constexpr int EnclaveSaveFields=1+EnclaveCount*(2*4+10);
@@ -3074,7 +3086,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x52445054);
+    put(0x53445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3082,7 +3094,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     put_mask(s.visited); put_mask(s.surveyed);
     put(s.rng); put(s.event_mask);
     for (int count : std::span(s.cargo).first<GoodsCount>()) bytes[offset++] = std::byte(count);
-    for (auto delta : s.stock_delta) bytes[offset++] = std::byte(delta + 48);
+    for (auto delta : std::span(s.stock_delta).first<BasePortCount*GoodsCount>())
+        bytes[offset++]=std::byte(delta+48);
     for (auto state : s.tales) bytes[offset++]=std::byte(state);
     bytes[offset++]=std::byte(s.beacon);
     for (auto event : s.sea_log) put(event);
@@ -3202,6 +3215,8 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (auto cell : s.outer_coast) bytes[offset++]=std::byte(cell);
     put(s.world_notebook);
     for (const auto day : s.trail_hunt_day) put(day);
+    for (auto delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>())
+        bytes[offset++]=std::byte(delta+48);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -3218,7 +3233,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
         bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
-        bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes &&
+        bytes.size()!=FieldSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3228,7 +3244,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool expanded_world=version==0x52445054 && bytes.size()==SaveBytes;
+    const bool new_ports=version==0x53445054 && bytes.size()==SaveBytes;
+    const bool expanded_world=new_ports || (version==0x52445054 && bytes.size()==FieldSaveBytes);
     const bool extended_survey=expanded_world || (version==0x51445054 && bytes.size()==PreviousWorldSaveBytes);
     const bool pilot_chart=extended_survey || (version==0x50445054 && bytes.size()==FirstSurveySaveBytes);
     const bool cargo_records=pilot_chart || (version==0x4f445054 && bytes.size()==CargoSaveBytes);
@@ -3274,7 +3291,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     s.rng=get(); s.event_mask=get();
     if ((s.visited|s.surveyed)>>PlaceCount) return false;
     for (auto& count : std::span(s.cargo).first<GoodsCount>()) count = std::to_integer<int>(bytes[offset++]);
-    const int saved_ports=expanded?PortCount:LegacyPortCount;
+    const int saved_ports=expanded?BasePortCount:LegacyPortCount;
     for (auto& delta : std::span{s.stock_delta}.first(saved_ports*GoodsCount)) {
         const int stock = std::to_integer<int>(bytes[offset++])-48;
         if (stock > 48 || stock < -48) return false;
@@ -3377,12 +3394,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         s.drift_stage=std::to_integer<std::uint8_t>(bytes[offset++]);
         const bool pending_deal=s.bargain_good>0 && s.bargain_good<=GoodsCount;
         if (s.language_skills>>(2*LanguageCount) || (s.language_skills&3U) ||
-            s.tide_ledger>LedgerReturned || s.drift_stage>DriftFiled || s.interpreter_port>=PortCount ||
+            s.tide_ledger>LedgerReturned || s.drift_stage>DriftFiled || (s.interpreter_port!=-1 && !is_port(s.interpreter_port)) ||
             (s.interpreter_port>=0 && (s.interpreter_port!=s.origin || s.helm || s.destination>=0)))
             return false;
         if (s.bargain_good>BargainUsed ||
             (pending_deal ? s.bargain_rate!=4 && s.bargain_rate!=8 : s.bargain_rate!=0) ||
-            (s.bargain_good && (s.origin>=PortCount || s.helm || s.destination>=0)))
+            (s.bargain_good && (!is_port(s.origin) || s.helm || s.destination>=0)))
             return false;
         for (int language=1;language<LanguageCount;++language)
             if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
@@ -3465,7 +3482,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             for (auto* field : {&berth.port,&berth.vessel,&berth.hull,&berth.guns,&berth.sailors})
                 *field=std::to_integer<std::uint8_t>(bytes[offset++]);
             if (berth.port && (!harbor_charter(int(berth.port)-1) ||
-                !(s.guild_stakes&(1U<<(berth.port-1))))) return false;
+                !(s.guild_stakes&(1U<<port_index(berth.port-1))))) return false;
             if (berth.vessel) {
                 if (!berth.port || berth.vessel>std::size(HullNames) || berth.hull<1 ||
                     berth.hull>100 || berth.guns>3 || berth.sailors>berths[2]-berths[0]) return false;
@@ -3599,11 +3616,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 return false;
             if (!extended_survey && s.pilot.region==LegacyPilotRegionCount+1)
                 s.pilot.region=WorldPilotIndex+1;
-            if (!expanded_world && s.pilot.region==WorldPilotIndex+1 &&
-                s.pilot.moored>WorldPilotSite+PreviousPlaceCount) {
-                constexpr int new_sites=PlaceCount-PreviousPlaceCount;
-                if (unsigned(s.pilot.moored)+new_sites>PilotSiteEnd) return false;
-                s.pilot.moored+=new_sites;
+            const int recorded_places=expanded_world?FirstNewPort:PreviousPlaceCount;
+            if (!new_ports && s.pilot.region==WorldPilotIndex+1 &&
+                s.pilot.moored>WorldPilotSite+recorded_places) {
+                const int shift=PlaceCount-recorded_places;
+                if (s.pilot.moored+shift>PilotSiteEnd) return false;
+                s.pilot.moored+=shift;
             }
             if (s.pilot.region) {
                 if (!s.helm || s.weather!=Calm) return false;
@@ -3713,7 +3731,14 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 day=int(saved);
             }
         }
-        if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
+        if (new_ports) {
+            for (auto& delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>()) {
+                const int stock=std::to_integer<int>(bytes[offset++])-48;
+                if (stock>48 || stock<-48) return false;
+                delta=static_cast<std::int8_t>(stock);
+            }
+        }
+        if (s.bargain_warnings && (s.helm || s.destination>=0 || !is_port(s.origin) ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }
     const auto bound = [](int n, int min, int max) { return n >= min && n <= max; };
@@ -3724,11 +3749,13 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.guns,0,3) || !bound(s.charts,0,PlaceCount-PortCount) ||
         !bound(s.chapter,0,Chapters) || !bound(s.ending,0,2) ||
         !bound(s.origin,0,PlaceCount-1) || !bound(s.destination,-1,PlaceCount-1) ||
-        !bound(s.contract,-1,PortCount-1) || !bound(s.contract_good,0,GoodsCount-1) ||
+        (s.contract!=-1 && !is_port(s.contract)) || !bound(s.contract_good,0,GoodsCount-1) ||
         !bound(s.weather,Calm,current?EncounterCount-1:version==0x31445054?Castaways:Fog) || !bound(s.range,0,4) || !bound(s.enemy,0,100) ||
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
+    if (!new_ports && (s.origin>=FirstNewPort || s.destination>=FirstNewPort || s.contract>=FirstNewPort ||
+        (s.chart_marks|s.visited|s.surveyed)>>FirstNewPort || s.guild_stakes>>BasePortCount)) return false;
     int load = s.whale_oil+s.whale_blubber+(s.migrant_site?3:0)+
         (s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;

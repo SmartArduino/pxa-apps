@@ -107,7 +107,7 @@ enum Action {
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
     LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, OpenWorldCatalog, OpenWorldStudy,
     LandWorldTrail, FieldObserve, FieldStalk, FieldShoot, ShoreFood, ShoreWater,
-    FieldPlate, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
+    RouteFilter, FieldPlate=RouteFilter+4, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
     PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
@@ -228,7 +228,7 @@ struct VoyageApp {
     Overlay nature_page_back=NatureAlbum;
     int expedition_item=0;
     int officer_item=Pilot;
-    int rumor_item=0, pinned_rumor=-1;
+    int rumor_item=0, pinned_rumor=-1, route_filter=0;
     Language lesson_language=Portuguese;
     HarborApproach approach;
     Point approach_position{-1,-1};
@@ -851,7 +851,7 @@ struct VoyageApp {
         d.image({art::weather_icons},{int(weather)*32,0,32,32},r,true);
     }
     void port_scene(Draw& d, Rect area, int port) {
-        if (port<0 || port>=PortCount || area.w<1 || area.h<1) return;
+        if (!is_port(port) || area.w<1 || area.h<1) return;
         if (const auto* view=sea_picture.pixels(harbor_picture(port))) {
             const Image picture{view};
             const int width=std::min(picture.width(),picture.height()*area.w/area.h);
@@ -1358,7 +1358,7 @@ struct VoyageApp {
             const auto p=map_point(Places[i].map);
             if (!map.contains(p)) continue;
             const bool landed=game.s.visited&place_bit(i);
-            auto c=i==target()?gold:i>=PortCount?mint:landed?ivory:quiet;
+            auto c=i==target()?gold:!is_port(i)?mint:landed?ivory:quiet;
             d.diamond(p,i==marked ? 6 : i==target() ? 4 : 3,ink);
             d.diamond(p,i==marked ? 4 : 2,c);
         }
@@ -2061,9 +2061,9 @@ struct VoyageApp {
         const Text route_label=route.count ? "航前计划" : scouting ? "传闻" : "地理";
         constexpr Text depart_label="按航线启航";
         const Text visit=scouting ? "循线出海" : story_here() ? "会面" : local_study ? "考察" :
-                         p>=PortCount ? "测绘" : "掌舵出海";
+                         !is_port(p) ? "测绘" : "掌舵出海";
         const int visit_action=story_here() ? ReadStory : local_study ? OpenObservation :
-                               p>=PortCount ? Survey : StartExplore;
+                               !is_port(p) ? Survey : StartExplore;
         const int visit_command=scouting?StartExplore:visit_action;
         const auto aim=scout_course.value_or(Anchor[p]);
         const int bearing=direction_to({aim.x-Anchor[p].x,aim.y-Anchor[p].y});
@@ -3083,7 +3083,7 @@ struct VoyageApp {
         const bool known=game.charted(study.place) || field_local;
         const int x=body.x+6, y=body.y+29, w=body.w-12, bottom=body.bottom();
         page_title(d,known?Places[study.place].name:study.region,ExpeditionBookIcon);
-        const int art_w=std::min(w*43/100,std::max(1,bottom-y-41)*2);
+        const int art_w=std::min(w*(w<290?36:43)/100,std::max(1,bottom-y-41)*2);
         const int art_h=std::min(bottom-y-56,art_w*52/100);
         const Rect picture{x,y,art_w,art_h};
         const bool recorded=field_plate && game.s.world_notebook&field_note_bit(field_item,field_plate-1);
@@ -3099,7 +3099,9 @@ struct VoyageApp {
             } else copy="尚无记录。上岸走到观察点附近后可写生。";
         }
         const int copy_y=recorded?y+16:y;
-        d.wrap({text_x,copy_y,text_w,bottom-copy_y-64},copy,ivory,15);
+        const auto blocked=field_local?game.field_requirement(field_item):Text{};
+        d.wrap({text_x,copy_y,text_w,bottom-copy_y-(blocked.empty()?52:67)},
+               copy,ivory,w<290?13:15);
         if (!known) return;
         const Text plates[]{"地貌","动物","植物"};
         for (int i=0;i<3;++i) {
@@ -3107,7 +3109,6 @@ struct VoyageApp {
             button(d,{left,bottom-49,x+(i+1)*w/3-4-left,20},plates[i],FieldPlate+i,i==field_plate);
         }
         if (field_local) {
-            const auto blocked=game.field_requirement(field_item);
             if (!blocked.empty()) d.label(text_x,bottom-67,blocked,vermilion,text_w);
             button(d,{x,bottom-26,w,23},field_result?"继续考察":"上岸走走",LandWorldTrail,true,!blocked.empty());
         } else if (game.charted(study.place) && !game.sea())
@@ -4120,27 +4121,51 @@ struct VoyageApp {
         button(d,{body.right()-169,body.y+3,36,23},"全图",WorldChart);
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
         button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
+        constexpr Text names[]{"全部","邻近","港口","测绘点"};
+        const int x=body.x+4, width=body.w-8, y=body.y+28;
+        for (int i=0;i<int(std::size(names));++i) {
+            const int left=x+width*i/4;
+            button(d,{left,y,x+width*(i+1)/4-left-3,20},names[i],RouteFilter+i,i==route_filter);
+        }
         std::array<int,PlaceCount> order{};
         int count=0;
-        if (target()>=0 && target()!=game.s.origin) order[count++]=target();
-        order[count++]=game.s.origin;
-        for (int i=0;i<PlaceCount;++i)
-            if (game.charted(i) && i!=game.s.origin && i!=target()) order[count++]=i;
-        const int rows=list_rows(), pages=(count+rows-1)/rows;
+        const auto add=[&](int p) {
+            if (p<0 || !game.charted(p)) return;
+            if (route_filter==1 && !std::ranges::any_of(Legs,[&](const Leg& leg) {
+                return (leg.from==game.s.origin && leg.to==p) || (leg.to==game.s.origin && leg.from==p);
+            })) return;
+            if (route_filter==2 && !is_port(p)) return;
+            if (route_filter==3 && is_port(p)) return;
+            order[count++]=p;
+        };
+        if (target()!=game.s.origin) add(target());
+        add(game.s.origin);
+        for (int p=0;p<PlaceCount;++p)
+            if (p!=game.s.origin && p!=target()) add(p);
+        if (!count) {
+            d.wrap({x+4,body.y+57,width-8,body.bottom()-body.y-62},
+                   route_filter==1?"附近暂无已知泊地。可以掌舵探索，或到酒馆问路。":"海图上还没有这类地点。",
+                   mist,15);
+            return;
+        }
+
+        constexpr int top=52;
+        const int rows=std::clamp((body.h-top-24)/row_pitch(),1,10);
+        const int pages=(count+rows-1)/rows;
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
             const int p=order[page*rows+i];
             const auto path=passage(game.s.origin,p);
-            auto meta=format("%d海里",path.miles);
+            const auto miles=format("%d海里",path.miles);
             const bool here=p==game.s.origin;
-            const int glyph=here?(game.port()?MooringIcon:AstrolabeIcon):p==target()?LetterIcon:-1;
-            row(d,i,Places[p].name,here?"所在处":p==target()?"主线":p==selected?"已选":Text(meta),
-                Destination+p,p==selected,28,glyph);
+            const int glyph=here?MooringIcon:p==target()?LetterIcon:is_port(p)?MooringIcon:AstrolabeIcon;
+            row(d,i,Places[p].name,here?"所在处":p==target()?"主线":p==selected?"已选":Text(miles),
+                Destination+p,p==selected,top,glyph);
         }
         pager(d,pages);
     }
     Text port_contact(int port) const {
-        const auto language=PortSpeech[port];
+        const auto language=port_language(port);
         if (game.fluency(language)==Fluent || game.crew_interpreter(language)!=NoOfficer) return "可沟通";
         return game.fluency(language)==Phrases?"会短语":"需口译";
     }
@@ -4153,7 +4178,7 @@ struct VoyageApp {
         const auto forecast=game.forecast(path);
         const int x=body.x+7, y=body.y, w=body.w-14;
         const int controls_y=body.bottom()-54;
-        const Text contact=selected<PortCount?port_contact(selected):Text{};
+        const Text contact=is_port(selected)?port_contact(selected):Text{};
         Text timing;
         if (game.s.dispatch.number && game.dispatch_target()==selected) {
             if (selected!=DispatchOrders[game.dispatch_order()].to) timing="中途停靠";
@@ -4316,10 +4341,10 @@ struct VoyageApp {
             const auto& leg=Legs[path.edge[i]];
             const int port=path.reverse[i]?leg.from:leg.to;
             const bool known=game.charted(port);
-            const Text status=!known?"待查":port<PortCount?port_contact(port):"测绘点";
+            const Text status=!known?"待查":is_port(port)?port_contact(port):"测绘点";
             const auto eta=format("%d日 · %s",forecast.arrival_days[i],status.data());
             row(d,j,known?Places[port].name:Text("未标记水域"),eta,known?Destination+port:0,port==selected,
-                28,known?(port<PortCount?SpeechIcon:AstrolabeIcon):-1);
+                28,known?(is_port(port)?SpeechIcon:AstrolabeIcon):-1);
         }
         pager(d,pages);
     }
@@ -4330,8 +4355,10 @@ struct VoyageApp {
         d.label(body.x+6,body.y+28,"当日买价 / 卖价",quiet,body.w-12);
         std::array<int,PortCount> order{};
         int count=0;
-        for (int port=0;port<PortCount;++port)
+        for (int i=0;i<PortCount;++i) {
+            const int port=port_place(i);
             if (game.charted(port)) order[count++]=port;
+        }
         const auto visited=[&](int port){return (game.s.visited&place_bit(port))!=0;};
         std::sort(order.begin(),order.begin()+count,[&](int a,int b) {
             if (a==game.s.origin || b==game.s.origin) return a==game.s.origin && b!=a;
@@ -4686,12 +4713,12 @@ struct VoyageApp {
     void show_languages(Language preferred) {
         if (!game.port()) return;
         language_back=modal;
-        lesson_language=game.can_study(preferred)?preferred:PortSpeech[game.s.origin];
+        lesson_language=game.can_study(preferred)?preferred:port_language(game.s.origin);
         set_modal(LanguageDesk);
     }
     void language_desk(Draw& d) {
         const int port=game.s.origin;
-        const Language primary=PortSpeech[port], second=port_second_language(port);
+        const Language primary=port_language(port), second=port_second_language(port);
         page_title(d,"口译与学话",PhrasebookIcon);
         constexpr Text levels[]{"未学","会短语","通晓"};
         row(d,0,LanguageNames[primary],levels[game.fluency(primary)],SelectPortLanguage,lesson_language==primary);
@@ -5023,8 +5050,8 @@ struct VoyageApp {
             std::abs(l.longitude)/100,std::abs(l.longitude)%100);
         d.label(body.x+6,body.y+29,coord,gold,body.w-12);
         int note_y=body.y+53;
-        if (p<PortCount) {
-            const Language language=PortSpeech[p];
+        if (is_port(p)) {
+            const Language language=port_language(p);
             const bool can_speak=game.fluency(language)==Fluent || game.crew_interpreter(language)!=NoOfficer;
             d.label(body.x+6,body.y+47,format("%s · %s",LanguageNames[language].data(),
                     can_speak?"随船可译":"可请本港口译"),mist,body.w-12);
@@ -5036,8 +5063,8 @@ struct VoyageApp {
         page_title(d,"发现图鉴");
         std::array<int,PlaceCount-PortCount> entries{};
         int count=0;
-        for (int p=PortCount;p<PlaceCount;++p)
-            if (game.charted(p)) entries[count++]=p;
+        for (int p=0;p<PlaceCount;++p)
+            if (!is_port(p) && game.charted(p)) entries[count++]=p;
         if (!count) {
             d.label(body.x+6,body.y+38,"出海后逐步收录测绘水域",mist,body.w-12);
             return;
@@ -5069,30 +5096,34 @@ struct VoyageApp {
             const int id=entries[page*rows+i];
             const auto& rumor=Rumors[id];
             const bool found=game.charted(rumor.site);
-            row(d,i,game.heard_rumor(id)||found?Places[rumor.site].name:rumor.speaker,
-                found?"已定位":game.heard_rumor(id)?"已抄录":"新线索",RumorEntry+id,found);
+            const bool heard=game.heard_rumor(id);
+            row(d,i,heard?Places[rumor.site].name:rumor.speaker,
+                heard?"已抄录":found?"本港见闻":"新线索",RumorEntry+id,heard);
         }
         pager(d,pages);
     }
     void rumor_page(Draw& d) {
         const auto& rumor=Rumors[rumor_item];
         const bool found=game.charted(rumor.site), heard=game.heard_rumor(rumor_item);
-        const auto language=PortSpeech[rumor.port];
+        const auto language=port_language(rumor.port);
         const bool understood=heard || game.understands(language);
-        page_title(d,heard||found?Places[rumor.site].name:rumor.speaker);
+        const bool local=game.port() && game.s.origin==rumor.port;
+        page_title(d,heard?Places[rumor.site].name:rumor.speaker);
         const int x=body.x+6, w=body.w-12;
         const auto needed=format("需%s口译",LanguageNames[language].data());
-        d.label(x,body.y+29,found?"已记入海图":heard?"只知道大致海域":
-                understood?"可抄下航路传闻":Text(needed),found?mint:mist,w);
-        const Text clue=understood?rumor.clue:found?"泊地已标在海图上。":
-            game.fluency(language)==Phrases?RumorFragments[rumor_item]:"对方指向海面。找人代译，或先在港口学几句。";
+        d.label(x,body.y+29,heard?(found?"已记入海图":"只知道大致海域"):
+                understood?"可抄录这段见闻":Text(needed),heard?mint:mist,w);
+        const Text clue=understood?rumor.clue:
+            game.fluency(language)==Phrases?RumorFragments[rumor_item]:"听不清细节。可以在本港请口译。";
         d.wrap({x,body.y+48,w,body.h-78},clue,ivory,15);
-        if (!understood && !found)
-            button(d,{x,body.bottom()-28,w,24},"找口译或学话",OpenLanguages,true);
-        else if (!heard && !found)
-            button(d,{x,body.bottom()-28,w,24},"抄录传闻",RecordRumor,true);
-        else
-            button(d,{x,body.bottom()-28,w,24},found?"定位海图":"圈出大致海域",MarkRumor,true,game.sea());
+        const int y=body.bottom()-28;
+        if (local && !heard) {
+            const int pick=found?(w-5)/2:w;
+            button(d,{x,y,pick,24},understood?"抄录见闻":"找口译或学话",
+                   understood?RecordRumor:OpenLanguages,true);
+            if (found) button(d,{x+pick+5,y,w-pick-5,24},"定位海图",MarkRumor);
+        } else if (found || heard)
+            button(d,{x,y,w,24},found?"定位海图":"圈出大致海域",MarkRumor,true,game.sea());
     }
     void expedition_list(Draw& d) {
         page_title(d,"考察簿");
@@ -5583,6 +5614,15 @@ struct VoyageApp {
             }
             return;
         }
+        if (action>=RouteFilter && action<RouteFilter+4) {
+            if (modal==Routes) {
+                route_filter=action-RouteFilter;
+                page=0;
+                focused=4+route_filter;
+                dirty=true;
+            }
+            return;
+        }
         if (action>=WalkToTownFacility && action<WalkToTownFacility+int(TownFacilityCount)) {
             const int id=action-WalkToTownFacility;
             if (modal==HarborTown) town_go(Towns[town_id].doors[id],id);
@@ -5976,10 +6016,10 @@ struct VoyageApp {
                 }
                 break;
             case OpenLanguages:
-                show_languages(modal==RumorPage?PortSpeech[Rumors[rumor_item].port]:
+                show_languages(modal==RumorPage?port_language(Rumors[rumor_item].port):
                                modal==ExpeditionPage?BookLanguage[expedition_item]:LanguageCount);
                 break;
-            case SelectPortLanguage: lesson_language=PortSpeech[game.s.origin]; break;
+            case SelectPortLanguage: lesson_language=port_language(game.s.origin); break;
             case SelectSecondLanguage: lesson_language=port_second_language(game.s.origin); break;
             case HireInterpreter: if (game.hire_interpreter()) changed(); break;
             case TakeLesson: if (game.take_lesson(lesson_language)) changed(); break;
@@ -6246,7 +6286,7 @@ struct VoyageApp {
         if (action>=Destination) {
             const int port=action-Destination;
             if (modal==PortPrices) {
-                if (game.port() && port<PortCount && port!=game.s.origin && game.charted(port)) {
+                if (game.port() && is_port(port) && port!=game.s.origin && game.charted(port)) {
                     trade_port=port;
                     set_modal(TradePassagePage);
                 }
@@ -6805,6 +6845,18 @@ struct VoyageApp {
             return;
         }
         if (modal==HarborTown && town_area.contains(p)) {
+            if (!outside) {
+                const auto& layout=Towns[town_id];
+                int best=12*12, door=-1;
+                for (int i=0;i<TownFacilityCount;++i) {
+                    if (i==TownArchive && game.archive_here()<0) continue;
+                    const Point spot=town_on_screen(layout.doors[i]);
+                    const int dx=p.x-spot.x, dy=p.y-spot.y;
+                    const int distance=dx*dx+dy*dy;
+                    if (distance<best) { best=distance; door=i; }
+                }
+                if (door>=0) { town_go(layout.doors[door],door); return; }
+            }
             const Point world{(p.x-town_area.x)*TownExtent/town_area.w,
                               (p.y-town_area.y)*TownExtent/town_area.h};
             const auto at=outside?town_street(OutskirtsQuay,OutskirtsSites,world):

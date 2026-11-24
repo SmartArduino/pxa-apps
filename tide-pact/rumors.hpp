@@ -30,6 +30,11 @@ inline constexpr Rumor Rumors[] {
     {muscat,hormuz,chart_point(56.6f,27.f),"盐船舵手","沿阿曼湾向西北驶进海峡。北岸附近有个红褐色的岛，岛上是霍尔木兹。"},
     {malindi,calicut,chart_point(75.5f,11.3f),"胡椒商","等西南季风，横渡阿拉伯海。对岸的马拉巴尔海岸有一座卖棉布和胡椒的大港。"},
     {canaries,santo_domingo,chart_point(-69.9f,18.3f),"远洋船工","借信风一路向西。伊斯帕尼奥拉岛南岸有条叫奥萨马的河，河口附近新建了聚落。"},
+    {ragusa,otranto,Anchor[otranto],"盐关抄写员","你瞧，盐袋得逐批盖印。船收齐货就南下，在意大利与阿尔巴尼亚之间出海。见到那处窄口，别急着贴近东岸。"},
+    {candia,ragusa,Anchor[ragusa],"酒商索菲娅","这几桶酒要送去拉古萨。过了奥特朗托海峡，沿东岸北上。货交给城门旁的抄写员，他会查桶上的封记。"},
+    {diu,calicut,Anchor[calicut],"织商哈桑","先送三匹棉布去卡利卡特。纱紧的留在船舱上层，海上潮气重，坏了布就赶不上布市。"},
+    {gresik,karimunjawa,Anchor[karimunjawa],"爪哇领航员","别循渔舟直接穿礁。往西北去，那片群岛外礁有一道深色水口。日头高些再进，能看清水色。"},
+    {aden,socotra,Anchor[socotra],"外海桨手","出亚丁一直往东。索科特拉在往印度的航线南侧，北岸能避风。天晴时，先看到的是岛上的高地。"},
 };
 inline constexpr int RumorCount=std::size(Rumors);
 static_assert(RumorCount<=32);
@@ -54,7 +59,9 @@ inline constexpr Text RumorFragments[]{
     "只听懂几个词：东南、大河、浑水。",
     "只听懂几个词：沿岸向北、礁盘开口。",
     "只听懂几个词：北海、木仓。","只听懂几个词：北角、岛。","只听懂几个词：岩山、向东北。",
-    "只听懂几个词：海峡、红岛。","只听懂几个词：季风、胡椒。","只听懂几个词：向西、河口。"
+    "只听懂几个词：海峡、红岛。","只听懂几个词：季风、胡椒。","只听懂几个词：向西、河口。",
+    "只听懂几个词：盐袋、窄口。","只听懂几个词：酒桶、向北。","只听懂几个词：棉布、潮气。",
+    "只听懂几个词：西北、礁口。","只听懂几个词：向东、岛上的高地。"
 };
 static_assert(std::size(RumorFragments)==RumorCount);
 

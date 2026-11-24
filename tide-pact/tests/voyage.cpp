@@ -220,7 +220,7 @@ void town_walks() {
     for (const auto& layout : Towns) {
         const auto dock=layout.doors[TownDock], market=layout.doors[TownMarket];
         assert(!town_street(layout,{998,990}));
-        const auto road=town_street(layout,{680,layout.quay+16});
+        const auto road=town_street(layout,{680,layout.quay});
         assert(road && road->y==layout.quay && road->x==680);
         TownWalk walk{.at=dock};
         walk.go(market,layout.quay,TownMarket,0);
@@ -2093,13 +2093,47 @@ void world_routes_and_fieldwork() {
     assert(!polar.has_shore_supply() && !polar.field_requirement(field_study_at(shetlands)).empty());
 }
 
+void expanded_ports_trade_and_discovery() {
+    Game approach;
+    approach.s.origin=venice;
+    assert(!approach.charted(ragusa) && !approach.charted(candia));
+    approach.learn_ocean_routes();
+    assert(approach.charted(ragusa) && !approach.charted(candia));
+    approach.s.origin=otranto;
+    approach.learn_ocean_routes();
+    assert(approach.charted(candia) && !approach.port());
+
+    constexpr int goods[]{Salt,Wine,Cloth,Pepper};
+    for (int i=0;i<PortCount-BasePortCount;++i) {
+        const int port=port_place(BasePortCount+i), good=goods[i];
+        Game merchant;
+        merchant.s.origin=port;
+        merchant.s.gold=10000;
+        assert(merchant.port() && town_index(port)>=0 && merchant.proposal_good()==good);
+        assert(merchant.price_at(port,good,false)>0 && merchant.stock(good)>20);
+        assert(merchant.trade(good,false,3).units==3 && merchant.invest());
+        assert(merchant.guild_stake(port) && !merchant.guild_stake(azores));
+        assert(merchant.hire_interpreter() && merchant.local_interpreter(port_language(port)));
+        merchant.take_contract();
+        State reloaded;
+        assert(decode(reloaded,encode(merchant.s)) && reloaded.origin==port &&
+               reloaded.stock_delta==merchant.s.stock_delta &&
+               reloaded.guild_stakes==merchant.s.guild_stakes && reloaded.interpreter_port==port &&
+               reloaded.contract==merchant.proposal() && reloaded.contract_good==good);
+    }
+    assert(market_access(gresik,Wool)==MarketAccess::Closed);
+    assert(market_notice(candia,Wine,55) && market_notice(diu,Cloth,36));
+}
+
 int main() {
     world_routes_and_fieldwork();
-    for (int port=0;port<PortCount;++port) {
+    expanded_ports_trade_and_discovery();
+    for (int index=0;index<PortCount;++index) {
+        const int port=port_place(index);
         Game game;
         game.s.origin=port;
         const int destination=game.proposal();
-        assert(destination>=0 && destination<PortCount && passage(port,destination).count>0);
+        assert(is_port(destination) && passage(port,destination).count>0);
     }
     seasonal_field_surveys();
     expanded_world_and_land();

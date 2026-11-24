@@ -15,14 +15,20 @@ inline constexpr int HarborPictureBase=160, WorldFieldPictureBase=200, WorldGrou
 inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture=HarborPictureBase+9;
 inline constexpr int LisbonStreetPicture=HarborPictureBase+10;
 inline constexpr int LisbonGuildPicture=HarborPictureBase+11, CalicutGuildPicture=HarborPictureBase+12;
+inline constexpr int NewHarborPictureBase=HarborPictureBase+13;
+
+inline int new_harbor_picture(int port) {
+    return is_port(port) && port>=FirstNewPort?NewHarborPictureBase+port-FirstNewPort:Calm;
+}
 
 inline int harbor_picture(int port) {
+    if (const int picture=new_harbor_picture(port); picture!=Calm) return picture;
     switch (port) {
     case lisbon: return HarborPictureBase+4;
     case venice: return HarborPictureBase+5;
     case kilwa: return HarborPictureBase+6;
     case calicut: return HarborPictureBase+7;
-    default: return HarborPictureBase+Zone[port];
+    default: return HarborPictureBase+Zone[port_index(port)];
     }
 }
 
@@ -31,7 +37,7 @@ inline int harbor_street_picture(int port) {
     case lisbon: return LisbonStreetPicture;
     case venice: return VeniceStreetPicture;
     case kilwa: return KilwaStreetPicture;
-    default: return Calm;
+    default: return new_harbor_picture(port);
     }
 }
 inline int guild_picture(int port) {
@@ -58,7 +64,9 @@ inline Text sea_picture_path(int kind) {
         "assets/ports/islands.pxi","assets/ports/indian.pxi","assets/ports/lisbon.pxi",
         "assets/ports/venice.pxi","assets/ports/kilwa.pxi","assets/ports/calicut.pxi",
         "assets/ports/venice-streets.pxi","assets/ports/kilwa-streets.pxi","assets/ports/lisbon-streets.pxi",
-        "assets/ports/lisbon-guild.pxi","assets/ports/calicut-guild.pxi"};
+        "assets/ports/lisbon-guild.pxi","assets/ports/calicut-guild.pxi",
+        "assets/ports/ragusa-streets.pxi","assets/ports/candia-streets.pxi",
+        "assets/ports/diu-streets.pxi","assets/ports/gresik-streets.pxi"};
     if (kind>=HarborPictureBase && kind<HarborPictureBase+int(std::size(ports)))
         return ports[kind-HarborPictureBase];
     switch (kind) {

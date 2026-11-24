@@ -151,13 +151,18 @@ def quote(value):
     return json.dumps(value, ensure_ascii=False)
 
 
+def ordered_places(data):
+    # Preserve IDs already written in saved games.
+    return data["ports"] + data["sites"] + data["new_ports"] + data["new_sites"]
+
+
 def world(data, mask):
     locations = []
     points = []
     ids = {}
     port_bias = []
     port_zone = []
-    for entry in data["ports"] + data["sites"]:
+    for entry in ordered_places(data):
         ident, name, *values = entry
         is_port = len(values) == 8
         region = values.pop(0) if is_port else "测绘点"
@@ -204,8 +209,10 @@ def world(data, mask):
     blocks = [
         f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH}, ChartWest = {WEST};\n"
         f"inline constexpr int ChartLongitudeScale = {SX}, ChartLatitudeScale = {SY};",
-        f"inline constexpr int PortCount = {len(data['ports'])};",
+        f"inline constexpr int BasePortCount = {len(data['ports'])};",
+        f"inline constexpr int PortCount = {len(data['ports']) + len(data['new_ports'])};",
         "enum PlaceId {\n    " + ", ".join(ids) + "\n};",
+        f"inline constexpr int FirstNewPort = {data['new_ports'][0][0]};",
         "inline constexpr Location Places[] = {\n" + "\n".join(locations) + "\n};",
         "inline constexpr Point Anchor[] = {\n    " + ", ".join("{%d,%d}" % p for p in points) + "\n};",
         "inline constexpr int Zone[] = {" + ", ".join(map(str, port_zone)) + "};",

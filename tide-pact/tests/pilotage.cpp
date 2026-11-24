@@ -209,7 +209,8 @@ int main() {
         const auto origin=pilot_patch_origin(patch);
         check_shoreline(atlas.read(patch),{at.x-origin.x*8,at.y-origin.y*8});
     };
-    for (int port=0;port<PortCount;++port) {
+    for (int index=0;index<PortCount;++index) {
+        const int port=port_place(index);
         Game ship;
         if (port!=elmina) check_world_berth(ship.pilot_atlas_site(port+WorldPilotSite,true));
         ship.s.origin=port;
@@ -285,6 +286,20 @@ int main() {
         State loaded;
         assert(decode(loaded,encode(visitor.s)) && loaded.pilot.moored==id+1 &&
                loaded.coast_visits==visitor.s.coast_visits);
+        // The previous world save used the same map geometry and fewer named places.
+        std::array<std::byte,FieldSaveBytes> previous{};
+        auto source=visitor.s;
+        source.pilot.moored-=PlaceCount-FirstNewPort;
+        source.chart_marks&=place_bit(FirstNewPort)-1;
+        const auto current=encode(source);
+        std::copy_n(current.begin(),previous.size()-4,previous.begin());
+        previous[3]=std::byte{0x52};
+        std::uint32_t sum=2166136261U;
+        for (std::size_t i=0;i<previous.size()-4;++i)
+            sum=(sum^std::to_integer<unsigned>(previous[i]))*16777619U;
+        for (int i=0;i<4;++i) previous[previous.size()-4+i]=std::byte(sum>>(i*8));
+        assert(decode(loaded,previous) && loaded.pilot.moored==id+1 &&
+               loaded.coast_visits==visitor.s.coast_visits && loaded.stock_delta==visitor.s.stock_delta);
         Game restored;
         restored.s=loaded;
         restored.s.pilot.x^=1;

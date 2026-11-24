@@ -27,6 +27,10 @@ inline constexpr Point PilotWorldPortMarks[]{
     {162579,58276}, // hormuz
     {179899,74496}, // calicut
     {49396,67092}, // santo_domingo
+    {128232,42344}, // ragusa
+    {134525,49828}, // candia
+    {175598,64809}, // diu
+    {212934,93348}, // gresik
 };
 inline constexpr Point PilotWorldBerths[]{
     {12965,5799}, // lisbon
@@ -85,6 +89,13 @@ inline constexpr Point PilotWorldBerths[]{
     {27359,11405}, // makassar
     {27749,12083}, // timor
     {27733,12849}, // kimberley
+    {16029,5295}, // ragusa
+    {16815,6225}, // candia
+    {21951,8101}, // diu
+    {26619,11665}, // gresik
+    {16141,5617}, // otranto
+    {20057,9113}, // socotra
+    {26365,11509}, // karimunjawa
 };
 inline constexpr PilotSite PilotCoastalSites[]{
     {"波尔图", "杜罗河两岸的屋子沿坡而建。河口有沙洲，外海大船先在口外泊下。", {104281,43888}, {104216,43896}, PilotCity, true},

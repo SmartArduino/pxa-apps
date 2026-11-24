@@ -16,6 +16,16 @@ struct Leg { int from, to, offset, count, nautical_miles; };
 #include "world_data.hpp"
 inline constexpr int PlaceCount = std::size(Places);
 static_assert(PlaceCount<64 && PortCount<32);
+constexpr int port_index(int place) {
+    if (place>=0 && place<BasePortCount) return place;
+    if (place>=FirstNewPort && place<FirstNewPort+PortCount-BasePortCount)
+        return BasePortCount+place-FirstNewPort;
+    return -1;
+}
+constexpr bool is_port(int place) { return port_index(place)>=0; }
+constexpr int port_place(int index) {
+    return index<BasePortCount?index:FirstNewPort+index-BasePortCount;
+}
 constexpr std::uint64_t place_bit(int place) { return std::uint64_t{1}<<place; }
 inline constexpr int LegacyPortCount=20, LegacyPlaceCount=29, LegacyChartWidth=728, LegacyChartHeight=912;
 inline constexpr int LegacyMapX=(-45-ChartWest)*ChartLongitudeScale;
@@ -65,6 +75,10 @@ inline constexpr MarketNotice MarketNotices[]{
     {cadiz,Salt,27,9,26,-9,"渔队备海盐"},
     {canaries,Wine,38,12,16,-7,"商船收葡萄酒"},
     {elmina,Cloth,55,10,21,-8,"集市收织锦"},
+    {ragusa,Salt,18,10,22,-8,"盐船集齐，岸上收盐"},
+    {candia,Wine,52,14,-18,13,"山村的新酒到港"},
+    {diu,Cloth,34,11,-15,12,"织户的棉布入仓"},
+    {gresik,Pepper,66,12,23,-9,"外海商船抢收胡椒"},
 };
 const MarketNotice* market_notice(int port, int good, int day);
 
@@ -329,7 +343,8 @@ inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, Car
 inline constexpr int LegacyPilotRegionCount=5;
 inline constexpr std::size_t FirstSurveySaveBytes=CargoSaveBytes+LegacyPilotRegionCount*PilotSurveyRows*sizeof(std::uint32_t);
 inline constexpr std::size_t PreviousWorldSaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
-inline constexpr std::size_t SaveBytes=PreviousWorldSaveBytes+OuterChartBytes+3*sizeof(std::uint32_t);
+inline constexpr std::size_t FieldSaveBytes=PreviousWorldSaveBytes+OuterChartBytes+3*sizeof(std::uint32_t);
+inline constexpr std::size_t SaveBytes=FieldSaveBytes+(PortCount-BasePortCount)*GoodsCount;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -456,7 +471,7 @@ struct Game {
     bool choose_tale(int tale, bool share);
     int proposal() const;
     int proposal_good() const;
-    bool port() const { return !sea() && !encounter() && !land_away() && !s.land_fight.kind && s.origin<PortCount; }
+    bool port() const { return !sea() && !encounter() && !land_away() && !s.land_fight.kind && is_port(s.origin); }
     bool sea() const { return s.helm || s.destination>=0; }
     bool encounter() const { return s.weather != 0; }
     Point position(float frame = 0) const;

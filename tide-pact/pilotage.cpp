@@ -188,7 +188,7 @@ Point Game::pilot_atlas_site(int site,bool berth) const {
             return pilot_to_atlas(region,berth?mark.berth:mark.location);
         }
     if (berth) return {PilotWorldBerths[place].x*8,PilotWorldBerths[place].y*8};
-    if (place<PortCount) return PilotWorldPortMarks[place];
+    if (is_port(place)) return PilotWorldPortMarks[port_index(place)];
     const auto& info=Places[place];
     return {int(std::lround((info.longitude*.01f-ChartWest)*world_x*8)),
             int(std::lround((ChartNorth-info.latitude*.01f)*world_y*8))};
@@ -209,7 +209,7 @@ PilotSite Game::pilot_site(int site) const {
     const auto& info=Places[place];
     const bool transfer=std::find(std::begin(PilotTransferPorts),std::end(PilotTransferPorts),place)!=
                         std::end(PilotTransferPorts);
-    return {info.name,info.note,location,berth,place<PortCount?PilotCity:PilotPoint,transfer};
+    return {info.name,info.note,location,berth,is_port(place)?PilotCity:PilotPoint,transfer};
 }
 
 bool Game::pilot_site_visible(int site) const {

@@ -9,7 +9,7 @@ import zipfile
 from PIL import Image, ImageDraw
 import shapefile
 
-from make_chart import ROOT, W, H, NORTH, SX, SY, draw_land, east_of_seam
+from make_chart import ROOT, W, H, NORTH, SX, SY, draw_land, east_of_seam, ordered_places
 from pilot_berths import edge_water, settlement_mark, shoreline_berth
 
 SCALE = 8
@@ -93,13 +93,13 @@ def write_berths(mask):
         return u * 2 + 1, v * 2 + 1
 
     transfers = data.get("pilot_transfers", {})
-    for entry in data["ports"]:
-        mark_x, mark_y = mark(*entry[3:5], True)
-        marks.append(f"    {{{mark_x},{mark_y}}}, // {entry[0]}")
-        x, y = berth(*transfers.get(entry[0], entry[3:5]), 14)
-        lines.append(f"    {{{x},{y}}}, // {entry[0]}")
-    for entry in data["sites"]:
-        x, y = waypoint(*entry[4:6], 40)
+    for entry in ordered_places(data):
+        if len(entry) == 10:
+            mark_x, mark_y = mark(*entry[3:5], True)
+            marks.append(f"    {{{mark_x},{mark_y}}}, // {entry[0]}")
+            x, y = berth(*transfers.get(entry[0], entry[3:5]), 14)
+        else:
+            x, y = waypoint(*entry[4:6], 40)
         lines.append(f"    {{{x},{y}}}, // {entry[0]}")
     places = []
     for name, lon, lat, kind, note, *options in json.loads((ROOT / "pilot_world_places.json").read_text()):
