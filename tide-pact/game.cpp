@@ -2038,8 +2038,15 @@ DispatchQuote Game::dispatch_quote(int id) const {
 bool Game::dispatch_offer_here(int id) const {
     if (id<0 || id>=DispatchCount || !port() || DispatchOrders[id].from!=s.origin) return false;
     const int story=story_for_dispatch(id);
-    return (story<0 || port_story_stage(story)==PortStoryMet) &&
-           (id!=RoadFreight || (road_timber_bonus()>0 && !s.road_delivery));
+    if (story>=0) {
+        const auto stage=port_story_stage(story);
+        return stage==PortStoryMet || (stage==PortStoryFirst && dispatch_failed(story_receipt(id).outcome));
+    }
+    return id!=RoadFreight || (road_timber_bonus()>0 && !s.road_delivery);
+}
+
+StoryDispatchReceipt Game::story_receipt(int id) const {
+    return id>=FirstStoryDispatch && id<DispatchCount?s.story_receipts[id-FirstStoryDispatch]:StoryDispatchReceipt{};
 }
 
 Text Game::dispatch_requirement(int id) const {
@@ -2122,6 +2129,8 @@ bool Game::cancel_dispatch() {
 }
 
 void Game::finish_dispatch(DispatchOutcome outcome) {
+    if (const int id=dispatch_order();id>=FirstStoryDispatch)
+        s.story_receipts[id-FirstStoryDispatch]={outcome,s.day};
     s.dispatch={.last=s.dispatch.number,.outcome=std::uint8_t(outcome)};
 }
 
@@ -3162,7 +3171,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x55445054);
+    put(0x56445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3294,6 +3303,10 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (auto delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>())
         bytes[offset++]=std::byte(delta+48);
     bytes[offset++]=std::byte(s.port_stories>>8);
+    for (const auto& receipt : s.story_receipts) {
+        bytes[offset++]=std::byte(receipt.outcome);
+        put(std::uint32_t(receipt.day+1));
+    }
     for (const auto flags : {s.visited,s.surveyed,s.chart_marks}) put_mask(flags.high);
     put(std::uint32_t(s.guild_stakes>>32));
     put(std::uint32_t(s.language_skills>>32));
@@ -3315,7 +3328,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
         bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes &&
         bytes.size()!=FieldSaveBytes && bytes.size()!=PortSaveBytes && bytes.size()!=EastSaveBytes &&
-        bytes.size()!=SaveBytes) return false;
+        bytes.size()!=StraitSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3325,7 +3338,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool strait_voyage=version==0x55445054 && bytes.size()==SaveBytes;
+    const bool story_receipts=version==0x56445054 && bytes.size()==SaveBytes;
+    const bool strait_voyage=story_receipts || (version==0x55445054 && bytes.size()==StraitSaveBytes);
     const bool east_asia=strait_voyage || (version==0x54445054 && bytes.size()==EastSaveBytes);
     const bool new_ports=east_asia || (version==0x53445054 && bytes.size()==PortSaveBytes);
     const bool expanded_world=new_ports || (version==0x52445054 && bytes.size()==FieldSaveBytes);
@@ -3835,6 +3849,21 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             }
         }
         if (strait_voyage) s.port_stories|=std::uint16_t(std::to_integer<unsigned>(bytes[offset++])<<8);
+        if (story_receipts) {
+            for (int index=0;index<StoryDispatchCount;++index) {
+                const int outcome=std::to_integer<int>(bytes[offset++]);
+                const auto day=get();
+                const int story=story_for_dispatch(FirstStoryDispatch+index);
+                if (outcome>DispatchInspectedOnTime || (!outcome && day) || day>100000 ||
+                    day>unsigned(s.day)+1 || (outcome && ((s.port_stories>>(2*story))&3U)!=PortStoryFirst) ||
+                    (s.dispatch.number==FirstStoryDispatch+index+1 && outcome && !dispatch_failed(DispatchOutcome(outcome))))
+                    return false;
+                s.story_receipts[index]={DispatchOutcome(outcome),int(day)-1};
+            }
+        } else if (strait_voyage && s.dispatch.last>FirstStoryDispatch) {
+            // Older saves keep only the most recent receipt, without a date.
+            s.story_receipts[s.dispatch.last-FirstStoryDispatch-1]={DispatchOutcome(s.dispatch.outcome),-1};
+        }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || !is_port(s.origin) ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }

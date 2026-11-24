@@ -52,13 +52,23 @@ inline constexpr DispatchOrder DispatchOrders[]{
      "釜山浦验过木料。船工把新桅木扛上岸，给你留了一杯热茶。"},
 };
 inline constexpr int DispatchCount=std::size(DispatchOrders), RoadFreight=19;
-inline constexpr int FirstStoryDispatch=RoadFreight+1;
+inline constexpr int FirstStoryDispatch=RoadFreight+1, StoryDispatchCount=DispatchCount-FirstStoryDispatch;
 static_assert(DispatchCount<255);
 
 enum DispatchStop : std::uint8_t { DispatchUnderway, DispatchReachedStop, DispatchInspected, DispatchSealed };
 inline constexpr int DispatchInspectionCost=24, DispatchInspectionBonus=70;
 
 enum DispatchOutcome { NoDispatchReceipt, DispatchOnTime, DispatchLate, DispatchCancelled, DispatchLost, DispatchInspectedOnTime };
+inline constexpr Text DispatchOutcomeLabels[]{
+    "","按期交付","逾期交付","已退回运单","航程中断","按期交付 · 验货赏金入账"
+};
+inline constexpr bool dispatch_failed(DispatchOutcome outcome) {
+    return outcome==DispatchCancelled || outcome==DispatchLost;
+}
+struct StoryDispatchReceipt {
+    DispatchOutcome outcome=NoDispatchReceipt;
+    int day=-1;
+};
 struct DispatchRecord {
     int due=0;
     std::uint8_t number=0, stopped=0, last=0, outcome=NoDispatchReceipt;

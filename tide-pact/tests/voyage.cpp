@@ -2188,6 +2188,13 @@ void strait_port_dispatches() {
 
         assert(ship.resolve_port_story(story,0) && ship.dispatch_order()==id);
         assert(ship.port_story_stage(story)==PortStoryFirst && ship.dispatch_space()==rate.space);
+        Game retry=ship;
+        assert(retry.cancel_dispatch() && retry.story_receipt(id).outcome==DispatchCancelled);
+        assert(retry.story_receipt(id).day==retry.s.day && retry.dispatch_offer_here(id));
+        const int retry_gold=retry.s.gold;
+        assert(retry.accept_dispatch(id) && retry.s.gold==retry_gold-rate.bond);
+        assert(decode(saved,encode(retry.s)) && saved.dispatch.number==id+1 &&
+               saved.story_receipts[index].outcome==DispatchCancelled);
         assert(!ship.choose_dispatch_stop(true));
         sail_to(ship,order.stop);
         assert(ship.dispatch_target()==order.stop && ship.dispatch_stop_pending());
@@ -2209,6 +2216,15 @@ void strait_port_dispatches() {
         assert(ship.s.dispatch.outcome==(late?DispatchLate:inspect?DispatchInspectedOnTime:DispatchOnTime));
         assert(decode(saved,encode(ship.s)) && saved.dispatch.outcome==ship.s.dispatch.outcome);
         assert(!ship.dispatch_space());
+        const auto receipt=ship.story_receipt(id);
+        assert(receipt.day==ship.s.day && receipt.outcome==ship.s.dispatch.outcome);
+        assert(saved.story_receipts[index].day==receipt.day && saved.story_receipts[index].outcome==receipt.outcome);
+        ship.s.origin=port;
+        assert(!ship.dispatch_offer_here(id) && !ship.accept_dispatch(id));
+        ship.s.origin=lisbon;
+        assert(ship.accept_dispatch(0) && ship.cancel_dispatch());
+        assert(decode(saved,encode(ship.s)) && saved.dispatch.last==1 &&
+               saved.story_receipts[index].outcome==receipt.outcome);
     }
 }
 

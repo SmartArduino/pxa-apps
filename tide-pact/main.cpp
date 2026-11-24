@@ -107,7 +107,8 @@ enum Action {
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
     LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, OpenWorldCatalog, OpenWorldStudy,
     LandWorldTrail, FieldObserve, FieldStalk, FieldShoot, ShoreFood, ShoreWater,
-    ShowHarborBoat, InspectDispatchStop, SealDispatchStop, RouteFilter, FieldPlate=RouteFilter+5, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
+    ShowHarborBoat, InspectDispatchStop, SealDispatchStop, RetryStoryDispatch,
+    RouteFilter, FieldPlate=RouteFilter+5, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
     PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
@@ -3723,7 +3724,8 @@ struct VoyageApp {
         if (outside) { outskirts_screen(d); return; }
         const auto& layout=Towns[town_id];
         const int story=port_story_at(layout.port);
-        const bool can_talk=story>=0 && game.port_story_stage(story)<PortStoryFirst;
+        const bool can_talk=story>=0 && (game.port_story_stage(story)<PortStoryFirst ||
+                            game.dispatch_offer_here(PortStories[story].dispatch));
         const int talk_door=can_talk?int(PortStoryDoors[story]):-1;
         town_area=harbor_view(d,town_id);
         harbor_panel(d,d.clip.inset(2),HarborTrim);
@@ -4626,10 +4628,9 @@ struct VoyageApp {
             if (!record.last) { dispatch_page=DispatchList; }
             else {
                 const auto& order=DispatchOrders[record.last-1];
-                constexpr Text outcomes[]{"","按期交付","逾期交付","已退回运单","航程中断","按期交付 · 验货赏金入账"};
                 page_title(d,"最近运单",LetterIcon);
                 d.label(x,y+34,order.title,gold,width);
-                d.label(x,y+54,outcomes[record.outcome],ivory,width);
+                d.label(x,y+54,DispatchOutcomeLabels[record.outcome],ivory,width);
                 const auto& rate=DispatchRates[order.kind];
                 if (record.outcome==DispatchOnTime || record.outcome==DispatchLate ||
                     record.outcome==DispatchInspectedOnTime) {
@@ -4935,8 +4936,14 @@ struct VoyageApp {
             if (i<0) {
                 const int id=seen[i+seen_count];
                 const auto stage=game.port_story_stage(id);
-                row(d,j,PortStories[id].title,stage==PortStoryMet?Places[PortStories[id].port].name:"已完成",
-                    ReadPortStory+id,stage==PortStoryMet,28,LetterIcon);
+                const auto& story=PortStories[id];
+                const bool underway=story.dispatch>=0 && game.dispatch_order()==story.dispatch;
+                const auto outcome=game.story_receipt(story.dispatch).outcome;
+                const Text status=underway?"运送中":
+                    outcome==DispatchInspectedOnTime?"按期交付":
+                    outcome?DispatchOutcomeLabels[outcome]:
+                    stage==PortStoryMet?Places[story.port].name:stage==PortStoryFirst && story.dispatch>=0?"已托付":"已完成";
+                row(d,j,story.title,status,ReadPortStory+id,stage==PortStoryMet || underway,28,LetterIcon);
                 continue;
             }
             if (i==TaleCount) {
@@ -4968,11 +4975,18 @@ struct VoyageApp {
         const bool finished=stage>=PortStoryFirst;
         const bool local=game.port() && game.s.origin==story.port;
         const bool active=stage==PortStoryFirst && game.dispatch_order()==story.dispatch;
-        const bool translation=local && !finished &&
-                               game.port_story_requirement(port_story_id,0)=="需要口译";
-        const bool actions=active || (!finished && !game.sea());
-        const Text copy=translation?"货主指了指海图上的两处港口。请位口译来听清托付。":
-                        finished?story.endings[stage-PortStoryFirst]:story.opening;
+        const auto receipt=active?StoryDispatchReceipt{}:game.story_receipt(story.dispatch);
+        const bool retry=dispatch_failed(receipt.outcome);
+        const auto retry_requirement=retry && local?game.dispatch_requirement(story.dispatch):Text{};
+        const bool translation=local && (retry?retry_requirement=="需要口译":
+                               !finished && game.port_story_requirement(port_story_id,0)=="需要口译");
+        const bool actions=active || ((!finished || retry) && !game.sea());
+        Text copy=finished?story.endings[stage-PortStoryFirst]:story.opening;
+        if (translation) copy="货主指了指海图上的两处港口。请位口译来听清托付。";
+        else if (retry)
+            copy=receipt.outcome==DispatchCancelled?"货件退回了发货港。货主在等新的船班。":
+                                                   "这趟航程中断了。货主备了替换的货件，可以回港找他。";
+        else if (receipt.outcome) copy=DispatchOrders[story.dispatch].delivery;
         constexpr Color ink=rgb(0x312117), note=rgb(0x795022);
         const auto frame=d.clip.inset(2);
         if (const auto* pixels=sea_picture.pixels(PortStoryPictureBase+port_story_id-WetPorcelain))
@@ -4991,18 +5005,26 @@ struct VoyageApp {
         voyage_icon(d,LetterIcon,{x+9,y+9,14,14});
         const int title_w=std::min(d.measure(story.title)+6,text_w-20);
         d.label(x+28,y+8,story.title,ink,title_w);
-        d.label(x+33+title_w,y+8,story.person,note,text_w-title_w-26);
+        const auto status=receipt.outcome==DispatchInspectedOnTime?Text("验货后按期交付"):
+                          receipt.outcome?DispatchOutcomeLabels[receipt.outcome]:story.person;
+        if (receipt.day>=0)
+            d.label(x+33+title_w,y+8,format("第%d日 · %s",receipt.day+1,status.data()),note,text_w-title_w-26);
+        else d.label(x+33+title_w,y+8,status,note,text_w-title_w-26);
         d.wrap({x+10,y+27,text_w,end-y-30},copy,ink,15);
 
         if (active) {
             harbor_button(d,buttons,"查看运单",OpenDispatch,true,false,{},LetterIcon);
-        } else if (!finished && !game.sea()) {
+        } else if ((!finished || retry) && !game.sea()) {
             if (!local) {
                 harbor_button(d,buttons,format("标记%s",Places[story.port].name.data()),
                               Destination+story.port,true,false,{},SeaChartIcon);
             } else if (translation) {
                 harbor_button(d,buttons,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
                               game.s.gold<Game::InterpreterFee,{},SpeechIcon);
+            } else if (retry) {
+                const auto bond=format("押金 %d金",DispatchRates[DispatchOrders[story.dispatch].kind].bond);
+                harbor_button(d,buttons,"重新接单",RetryStoryDispatch,true,!retry_requirement.empty(),
+                              retry_requirement.empty()?Text(bond):retry_requirement,LetterIcon);
             } else {
                 const int half=(width-5)/2;
                 for (int choice=0;choice<2;++choice) {
@@ -6319,12 +6341,19 @@ struct VoyageApp {
                 break;
             case FindPortStory: {
                 const int id=port_story_at(game.s.origin);
-                if (modal==HarborTown && id>=0 && game.port_story_stage(id)<PortStoryFirst)
+                if (modal==HarborTown && id>=0 && (game.port_story_stage(id)<PortStoryFirst ||
+                    game.dispatch_offer_here(PortStories[id].dispatch)))
                     town_go(Towns[town_id].doors[PortStoryDoors[id]],TownStoryTarget);
                 break;
             }
             case PortStoryChooseFirst: case PortStoryChooseSecond:
                 if (modal==PortStoryPage && game.resolve_port_story(port_story_id,action-PortStoryChooseFirst)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case RetryStoryDispatch:
+                if (modal==PortStoryPage && game.accept_dispatch(PortStories[port_story_id].dispatch)) {
                     audio.cue(Sound::Page);
                     changed();
                 }

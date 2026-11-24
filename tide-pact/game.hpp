@@ -365,6 +365,7 @@ struct State {
     std::array<int,2> fishery_next{};
     std::uint8_t whale_oil=0, whale_blubber=0;
     DispatchRecord dispatch;
+    std::array<StoryDispatchReceipt,StoryDispatchCount> story_receipts{};
     std::array<MerchantVoyage,MerchantNames.size()> merchants{{{.port=0},{.port=1}}};
 };
 
@@ -380,7 +381,8 @@ inline constexpr std::size_t FieldSaveBytes=PreviousWorldSaveBytes+OuterChartByt
 inline constexpr std::size_t PortSaveBytes=FieldSaveBytes+(PreviousPortCount-BasePortCount)*GoodsCount;
 inline constexpr std::size_t EastSaveBytes=PortSaveBytes+(EastPortCount-PreviousPortCount)*GoodsCount+
                                        3*sizeof(std::uint64_t)+2*sizeof(std::uint32_t);
-inline constexpr std::size_t SaveBytes=EastSaveBytes+(PortCount-EastPortCount)*GoodsCount+1;
+inline constexpr std::size_t StraitSaveBytes=EastSaveBytes+(PortCount-EastPortCount)*GoodsCount+1;
+inline constexpr std::size_t SaveBytes=StraitSaveBytes+StoryDispatchCount*(1+sizeof(std::uint32_t));
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -525,6 +527,7 @@ struct Game {
     int dispatch_space() const;
     bool dispatch_board_here() const;
     bool dispatch_offer_here(int id) const;
+    StoryDispatchReceipt story_receipt(int id) const;
     DispatchQuote dispatch_quote(int id) const;
     Text dispatch_requirement(int id) const;
     bool accept_dispatch(int id);
