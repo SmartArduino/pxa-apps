@@ -42,6 +42,9 @@ inline constexpr RegionalGoal regionalGoals[] = {
     {"闽江通商",{20,39,38},75,300,240,manual},
     {"西江粮道",{34,35,29},75,225,440,saddle},
     {"北部湾水路",{36,40,41},65,290,390,sword},
+    {"汉水峡道",{3,shangyong,zigui},65,220,330,manual},
+    {"濡须江防",{wancheng,ruxu,8},65,260,280,scaleArmor},
+    {"金牛道",{47,fucheng,14},65,280,260,armor},
 };
 constexpr int regionalGoalCount=int(std::size(regionalGoals));
 static_assert(regionalGoalCount<=16);
@@ -53,12 +56,14 @@ inline constexpr OpeningChange yizhouOpening[] = {
     {32,0,475,2},{7,0,1450,2},{10,2,925,2},{15,0,890,2},{16,0,650,1},{17,0,550,1},{18,0,560,1},
     {30,0,1850,2},{12,0,580,2},{2,4,1340,3},{13,4,780,2},{14,4,720,2},
     {0,1,950,3},{27,1,710,2},{23,1,1180,3},{8,2,1510,3},{53,0,525,2},
+    {fucheng,0,520,2},{zigui,0,495,2},{qishan,1,490,2},
 };
 inline constexpr OpeningChange xiangfanOpening[] = {
     {32,0,530,2},{47,0,610,2},{2,0,1575,3},{3,0,1880,3},{13,0,1080,2},{14,0,760,2},{30,0,790,2},
     {7,0,1610,3},{15,2,780,2},{16,0,660,2},{17,0,770,2},{18,2,730,2},{10,2,880,2},
     {6,1,1490,3},{11,1,980,2},{0,1,1060,3},{27,1,810,2},{8,2,1710,3},{9,2,1170,2},
     {12,0,660,2},{52,0,660,2},{53,0,475,2},{55,0,710,3},
+    {shangyong,0,540,2},{fucheng,0,560,2},{zigui,0,530,2},{wancheng,2,600,2},{qishan,1,510,2},
 };
 
 constexpr const OpeningChange* opening(int chapter,int city) {

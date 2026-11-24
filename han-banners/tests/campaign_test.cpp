@@ -1,5 +1,6 @@
 #include "battle.hpp"
 #include "save.hpp"
+#include <string_view>
 #include <cassert>
 #include <iostream>
 
@@ -101,6 +102,64 @@ static Campaign play(int side,int chapter,Difficulty difficulty=Difficulty::stan
     return c;
 }
 
+static void writeLegacy(const Campaign& fixture,auto& older,int version,int cities) {
+    constexpr size_t baseHeader=18*2;
+    constexpr size_t newHeader=baseHeader+4;
+    constexpr size_t prisonersAt=2*(ninthSaveWords-1+3*(newTalentFirst-legacyCommanders)+2);
+    constexpr size_t kitsBegin=2*(twelfthSaveWords-1-commanderSlots*gearSlotCount);
+    constexpr size_t growth=(cityCount-previousCityCount)*6;
+    const auto newest=encode(fixture);
+    FifteenthSave expanded{};
+    std::copy_n(newest.begin(),newHeader,expanded.begin());
+    auto word=[&](size_t at,int value) {
+        expanded[at]=std::byte(value&255);
+        expanded[at+1]=std::byte(value>>8);
+    };
+    for (int i=0;i<previousCityCount;++i) {
+        const auto& city=fixture.cities[i];
+        const auto at=newHeader+6*i;
+        word(at,city.owner|(city.fields<<4)|(city.fort<<8));
+        word(at+2,city.troops);
+        word(at+4,city.order|(city.market<<8));
+        word(prisonersAt+2*i,city.prisoners);
+    }
+    constexpr size_t mapEnd=newHeader+previousCityCount*6;
+    std::copy_n(newest.begin()+mapEnd+growth,prisonersAt-mapEnd,expanded.begin()+mapEnd);
+    std::copy_n(newest.begin()+prisonersAt+growth,kitsBegin-prisonersAt-2*previousCityCount,
+                expanded.begin()+prisonersAt+2*previousCityCount);
+    constexpr size_t packedKits=kitsBegin+growth-2*previousCityCount;
+    for (int slot=0;slot<commanderSlots;++slot) {
+        const auto packed=packedKits+2*slot;
+        const int kit=int(newest[packed])|(int(newest[packed+1])<<8);
+        for (int category=0;category<gearSlotCount;++category)
+            word(kitsBegin+2*(slot*gearSlotCount+category),(kit>>(4*category))&15);
+    }
+    constexpr size_t endOfKits=kitsBegin+2*commanderSlots*gearSlotCount;
+    constexpr size_t endOfPacked=packedKits+2*commanderSlots;
+    constexpr size_t endOfBase=2*(fifteenthSaveWords-cityPolicyWords-1);
+    std::copy_n(newest.begin()+endOfPacked,endOfBase-endOfKits,expanded.begin()+endOfKits);
+    for (int first=0;first<previousCityCount;first+=8) {
+        int policies=0;
+        for (int i=0;i<8;++i) policies|=int(fixture.cities[first+i].policy)<<(2*i);
+        word(endOfBase+2*(first/8),policies);
+    }
+    const size_t header=version>=8?newHeader:baseHeader+(version>=4?2:0);
+    std::copy_n(expanded.begin(),header,older.begin());
+    older[2]=std::byte(version);
+    std::copy_n(expanded.begin()+newHeader,cities*6,older.begin()+header);
+    const auto body=header+cities*6;
+    if (version==16) {
+        std::copy(expanded.begin()+mapEnd,expanded.begin()+kitsBegin,older.begin()+body);
+        std::copy_n(newest.begin()+packedKits,2*commanderSlots,older.begin()+kitsBegin);
+        std::copy(expanded.begin()+endOfKits,expanded.end()-2,older.begin()+kitsBegin+2*commanderSlots);
+    } else {
+        std::copy_n(expanded.begin()+mapEnd,older.size()-body-2,older.begin()+body);
+    }
+    const auto sum=checksum(older,older.size()-2);
+    older[older.size()-2]=std::byte(sum&255);
+    older.back()=std::byte(sum>>8);
+}
+
 static void checkMigration() {
     LegacySave old{};
     size_t offset=0;
@@ -144,36 +203,34 @@ static void checkMigration() {
 
     current.start(0,2);
     current.surveyed=uint64_t(1)<<31;
-    auto newest=encode(current);
+    auto fixture=current;
     ThirdSave third{};
-    const auto writeLegacy=[&](auto& older,int version,int cities) {
-        constexpr size_t baseHeader=18*2;
-        constexpr size_t newHeader=baseHeader+4;
-        const size_t header=version>=8?newHeader:baseHeader+(version>=4?2:0);
-        std::copy_n(newest.begin(),header,older.begin());
-        older[2]=std::byte(version);
-        std::copy_n(newest.begin()+newHeader,cities*6,older.begin()+header);
-        const auto body=header+cities*6;
-        std::copy_n(newest.begin()+newHeader+cityCount*6,older.size()-body-2,older.begin()+body);
-        const auto sum=checksum(older,older.size()-2);
-        older[older.size()-2]=std::byte(sum&255);
-        older.back()=std::byte(sum>>8);
-    };
     FourteenthSave fourteenth{};
-    writeLegacy(fourteenth,14,cityCount);
+    writeLegacy(fixture,fourteenth,14,previousCityCount);
     assert(migrate(fourteenth,c) && c.preferredOrigin()==current.capital() &&
            c.cities[current.capital()].policy==CityPolicy::manual);
+    {
+        Campaign geared=current;
+        geared.generals[rulerSlot].kit={twinJian,scaleArmor,whiteHorse,featherFan};
+        const auto previous=fixture;
+        fixture=geared;
+        FifteenthSave fifteenth{};
+        writeLegacy(fixture,fifteenth,15,previousCityCount);
+        assert(restoreSave(fifteenth,fifteenth.size(),c));
+        assert(c.generals[rulerSlot].kit==geared.generals[rulerSlot].kit && encode(c)==encode(fixture));
+        fixture=previous;
+    }
     ThirteenthSave thirteenth{};
     current.alliance[2]=allianceSeasons;
-    newest=encode(current);
-    writeLegacy(thirteenth,13,cityCount);
+    fixture=current;
+    writeLegacy(fixture,thirteenth,13,previousCityCount);
     assert(migrate(thirteenth,c) && c.allied(2) && !c.alliedRequest && !c.alliedReport.request);
     current.alliance[2]=0;
-    newest=encode(current);
+    fixture=current;
     TwelfthSave twelfth{};
-    writeLegacy(twelfth,12,cityCount);
+    writeLegacy(fixture,twelfth,12,previousCityCount);
     assert(migrate(twelfth,c) && c.chapter==2 && (c.alliance==std::array<int,3>{}));
-    writeLegacy(third,3,oldCityCount);
+    writeLegacy(fixture,third,3,oldCityCount);
     assert(migrate(third,c) && c.chapter==2 && c.own(32) && c.cities[37].owner==7 &&
            c.surveyed==(uint64_t(1)<<31));
     assert(c.canSearch(32,0));
@@ -183,18 +240,18 @@ static void checkMigration() {
 
     current.surveyed=uint64_t(1)<<37;
     current.cities[37].troops=432;
-    newest=encode(current);
+    fixture=current;
     FourthSave fourth{};
-    writeLegacy(fourth,4,expandedCityCount);
+    writeLegacy(fixture,fourth,4,expandedCityCount);
     assert(migrate(fourth,c) && c.chapter==2 && c.cities[37].troops==432 &&
            c.surveyed==(uint64_t(1)<<37) && c.cities[40].owner==7 && c.own(47));
     c.surveyed|=uint64_t(1)<<47;
     checkSave(c);
 
     c.regionalRewards=7;
-    newest=encode(c);
+    fixture=c;
     FifthSave fifth{};
-    writeLegacy(fifth,5,seventhCityCount);
+    writeLegacy(fixture,fifth,5,seventhCityCount);
     Save stored{};
     std::copy(fifth.begin(),fifth.end(),stored.begin());
     assert(!restoreSave(stored,fifth.size()-1,c));
@@ -202,33 +259,33 @@ static void checkMigration() {
            c.surveyed==((uint64_t(1)<<37)|(uint64_t(1)<<47)));
 
     NinthSave ninth{};
-    writeLegacy(ninth,9,cityCount);
+    writeLegacy(fixture,ninth,9,previousCityCount);
     assert(migrate(ninth,c) && c.difficulty==Difficulty::standard && c.own(47));
     assert(!c.held(c.commander) && !c.prisoners[0] && !c.cities[c.capital()].prisoners);
-    const auto priorFixture=newest;
+    const auto priorFixture=fixture;
     current.guests[1]={1,2,-1};
     current.commander=guestCommand(1);
     current.holdTroops(current.capital(),47);
-    newest=encode(current);
+    fixture=current;
     TenthSave tenth{};
-    writeLegacy(tenth,10,cityCount);
+    writeLegacy(fixture,tenth,10,previousCityCount);
     assert(migrate(tenth,c) && c.commander==guestCommand(1) && &c.leader(c.commander)==&officers[1][2]);
     assert(c.cities[c.capital()].prisoners==47 && !c.unlocked(talentSlot(previousTalentCount)));
     current.generals[0].kit[armorSlot]=armor;
-    newest=encode(current);
+    fixture=current;
     EleventhSave eleventh{};
-    writeLegacy(eleventh,11,cityCount);
+    writeLegacy(fixture,eleventh,11,previousCityCount);
     assert(migrate(eleventh,c) && c.unlocked(rulerSlot) && c.generals[0].kit[armorSlot]==armor);
     assert(c.generals[0].kit[mountSlot]==noGear && c.generals[rulerSlot].kit[armsSlot]==twinJian);
-    newest=priorFixture;
+    fixture=priorFixture;
 
     SixthSave sixth{};
-    writeLegacy(sixth,6,seventhCityCount);
+    writeLegacy(fixture,sixth,6,seventhCityCount);
     std::copy(sixth.begin(),sixth.end(),stored.begin());
     assert(restoreSave(stored,sixth.size(),c) && c.regionalRewards==7 && c.talentHired==0 &&
            c.own(47) && c.cities[37].troops==432);
     SeventhSave seventh{};
-    writeLegacy(seventh,7,seventhCityCount);
+    writeLegacy(fixture,seventh,7,seventhCityCount);
     std::copy(seventh.begin(),seventh.end(),stored.begin());
     assert(restoreSave(stored,seventh.size(),c) && c.own(47) && c.cities[37].troops==432);
     for (int i=seventhCityCount;i<cityCount;++i) {
@@ -236,6 +293,12 @@ static void checkMigration() {
         assert(c.cities[i].owner==original.owner && c.cities[i].troops==original.troops);
         assert(std::any_of(std::begin(roads),std::end(roads),[&](auto& r){return r.from==i||r.to==i;}));
     }
+    SixteenthSave sixteenth{};
+    fixture=current;
+    fixture.cities[2].policy=CityPolicy::garrison;
+    writeLegacy(fixture,sixteenth,16,previousCityCount);
+    assert(restoreSave(sixteenth,sixteenth.size(),c) && c.cities[2].policy==CityPolicy::garrison &&
+           c.cities[c.capital()].prisoners==47 && c.own(shangyong) && !c.chronicleDeeds);
     c.surveyed|=uint64_t(1)<<(cityCount-1);
     checkSave(c);
 }
@@ -279,7 +342,7 @@ static void checkSeasonAndRegionalGoals() {
     auto saved=encode(c);
     Campaign restored;
     assert(decode(saved,restored) && restored.regionalPaid(id) && !restored.claimRegional(id));
-    saved[SixthSave{}.size()+6*(cityCount-seventhCityCount)-1]=std::byte{1};
+    saved[43]|=std::byte{0xf0}; // Invalid packed city policy.
     const auto sum=checksum(saved,saved.size()-2);
     saved[saved.size()-2]=std::byte(sum&255);
     saved.back()=std::byte(sum>>8);
@@ -641,9 +704,12 @@ static void checkSearchAndTalents() {
     assert(fight.rally());
     assert(fight.losses[1]==talents[3].officer.strength+35);
     arms.cities[11].owner=0;
-    auto ordinary=arms;
-    assert(ordinary.search(11,0).kind==moneyFound);
-    assert(arms.search(11,talentFirst+4).kind==gearFound);
+    const auto ordinary=arms.searchOdds(11,0);
+    const auto trained=arms.searchOdds(11,talentFirst+4);
+    assert(trained.talent>ordinary.talent);
+    const int market=linzi;
+    arms.cities[market].owner=0;
+    assert(arms.searchOdds(market,talentFirst+4).localItem>arms.searchOdds(market,0).localItem);
     checkSave(arms);
 }
 
@@ -667,6 +733,40 @@ static void checkBattleOrders() {
     const int position=b.fronts[0][1];
     fightUntilRound(b,b.round+1);
     assert(b.fronts[0][1]<position && b.generalHealth>health);
+}
+
+static void checkRetreatFacing() {
+    Battle battle;
+    battle.ranks[0]={100,100,100};
+    battle.ranks[1]={100,100,100};
+    battle.fronts[0]={410,410,410};
+    battle.fronts[1]={450,450,450};
+    battle.rankOrders[1]={fallBack,2};
+    battle.enemyRank=1;
+    battle.enemyManeuver=fallBack;
+    assert(battle.rankFacing(0,0)==1 && battle.rankFacing(1,0)==-1);
+    assert(battle.rankFacing(0,1)==-1 && battle.rankFacing(1,1)==1);
+    battle.marchRanks();
+    assert(battle.rankMotion[0][1]==-1 && battle.rankMotion[1][1]==1);
+
+    battle.rankOrders[1]={};
+    battle.enemyManeuver=measured;
+    battle.marchRanks();
+    assert(battle.rankFacing(0,1)==1 && battle.rankFacing(1,1)==-1);
+
+    battle.routed[0][2]=battle.routed[1][2]=true;
+    battle.marchRanks();
+    assert(battle.rankMotion[0][2]==-1 && battle.rankMotion[1][2]==1);
+    battle.fronts[0][2]=Battle::fieldMargin;
+    battle.fronts[1][2]=Battle::fieldLength-Battle::fieldMargin;
+    battle.marchRanks();
+    assert(!battle.rankMotion[0][2] && !battle.rankMotion[1][2]);
+    assert(battle.rankFacing(0,2)==-1 && battle.rankFacing(1,2)==1);
+
+    battle.fronts[0][0]=540;
+    battle.fronts[1][0]=490;
+    battle.marchRanks();
+    assert(battle.rankFacing(0,0)==-1 && battle.rankFacing(1,0)==1);
 }
 
 static void checkOrderPreview() {
@@ -745,13 +845,8 @@ static void checkDifficultyAndAI() {
     Campaign veteran;
     veteran.start(0,0,Difficulty::veteran);
     checkSave(veteran);
-    auto stored=encode(veteran);
     EighthSave previous{};
-    std::copy_n(stored.begin(),previous.size()-2,previous.begin());
-    previous[2]=std::byte{8};
-    const auto sum=checksum(previous,previous.size()-2);
-    previous[previous.size()-2]=std::byte(sum&255);
-    previous.back()=std::byte(sum>>8);
+    writeLegacy(veteran,previous,8,previousCityCount);
     assert(migrate(previous,ordinary) && ordinary.difficulty==Difficulty::standard);
     assert(ordinary.cities[10].troops==veteran.cities[10].troops && ordinary.grain==veteran.grain);
 
@@ -1189,7 +1284,9 @@ static void checkPrisonCamps() {
     scouts.gold=2000;
     const int home=talents[legacyTalentCount].city[0];
     scouts.cities[home].owner=0;
-    assert(scouts.search(home,0).value==legacyTalentCount);
+    while (scouts.roll(home,6)>=scouts.searchOdds(home,0).talent) ++scouts.turn;
+    const auto discovery=scouts.search(home,0);
+    assert(discovery.kind==talentFound && discovery.value==legacyTalentCount);
     const int id=legacyTalentCount;
     while (scouts.roll(id,4)<scouts.welcomeChance(home,id)) ++scouts.turn;
     assert(scouts.welcome(home,id)==Offer::refused && !scouts.canWelcome(home,id));
@@ -1369,8 +1466,47 @@ static void checkRetreatAccounting() {
     assert(campaign.cities[refuge].troops==armyLimit);
 }
 
+static void checkHistoricalExpansion() {
+    const auto name=[](const char* value) {return std::string_view(value);};
+    assert(cityCount==64 && name(cityLabel(8,211))=="秣陵" && name(cityLabel(8,212))=="建业");
+    assert(name(cityLabel(43,221,0))=="鄂县" && name(cityLabel(43,221,1))=="武昌");
+    assert(name(cityLabel(52,222,0))=="白帝城" && name(cityLabel(52,222,1))=="永安");
+    assert(name(cityDistrict(shangyong,219,2))=="上庸郡" && name(cityDistrict(shangyong,221))=="新城郡");
+    assert(name(historicalEra(1,220,1)->name)=="延康" && name(historicalEra(1,220,3)->name)=="黄初");
+    assert(!historicalEra(0,221,0) && name(historicalEra(0,221,1)->name)=="章武");
+    assert(name(historicalEra(0,223,1)->name)=="建兴" && name(historicalEra(2,229,1)->name)=="黄龙");
+    assert(adjacent(6,fancheng) && adjacent(shangyong,zigui) && adjacent(23,ruxu));
+    for (int i=1;i<chronicleCount;++i)
+        assert(reachedDate(chronicle[i].year,chronicle[i].season,chronicle[i-1].year,chronicle[i-1].season));
+    assert(latestChronicle(208,2)<0 && latestChronicle(228,0,qishan)>=0);
+
+    Campaign c;
+    c.start(0,2);
+    const int entry=latestChronicle(c.year(),c.season(),shangyong);
+    assert(c.own(shangyong) && entry>=0);
+    const int gold=c.gold, actions=c.actions, order=c.cities[shangyong].order;
+    const auto deed=chronicle[entry].deed;
+    assert(c.dispatchDeed(entry) && !c.dispatchDeed(entry));
+    assert(c.gold==gold-deed.gold && c.actions==actions-1 &&
+           c.cities[shangyong].order==order+deed.gainOrder);
+    Campaign restored;
+    assert(decode(encode(c),restored) && !restored.canDispatchDeed(entry));
+
+    c.cities[qishan].owner=0;
+    c.actions=2;
+    assert(c.canSearch(qishan,0));
+    const int specialty=c.searchOdds(qishan,0).localItem;
+    assert(specialty>0 && c.searchOdds(2,0).localItem!=specialty);
+    while (c.roll(qishan,6)>=specialty) ++c.turn;
+    const auto found=c.search(qishan,0);
+    assert(found.kind==gearFound && found.value==manual);
+    assert(c.alreadySearched(qishan) && !c.canSearch(qishan,0));
+    checkSave(c);
+}
+
 int main() {
     checkMigration();
+    checkHistoricalExpansion();
     checkSearchAndTalents();
     checkSeasonAndRegionalGoals();
     checkAlliedTransit();
@@ -1381,6 +1517,7 @@ int main() {
     checkBattleAndCaptive();
     checkPrisonCamps();
     checkBattleOrders();
+    checkRetreatFacing();
     checkOrderPreview();
     checkDifficultyAndAI();
     checkScoutingAndWithdrawal();

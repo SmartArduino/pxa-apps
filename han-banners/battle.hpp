@@ -74,7 +74,7 @@ struct Battle {
     int troops[2]{},initial[2]{},morale[2]{100,100};
     Ranks ranks[2]{},fronts[2]{},rankLosses[2]{};
     std::array<bool,rankCount> routed[2]{};
-    std::array<bool,rankCount> walking[2]{};
+    std::array<std::int8_t,rankCount> rankMotion[2]{};
     int fled[2]{},routCue[2]{};
     std::array<RankOrder,rankCount> rankOrders{};
     RankAid aid{},enemyAid{};
@@ -752,21 +752,36 @@ struct Battle {
         }
         return gap;
     }
+    static constexpr int advanceDirection(int side) {return side?-1:1;}
+    int movementTarget(int side,int lane) const {
+        const int assisted=supportedTarget(side,lane);
+        return assisted>=0?assisted:targetRank(side,lane);
+    }
+    int towardRank(int side,int lane,int target) const {
+        if (target<0 || fronts[1-side][target]==fronts[side][lane]) return advanceDirection(side);
+        return fronts[1-side][target]>fronts[side][lane]?1:-1;
+    }
+    int rankFacing(int side,int lane,int attack=-1) const {
+        if (routed[side][lane]) return -advanceDirection(side);
+        if (stance(side,lane)==fallBack) return -towardRank(side,lane,movementTarget(side,lane));
+        if (attack>=0) return towardRank(side,lane,attack);
+        const int motion=rankMotion[side][lane];
+        return motion?motion:towardRank(side,lane,movementTarget(side,lane));
+    }
     void marchRanks() {
         Ranks next[2]={fronts[0],fronts[1]};
         for (int side=0;side<2;++side) for (int lane=0;lane<rankCount;++lane) {
             if (!ranks[side][lane]) continue;
             const auto move=stance(side,lane);
             if (routed[side][lane]) {
-                next[side][lane]=std::clamp(fronts[side][lane]+(side?4:-4),fieldMargin,fieldLength-fieldMargin);
+                next[side][lane]=std::clamp(fronts[side][lane]-4*advanceDirection(side),fieldMargin,fieldLength-fieldMargin);
                 continue;
             }
             if (side==0 && anchored && move==measured) continue;
-            const int assisted=supportedTarget(side,lane);
-            const int target=assisted>=0?assisted:targetRank(side,lane);
+            const int target=movementTarget(side,lane);
             if (target<0 || move==hold) continue;
             const int x=fronts[side][lane], foe=fronts[1-side][target];
-            const int direction=x==foe?(side?-1:1):foe>x?1:-1;
+            const int direction=towardRank(side,lane,target);
             if (move==fallBack) {
                 if (laneGap(side,lane,target)<range(side,lane)+88)
                     next[side][lane]=std::clamp(x-direction*2,fieldMargin,fieldLength-fieldMargin);
@@ -788,7 +803,10 @@ struct Battle {
                 next[side][lane]=std::max(next[side][lane],std::min(x,gatePosition-68));
         }
         for (int side=0;side<2;++side) {
-            for (int lane=0;lane<rankCount;++lane) walking[side][lane]=fronts[side][lane]!=next[side][lane];
+            for (int lane=0;lane<rankCount;++lane) {
+                const int delta=next[side][lane]-fronts[side][lane];
+                rankMotion[side][lane]=std::int8_t((delta>0)-(delta<0));
+            }
             fronts[side]=next[side];
         }
         if (round) ++roundClock;

@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdint>
 #include "chapters.hpp"
+#include "history.hpp"
 
 namespace han {
 
@@ -54,6 +55,9 @@ struct PrisonNews {
 };
 enum class Offer {unavailable, refused, joined};
 enum FindKind { noFind, moneyFound, grainFound, gearFound, loreFound, talentFound };
+struct SearchOdds {
+    int talent=0, localItem=0, equipment=0, money=0, grain=0;
+};
 struct Discovery {
     FindKind kind=noFind;
     int value=0;
@@ -93,7 +97,7 @@ struct Campaign {
     int won=0, commander=0, tours=0, recruited=7;
     int marchBase=-1;
     bool objectivePaid=false;
-    unsigned regionalRewards=0;
+    unsigned regionalRewards=0, chronicleDeeds=0;
     unsigned talentSeen=0, talentHired=0;
     unsigned hireOffered=0, talentOffered=0;
     uint64_t surveyed=0;
@@ -590,13 +594,33 @@ struct Campaign {
         }
         return true;
     }
+    bool canDispatchDeed(int entry) const {
+        if (entry<0 || entry>=chronicleCount || won || !actions) return false;
+        const auto& story=chronicle[entry];
+        const auto& deed=story.deed;
+        return deed.bit && !(chronicleDeeds&deed.bit) && own(story.city) &&
+            reachedDate(year(),season(),story.year,story.season) &&
+            gold>=deed.gold && grain>=deed.grain;
+    }
+    bool dispatchDeed(int entry) {
+        if (!canDispatchDeed(entry)) return false;
+        const auto& story=chronicle[entry];
+        const auto& deed=story.deed;
+        --actions;
+        gold-=deed.gold;
+        grain=std::min(9999,grain-deed.grain+deed.gainGrain);
+        auto& city=cities[story.city];
+        city.order=std::min(100,city.order+deed.gainOrder);
+        chronicleDeeds|=deed.bit;
+        return true;
+    }
     static constexpr int searchCost=35;
     int localTalent(int city) const {
         for (int i=0;i<talentCount;++i) if (talents[i].city[chapter]==city) return i;
         return -1;
     }
     bool knowsTalent(int id) const {return id>=0 && (talentSeen&(1u<<id));}
-    bool alreadySearched(int city) const {return surveyed&(uint64_t(1)<<city);}
+    bool alreadySearched(int city) const {return city>=0 && city<cityCount && (surveyed&(uint64_t(1)<<city));}
     int searchLead(int city) const {
         int lead=-1;
         for (int slot=0;slot<commanderSlots;++slot) {
@@ -613,33 +637,68 @@ struct Campaign {
         return !won && actions && own(city) && !alreadySearched(city) && gold>=searchCost &&
             available(slot,city);
     }
+    Gear commonFind(int city) const {
+        const int count=tours>=4?noGear:legacyGearCount;
+        auto gear=Gear((city+chapter+turn)%count);
+        if (gear==localFinds(city).item) gear=Gear((gear+1)%count);
+        return gear;
+    }
+    SearchOdds searchOdds(int city,int slot) const {
+        if (city<0 || city>=cityCount || !available(slot,city)) return {};
+        const int quality=searchQuality(slot);
+        const auto local=localFinds(city);
+        const int candidate=localTalent(city);
+        SearchOdds odds;
+        if (candidate>=0 && !knowsTalent(candidate)) {
+            // The capital lead remains available for the opening recruitment lesson.
+            if (candidate==player && city==capital()) return {100};
+            odds.talent=std::clamp(local.talentChance+(quality-65)/3+
+                                   (cities[city].order-70)/4,12,75);
+        }
+        if (local.item!=noGear && stock[local.item]<24)
+            odds.localItem=std::clamp(local.itemChance+(quality-70)/5,4,28);
+        odds.localItem=std::min(odds.localItem,95-odds.talent);
+        const int remainder=100-odds.talent-odds.localItem;
+        if (stock[commonFind(city)]<24)
+            odds.equipment=remainder*std::clamp((quality-40)/2,5,43)/100;
+        const int supplies=remainder-odds.equipment;
+        const int grainShare=sites[city].terrain==river?52:sites[city].terrain==plain?44:34;
+        odds.grain=supplies*grainShare/100;
+        odds.money=supplies*37/100;
+        return odds;
+    }
     Discovery search(int city,int slot) {
         if (!canSearch(city,slot)) return {};
+        const auto odds=searchOdds(city,slot);
+        const int quality=searchQuality(slot);
         surveyed|=uint64_t(1)<<city;
         --actions;
         gold-=searchCost;
-        const int quality=searchQuality(slot);
         gainXp(slot,15,8);
-        const int candidate=localTalent(city);
-        if (candidate>=0 && !knowsTalent(candidate)) {
+        int result=roll(city,6);
+        if (result<odds.talent) {
+            const int candidate=localTalent(city);
             talentSeen|=1u<<candidate;
             return {talentFound,candidate};
         }
-        const int roll=(city*17+turn*37+chapter*23+player*13)%100;
-        const int gearChance=std::clamp((quality-40)/2,8,43);
-        if (roll<gearChance) {
-            const auto gear=Gear((city+chapter+turn)%(tours>=4?noGear:legacyGearCount));
-            if (stock[gear]<24) {
-                gainGear(gear);
-                return {gearFound,gear};
-            }
+        result-=odds.talent;
+        if (result<odds.localItem) {
+            const auto gear=localFinds(city).item;
+            gainGear(gear);
+            return {gearFound,gear};
         }
-        if (roll<gearChance || roll<55) {
+        result-=odds.localItem;
+        if (result<odds.equipment) {
+            const auto gear=commonFind(city);
+            gainGear(gear);
+            return {gearFound,gear};
+        }
+        if (result<odds.equipment+odds.money) {
             const int amount=std::min(9999-gold,55+quality/2);
             gold+=amount;
             return {moneyFound,amount};
         }
-        if (roll<88) {
+        if (result<odds.equipment+odds.money+odds.grain) {
             const int amount=std::min(9999-grain,85+quality);
             grain+=amount;
             return {grainFound,amount};

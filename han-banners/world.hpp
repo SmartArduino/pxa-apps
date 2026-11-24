@@ -7,7 +7,10 @@ namespace han {
 constexpr int oldCityCount = 32;
 constexpr int expandedCityCount = 38;
 constexpr int seventhCityCount = 48;
-constexpr int cityCount = 56;
+constexpr int previousCityCount = 56;
+enum AddedSite { fancheng=previousCityCount, shangyong, fucheng, zigui, wancheng,
+                 ruxu, linzi, qishan };
+constexpr int cityCount = qishan+1;
 constexpr int ownerCount = 8;
 constexpr int officerCount = 8;
 constexpr int guestSlot = officerCount;
@@ -15,7 +18,7 @@ constexpr int talentFirst = guestSlot+1;
 constexpr int columnCount = 3;
 constexpr int garrison = 100;
 constexpr int armyLimit = 2400;
-constexpr int lastTurn = 72;
+constexpr int lastTurn = 84;
 constexpr int worldWidth = 512, worldHeight = 512;
 
 enum Troop { spear, bow, horse, shields, crossbow, heavyHorse, troopCount };
@@ -144,7 +147,7 @@ inline constexpr WildTalent talents[] = {
     {{"梁稷","同袍共济","恢复军心并补充军令",spear,inspire,39,32,67,91},
      {36,36,36},140,Specialty::granary,"任太守时，每季增加28粮"},
     {{"庞统","连环奇策","瓦解阵势与军心",crossbow,guile,57,33,42,98},
-     {6,14,-1},230,Specialty::command,"担任领军时，开战多12军令"},
+     {6,58,-1},230,Specialty::command,"担任领军时，开战多12军令"},
     {{"张任","伏弩截道","弩阵连射伤害更高",crossbow,volley,104,34,92,85},
      {47,47,-1},185,Specialty::scout,"负责搜寻时，更容易找到军械"},
     {{"吕玲绮","飞骑卷旗","重骑突击兼稳军心",heavyHorse,charge,171,35,94,66},
@@ -154,13 +157,13 @@ inline constexpr WildTalent talents[] = {
     {{"贺齐","山越奇袭","迂回并瓦解敌军",spear,guile,51,37,89,83},
      {20,20,20},175,Specialty::scout,"负责搜寻时，更容易找到军械"},
     {{"马良","白眉安军","恢复军心并补充军令",bow,inspire,48,38,47,94},
-     {17,15,53},160,Specialty::envoy,"任太守时，每季额外恢复6民心"},
+     {17,15,59},160,Specialty::envoy,"任太守时，每季额外恢复6民心"},
     {{"徐庶","断援之计","断敌协战并压制弓弩两合",bow,breakSupport,0,39,66,97},
-     {13,22,22},200,Specialty::treasury,"任太守时，每季增加22金"},
+     {11,1,1},200,Specialty::treasury,"任太守时，每季增加22金"},
     {{"王平","无当定军","收住溃退，两合护军",shields,rallyGuard,0,40,87,80},
      {55,55,52},185,Specialty::command,"担任领军时，开战多12军令"},
     {{"朱然","江防火矢","火箭突袭本路，水战更强",bow,fireArrow,115,41,87,83},
-     {43,43,43},185,Specialty::convoy,"担任领军时，出征最多省22粮"},
+     {43,43,53},185,Specialty::convoy,"担任领军时，出征最多省22粮"},
 };
 constexpr int talentCount=int(std::size(talents));
 constexpr int legacyTalentCount=6;
@@ -282,22 +285,38 @@ constexpr Site sites[] = {
     {"麦城","南郡",111.89f,30.73f,hills,2,1,430,2,stronghold},
     {"虎牢关","河南尹",113.17f,34.85f,hills,3,1,575,3,pass},
     {"剑阁","广汉郡",105.57f,32.21f,hills,2,4,610,3,pass},
+    {"樊城","襄阳郡",112.15f,32.06f,river,3,1,580,2,stronghold},
+    {"上庸","汉宁郡",110.24f,32.10f,hills,2,5,440,2},
+    {"涪城","广汉郡",104.74f,31.45f,plain,3,4,460,1},
+    {"秭归","临江郡",110.97f,30.85f,river,2,1,440,2},
+    {"皖城","庐江郡",116.57f,30.63f,river,3,1,550,2},
+    {"濡须口","庐江郡沿江",118.10f,31.39f,river,2,2,490,2,crossing},
+    {"临淄","齐国",118.34f,36.87f,plain,4,1,475,2},
+    {"祁山","陇右",105.11f,34.30f,hills,2,6,435,2,stronghold},
 };
 static_assert(std::size(sites) == cityCount);
-constexpr const char* cityLabel(int city,int year) {
+constexpr bool reachedDate(int year,int season,int fromYear,int fromSeason=0) {
+    return year*4+season>=fromYear*4+fromSeason;
+}
+constexpr const char* cityLabel(int city,int year,int season=0) {
     if (city==8 && year>=212) return "建业";
     if (city==4 && year>=221) return "许昌";
-    if (city==43 && year>=221) return "武昌";
+    if (city==43 && reachedDate(year,season,221,1)) return "武昌";
     if (city==12 && year>=222) return "西陵";
-    if (city==30 && year>=219) return "汉寿";
-    if (city==52 && year>=222) return "永安";
+    if (city==30 && year>=217) return "汉寿";
+    if (city==52 && reachedDate(year,season,222,1)) return "永安";
     return sites[city].name;
 }
-constexpr const char* cityDistrict(int city,int year) {
-    if (city==3 && year>=215) return "汉中郡";
+constexpr const char* cityDistrict(int city,int year,int season=0) {
+    if (city==3 && reachedDate(year,season,215,2)) return "汉中郡";
     if (city==12 && year>=210) return "宜都郡";
-    if ((city==14 || city==30 || city==55) && year>=219) return "梓潼郡";
-    if (city==43 && year>=221) return "武昌郡";
+    if ((city==14 || city==30 || city==55 || city==fucheng) && year>=217) return "梓潼郡";
+    if ((city==43 || city==9) && reachedDate(year,season,221,1)) return "武昌郡";
+    if (city==36 && year>=228) return "珠官郡";
+    if (city==shangyong && reachedDate(year,season,237,1)) return "上庸郡";
+    if (city==shangyong && reachedDate(year,season,220,3)) return "新城郡";
+    if (city==shangyong && reachedDate(year,season,215,2)) return "上庸郡";
+    if (city==zigui && year>=210) return "宜都郡";
     return sites[city].region;
 }
 inline std::pair<float,float> cityMapPoint(int city,int year) {
@@ -417,6 +436,22 @@ constexpr Road roads[] = {
     {54,1},
     {55,30,{{105.65f,32.29f}},"金牛道"},
     {55,14,{{105.51f,32.05f},{105.48f,31.92f},{105.34f,31.78f}},"金牛道"},
+    {56,6,{{112.15f,32.04f}},"汉水渡口"},
+    {56,11,{{112.26f,32.36f},{112.36f,32.68f}},"南阳盆地"},
+    {57,3,{{109.72f,32.80f},{109.03f,32.69f},{108.50f,32.89f},{107.55f,33.07f}},"汉水上游"},
+    {57,59,{{110.74f,32.06f},{110.73f,31.43f},{110.75f,31.06f}},"房陵山道"},
+    {58,47,{{104.62f,31.28f},{104.43f,31.14f}},"金牛道"},
+    {58,14,{{104.87f,31.52f},{105.00f,31.58f}},"金牛道"},
+    {59,12,{{111.01f,30.85f},{111.18f,30.75f}},"西陵峡"},
+    {59,52,{{110.74f,30.96f},{110.24f,31.06f},{109.88f,31.08f}},"三峡水道"},
+    {60,9,{{116.43f,30.41f},{116.26f,30.13f},{116.15f,29.76f}},"皖水长江"},
+    {60,61,{{117.00f,30.51f},{117.39f,30.70f},{117.72f,30.95f}},"沿江水路"},
+    {61,23,{{117.95f,31.50f},{117.83f,31.58f},{117.54f,31.59f},{117.34f,31.75f}},"濡须水"},
+    {61,8,{{118.35f,31.40f},{118.49f,31.83f}},"长江"},
+    {62,25,{{118.57f,36.84f}},"淄水走廊"},
+    {62,46,{{117.82f,36.91f},{117.40f,36.87f},{116.99f,37.16f}},"齐地平原"},
+    {63,27,{{105.14f,34.50f},{104.86f,34.70f},{104.69f,34.84f}},"陇右山道"},
+    {63,3,{{105.46f,34.06f},{106.06f,33.72f},{106.16f,33.33f},{106.63f,33.16f}},"西汉水谷地"},
 };
 constexpr bool adjacent(int a, int b) {
     for (const auto& r : roads) if (r.joins(a,b)) return true;

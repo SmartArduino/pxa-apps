@@ -64,6 +64,14 @@ inline constexpr PlaceHistory placeHistory[] = {
     {"今湖北当阳两河镇一带", "《演义》第七十六回，关羽失荆州后败走麦城。"},
     {"今河南荥阳汜水镇一带", "《演义》第五回，刘关张在虎牢关合战吕布。"},
     {"今四川剑阁县剑门关", "《演义》第一百十七回，姜维据守剑阁，魏军改走阴平。"},
+    {"今襄阳樊城、汉水北岸", "与襄阳隔汉水相望。219年曹仁守樊，关羽围城。"},
+    {"今湖北竹山上庸镇一带", "在堵河谷地。219年申耽归刘备，后曹魏合上庸、房陵、西城为新城郡。"},
+    {"今四川绵阳涪江沿岸", "刘璋曾在涪会刘备。刘备自葭萌南下取涪，再围雒。"},
+    {"今湖北秭归归州一带", "楚地峡江旧县。孟达由此北攻房陵，刘备东征也曾驻军于此。"},
+    {"今安徽潜山梅城一带", "庐江郡皖县。曹操部将朱光屯田于此，214年孙权破城。"},
+    {"今安徽裕溪河入江一带", "濡须水通巢湖与长江，孙权筑坞拒曹。口与坞为沿线地标，地图取入江口。"},
+    {"今山东淄博临淄齐故城", "东汉齐国治。三国史籍也写作临菑。"},
+    {"今甘肃礼县祁山堡一带", "西汉水谷地的陇右据点。228年诸葛亮初出祁山。"},
 };
 static_assert(std::size(placeHistory)==cityCount);
 
@@ -122,11 +130,111 @@ inline constexpr OfficialRecord officials[] = {
     {44,7,"后载郝昭 · 镇陈仓","守陈仓在228年前后，晚于本战局。","三国志·明帝纪注"},
     {45,1,"曹操 · 曾自谯进军","209年曹军从谯沿涡水入淮，进驻合肥。","资治通鉴·卷六十六"},
     {46,7,"早年刘备 · 曾领平原相","早于本战局，所选年份长吏未详。","三国志·先主传"},
+    {fancheng,4,"曹仁 · 屯樊","关羽来攻，汉水暴涨。曹仁守城，直至徐晃来援。","三国志·曹仁传"},
+    {shangyong,4,"申耽 · 上庸太守","219年归刘备，仍领上庸太守。","三国志·刘封传"},
+    {wancheng,2,"朱光 · 庐江太守","孙权攻皖前，朱光在皖屯田。","三国志·吕蒙传"},
     {47,2,"刘循 · 据守雒城","刘璋之子刘循守城，刘备攻雒近一年。","三国志·刘二牧传"},
 };
 inline const OfficialRecord* recordedOfficial(int city,int chapter) {
     for (const auto& record:officials)
         if (record.city==city && (record.chapters&(1u<<chapter))) return &record;
     return nullptr;
+}
+
+struct Era {
+    int year, season;
+    const char* name;
+};
+inline constexpr Era hanEras[]={{196,0,"建安"},{220,1,"延康"}};
+inline constexpr Era shuEras[]={{221,1,"章武"},{223,1,"建兴"},{238,0,"延熙"}};
+inline constexpr Era weiEras[]={{220,3,"黄初"},{227,0,"太和"},{233,0,"青龙"},{237,1,"景初"},{240,0,"正始"}};
+inline constexpr Era wuEras[]={{220,3,"黄初"},{222,0,"黄武"},{229,1,"黄龙"},{232,0,"嘉禾"},{238,2,"赤乌"}};
+template<size_t N>
+constexpr const Era* eraAt(const Era (&eras)[N],int year,int season) {
+    const Era* era=nullptr;
+    for (const auto& change:eras)
+        if (reachedDate(year,season,change.year,change.season)) era=&change;
+    return era;
+}
+constexpr const Era* historicalEra(int side,int year,int season) {
+    // Where a reform falls at the end of a season, use the next playable season.
+    if (!reachedDate(year,season,220,3)) return eraAt(hanEras,year,season);
+    if (side==0) return eraAt(shuEras,year,season);
+    if (side==1) return eraAt(weiEras,year,season);
+    return eraAt(wuEras,year,season);
+}
+
+struct ChronicleDeed {
+    int bit=0, gold=0, grain=0, gainGrain=0, gainOrder=0;
+    const char* label=nullptr;
+    const char* terms=nullptr;
+};
+constexpr unsigned deedMask=7;
+struct ChronicleEntry {
+    int year, season, city;
+    const char* title;
+    const char* source;
+    const char* body;
+    ChronicleDeed deed{};
+};
+inline constexpr ChronicleEntry chronicle[]={
+    {208,3,51,"借东风","三国演义·第四十九回","孔明在七星坛祭风。东南风起，黄盖乘火船顺风而下。这是小说写赤壁火攻的情节。"},
+    {208,3,51,"赤壁火攻","三国志·周瑜传","周瑜、程普迎战。黄盖献火攻之计，诈降后借风纵火，曹军退回北方。"},
+    {212,0,8,"秣陵改建业","三国志·吴主传","孙权移治秣陵，次年筑石头城，改称建业。地图上的城址也随之北移。"},
+    {213,0,ruxu,"濡须拒曹","三国志·吴主传","曹操于正月进兵濡须。孙权依水道相拒，双方相持一月有余，曹操引军退去。"},
+    {214,1,47,"雒城告破","三国志·先主传","刘备围雒近一年，刘循守城。庞统在围攻中中箭身亡，夏季雒城破。"},
+    {214,1,wancheng,"攻取皖城","三国志·吴主传","孙权攻陷皖城，曹军太守朱光被俘。吕蒙、甘宁在攻城中立功。"},
+    {215,2,23,"合肥退兵","三国志·张辽传","孙权围合肥。张辽率敢战之士出城突击，吴军未克，退兵时又在津北遇袭。"},
+    {219,2,shangyong,"两军会于上庸","三国志·刘封传","孟达从秭归经房陵进兵，刘封自汉中沿沔水东下，申耽举众归附。",
+     {1,35,0,0,12,"访山谷乡老","35金 · 民心+12"}},
+    {219,2,fancheng,"汉水暴涨","三国志·关羽传","关羽围曹仁于樊城。秋雨使汉水暴涨，于禁所部被淹，于禁降，庞德被俘。"},
+    {219,3,7,"白衣渡江","三国演义·第七十五回","吕蒙令士卒装作商人，乘船过江，先控制沿江守哨，再取荆州。"},
+    {220,3,1,"汉魏易代","后汉书·献帝纪","汉献帝在三月改元延康，冬季禅位于曹丕。魏改元黄初，随后定都洛阳。"},
+    {221,1,2,"成都称帝","三国志·先主传","刘备在成都称帝，国号汉，改元章武。后世通常称蜀汉，以别于东汉。"},
+    {221,1,43,"迁鄂改武昌","三国志·吴主传","孙权自公安迁治鄂县，改名武昌。此城在今湖北鄂州。"},
+    {222,1,52,"鱼复改永安","三国志·先主传","刘备从猇亭退至秭归，整合离散兵众，随后由步道退到鱼复，改名永安。",
+     {2,0,45,0,16,"安置峡江百姓","45粮 · 民心+16"}},
+    {223,1,52,"白帝城托孤","三国演义·第八十五回","小说写刘备病重于永安宫，召诸葛亮等托付后事，嘱刘禅以父事丞相。"},
+    {228,0,qishan,"初出祁山","三国志·后主传","诸葛亮出兵祁山。街亭失守后，蜀军回撤汉中。同年冬又围陈仓。",
+     {4,65,0,140,0,"设陇右粮站","65金 · 粮+140"}},
+    {229,2,8,"还都建业","三国志·吴主传","孙权在武昌称帝、改元黄龙。同年九月迁都建业，仍用旧有馆舍。"},
+};
+constexpr int chronicleCount=int(std::size(chronicle));
+inline int latestChronicle(int year,int season,int city=-1) {
+    for (int i=chronicleCount-1;i>=0;--i)
+        if ((city<0 || chronicle[i].city==city) &&
+            reachedDate(year,season,chronicle[i].year,chronicle[i].season)) return i;
+    return -1;
+}
+
+struct LocalFinds {
+    Gear item=noGear;
+    int itemChance=0;
+    int talentChance=30;
+};
+constexpr LocalFinds localFinds(int city) {
+    switch (city) {
+        case 6:return {featherFan,13,56}; // 隆中，演义第三十七回
+        case 7:return {dragonBlade,13,34}; // 关羽镇荆州，兵器取演义
+        case 10:return {whiteHorse,15,35}; // 的卢旧事见演义第三十四回
+        case 2:return {twinJian,14,42};
+        case 4:return {manual,20,41};
+        case 5:case 24:return {redHare,12,34}; // 下邳旧部、曹营赠马
+        case 15:return {featherBow,20,29};
+        case 17:return {manual,15,48};
+        case 20:case 39:return {featherBow,17,37};
+        case 28:return {saddle,23,25};
+        case 30:case fucheng:return {manual,19,47};
+        case 47:return {featherBow,17,35};
+        case 51:return {scaleArmor,16,32};
+        case ruxu:return {brightArmor,16,32}; // 魏文帝送明光铠，见吴主传
+        case 52:case zigui:return {manual,17,40};
+        case 53:case fancheng:return {dragonBlade,11,34};
+        case 44:case qishan:return {manual,21,28};
+        case shangyong:return {armor,17,37};
+        case wancheng:return {scaleArmor,14,31};
+        case linzi:return {sword,22,36};
+        default:return {};
+    }
 }
 }

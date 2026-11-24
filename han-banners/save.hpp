@@ -6,23 +6,31 @@ namespace han {
 
 constexpr size_t thirdSaveWords=18+3*oldCityCount+2*(ownerCount+1)+legacyGearCount+
     3*talentFirst+4*columnCount+6+1;
-static_assert(seventhCityCount==48 && cityCount>seventhCityCount && cityCount<64);
+static_assert(seventhCityCount==48 && previousCityCount==56 && cityCount<=64);
 constexpr size_t fourthSaveWords=thirdSaveWords+3*(expandedCityCount-oldCityCount)+1;
 constexpr size_t fifthSaveWords=thirdSaveWords+3*(seventhCityCount-oldCityCount)+1;
 constexpr size_t sixthSaveWords=fifthSaveWords+1;
 constexpr int legacyCommanders=talentFirst+legacyTalentCount;
 constexpr size_t seventhSaveWords=sixthSaveWords+2+3*legacyTalentCount;
-constexpr size_t eighthSaveWords=seventhSaveWords+1+3*(cityCount-seventhCityCount);
+constexpr size_t eighthSaveWords=seventhSaveWords+1+3*(previousCityCount-seventhCityCount);
 constexpr size_t ninthSaveWords=eighthSaveWords+1;
-constexpr size_t tenthSaveWords=ninthSaveWords+3*(newTalentFirst-legacyCommanders)+2+cityCount+
+constexpr size_t tenthSaveWords=ninthSaveWords+3*(newTalentFirst-legacyCommanders)+2+previousCityCount+
     newTalentFirst+1+4*(Campaign{}.prisoners.size()-1)+3*(guestCount-1);
 constexpr size_t eleventhSaveWords=tenthSaveWords+4*(rulerSlot-newTalentFirst);
 constexpr size_t twelfthSaveWords=eleventhSaveWords+4+noGear-legacyGearCount+commanderSlots*gearSlotCount;
 constexpr size_t thirteenthSaveWords=twelfthSaveWords+3;
 constexpr size_t fourteenthSaveWords=thirteenthSaveWords+5;
-constexpr size_t cityPolicyWords=(cityCount+7)/8;
-constexpr size_t saveWords=fourteenthSaveWords+1+cityPolicyWords;
+constexpr size_t cityPolicyWords=(previousCityCount+7)/8;
+constexpr size_t fifteenthSaveWords=fourteenthSaveWords+1+cityPolicyWords;
+constexpr int gearBits=4;
+static_assert(noGear<(1<<gearBits) && gearSlotCount*gearBits==16);
+constexpr size_t sixteenthSaveWords=fifteenthSaveWords-commanderSlots*(gearSlotCount-1);
+constexpr size_t saveWords=sixteenthSaveWords+3*(cityCount-previousCityCount)-
+    previousCityCount-cityPolicyWords+1;
 using Save=std::array<std::byte,saveWords*2>;
+using SixteenthSave=std::array<std::byte,sixteenthSaveWords*2>;
+using FifteenthSave=std::array<std::byte,fifteenthSaveWords*2>;
+static_assert(sizeof(Save)<=960, "Campaign records must fit the ESP private KV limit");
 using FourteenthSave=std::array<std::byte,fourteenthSaveWords*2>;
 using ThirteenthSave=std::array<std::byte,thirteenthSaveWords*2>;
 using TwelfthSave=std::array<std::byte,twelfthSaveWords*2>;
@@ -37,13 +45,15 @@ using FourthSave=std::array<std::byte,fourthSaveWords*2>;
 using ThirdSave=std::array<std::byte,thirdSaveWords*2>;
 using SecondSave=std::array<std::byte,194>;
 using LegacySave=std::array<std::byte,78>;
-constexpr const char* saveKey="campaign-v15";
+constexpr const char* saveKey="campaign-v17";
 struct SaveSlot {
     const char* key;
     size_t size;
 };
 inline constexpr SaveSlot saveSlots[] = {
     {saveKey,Save{}.size()},
+    {"campaign-v16",SixteenthSave{}.size()},
+    {"campaign-v15",FifteenthSave{}.size()},
     {"campaign-v14",FourteenthSave{}.size()},
     {"campaign-v13",ThirteenthSave{}.size()},
     {"campaign-v12",TwelfthSave{}.size()},
@@ -95,15 +105,15 @@ inline Save encode(const Campaign& c) {
         const auto legacy=std::find_if(g.kit.begin(),g.kit.end(),[](Gear item){return item<legacyGearCount;});
         put(legacy==g.kit.end()?legacyGearCount:int(*legacy));
     };
-    put(0x4842);put(15);put(c.player);put(c.turn);put(c.gold);put(c.grain);
+    put(0x4842);put(17);put(c.player);put(c.turn);put(c.gold);put(c.grain);
     put(c.actions);put(c.won+1);put(c.commander);put(c.recruited);put(c.tours);
     for (int n:c.truce) put(n);
     put(c.chapter);put(c.objectivePaid);
     for (int word=0;word<4;++word) put((c.surveyed>>(16*word))&65535u);
     for (const auto& city:c.cities) {
-        put(city.owner|(city.fields<<4)|(city.fort<<8));
-        put(city.troops);
-        put(city.order|(city.market<<8));
+        put(city.owner|((city.fields-1)<<3)|((city.fort-1)<<5)|(city.order<<7)|(city.market<<14));
+        put(city.troops|(int(city.policy)<<12));
+        put(city.prisoners);
     }
     for (auto o:c.orders) order(o);
     order(c.defense);
@@ -124,7 +134,6 @@ inline Save encode(const Campaign& c) {
     for (int slot=legacyCommanders;slot<newTalentFirst;++slot) veteran(c.generals[slot]);
     put(c.hireOffered);
     put(c.talentOffered);
-    for (const auto& city:c.cities) put(city.prisoners);
     auto detention=[&](Detention person) {put((person.city+1)|(person.since<<8));};
     for (int slot=0;slot<newTalentFirst;++slot) detention(c.detained[slot]);
     put(c.prisoners[0].since|(c.prisoners[0].offered<<8));
@@ -139,7 +148,12 @@ inline Save encode(const Campaign& c) {
         detention(c.detained[slot]);
     }
     for (int item=legacyGearCount;item<noGear;++item) put(c.stock[item]);
-    for (const auto& person:c.generals) for (Gear item:person.kit) put(item);
+    for (const auto& person:c.generals) {
+        int kit=0;
+        for (int category=0;category<gearSlotCount;++category)
+            kit|=int(person.kit[category])<<(gearBits*category);
+        put(kit);
+    }
     for (int n:c.alliance) put(n);
     for (const auto request:{c.alliedRequest,c.alliedReport.request}) {
         put(request.side+1);
@@ -147,11 +161,7 @@ inline Save encode(const Campaign& c) {
     }
     put(int(c.alliedReport.outcome));
     put(c.marchBase+1);
-    for (int first=0;first<cityCount;first+=8) {
-        int policies=0;
-        for (int i=0;i<8 && first+i<cityCount;++i) policies|=int(c.cities[first+i].policy)<<(2*i);
-        put(policies);
-    }
+    put(c.chronicleDeeds);
     put(checksum(bytes,i));
     return bytes;
 }
@@ -173,16 +183,25 @@ inline bool validRouteEndpoints(Order o) {
 inline bool validRoad(Order o) {
     return validRouteEndpoints(o) && (!o || adjacent(o.from,o.to));
 }
-template<size_t N>
+template<bool Compact=false,size_t N>
 bool readMap(Reader<N>& r,Campaign& c,int count,bool old=false) {
     for (int i=0;i<count;++i) {
         auto& city=c.cities[i];
         const int flags=r.get();
-        city={flags&15,r.get(),(flags>>4)&15,flags>>8};
-        if (!old) {
-            const int civic=r.get();
-            city.order=civic&255;
-            city.market=civic>>8;
+        const int troops=r.get();
+        if constexpr (Compact) {
+            const int policy=troops>>12;
+            city={flags&7,troops&4095,((flags>>3)&3)+1,((flags>>5)&3)+1,
+                  flags>>14,(flags>>7)&127,r.get(),CityPolicy(policy)};
+            if (city.prisoners>armyLimit || policy>int(CityPolicy::garrison) ||
+                (policy && city.owner!=c.player)) return false;
+        } else {
+            city={flags&15,troops,(flags>>4)&15,flags>>8};
+            if (!old) {
+                const int civic=r.get();
+                city.order=civic&255;
+                city.market=civic>>8;
+            }
         }
         if (city.owner>=ownerCount || city.troops>armyLimit || city.fields<1 ||
             city.fields>4 || city.fort<1 || city.fort>4 || city.order>100 || city.market>3)
@@ -208,8 +227,8 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     loaded.surveyed|=uint64_t(r.get())<<16;
     if constexpr (Version>=4) loaded.surveyed|=uint64_t(r.get())<<32;
     if constexpr (Version>=8) loaded.surveyed|=uint64_t(r.get())<<48;
-    if ((loaded.surveyed>>Count) || !readMap(r,loaded,Count))
-        return false;
+    if constexpr (Count<64) if (loaded.surveyed>>Count) return false;
+    if (!readMap<(Version>=17)>(r,loaded,Count)) return false;
     if constexpr (Version<12) if (loaded.commander==rulerSlot) return false;
     constexpr int stockLimit=Version>=12?24+commanderSlots:33;
     for (int i=0;i<legacyGearCount;++i) {
@@ -266,10 +285,12 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
         loaded.hireOffered=r.get();
         loaded.talentOffered=r.get();
         if ((loaded.hireOffered&~0xf8u) || (loaded.talentOffered&~loaded.talentSeen)) return false;
-        for (auto& city:loaded.cities) {
-            city.prisoners=r.get();
-            if (city.prisoners>armyLimit) return false;
-        }
+        if constexpr (Version<17)
+            for (int i=0;i<Count;++i) {
+                auto& city=loaded.cities[i];
+                city.prisoners=r.get();
+                if (city.prisoners>armyLimit) return false;
+            }
         auto readDetention=[&](Detention& person) {
             const int status=r.get();
             person={(status&255)-1,status>>8};
@@ -298,12 +319,14 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
             loaded.stock[item]=r.get();
             if (loaded.stock[item]>stockLimit) return false;
         }
-        for (auto& person:loaded.generals)
+        for (auto& person:loaded.generals) {
+            const int kit=Version>=16?r.get():0;
             for (int category=0;category<gearSlotCount;++category) {
-                const int item=r.get();
+                const int item=Version>=16?(kit>>(gearBits*category))&((1<<gearBits)-1):r.get();
                 if (item>noGear || (item!=noGear && gearSpecs[item].slot!=category)) return false;
                 person.kit[category]=Gear(item);
             }
+        }
     } else if (loaded.player==0) {
         loaded.generals[rulerSlot].kit[armsSlot]=twinJian;
     }
@@ -336,15 +359,19 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     if constexpr (Version>=15) {
         loaded.marchBase=r.get()-1;
         if (loaded.marchBase>=cityCount) return false;
-        for (int first=0;first<cityCount;first+=8) {
+        if constexpr (Version<17) for (int first=0;first<Count;first+=8) {
             const int policies=r.get();
             for (int i=0;i<8;++i) {
                 const int policy=(policies>>(i*2))&3;
                 const int city=first+i;
                 if (policy>int(CityPolicy::garrison) || (policy && !loaded.own(city))) return false;
-                if (city<cityCount) loaded.cities[city].policy=CityPolicy(policy);
+                if (city<Count) loaded.cities[city].policy=CityPolicy(policy);
             }
         }
+    }
+    if constexpr (Version>=17) {
+        loaded.chronicleDeeds=r.get();
+        if (loaded.chronicleDeeds&~deedMask) return false;
     }
     bool found[3][officerCount]{};
     auto validCaptive=[&](const Captive& p,bool visiting) {
@@ -358,7 +385,7 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     };
     for (const auto& p:loaded.prisoners) if (!validCaptive(p,false)) return false;
     for (const auto& p:loaded.guests) if (!validCaptive(p,true)) return false;
-    if (!loaded.unlocked(loaded.commander) || !r.finish()) return false;
+    if (!loaded.unlocked(loaded.commander) || r.i+2!=N || !r.finish()) return false;
     std::array<bool,cityCount> seatUsed{},targeted{};
     std::array<bool,commanderSlots> leading{};
     for (int slot=0;slot<commanderSlots;++slot) {
@@ -378,28 +405,34 @@ bool decodeCampaign(const std::array<std::byte,N>& bytes,Campaign& campaign) {
     return true;
 }
 inline bool decode(const Save& bytes,Campaign& campaign) {
-    return decodeCampaign<15,cityCount>(bytes,campaign);
+    return decodeCampaign<17,cityCount>(bytes,campaign);
+}
+inline bool migrate(const SixteenthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<16,previousCityCount>(bytes,campaign);
+}
+inline bool migrate(const FifteenthSave& bytes,Campaign& campaign) {
+    return decodeCampaign<15,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const FourteenthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<14,cityCount>(bytes,campaign);
+    return decodeCampaign<14,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const ThirteenthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<13,cityCount>(bytes,campaign);
+    return decodeCampaign<13,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const TwelfthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<12,cityCount>(bytes,campaign);
+    return decodeCampaign<12,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const EleventhSave& bytes,Campaign& campaign) {
-    return decodeCampaign<11,cityCount>(bytes,campaign);
+    return decodeCampaign<11,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const TenthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<10,cityCount>(bytes,campaign);
+    return decodeCampaign<10,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const NinthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<9,cityCount>(bytes,campaign);
+    return decodeCampaign<9,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const EighthSave& bytes,Campaign& campaign) {
-    return decodeCampaign<8,cityCount>(bytes,campaign);
+    return decodeCampaign<8,previousCityCount>(bytes,campaign);
 }
 inline bool migrate(const SeventhSave& bytes,Campaign& campaign) {
     return decodeCampaign<7,seventhCityCount>(bytes,campaign);
@@ -450,13 +483,21 @@ inline bool migrate(const LegacySave& bytes,Campaign& campaign) {
     return true;
 }
 
-inline bool restoreSave(const Save& data,size_t size,Campaign& campaign) {
+template<size_t N>
+bool restoreSave(const std::array<std::byte,N>& data,size_t size,Campaign& campaign) {
+    if (size>N) return false;
     auto older=[&](auto previous) {
         std::copy_n(data.begin(),previous.size(),previous.begin());
         return migrate(previous,campaign);
     };
     switch (size) {
-        case Save{}.size():return decode(data,campaign);
+        case Save{}.size(): {
+            Save current;
+            std::copy_n(data.begin(),current.size(),current.begin());
+            return decode(current,campaign);
+        }
+        case SixteenthSave{}.size():return older(SixteenthSave{});
+        case FifteenthSave{}.size():return older(FifteenthSave{});
         case FourteenthSave{}.size():return older(FourteenthSave{});
         case ThirteenthSave{}.size():return older(ThirteenthSave{});
         case TwelfthSave{}.size():return older(TwelfthSave{});

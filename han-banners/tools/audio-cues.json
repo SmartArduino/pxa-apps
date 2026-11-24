@@ -29,8 +29,8 @@
   "processing": {
     "sample_rate": 16000,
     "channels": 1,
-    "music": "Loop length in bars, one-bar raised-cosine crossfade, Ogg Vorbis",
-    "one_shots": "Trimmed to active onset, high-pass/low-pass filtered, leveled with short fades, S16LE raw PCM"
+    "music": "SoX band-limited resampling, one-bar raised-cosine loop crossfade, Ogg Vorbis q7",
+    "one_shots": "SoX band-limited resampling, transient-preserving fades and light speech presence EQ, S16LE raw PCM"
   },
   "music": {
     "title": {

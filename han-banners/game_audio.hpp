@@ -41,6 +41,7 @@ struct GameAudio {
     uint64_t now=0, instance=0, retryAt=0, voiceUntil=0, gainAt=0;
     int currentGain=-26;
     bool musicReady=false;
+    static constexpr uint32_t soundBytesPerSecond=16000*2; // S16LE mono
 
     bool enabled(unsigned bit) const {return (options&bit)!=0;}
 
@@ -162,6 +163,8 @@ struct GameAudio {
             musicReady=true;
             log("music",scores[unsigned(playing)]);
         } else if (update->state!=pxa::PlaybackState::replaced) {
+            if (update->state==pxa::PlaybackState::error)
+                log("music decode failed",scores[unsigned(playing)]);
             instance=0;
             musicReady=false;
             retryAt=now+3000000;
@@ -177,10 +180,14 @@ struct GameAudio {
             if (now>next.expires) {bank.release(next.clip);next={};continue;}
             const auto* asset=bank.prepare(next.clip,clips[next.clip]);
             if (!asset) continue;
-            const int gain=track==2?-4:track==1?-10:-16;
+            const bool ambience=next.clip==arrowSound || next.clip==clashSound;
+            const int gain=track==2?-4:track==0?-16:ambience && now<voiceUntil?-14:-10;
             const auto played=bank.session->sound_track(*asset,pxa::SoundTrack(track),false,gain*256);
             if (played) {
-                if (track==2) voiceUntil=now+1100000;
+                if (track==2) {
+                    voiceUntil=now+uint64_t(asset->descriptor().decoded_bytes)*1000000/soundBytesPerSecond;
+                    gainAt=now;
+                }
                 // The host keeps its own pin until this clip finishes.
                 log(track==2?"voice":"effect",clips[next.clip]);
             } else if (arcade::transient_audio_error(played.error())) continue;
@@ -198,11 +205,13 @@ struct GameAudio {
             currentGain=-26;
         }
         if (!musicReady || now<gainAt) return;
-        const int goal=now<voiceUntil?-23:(playing==Score::battle?-14:-12);
-        const int gain=currentGain+std::clamp(goal-currentGain,-4,2);
+        const bool spoken=now<voiceUntil;
+        const int sceneGain=playing==Score::battle?-14:-12;
+        const int goal=sceneGain-(spoken?9:0);
+        const int gain=currentGain+std::clamp(goal-currentGain,-5,spoken?2:1);
         if (gain!=currentGain && bank.session->control_music(pxa::MusicAction::gain,gain*256))
             currentGain=gain;
-        gainAt=now+65000;
+        gainAt=now+50000;
     }
 };
 

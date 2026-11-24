@@ -2,9 +2,9 @@
   "format": "pxa-package-source-0.2",
   "id": "pxa-han-banners",
   "name": "三国逐城",
-  "version": "2.1.0",
-  "release_sequence": 25,
-  "description": "原创三国策略。任命太守治理城池，结盟借道或请援，再率三路混编军队会战。",
+  "version": "2.2.0",
+  "release_sequence": 26,
+  "description": "原创三国策略。争夺六十四处城关，寻访地方人才与特产，统领三路混编部队。",
   "icon": "assets/icon.png",
   "min_sdk": [
     2,

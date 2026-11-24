@@ -22,11 +22,7 @@ public:
 
     bool init() {return stbtt_InitFont(&font,sansFontBytes,0)!=0;}
 
-    int advance(uint32_t code,int pixels) const {
-        int width=0;
-        stbtt_GetGlyphHMetrics(&font,index(code),&width,nullptr);
-        return int(std::round(width*em(pixels)));
-    }
+    int advance(uint32_t code,int pixels) const {return metrics(code,pixels).advance;}
 
     void reset() {
         count=0;
@@ -37,9 +33,14 @@ public:
     }
 
     const Glyph* glyph(uint32_t code,int pixels,bool antialias) {
-        const int id=index(code);
-        for (int i=0;i<count;++i)
-            if (entries[i].index==id && entries[i].pixels==pixels) return &entries[i];
+        auto& cached=metrics(code,pixels);
+        const int id=cached.index;
+        const auto matches=[&](int i) {return entries[i].index==id && entries[i].pixels==pixels;};
+        if (cached.entry>=0 && cached.entry<count && matches(cached.entry)) return &entries[cached.entry];
+        for (int i=0;i<count;++i) if (matches(i)) {
+            cached.entry=i;
+            return &entries[i];
+        }
         if (count==int(entries.size())) return nullptr;
 
         auto& entry=entries[count];
@@ -62,7 +63,7 @@ public:
                     for (int x=0;x<entry.width;++x)
                         bytes[y*edge+x]=bytes[y*edge+x]>=125?255:0;
             }
-            ++count;
+            cached.entry=count++;
             return &entry;
         }
         return nullptr;
@@ -83,6 +84,11 @@ public:
 
 private:
     static constexpr int edge=256;
+    struct Metrics {
+        uint32_t key=UINT32_MAX;
+        int index=0, advance=0, entry=-1;
+    };
+    mutable std::array<Metrics,256> metricsCache{};
     struct Bank {
         std::array<std::byte,edge*edge+pxa::game::Upload::header_bytes> data{};
         int x=0, y=0, row=0;
@@ -109,6 +115,17 @@ private:
     int index(uint32_t code) const {
         const int id=stbtt_FindGlyphIndex(&font,int(code));
         return id?id:stbtt_FindGlyphIndex(&font,'?');
+    }
+    Metrics& metrics(uint32_t code,int pixels) const {
+        const uint32_t key=(code<<6)|uint32_t(pixels);
+        auto& cached=metricsCache[(key^(key>>9)^(key>>16))&(metricsCache.size()-1)];
+        if (cached.key!=key) {
+            const int id=index(code);
+            int width=0;
+            stbtt_GetGlyphHMetrics(&font,id,&width,nullptr);
+            cached={key,id,int(std::round(width*em(pixels))),-1};
+        }
+        return cached;
     }
     float em(int pixels) const {return stbtt_ScaleForMappingEmToPixels(&font,float(pixels));}
 

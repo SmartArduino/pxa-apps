@@ -2,8 +2,10 @@
 
 场景、肖像和兵种 PNG 由内置 ImageGen 生成。下面记录每张图的提示词。打包脚本将原图转换成共享 RGB565 色板的 PXA 索引纹理。
 
-- `cover.png` 与 `square-cover.png` 分别为宽屏和方屏标题原画。
+- `river-crossing-cover.png` 为宽屏标题原画，`square-cover.png` 用于较窄的屏幕。`cover.png` 保留为共享色板的取样底稿。宽屏插画利用色板中重复的 RGB565 色位补充渐变，并在切成纹理块前统一量化，避免接缝。
 - `logo.png` 为透明标题 Logo，`app-icon.png` 为独立的城门图标。
+- `status-icons.png` 为 4×4 透明图集。各行依次是盾牌、弩、军械、破旗，伤亡、俘虏、军功、太守，编钟、战鼓、号角、手册，铠甲、马鞍、羽扇、城志。打包到游戏已有的界面纹理中。
+- `armory.png` 为军械与操练界面的背景，画面两侧保留兵器架、挂甲、马鞍和灯笼，中央压暗以便显示装备卡片。
 - `map.png` 是初版地图原画。新版使用 terrain.png 作为地形底图，应用绘制道路、城池和行军部队。
 - `battle.png` 为平原会战背景，另外两张战场图用于山地和水乡。
 - `portraits.png` 为六宫格肖像，依次是刘备、曹操、孙权、赵云、夏侯惇、周瑜。
@@ -12,6 +14,10 @@
 ## 生成提示词
 
 ### 封面
+
+> Landscape for an original late Eastern Han strategy game. At autumn dawn a mounted commander in a muted vermilion cloak looks over the Yangtze from the right edge. A fortified timber river crossing, distant square-sail boats, layered teal ink-wash mountains and a narrow gold river reflection fill the middle distance. Detailed lamellar plates and linen folds. Keep the left half subdued ink teal for the title and buttons. No text, decorative frame or interface.
+
+初版宽屏原画
 
 > Create an original wide 16:9 key art background for a late Han Three Kingdoms tactile strategy game, no text or symbols. Moody painterly ink-and-gouache mixed with cinematic realistic digital art, antique teal shadows, reddish bronze, fine ochre light. At the RIGHT third, a mounted late-Han commander from behind with flowing red cloak and spear, overlooking a rocky cliff and vast fortress valley with orange dawn, banners and distant armies in fog. Keep the left half dark atmospheric charcoal-blue with low detail for overlaid gold Chinese typography. Strong art direction, premium historical game, no UI or lettering or watermark.
 
@@ -107,7 +113,9 @@
 
 使用内置 ImageGen 生成透明四列四行的汉末章纹图标。各行依次为铜牌、方阵盾、锋矢、雁行翼，环首刀、将技星、军旗、暂停，军心、双刀、迂回、回撤，以及司南、帆船、城门、营帐。提示词要求图标保持独立轮廓、透明留边、青玉和古铜配色，在 12 至 24 像素下仍能辨认。打包时裁取原图的透明单元。
 
-大屏背景从原画重新取样。横屏标题保留 768 × 432 像素，军议厅保留 448 × 252 像素，会战和单挑保留 512 × 272 像素。背景拆成不超过 256 像素的贴图，绘制时在相邻图块之间共用同一条边。小屏和资源不足的设备使用原有的紧凑纹理。
+大屏背景从原画重新取样。横屏标题保留 768 × 432 像素，军议厅保留 448 × 252 像素。择主界面单独使用 768 × 448 的背景和三张 120 × 120 的头像。800 × 480 和 854 × 480 的原生画布在会战优先使用 1024 × 176 的横向全景，每个横向像素读取一个纹素，纵向按行采样以控制贴图内存。单挑和备用战场背景保留 512 × 272 像素。背景拆成不超过 256 像素的贴图，各图块共用边界。小屏和资源不足的设备使用紧凑纹理。
+
+大屏使用 448 像素宽的标题题字和 96 × 96 的武将名册头像。名将的待机、步行和出招帧，以及枪、弓、骑的常规帧和战术帧，从原画另行导出为 64 × 64。名将帧按朝向加载。单方使用一种基础兵种时加载该兵种的高清帧，使用多种基础兵种时复用合并图集以控制常驻内存。
 
 ### `war-hall.png`
 
