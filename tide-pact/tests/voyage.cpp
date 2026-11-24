@@ -2048,15 +2048,18 @@ void world_routes_and_fieldwork() {
 
     for (int i=0;i<FieldStudyCount;++i) {
         const auto& study=FieldStudies[i];
-        FieldWalk walker;
-        walker.target=FieldAnimal;
+        const auto& landmarks=FieldLandmarks[study.ground];
+        FieldWalk walker(study.ground);
+        assert(field_range(walker.player,landmarks.camp)==0);
+        assert(!field_walkable(study.ground,{landmarks.camp.x,0}));
+        walker.target=landmarks.animal;
         for (unsigned tick=1;tick<=60;++tick)
             walker.advance(study.ground,tick*110,{},study.hunt,3,false);
-        assert(field_range(walker.player,FieldAnimal)<=1);
-        walker.target=FieldPlant;
+        assert(field_range(walker.player,landmarks.animal)<=1);
+        walker.target=landmarks.plant;
         for (unsigned tick=61;tick<=125;++tick)
             walker.advance(study.ground,tick*110,{},study.hunt,3,false);
-        assert(field_range(walker.player,FieldPlant)<=1);
+        assert(field_range(walker.player,landmarks.plant)<=1);
 
         Game field;
         field.s.origin=study.place;

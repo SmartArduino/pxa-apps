@@ -122,6 +122,11 @@ inline void draw_chart_background(Draw& d,Rect world,const Game& game,bool helm,
     const auto outer=d.clip;
     const auto visible=d.clipped(world);
     if (!visible.w || !visible.h) return;
+    // The close combat view shows the sea around the ships without altering the surveyed chart.
+    if (game.s.skirmish.active) {
+        draw_helm_chart(d,world);
+        return;
+    }
     if (reveal_all) {
         d.blit(atlas,{0,0,ChartWidth,ChartHeight},world,false,false);
         return;

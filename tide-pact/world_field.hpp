@@ -59,29 +59,25 @@ constexpr int field_study_at(int place) {
 
 inline constexpr Text QuarryNames[]{"柳雷鸟","低地斑豚鼠"};
 inline constexpr int FieldColumns=22, FieldRows=11;
-inline constexpr Point FieldCamp{2,5}, FieldAnimal{16,3}, FieldPlant{7,8};
-
-enum FieldTile { FieldWater, FieldStone, FieldPath, FieldCover };
+struct FieldSceneLandmarks { Point camp, animal, plant, quarry; };
 
 #include "field_layout.hpp"
 
-constexpr FieldTile field_tile(FieldGround ground,Point p) {
-    if (p.x<1 || p.x>=FieldColumns-1 || p.y<1 || p.y>=FieldRows-1) return FieldStone;
-    switch (FieldLayout[ground][p.y][p.x]) {
-    case 'w': return FieldWater;
-    case 'r': return FieldStone;
-    case 'p': return FieldPath;
-    default: return FieldCover;
-    }
+constexpr bool field_walkable(FieldGround ground,Point p) {
+    return p.x>0 && p.x<FieldColumns-1 && p.y>0 && p.y<FieldRows-1 && FieldLayout[ground][p.y][p.x]=='.';
 }
 
 constexpr int field_range(Point a,Point b) { return std::abs(a.x-b.x)+std::abs(a.y-b.y); }
-constexpr bool field_walkable(FieldGround ground,Point p) { return field_tile(ground,p)>=FieldPath; }
 
 class FieldWalk {
 public:
-    Point player=FieldCamp, from=FieldCamp, quarry{13,6}, previous_quarry=quarry;
-    Point target=FieldCamp, facing{1,0};
+    FieldWalk() : FieldWalk(BorealGround) {}
+    explicit FieldWalk(FieldGround ground)
+        : player(FieldLandmarks[ground].camp), from(player),
+          quarry(FieldLandmarks[ground].quarry), previous_quarry(quarry), target(player) {}
+
+    Point player, from, quarry, previous_quarry;
+    Point target, facing{1,0};
     Point shot_from{}, shot_to{};
     unsigned moved_at=0, animal_at=0, shot_at=0;
     bool stalking=false, hunted=false;
@@ -112,10 +108,11 @@ public:
         const bool alerted=field_range(player,quarry)<=range-(downwind>0);
         auto winner=quarry;
         int furthest=alerted?field_range(player,quarry):-1;
+        const Point habitat=FieldLandmarks[ground].quarry;
         for (int i=0;i<4;++i) {
             const auto d=steps[(i+step/3)%4];
             const Point candidate{quarry.x+d.x,quarry.y+d.y};
-            if (candidate.x<9 || candidate.x>17 || candidate.y<3 || candidate.y>7 ||
+            if (std::abs(candidate.x-habitat.x)>4 || std::abs(candidate.y-habitat.y)>2 ||
                 !field_walkable(ground,candidate)) continue;
             const int distance=field_range(player,candidate);
             if (alerted && distance<=furthest) continue;
@@ -136,14 +133,14 @@ public:
         for (int i=1;i<distance;++i) {
             const Point p{player.x+(quarry.x-player.x)*i/distance,
                           player.y+(quarry.y-player.y)*i/distance};
-            if (field_tile(ground,p)==FieldStone) return false;
+            if (!field_walkable(ground,p)) return false;
         }
         return true;
     }
 
 private:
     Point route(FieldGround ground) const {
-        if (!field_walkable(ground,target)) return {};
+        if (!field_walkable(ground,target) || !field_walkable(ground,player)) return {};
         struct Search { Point at, first; };
         std::array<Search, FieldColumns*FieldRows> queue{};
         std::array<bool, FieldColumns*FieldRows> visited{};

@@ -1117,13 +1117,12 @@ struct VoyageApp {
     }
     Rect chart_scale_box() const { return {map.right()-78,map.bottom()-23,74,20}; }
 
-    void draw_chart_scale(Draw& d) {
+    void draw_chart_scale(Draw& d,Rect box) {
         if (map.w<115 || factor<=0.f) return;
         constexpr int distances[]{1,2,5,10,20,50,100,200,500,1000,2000,5000,10000};
         const float latitude=ChartNorth-chart_y/ChartLatitudeScale;
         const float pixels_per_mile=factor*ChartLongitudeScale/
             (60.f*std::cos(latitude*0.0174532925f));
-        const Rect box=chart_scale_box();
         int miles=distances[0];
         for (int candidate : distances) {
             if (candidate*pixels_per_mile>box.w-7) break;
@@ -1420,7 +1419,7 @@ struct VoyageApp {
             d.dot(mark.x,mark.y,ink);
         }
         nav_icon(d,CompassIcon,compass);
-        if (full_helm_chart()) draw_chart_scale(d);
+        if (full_helm_chart()) draw_chart_scale(d,chart_scale_box());
         d.clip=before;
         d.frame(map,border);
     }
@@ -3120,80 +3119,107 @@ struct VoyageApp {
     }
 
     int field_subject() const {
-        if (field_range(field_walk.player,FieldAnimal)<=2) return 0;
-        if (field_range(field_walk.player,FieldPlant)<=2) return 1;
-        return -1;
+        const auto& landmarks=FieldLandmarks[FieldStudies[field_item].ground];
+        const int bird_distance=field_range(field_walk.player,landmarks.animal);
+        const int plant_distance=field_range(field_walk.player,landmarks.plant);
+        if (bird_distance>2 && plant_distance>2) return -1;
+        return plant_distance<bird_distance?1:0;
+    }
+
+    int field_quarry() const {
+        const int quarry=FieldStudies[field_item].hunt;
+        return quarry>=0 && !field_walk.hunted && game.s.trail_hunt_day[quarry]!=game.s.day+1?quarry:-1;
     }
 
     void tick_field() {
+        const auto ground=FieldStudies[field_item].ground;
+        if (!sea_picture.pixels(WorldGroundPictureBase+ground)) return;
+        const int quarry=field_quarry();
         if (now-field_tick>=105) {
             const auto direction=[&]() {
                 using namespace pxa::input;
                 const int x=int(controller.down(controller_right))-int(controller.down(controller_left));
                 return Point{x,x?0:int(controller.down(controller_down))-int(controller.down(controller_up))};
             }();
-            const auto& study=FieldStudies[field_item];
             const auto sea=game.conditions();
-            int quarry=study.hunt;
-            if (quarry>=0 && game.s.trail_hunt_day[quarry]==game.s.day+1) quarry=-1;
-            field_walk.advance(study.ground,now,direction,quarry,sea.direction,sea.weather==Rain);
+            field_walk.advance(ground,now,direction,quarry,sea.direction,sea.weather==Rain);
             field_tick=now;
         }
-        const bool active=FieldStudies[field_item].hunt>=0 && !field_walk.hunted;
-        if ((active || now-field_walk.moved_at<165 || (field_walk.shot_at && now-field_walk.shot_at<390)) &&
+        if ((quarry>=0 || now-field_walk.moved_at<165 || (field_walk.shot_at && now-field_walk.shot_at<390)) &&
             now-field_painted>=50) {
             field_painted=now;
             dirty=true;
         }
     }
 
+    void scene_caption(Draw& d,Rect r,Text text,Color color) {
+        d.darken(r,12);
+        d.fill({r.x,r.bottom()-1,r.w,1},border);
+        d.label(r.x+5,r.y+(r.h-12)/2,text,color,r.w-10);
+    }
+
     void field_trail(Draw& d) {
         const auto& study=FieldStudies[field_item];
-        page_title(d,Places[study.place].name,AstrolabeIcon);
-        const int x=body.x+5, w=body.w-10, y=body.y+28;
-        const int controls=body.bottom()-26;
-        field_area={x,y,w,std::max(1,controls-y-19)};
-        const auto bounds=[&](Point p) {
-            return Rect{x+p.x*w/FieldColumns,y+p.y*field_area.h/FieldRows,
-                 (p.x+1)*w/FieldColumns-p.x*w/FieldColumns,
-                 (p.y+1)*field_area.h/FieldRows-p.y*field_area.h/FieldRows};
-        };
-        const auto center=[&](Point p) {
-            const Rect tile=bounds(p);
-            return Point{tile.x+tile.w/2,tile.y+tile.h/2};
-        };
-        const auto old=d.clip;
-        d.clip=d.clipped(field_area);
+        const auto& landmarks=FieldLandmarks[study.ground];
         const int ground=WorldGroundPictureBase+study.ground;
-        if (const auto* pixels=sea_picture.pixels(ground)) {
-            const Image texture{pixels};
-            d.image(texture,{0,0,texture.width(),texture.height()},field_area);
-        } else d.fill(field_area,rgb(0x314a41));
-        const auto spot=[&](Point at,int type,Color color) {
-            const auto c=center(at);
-            const bool marked=type>=0 && game.s.world_notebook&field_note_bit(field_item,type);
-            d.diamond(c,7,ink);
-            d.image({art::field_marks},{(type+1)*24,0,24,24},{c.x-8,c.y-9,16,16},true);
-            if (marked) d.dot(c.x+5,c.y+4,color);
+        const auto* pixels=sea_picture.pixels(ground);
+        const Rect view=d.clip;
+        constexpr int button_h=23, gap=5;
+        const auto draw_title=[&] {
+            const Text place=Places[study.place].name;
+            scene_caption(d,{safe.x,safe.y,std::min(d.measure(place)+10,safe.w-50),button_h},place,ivory);
+            button(d,{safe.right()-45,safe.y,45,button_h},"返回",Close);
         };
-        spot(FieldCamp,-1,ivory);
-        spot(FieldAnimal,0,mint);
-        spot(FieldPlant,1,mint);
+        if (!pixels) {
+            field_area={};
+            d.fill(view,ink);
+            d.center(view,sea_picture.failed(ground)?"地形暂时无法载入":"正在载入地形",ivory);
+            draw_title();
+            return;
+        }
+
+        const Image painting{pixels};
+        const auto walk_point=[&](Point from,Point to,int w,int h,unsigned duration,unsigned started) {
+            const int t=std::min(duration,now-started);
+            const auto axis=[&](int a,int b,int extent,int count) {
+                return ((2*a+1)*int(duration)+2*(b-a)*t)*extent/(2*count*int(duration));
+            };
+            return Point{axis(from.x,to.x,w,FieldColumns),axis(from.y,to.y,h,FieldRows)};
+        };
+        // Cover the screen without stretching the painting. Small or tall screens follow the traveler.
+        const int w=std::max(view.w,(view.h*painting.width()+painting.height()-1)/painting.height());
+        const int h=std::max(view.h,(view.w*painting.height()+painting.width()-1)/painting.width());
+        const auto feet=walk_point(field_walk.from,field_walk.player,w,h,105,field_walk.moved_at);
+        const int x=view.x-std::clamp(feet.x-view.w/2,0,w-view.w);
+        const int y=view.y-std::clamp(feet.y-view.h/2,0,h-view.h);
+        field_area={x,y,w,h};
+        d.image(painting,{0,0,painting.width(),painting.height()},field_area);
+        const auto center=[&](Point p) {
+            return Point{x+(2*p.x+1)*w/(2*FieldColumns),y+(2*p.y+1)*h/(2*FieldRows)};
+        };
+
+        const auto spot=[&](Point at,int type) {
+            const auto c=center(at);
+            const bool marked=type>=0 && (game.s.world_notebook&field_note_bit(field_item,type));
+            d.diamond({c.x,c.y+5},3,rgb(0x23372c));
+            d.image({art::field_marks},{(type+1)*24,0,24,24},{c.x-8,c.y-10,16,16},true);
+            d.dot(c.x,c.y+5,marked?mint:gold);
+        };
+        spot(landmarks.camp,-1);
+        spot(landmarks.animal,0);
+        spot(landmarks.plant,1);
         if (field_range(field_walk.target,field_walk.player)) {
             const auto aim=center(field_walk.target);
             d.diamond(aim,3,ivory);
+            d.diamond(aim,1,ink);
         }
-        const auto walk_point=[&](Point from,Point to,unsigned duration,unsigned started) {
-            const auto a=center(from), b=center(to);
-            const int t=std::min(duration,now-started);
-            return Point{a.x+(b.x-a.x)*t/int(duration),a.y+(b.y-a.y)*t/int(duration)};
-        };
-        if (study.hunt>=0 && !field_walk.hunted && game.s.trail_hunt_day[study.hunt]!=game.s.day+1) {
-            const auto prey=walk_point(field_walk.previous_quarry,field_walk.quarry,190,field_walk.animal_at);
+        const int hunt=field_quarry();
+        if (hunt>=0) {
+            const auto at=walk_point(field_walk.previous_quarry,field_walk.quarry,w,h,190,field_walk.animal_at);
+            const Point prey{x+at.x,y+at.y};
             const int phase=now/94%4;
             const bool flip=field_walk.previous_quarry.x>field_walk.quarry.x;
-            d.image({art::field_marks},{72,0,24,24},{prey.x-16,prey.y-2,11,11},true,flip);
-            d.image({art::field_animals},{phase*24,study.hunt*20,24,20},{prey.x-9,prey.y-11,18,15},true,flip);
+            d.image({art::field_animals},{phase*24,hunt*20,24,20},{prey.x-10,prey.y-13,20,17},true,flip);
         }
         if (field_walk.shot_at && now-field_walk.shot_at<320) {
             const auto a=center(field_walk.shot_from), b=center(field_walk.shot_to);
@@ -3201,37 +3227,45 @@ struct VoyageApp {
             const Point arrow{a.x+(b.x-a.x)*t/240,a.y+(b.y-a.y)*t/240};
             d.line({arrow.x+(a.x-b.x)/7,arrow.y+(a.y-b.y)/7},arrow,ivory);
         }
-        const auto player=walk_point(field_walk.from,field_walk.player,105,field_walk.moved_at);
+        const Point player{x+feet.x,y+feet.y};
         const int row=field_walk.facing.x?2:field_walk.facing.y>0?0:1;
-        const int phase=now-field_walk.moved_at<120?int(now/80%4):0;
-        d.diamond({player.x,player.y+2},4,rgb(0x263831));
+        const int phase=now-field_walk.moved_at<105?(field_walk.step%2)*2+int(now-field_walk.moved_at>=52):0;
+        d.diamond({player.x,player.y+1},4,rgb(0x263831));
         d.image({art::field_traveler},{phase*24,row*32,24,32},
-                {player.x-9,player.y-19,18,24},true,field_walk.facing.x<0);
-        d.clip=old;
-        d.frame(field_area,border);
+                {player.x-11,player.y-25,22,29},true,field_walk.facing.x<0);
 
+        draw_title();
         const int subject=field_subject();
         const auto blocked=game.field_requirement(field_item);
-        const bool seen=subject>=0 && game.s.world_notebook&field_note_bit(field_item,subject);
-        const Text note=subject>=0?subject==0?study.animal:study.plant:
-                        study.hunt>=0?QuarryNames[study.hunt]:Text("点地面行走，靠近观察点");
-        const auto sea=game.conditions();
-        const auto breeze=format("风往%s",Bearings[sea.direction].data());
-        const int breeze_w=study.hunt>=0?d.measure(breeze):0;
-        d.label(x,controls-16,blocked.empty()?note:blocked,blocked.empty()?gold:vermilion,w-breeze_w-6);
-        if (breeze_w) d.label(x+w-breeze_w,controls-16,breeze,quiet,breeze_w);
-        const int count=study.hunt>=0?3:1;
-        auto action_rect=[&](int i) {
-            const int left=x+i*w/count;
-            return Rect{left,controls,x+(i+1)*w/count-left-4,23};
+        const bool seen=subject>=0 && (game.s.world_notebook&field_note_bit(field_item,subject));
+        int right=safe.right(), wind_w=0;
+        const int row_y=safe.bottom()-button_h;
+        const auto action=[&](Text label,int id,bool accent,bool disabled=false) {
+            const int width=std::max(51,d.measure(label)+14);
+            right-=width;
+            button(d,{right,row_y,width,button_h},label,id,accent,disabled);
+            right-=gap;
         };
-        button(d,action_rect(0),seen?"看速写":"写生",FieldObserve,true,subject<0 || (!seen && !blocked.empty()));
-        if (study.hunt>=0) {
-            button(d,action_rect(1),field_walk.stalking?"起身":"蹲走",FieldStalk,field_walk.stalking);
-            const bool done=game.s.trail_hunt_day[study.hunt]==game.s.day+1;
-            button(d,action_rect(2),done?"今日已猎":"放箭",FieldShoot,false,
-                   done || !blocked.empty() || !field_walk.can_shoot(study.ground));
+        if (hunt>=0) {
+            action("放箭",FieldShoot,true,!blocked.empty() || !field_walk.can_shoot(study.ground));
+            action(field_walk.stalking?"起身":"蹲走",FieldStalk,field_walk.stalking);
+            const auto wind=game.conditions();
+            const auto breeze=format("风往%s",Bearings[wind.direction].data());
+            wind_w=d.measure(breeze)+10;
+            scene_caption(d,{safe.right()-wind_w,row_y-21,wind_w,17},breeze,ivory);
         }
+        if (subject>=0) action(seen?"看速写":"写生",FieldObserve,true,!seen && !blocked.empty());
+
+        const Text note=!blocked.empty()?blocked:
+                        notice_until && !game.notice.empty()?game.notice:
+                        subject>=0?(subject==0?study.animal:study.plant):
+                        hunt>=0?QuarryNames[hunt]:
+                        study.hunt>=0?Text("今日已猎"):Text("点地行走，靠近观察点");
+        int width=std::min(safe.w,d.measure(note)+10);
+        const bool above_actions=width>right-safe.x;
+        if (above_actions && wind_w) width=std::min(width,safe.w-wind_w-gap);
+        scene_caption(d,{safe.x,above_actions?row_y-21:row_y,width,above_actions?17:button_h},
+                      note,blocked.empty()?ivory:vermilion);
     }
 
     void nature_index(Draw& d, bool local) {
@@ -3514,9 +3548,7 @@ struct VoyageApp {
     void skirmish_view(Draw& d) {
         const auto& battle=game.s.skirmish;
         const auto& s=game.s;
-        map={body.x,body.y,body.w,body.h-48};
-        const auto clip=d.clip;
-        d.clip=map;
+        map=d.clip;
         // The camera follows the middle of both ships so the helm and target remain visible.
         chart_x=(s.helm_x+battle.rival.x)/32.f;
         chart_y=(s.helm_y+battle.rival.y)/32.f;
@@ -3551,47 +3583,52 @@ struct VoyageApp {
             if (!flash.started || now-flash.started>=390) continue;
             skirmish_effect(d,flash.sprite+int(now-flash.started>=145),skirmish_point(flash.position),29);
         }
-        const Rect left{map.x+4,map.y+4,d.measure(status)+18,29};
-        skin_box(d,left,0,4);
-        d.label(left.x+5,left.y+3,status,ivory,left.w-10);
-        meter(d,{left.x+3,left.bottom()-9,left.w-6,6},s.enemy,74,true);
-        const Rect right{map.right()-d.measure(course)-12,map.y+4,d.measure(course)+8,20};
-        skin_box(d,right,0,4);
-        d.center(right,course,ivory);
-        if (battle.reload) {
-            const Rect reload{map.x+4,map.bottom()-23,74,19};
-            skin_box(d,reload,0,3);
-            d.label(reload.x+5,reload.y+2,"装填",ivory);
+        constexpr int gap=4, height=23;
+        const int info_w=std::min((safe.w-gap)/2,std::max(100,d.measure(status)+10));
+        const Rect left{safe.x,safe.y,info_w,27};
+        const Rect right{safe.right()-info_w,safe.y,info_w,27};
+        scene_caption(d,left,status,ivory);
+        meter(d,{left.x+5,left.bottom()-7,left.w-10,6},s.enemy,74,true);
+        const auto hull=format("船体 %d",s.hull);
+        scene_caption(d,right,hull,ivory);
+        meter(d,{right.x+5,right.bottom()-7,right.w-10,6},s.hull,100,false);
+        const int wind_w=std::min(info_w,d.measure(course)+10);
+        scene_caption(d,{right.right()-wind_w,right.bottom()+gap,wind_w,18},course,ivory);
+        if (battle.reload && !game.paused) {
             const int ticks=skirmish_reload_ticks(s.guns);
-            meter(d,{reload.x+35,reload.y+6,reload.w-40,8},ticks-battle.reload,ticks,true);
+            scene_caption(d,{left.x,left.bottom()+gap,info_w,19},"装填",ivory);
+            meter(d,{left.x+36,left.bottom()+gap+6,info_w-41,7},ticks-battle.reload,ticks,true);
         }
         if (game.paused)
-            d.center({map.x+4,map.bottom()-24,map.w-8,20},"战斗暂停",gold);
-        draw_chart_scale(d);
-        d.clip=clip;
-        d.frame(map,border);
+            scene_caption(d,{left.x,left.bottom()+gap,info_w,19},"战斗暂停",gold);
 
-        const auto bar=[&](int index,int count,int row) {
-            const int left_edge=body.x+index*(body.w+3)/count;
-            const int right_edge=body.x+(index+1)*(body.w+3)/count-3;
-            return Rect{left_edge,map.bottom()+3+row*22,right_edge-left_edge,21};
+        // Helm and gunnery occupy opposite corners, leaving the ships and their courses visible.
+        const int controls_y=safe.bottom()-2*height-gap;
+        draw_chart_scale(d,{safe.right()-74,controls_y-gap-20,74,20});
+        if (notice_until && !game.notice.empty()) {
+            const int width=std::min(safe.w-82,d.measure(game.notice)+10);
+            scene_caption(d,{safe.x,controls_y-gap-18,width,18},game.notice,mint);
+        }
+        const int width=std::min(63,(safe.w-3*gap)/4);
+        const auto control=[&](bool guns,int index) {
+            const int group=guns?safe.right()-2*width-gap:safe.x;
+            return Rect{group+index%2*(width+gap),safe.bottom()-(2-index/2)*height-(1-index/2)*gap,width,height};
         };
-        button(d,bar(0,4,0),"左舵",SteerLeft,false,false,{},HelmTurnLeft);
-        button(d,bar(1,4,0),"右舵",SteerRight,false,false,{},HelmTurnRight);
-        button(d,bar(2,4,0),s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
-        button(d,bar(3,4,0),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
+        button(d,control(false,0),"左舵",SteerLeft,false,false,{},HelmTurnLeft);
+        button(d,control(false,1),"右舵",SteerRight,false,false,{},HelmTurnRight);
+        button(d,control(false,2),s.reefed?"张帆":"缩帆",Trim,false,false,{},HelmCanvas);
+        button(d,control(false,3),game.paused?"继续":"停船",Pause,true,false,{},game.paused?ResumeIcon:PauseIcon);
         const bool loading=game.paused || battle.reload;
-        button(d,bar(0,4,1),"左舷炮",FirePort,true,loading,{},HelmGunLeft);
-        button(d,bar(1,4,1),"右舷炮",FireStarboard,true,loading,{},HelmGunRight);
-        button(d,bar(2,4,1),"抛浮索",DropRope,false,game.paused || battle.rope_ticks || !s.cargo[Timber],{},HelmRope);
-        button(d,bar(3,4,1),"接舷",BoardSkirmish,false,!game.can_board_skirmish(),{},HelmBoard);
+        button(d,control(true,0),"左炮",FirePort,true,loading,{},HelmGunLeft);
+        button(d,control(true,1),"右炮",FireStarboard,true,loading,{},HelmGunRight);
+        button(d,control(true,2),"抛浮索",DropRope,false,game.paused || battle.rope_ticks || !s.cargo[Timber],{},HelmRope);
+        button(d,control(true,3),"接舷",BoardSkirmish,false,!game.can_board_skirmish(),{},HelmBoard);
     }
 
     void encounter_screen(Draw& d) {
         const auto& s=game.s;
         const auto weather=s.weather;
         if (game.duel()) { duel_screen(d); return; }
-        if (s.skirmish.active) { skirmish_view(d); return; }
         if (!sea_picture_path(weather).empty()) { illustrated_encounter(d,weather); return; }
         const auto arena=combat_backdrop(d,{art::storm},weather==Privateer);
         const int x=body.x+6, w=body.w-12;
@@ -5370,6 +5407,16 @@ struct VoyageApp {
             return;
         }
         chrome={};
+        if (!title && modal==WorldTrail) {
+            field_trail(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
+        if (!title && modal==None && screen==Chart && game.s.skirmish.active) {
+            skirmish_view(d);
+            focused=std::clamp(focused,0,std::max(0,button_count-1));
+            return;
+        }
         if (!title || modal==AudioSettings) d.fill(d.clip,ink);
         if (!title && game.s.land_fight.kind) {
             land_screen(d);
@@ -5393,12 +5440,6 @@ struct VoyageApp {
             return;
         }
         header(d);
-        if (modal==WorldTrail) {
-            body.h=safe.bottom()-body.y;
-            skin_box(d,body,0,6);
-            field_trail(d);
-            return;
-        }
         switch (modal) {
         case Routes: route_list(d); break;
         case StoryPage: story(d); break;
@@ -5876,14 +5917,15 @@ struct VoyageApp {
                 break;
             case LandWorldTrail:
                 if (modal==WorldStudy && field_local && game.field_requirement(field_item).empty()) {
-                    if (!field_result) field_walk={};
+                    if (!field_result) field_walk=FieldWalk(FieldStudies[field_item].ground);
                     else field_walk.target=field_walk.player;
                     field_tick=now;
+                    field_area={};
                     set_modal(WorldTrail);
                 }
                 break;
             case FieldObserve:
-                if (modal==WorldTrail) {
+                if (modal==WorldTrail && field_area.w) {
                     const int type=field_subject();
                     if (type>=0 && ((game.s.world_notebook&field_note_bit(field_item,type)) ||
                         game.sketch_field(field_item,type))) {
@@ -5895,10 +5937,11 @@ struct VoyageApp {
                 }
                 break;
             case FieldStalk:
-                if (modal==WorldTrail) field_walk.stalking=!field_walk.stalking;
+                if (modal==WorldTrail && field_quarry()>=0) field_walk.stalking=!field_walk.stalking;
                 break;
             case FieldShoot:
-                if (modal==WorldTrail && field_walk.can_shoot(FieldStudies[field_item].ground) &&
+                if (modal==WorldTrail && field_area.w && field_quarry()>=0 &&
+                    field_walk.can_shoot(FieldStudies[field_item].ground) &&
                     game.hunt_field(field_item)) {
                     field_walk.hunted=true;
                     field_walk.shot_from=field_walk.player;

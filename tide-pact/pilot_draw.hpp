@@ -476,7 +476,7 @@ public:
 
     void draw_chart(Draw& out,Rect view,Rect world,const Game& game,int density,bool helm,
                     bool reveal_all,bool frame) {
-        const int style=int(helm)|(int(reveal_all)<<1)|(int(frame)<<2);
+        const int style=int(helm)|(int(reveal_all)<<1)|(int(frame)<<2)|(int(game.s.skirmish.active)<<3);
         const bool aligned=mode==Chart && world.w==chart_width && world.h==chart_height &&
                            style==chart_style && (reveal_all || charted==game.s.coast);
         draw_scrolled(out,view,{view.x-world.x,view.y-world.y},density,aligned,[&](Draw& d,Point offset) {

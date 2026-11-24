@@ -1,93 +1,219 @@
 {
-  "boreal": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rpppcccpccccpppppccccr",
-    "rcpcppppccccccccppppcr",
-    "rccccccpppppppppppprpr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpccccccccpcrrrr",
-    "rccccccpccccccccpcrrrr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "mangrove": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rccccccpppppccccpcccpr",
-    "rpppcccpccccpppppccccr",
-    "rcccppppccccpppppprprr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpcccccccwpwrwrr",
-    "rccccccpccccccwwwwwwwr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "ice": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcwwwwwwwwwwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppwwr",
-    "rcccppppccccccccpppwwr",
-    "rcpccccpppppccccpcccpr",
-    "rpppcccpccccppppppprpr",
-    "rcccrccpccccccccpcrrrr",
-    "rwwwwccpccccccccpcrrrr",
-    "rwwwwccpccccccccpcrrrr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "tropical": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rpppcccpccccpppppccccr",
-    "rcpcppppccccccccppppcr",
-    "rccccccppppppppppprprr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpcccccccwpwrwrr",
-    "rccccccpccccccwwwwwwwr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "reef": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rccccccpppppccccpcccpr",
-    "rpppcccpccccpppppccccr",
-    "rcccppppccccppppppprpr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpccccccwcwcwrwr",
-    "rccccccpccccccwwwwwwwr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "sandstone": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rcccppppccccccccppppcr",
-    "rcpccccpppppccccpcccpr",
-    "rpppcccpccccpppppprprr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpccccccccpcrrrr",
-    "rccccccpccccccccpcrrrr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ],
-  "lava": [
-    "rwwwwwwwwwwwwwwwwwwwwr",
-    "rwwwwccpcrrrccccpcwwwr",
-    "rwwccccpcrrrccccpcwwwr",
-    "rccccccpcrrrpppppppppr",
-    "rpppcccpccccpppppccwwr",
-    "rcpcppppccccccccppppcr",
-    "rccccccpppppppppppprpr",
-    "rcccrccpccccccccpcrrrr",
-    "rcccrccpccccccccpcrrrr",
-    "rccccccpccccccccpcrrrr",
-    "rrrrrrrrrrrrrrrrrrrrrr"
-  ]
+  "boreal": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      ".....w........wwwwwwww",
+      "...........rr.........",
+      "...........r..........",
+      "......................",
+      "...................rr.",
+      ".....rr...........rrr.",
+      "...rrrr...........rrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      7
+    ],
+    "animal": [
+      17,
+      4
+    ],
+    "plant": [
+      8,
+      8
+    ],
+    "quarry": [
+      14,
+      6
+    ]
+  },
+  "mangrove": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "www......wwwwwwwwwwwww",
+      ".rrr................r.",
+      ".r.rr...............r.",
+      "....................r.",
+      ".rr................rr.",
+      ".rr................rr.",
+      ".rr.rr...........rrrr.",
+      "......................"
+    ],
+    "camp": [
+      4,
+      8
+    ],
+    "animal": [
+      16,
+      4
+    ],
+    "plant": [
+      8,
+      5
+    ],
+    "quarry": [
+      14,
+      6
+    ]
+  },
+  "ice": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwww...",
+      "wwwwwwwwwwwwwww.......",
+      "w.wr.....wwww.......r.",
+      "...................rr.",
+      "...........rrr....rrr.",
+      ".....rr..rrr....r..rr.",
+      ".rrr.....rrrrrrr...rr.",
+      ".rrrrr....rrrrr...rrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      5
+    ],
+    "animal": [
+      16,
+      3
+    ],
+    "plant": [
+      7,
+      7
+    ],
+    "quarry": [
+      15,
+      5
+    ]
+  },
+  "tropical": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwww....wwwwww",
+      "www..............rr.r.",
+      ".rr.................r.",
+      "......................",
+      "....................r.",
+      ".rr..............r.rr.",
+      ".rrrr......rrr....rrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      7
+    ],
+    "animal": [
+      17,
+      5
+    ],
+    "plant": [
+      7,
+      6
+    ],
+    "quarry": [
+      14,
+      6
+    ]
+  },
+  "reef": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwww...wwwwwwwwwwwwwww",
+      "wwrr......wwwwwwwwwwww",
+      ".rr.............r...r.",
+      ".rr...........rrrrr...",
+      ".rr..........rrrrr....",
+      "............rrr.......",
+      "...................rr.",
+      ".rrr..............rrr.",
+      "......................"
+    ],
+    "camp": [
+      5,
+      8
+    ],
+    "animal": [
+      13,
+      4
+    ],
+    "plant": [
+      7,
+      5
+    ],
+    "quarry": [
+      10,
+      6
+    ]
+  },
+  "sandstone": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwr..................",
+      "......................",
+      "......................",
+      "......................",
+      "...................rr.",
+      ".rrr............rrrrr.",
+      "......................"
+    ],
+    "camp": [
+      4,
+      7
+    ],
+    "animal": [
+      13,
+      4
+    ],
+    "plant": [
+      6,
+      5
+    ],
+    "quarry": [
+      14,
+      6
+    ]
+  },
+  "lava": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      ".r..rrrwwwwwwwwwwrr.r.",
+      ".r.....rrrrrrrr..r..r.",
+      ".rr.................r.",
+      "......................",
+      ".rr...............r.r.",
+      ".rr...............rrr.",
+      ".rrrr............rrrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      5
+    ],
+    "animal": [
+      16,
+      4
+    ],
+    "plant": [
+      9,
+      8
+    ],
+    "quarry": [
+      14,
+      6
+    ]
+  }
 }
