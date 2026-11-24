@@ -9,7 +9,7 @@ import zipfile
 from PIL import Image, ImageDraw
 import shapefile
 
-from make_chart import ROOT, W, H, WEST, NORTH, SX, SY
+from make_chart import ROOT, W, H, NORTH, SX, SY, draw_land, east_of_seam
 from pilot_berths import edge_water, settlement_mark, shoreline_berth
 
 SCALE = 8
@@ -25,16 +25,7 @@ def land_mask(archive_path):
     with zipfile.ZipFile(archive_path) as archive:
         shape = next(name for name in archive.namelist() if name.endswith(".shp"))
         reader = shapefile.Reader(shp=io.BytesIO(archive.read(shape)))
-        for feature in reader.iterShapes():
-            lo, bot, hi, top = feature.bbox
-            if hi < WEST or lo > WEST + W / SX or bot > NORTH or top < NORTH - H / SY:
-                continue
-            starts = [*feature.parts, len(feature.points)]
-            for first, last in zip(starts, starts[1:]):
-                points = feature.points[first:last]
-                clockwise = sum(x * v - y * u for (x, y), (u, v) in zip(points, points[1:])) < 0
-                draw.polygon([((lon - WEST) * SX * SCALE - .5, (NORTH - lat) * SY * SCALE - .5)
-                              for lon, lat in points], fill=255 if clockwise else 0)
+        draw_land(draw, reader, SCALE, -.5)
     return mask
 
 
@@ -80,20 +71,20 @@ def write_berths(mask):
     wet = lambda u, v: not mask.getpixel((u, v))
 
     def mark(lon, lat, settlement):
-        x, y = (lon - WEST) * SX * SCALE, (NORTH - lat) * SY * SCALE
+        x, y = east_of_seam(lon) * SX * SCALE, (NORTH - lat) * SY * SCALE
         if settlement:
             x, y = settlement_mark(x, y, mask.size, wet, SY / SX * math.cos(math.radians(lat)))
         return round(x * 16), round(y * 16)
 
     def waypoint(lon, lat, reach):
-        x, y = round((lon - WEST) * SX * SCALE), round((NORTH - lat) * SY * SCALE)
+        x, y = round(east_of_seam(lon) * SX * SCALE), round((NORTH - lat) * SY * SCALE)
         wet = ((u, v) for v in range(max(0, y - reach), min(mask.height, y + reach + 1))
                for u in range(max(0, x - reach), min(mask.width, x + reach + 1)) if not mask.getpixel((u, v)))
         u, v = min(wet, key=lambda point: (point[0] - x)**2 + (point[1] - y)**2)
         return u * 2 + 1, v * 2 + 1
 
     def berth(lon, lat, reach):
-        x, y = (lon - WEST) * SX * SCALE, (NORTH - lat) * SY * SCALE
+        x, y = east_of_seam(lon) * SX * SCALE, (NORTH - lat) * SY * SCALE
         bound = reach + 12
         bounds = (max(0, int(x) - bound), max(0, int(y) - bound),
                   min(mask.width, int(x) + bound + 1), min(mask.height, int(y) + bound + 1))

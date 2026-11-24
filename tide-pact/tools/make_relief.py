@@ -21,13 +21,17 @@ def main():
         with Image.open(io.BytesIO(archive.read(filename))) as original:
             gray = original.convert("L")
     width, height = gray.size
+    # Repeat the Pacific edge so the equirectangular source straddles our seam.
+    full = Image.new("L", (width * 2, height))
+    full.paste(gray, (0, 0))
+    full.paste(gray, (width, 0))
     grid_w, grid_h = math.ceil(W / STRIDE), math.ceil(H / STRIDE)
     extent = ((WEST + 180) * width / 360, (90 - NORTH) * height / 180,
               (WEST + grid_w * STRIDE / SX + 180) * width / 360,
               (90 - NORTH + grid_h * STRIDE / SY) * height / 180)
     # The source follows the same plate carrée grid. Only the game coastline
     # decides which samples are rendered as land.
-    shade = gray.transform((grid_w, grid_h), Image.Transform.EXTENT, extent, Image.Resampling.BILINEAR)
+    shade = full.transform((grid_w, grid_h), Image.Transform.EXTENT, extent, Image.Resampling.BILINEAR)
     levels = [min(15, max(0, (value - 110) * 15 // 140)) for value in shade.tobytes()]
     if len(levels) % 2:
         levels.append(0)

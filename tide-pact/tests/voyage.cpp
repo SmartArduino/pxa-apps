@@ -2024,7 +2024,74 @@ void seasonal_field_surveys() {
     assert(desert.land_cost(ReturnToCity).water==reserve.water);
 }
 
+void world_routes_and_fieldwork() {
+    assert(ChartWidth==360*ChartLongitudeScale && ChartNorth-ChartHeight/ChartLatitudeScale==-90);
+    assert(passage(malacca,brunei).miles<1100 && passage(horn,shetlands).miles<700);
+    Game route;
+    assert(!route.charted(ceylon) && !route.charted(naha));
+    route.s.origin=calicut;
+    route.restore();
+    assert(route.charted(ceylon) && !route.charted(naha));
+
+    Game voyage;
+    voyage.s.origin=naha;
+    voyage.s.visited|=place_bit(naha);
+    voyage.s.chart_marks|=place_bit(naha);
+    voyage.restore();
+    assert(voyage.start_helm(-1));
+    voyage.helm_step([](Point){return true;});
+    const auto tile=Anchor[naha];
+    assert(voyage.chart_cell(tile.x/ChartCell,tile.y/ChartCell));
+    State recovered;
+    assert(decode(recovered,encode(voyage.s)));
+    assert(recovered.outer_coast==voyage.s.outer_coast && recovered.origin==naha);
+
+    for (int i=0;i<FieldStudyCount;++i) {
+        const auto& study=FieldStudies[i];
+        FieldWalk walker;
+        walker.target=FieldAnimal;
+        for (unsigned tick=1;tick<=60;++tick)
+            walker.advance(study.ground,tick*110,{},study.hunt,3,false);
+        assert(field_range(walker.player,FieldAnimal)<=1);
+        walker.target=FieldPlant;
+        for (unsigned tick=61;tick<=125;++tick)
+            walker.advance(study.ground,tick*110,{},study.hunt,3,false);
+        assert(field_range(walker.player,FieldPlant)<=1);
+
+        Game field;
+        field.s.origin=study.place;
+        while (!field.field_requirement(i).empty() && field.s.day<365) ++field.s.day;
+        assert(field.field_requirement(i).empty());
+        const int water=field.s.water, gold=field.s.gold;
+        assert(field.sketch_field(i,0) && !field.sketch_field(i,0) && field.sketch_field(i,1));
+        assert(field.s.water==water-2 && field.s.gold==gold+90);
+        assert(decode(recovered,encode(field.s)));
+        assert(recovered.world_notebook==(field_note_bit(i,0)|field_note_bit(i,1)));
+        if (study.hunt>=0) {
+            walker.stalking=true;
+            walker.player={12,6};
+            walker.quarry={15,6};
+            assert(walker.can_shoot(study.ground));
+            const int food=field.s.stores;
+            assert(field.hunt_field(i) && field.s.stores>food && !field.hunt_field(i));
+            assert(decode(recovered,encode(field.s)) && recovered.trail_hunt_day==field.s.trail_hunt_day);
+        } else assert(!field.hunt_field(i));
+    }
+    assert(local_season(Anchor[kimberley],10)==WetSeason && local_season(Anchor[kimberley],181)==DrySeason);
+    assert(local_season(Anchor[malacca],10)==NortheastMonsoon);
+    Game provisions;
+    provisions.s.origin=newfoundland;
+    provisions.s.stores=48;
+    assert(provisions.has_shore_supply() && provisions.shore_provision_amount(false)==24);
+    assert(provisions.shore_resupply(false) && provisions.s.stores==72 && provisions.s.gold==448);
+    Game polar;
+    polar.s.origin=shetlands;
+    polar.s.day=181;
+    assert(!polar.has_shore_supply() && !polar.field_requirement(field_study_at(shetlands)).empty());
+}
+
 int main() {
+    world_routes_and_fieldwork();
     for (int port=0;port<PortCount;++port) {
         Game game;
         game.s.origin=port;

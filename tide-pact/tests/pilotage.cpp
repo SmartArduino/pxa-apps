@@ -46,7 +46,12 @@ struct WorldAtlas {
 template<std::size_t Bytes>
 void check_legacy(const State& state,std::uint8_t version) {
     auto source=state;
-    if (source.pilot.region==WorldPilotIndex+1) source.pilot.region=LegacyPilotRegionCount+1;
+    if (source.pilot.region==WorldPilotIndex+1) {
+        source.pilot.region=LegacyPilotRegionCount+1;
+        constexpr int previous_columns=(PreviousChartWidth+29)/30;
+        source.pilot.patch=(source.pilot.patch/PilotTilesX)*previous_columns+source.pilot.patch%PilotTilesX;
+        if (source.pilot.moored>CoastalPilotSite) source.pilot.moored-=PlaceCount-PreviousPlaceCount;
+    }
     const auto current=encode(source);
     std::array<std::byte,Bytes> old{};
     std::copy_n(current.begin(),old.size()-4,old.begin());

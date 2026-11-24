@@ -123,14 +123,16 @@ SeaConditions conditions_at(Point p, int day) {
     if (season==NortheastMonsoon) out.direction=5;
     if (season==BetweenMonsoons) out.strength=std::max(1,out.strength-1);
     const bool winter_seas=season==Winter && std::abs(latitude)>28;
-    const bool rain_season=season==WetSeason || season==SouthwestMonsoon;
+    const bool asian_monsoon=southeast_asia(p);
+    if (northern_australia(p)) out.direction=season==WetSeason?3:7;
+    const bool rain_season=season==WetSeason || (asian_monsoon?season==NortheastMonsoon:season==SouthwestMonsoon);
     const unsigned gale=winter_seas?17:rain_season?11:(latitude<-27 || latitude>28)?9:5;
     const unsigned precipitation=rain_season?58:season==DrySeason || season==NortheastMonsoon?17:29;
     if (sample<gale) {
         out.weather=Squall;
         out.strength=6;
     } else if (sample<precipitation) {
-        out.weather=latitude>=57 && season==Winter?Snow:Rain;
+        out.weather=std::abs(latitude)>=57 && season==Winter?Snow:Rain;
     } else if ((std::abs(latitude)<24 || (season==Summer && std::abs(latitude)<48)) &&
                sample<(rain_season?68:78)) {
         out.weather=Heat;
@@ -966,8 +968,12 @@ bool Game::charted(int place) const {
 
 bool Game::chart_cell(int column, int row) const {
     if (column<0 || column>=ChartColumns || row<0 || row>=ChartRows) return false;
-    const int cell=row*ChartColumns+column;
-    return s.coast[cell/8]&(1U<<(cell%8));
+    if (column<PreviousChartColumns && row<PreviousChartRows) {
+        const int cell=row*PreviousChartColumns+column;
+        return s.coast[cell/8]&(1U<<(cell%8));
+    }
+    const int cell=(row/2)*OuterChartColumns+(column/2);
+    return s.outer_coast[cell/8]&(1U<<(cell%8));
 }
 
 void Game::reveal_chart(Point center, int radius) {
@@ -980,8 +986,13 @@ void Game::reveal_chart(Point center, int radius) {
         for (int x=left;x<=right;++x) {
             const int dx=x*ChartCell+ChartCell/2-center.x;
             if (dx*dx+dy*dy>radius*radius) continue;
-            const int cell=y*ChartColumns+x;
-            s.coast[cell/8]|=1U<<(cell%8);
+            if (x<PreviousChartColumns && y<PreviousChartRows) {
+                const int cell=y*PreviousChartColumns+x;
+                s.coast[cell/8]|=1U<<(cell%8);
+            } else {
+                const int cell=(y/2)*OuterChartColumns+(x/2);
+                s.outer_coast[cell/8]|=1U<<(cell%8);
+            }
         }
     }
 }
@@ -1331,6 +1342,7 @@ void Game::wait_at_port() {
 }
 
 void Game::restore() {
+    learn_ocean_routes();
     cancel_pilot_docking();
     if (s.pilot.region && s.pilot.moored) {
         const int site=s.pilot.moored-1;
@@ -1754,7 +1766,8 @@ void Game::arrive() {
         if (port()) ++s.renown;
     }
     reveal_chart(Anchor[s.origin],26);
-    notice = port() ? "安全入港" : "到达测绘水域";
+    learn_ocean_routes();
+    notice = port() ? "安全入港" : s.origin>=PreviousPlaceCount ? "已到锚地，可在港务查看岸上" : "到达测绘水域";
     if (port()) inspect_colors();
     if (s.migrant_site && s.origin==EnclaveSites[s.migrant_site-1].home)
         notice="拓居者已抵达，可在村镇安置";
@@ -2024,7 +2037,77 @@ void Game::finish_dispatch(DispatchOutcome outcome) {
     s.dispatch={.last=s.dispatch.number,.outcome=std::uint8_t(outcome)};
 }
 
+void Game::learn_ocean_routes() {
+    if (sea() || encounter()) return;
+    for (const auto& leg : Legs) {
+        const int next=leg.from==s.origin?leg.to:leg.to==s.origin?leg.from:-1;
+        if (next>=PreviousPlaceCount) s.chart_marks|=place_bit(next);
+    }
+}
+
+Text Game::field_requirement(int study) const {
+    if (study<0 || study>=FieldStudyCount || s.origin!=FieldStudies[study].place ||
+        sea() || encounter() || land_away()) return "先在考察地靠岸";
+    const auto weather=conditions().weather;
+    if (weather==Squall || (s.origin==shetlands && local_season(position(),s.day)==Winter))
+        return "风浪或海冰封住岸路";
+    if (!s.water) return "至少带一份淡水";
+    return {};
+}
+
+bool Game::sketch_field(int study,int type) {
+    if ((type!=0 && type!=1) || !field_requirement(study).empty()) return false;
+    const auto mark=field_note_bit(study,type);
+    if (s.world_notebook&mark) return false;
+    s.world_notebook|=mark;
+    --s.water;
+    advance_watch();
+    s.renown=std::min(999999,s.renown+1);
+    if ((s.world_notebook&(field_note_bit(study,0)|field_note_bit(study,1)))==(field_note_bit(study,0)|field_note_bit(study,1))) {
+        earn(90);
+        notice="两项观察已入图鉴，记入90金考察赏";
+    } else notice="写生已收入远洋图鉴";
+    return true;
+}
+
+bool Game::hunt_field(int study) {
+    if (!field_requirement(study).empty()) return false;
+    const int quarry=FieldStudies[study].hunt;
+    if (quarry<0 || s.trail_hunt_day[quarry]==s.day+1) return false;
+    const int gain=provisions_order(s.stores+(quarry==0?3:5),s.water).x;
+    if (!gain) { notice="粮舱已满"; return false; }
+    --s.water;
+    s.stores+=gain;
+    advance_watch();
+    s.trail_hunt_day[quarry]=s.day+1;
+    notice="猎获已带回船上";
+    return true;
+}
+
+bool Game::has_shore_supply() const {
+    return !sea() && !encounter() && s.origin>=PreviousPlaceCount &&
+           s.origin!=shetlands && s.origin!=galapagos && s.origin!=horn && s.origin!=kimberley;
+}
+
+int Game::shore_provision_amount(bool water) const {
+    if (!has_shore_supply()) return 0;
+    const int limit=std::min(24,s.gold/3);
+    const auto carried=provisions_order(s.stores+(water?0:limit),s.water+(water?limit:0));
+    return water?carried.y:carried.x;
+}
+
+bool Game::shore_resupply(bool water) {
+    const int quantity=shore_provision_amount(water);
+    if (!quantity) return false;
+    s.gold-=quantity*3;
+    if (water) s.water+=quantity;
+    else s.stores+=quantity;
+    notice=water?"淡水已装船":"干粮已装船";
+    return true;
+}
+
 void Game::survey() {
+    learn_ocean_routes();
     if (sea() || encounter() || port()) return;
     const auto bit = place_bit(s.origin);
     if (s.surveyed & bit) { notice = "此处已测绘"; return; }
@@ -2974,7 +3057,7 @@ void migrate_chart(State& state, std::span<const std::byte> old) {
         const int y=LegacyMapY+cell/OldChartColumns*OldChartCell;
         for (int row=y/ChartCell;row<=(y+OldChartCell-1)/ChartCell;++row) {
             for (int column=x/ChartCell;column<=(x+OldChartCell-1)/ChartCell;++column) {
-                const int bit=row*ChartColumns+column;
+                const int bit=row*PreviousChartColumns+column;
                 state.coast[bit/8]|=1U<<(bit%8);
             }
         }
@@ -2991,7 +3074,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x51445054);
+    put(0x52445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3116,6 +3199,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     offset=CargoSaveBytes-4;
     for (const auto& area : s.pilot_chart)
         for (const auto row : area) put(row);
+    for (auto cell : s.outer_coast) bytes[offset++]=std::byte(cell);
+    put(s.world_notebook);
+    for (const auto day : s.trail_hunt_day) put(day);
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -3132,7 +3218,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=PilotSaveBytes && bytes.size()!=WorldPilotSaveBytes &&
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
         bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
-        bytes.size()!=FirstSurveySaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3142,7 +3228,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool extended_survey=version==0x51445054 && bytes.size()==SaveBytes;
+    const bool expanded_world=version==0x52445054 && bytes.size()==SaveBytes;
+    const bool extended_survey=expanded_world || (version==0x51445054 && bytes.size()==PreviousWorldSaveBytes);
     const bool pilot_chart=extended_survey || (version==0x50445054 && bytes.size()==FirstSurveySaveBytes);
     const bool cargo_records=pilot_chart || (version==0x4f445054 && bytes.size()==CargoSaveBytes);
     const bool local_orders=cargo_records || (version==0x4e445054 && bytes.size()==LocalOrdersSaveBytes);
@@ -3512,6 +3599,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 return false;
             if (!extended_survey && s.pilot.region==LegacyPilotRegionCount+1)
                 s.pilot.region=WorldPilotIndex+1;
+            if (!expanded_world && s.pilot.region==WorldPilotIndex+1 &&
+                s.pilot.moored>WorldPilotSite+PreviousPlaceCount) {
+                constexpr int new_sites=PlaceCount-PreviousPlaceCount;
+                if (unsigned(s.pilot.moored)+new_sites>PilotSiteEnd) return false;
+                s.pilot.moored+=new_sites;
+            }
             if (s.pilot.region) {
                 if (!s.helm || s.weather!=Calm) return false;
                 if (s.pilot.moored) {
@@ -3535,6 +3628,12 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             }
             s.pilot.patch=std::to_integer<std::uint8_t>(bytes[offset++]);
             s.pilot.patch|=unsigned(std::to_integer<std::uint8_t>(bytes[offset++]))<<8;
+            if (!expanded_world && s.pilot.region==WorldPilotIndex+1) {
+                constexpr int previous_columns=(PreviousChartWidth+29)/30;
+                constexpr int previous_rows=(PreviousChartHeight+13)/14;
+                if (s.pilot.patch>=previous_columns*previous_rows) return false;
+                s.pilot.patch=(s.pilot.patch/previous_columns)*PilotTilesX+s.pilot.patch%previous_columns;
+            }
             if (s.pilot.region==WorldPilotIndex+1?s.pilot.patch>=PilotTileCount:s.pilot.patch!=0) return false;
         }
         if (coast_ports) {
@@ -3603,6 +3702,16 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             const auto regions=extended_survey?WorldPilotIndex:LegacyPilotRegionCount;
             for (auto& area : std::span(s.pilot_chart).first(regions))
                 for (auto& row : area) row=get();
+        }
+        if (expanded_world) {
+            for (auto& cell : s.outer_coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
+            s.world_notebook=get();
+            if (std::bit_width(s.world_notebook)>FieldStudyCount*2) return false;
+            for (auto& day : s.trail_hunt_day) {
+                const auto saved=get();
+                if (saved>100000 || saved>unsigned(s.day)+1) return false;
+                day=int(saved);
+            }
         }
         if (s.bargain_warnings && (s.helm || s.destination>=0 || s.origin>=PortCount ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;

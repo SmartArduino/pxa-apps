@@ -14,7 +14,7 @@
   ],
   "build": {
     "system": "cmake",
-    "linear_memory": {"maximum_bytes": 5767168, "pinned": true}
+    "linear_memory": {"maximum_bytes": 6422528, "pinned": true}
   },
   "interaction": {
     "schema": "pxa-app-interaction-1",

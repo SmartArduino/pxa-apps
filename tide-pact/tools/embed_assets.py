@@ -16,7 +16,7 @@ def main():
                      "towns", "town_icons", "town_walk", "port_people", "port_ui", "dispatch_icons",
                      "weather_icons", "outskirts", "inland", "calicut", "levada", "marsh", "nature", "flags", "shore_tasks",
                      "expedition_estuary", "expedition_forest", "expedition_wadi", "expedition_vardo", "expedition_malabar", "expedition_sabaki", "weather_motion", "expedition_arguin",
-                     "expedition_vardo_thaw", "expedition_malabar_dry"):
+                     "expedition_vardo_thaw", "expedition_malabar_dry", "field_animals", "field_traveler", "field_marks"):
             data = (args.source / (name + ".pxi")).read_bytes()
             out.write(f'const unsigned char {name}[] =\n')
             for start in range(0, len(data), 48):

@@ -11,7 +11,7 @@ inline constexpr unsigned VesselFrameMs=135;
 inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
 inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
-inline constexpr int HarborPictureBase=160;
+inline constexpr int HarborPictureBase=160, WorldFieldPictureBase=200, WorldGroundPictureBase=240;
 inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture=HarborPictureBase+9;
 inline constexpr int LisbonStreetPicture=HarborPictureBase+10;
 inline constexpr int LisbonGuildPicture=HarborPictureBase+11, CalicutGuildPicture=HarborPictureBase+12;
@@ -45,6 +45,15 @@ inline bool pilot_picture(int kind) {
 
 inline Text sea_picture_path(int kind) {
     if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
+    constexpr Text grounds[]{"assets/world/ground-boreal.pxi","assets/world/ground-mangrove.pxi",
+        "assets/world/ground-ice.pxi","assets/world/ground-tropical.pxi","assets/world/ground-reef.pxi",
+        "assets/world/ground-sandstone.pxi","assets/world/ground-lava.pxi"};
+    if (kind>=WorldGroundPictureBase && kind<WorldGroundPictureBase+int(std::size(grounds)))
+        return grounds[kind-WorldGroundPictureBase];
+    if (kind>=WorldFieldPictureBase && kind<WorldFieldPictureBase+3*FieldStudyCount) {
+        const int plate=kind-WorldFieldPictureBase;
+        return FieldStudies[plate/3].pictures[plate%3];
+    }
     constexpr Text ports[]{"assets/ports/atlantic.pxi","assets/ports/mediterranean.pxi",
         "assets/ports/islands.pxi","assets/ports/indian.pxi","assets/ports/lisbon.pxi",
         "assets/ports/venice.pxi","assets/ports/kilwa.pxi","assets/ports/calicut.pxi",

@@ -41,6 +41,16 @@ constexpr bool arabian_sea(Point p) {
            p.y>=chart_point(0,24).y && p.y<=chart_point(0,-6).y;
 }
 
+constexpr bool southeast_asia(Point p) {
+    return p.x>=chart_point(95,0).x && p.x<=chart_point(123,0).x &&
+           p.y>=chart_point(0,18).y && p.y<=chart_point(0,-8).y;
+}
+
+constexpr bool northern_australia(Point p) {
+    return p.x>=chart_point(113,0).x && p.x<=chart_point(154,0).x &&
+           p.y>=chart_point(0,-10).y && p.y<=chart_point(0,-23).y;
+}
+
 constexpr bool guinea_coast(Point p) {
     return p.x>=chart_point(-15,0).x && p.x<=chart_point(12,0).x &&
            p.y>=chart_point(0,11).y && p.y<=chart_point(0,1).y;
@@ -57,6 +67,12 @@ constexpr ClimateSeason temperate_season(int day,bool south) {
 constexpr ClimateSeason local_season(Point p,int day) {
     const int year_day=annual_day(day);
     if (arabian_sea(p)) return monsoon_season(year_day);
+    if (southeast_asia(p)) {
+        if (year_day>=MonthStarts[10] || year_day<MonthStarts[3]) return NortheastMonsoon;
+        return monsoon_season(year_day)==SouthwestMonsoon?SouthwestMonsoon:BetweenMonsoons;
+    }
+    if (northern_australia(p))
+        return year_day>=MonthStarts[9] || year_day<MonthStarts[4]?WetSeason:DrySeason;
     if (guinea_coast(p)) return guinea_rains(year_day)?WetSeason:DrySeason;
     if (p.y>=chart_point(0,12).y && p.y<=chart_point(0,-12).y) {
         const bool wet=p.x>=chart_point(26,0).x?swahili_rains(year_day):guinea_rains(year_day);

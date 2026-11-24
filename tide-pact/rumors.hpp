@@ -63,6 +63,11 @@ inline constexpr auto StartingChart=place_bit(lisbon)|place_bit(cadiz)|place_bit
 inline constexpr int ChartCell=16;
 inline constexpr int ChartColumns=(ChartWidth+ChartCell-1)/ChartCell;
 inline constexpr int ChartRows=(ChartHeight+ChartCell-1)/ChartCell;
-inline constexpr int ChartBytes=(ChartColumns*ChartRows+7)/8;
+inline constexpr int PreviousChartWidth=1540, PreviousChartHeight=1136, PreviousPlaceCount=35;
+inline constexpr int PreviousChartColumns=(PreviousChartWidth+ChartCell-1)/ChartCell;
+inline constexpr int PreviousChartRows=(PreviousChartHeight+ChartCell-1)/ChartCell;
+inline constexpr int ChartBytes=(PreviousChartColumns*PreviousChartRows+7)/8;
+inline constexpr int OuterChartColumns=(ChartColumns+1)/2, OuterChartRows=(ChartRows+1)/2;
+inline constexpr int OuterChartBytes=(OuterChartColumns*OuterChartRows+7)/8;
 
 } // namespace tide

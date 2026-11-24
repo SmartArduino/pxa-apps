@@ -11,14 +11,35 @@ from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = Path(__file__).resolve().parents[1]
-W, H = 1540, 1136
+W, H = 2520, 1392
 WEST, NORTH = -125, 84
 SX, SY = 7, 8
 DIRS = ((1, 0), (0, 1), (-1, 0), (0, -1), (1, 1), (-1, 1), (-1, -1), (1, -1))
 
 
+def east_of_seam(lon):
+    return (lon - WEST) % 360
+
+
 def project(lon, lat):
-    return round((lon - WEST) * SX), round((NORTH - lat) * SY)
+    return round(east_of_seam(lon) * SX), round((NORTH - lat) * SY)
+
+
+def draw_land(draw, reader, scale, adjustment):
+    for land in reader.iterShapes():
+        lo, bot, hi, top = land.bbox
+        if bot > NORTH or top < NORTH - H / SY:
+            continue
+        starts = [*land.parts, len(land.points)]
+        for i, j in zip(starts, starts[1:]):
+            points = land.points[i:j]
+            clockwise = sum(x * v - y * u for (x, y), (u, v) in zip(points, points[1:])) < 0
+            for shift in (0, 360):
+                if hi + shift < WEST or lo + shift > WEST + W / SX:
+                    continue
+                xy = [((lon + shift - WEST) * SX * scale + adjustment,
+                       (NORTH - lat) * SY * scale + adjustment) for lon, lat in points]
+                draw.polygon(xy, fill=255 if clockwise else 0)
 
 
 def mask_from_land(path):
@@ -29,20 +50,17 @@ def mask_from_land(path):
     with zipfile.ZipFile(path) as archive:
         shp = next(name for name in archive.namelist() if name.endswith(".shp"))
         reader = shapefile.Reader(shp=io.BytesIO(archive.read(shp)))
-        for land in reader.iterShapes():
-            lo, bot, hi, top = land.bbox
-            if hi < WEST or lo > WEST + W / SX or bot > NORTH or top < NORTH - H / SY:
-                continue
-            starts = [*land.parts, len(land.points)]
-            for i, j in zip(starts, starts[1:]):
-                points = land.points[i:j]
-                clockwise = sum(x * v - y * u for (x, y), (u, v) in zip(points, points[1:])) < 0
-                draw.polygon([project(lon, lat) for lon, lat in points], fill=255 if clockwise else 0)
+        draw_land(draw, reader, 1, 0.5)
     # One atlas pixel is close to the width of the narrowest part of Gibraltar.
     # Retain its navigable channel where rasterization joins the two banks.
     draw.line([project(lon, lat) for lon, lat in [
         (-6.02, 35.96), (-5.79, 35.94), (-5.61, 35.96), (-5.43, 36.01),
         (-5.22, 36.02)]], fill=0, width=1)
+    # Singapore Strait is also narrower than one coarse chart cell in places.
+    # This channel only affects the overview and its passage graph.
+    draw.line([project(lon, lat) for lon, lat in [
+        (103.30, 1.32), (103.51, 1.18), (103.67, 1.15), (103.90, 1.20),
+        (104.07, 1.27), (104.14, 1.25), (104.29, 1.38), (104.52, 1.54), (104.72, 1.33)]], fill=0, width=1)
     return mask
 
 
@@ -167,7 +185,7 @@ def world(data, mask):
         a, b = ids[left], ids[right]
         intermediate = [project(lon, lat) for lon, lat in via[0]] if via else []
         course = [points[a], *intermediate, points[b]]
-        step = 1 if "gibraltar" in (left, right) or "mandeb" in (left, right) else 3
+        step = 1 if any(site in (left, right) for site in ("gibraltar", "mandeb", "malacca")) else 3
         path = [course[0]]
         for start, end in zip(course, course[1:]):
             if not sea(mask, end):

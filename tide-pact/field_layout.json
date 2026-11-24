@@ -1,0 +1,93 @@
+{
+  "boreal": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rpppcccpccccpppppccccr",
+    "rcpcppppccccccccppppcr",
+    "rccccccpppppppppppprpr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpccccccccpcrrrr",
+    "rccccccpccccccccpcrrrr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "mangrove": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rccccccpppppccccpcccpr",
+    "rpppcccpccccpppppccccr",
+    "rcccppppccccpppppprprr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpcccccccwpwrwrr",
+    "rccccccpccccccwwwwwwwr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "ice": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcwwwwwwwwwwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppwwr",
+    "rcccppppccccccccpppwwr",
+    "rcpccccpppppccccpcccpr",
+    "rpppcccpccccppppppprpr",
+    "rcccrccpccccccccpcrrrr",
+    "rwwwwccpccccccccpcrrrr",
+    "rwwwwccpccccccccpcrrrr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "tropical": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rpppcccpccccpppppccccr",
+    "rcpcppppccccccccppppcr",
+    "rccccccppppppppppprprr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpcccccccwpwrwrr",
+    "rccccccpccccccwwwwwwwr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "reef": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rccccccpppppccccpcccpr",
+    "rpppcccpccccpppppccccr",
+    "rcccppppccccppppppprpr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpccccccwcwcwrwr",
+    "rccccccpccccccwwwwwwwr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "sandstone": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rcccppppccccccccppppcr",
+    "rcpccccpppppccccpcccpr",
+    "rpppcccpccccpppppprprr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpccccccccpcrrrr",
+    "rccccccpccccccccpcrrrr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ],
+  "lava": [
+    "rwwwwwwwwwwwwwwwwwwwwr",
+    "rwwwwccpcrrrccccpcwwwr",
+    "rwwccccpcrrrccccpcwwwr",
+    "rccccccpcrrrpppppppppr",
+    "rpppcccpccccpppppccwwr",
+    "rcpcppppccccccccppppcr",
+    "rccccccpppppppppppprpr",
+    "rcccrccpccccccccpcrrrr",
+    "rcccrccpccccccccpcrrrr",
+    "rccccccpccccccccpcrrrr",
+    "rrrrrrrrrrrrrrrrrrrrrr"
+  ]
+}

@@ -201,6 +201,7 @@ inline constexpr LandLeg LandLegs[]{{2,3,2},{1,2,3},{1,1,1},{1,2,2},{1,1,1}};
 } // namespace tide
 
 #include "inland.hpp"
+#include "world_field.hpp"
 #include "nature.hpp"
 #include "charters.hpp"
 #include "flags.hpp"
@@ -285,6 +286,9 @@ struct State {
     std::uint64_t chart_marks=StartingChart;
     std::uint32_t heard_rumors=0;
     std::array<std::uint8_t, ChartBytes> coast{};
+    std::array<std::uint8_t, OuterChartBytes> outer_coast{};
+    std::uint32_t world_notebook=0;
+    std::array<int,2> trail_hunt_day{};
     std::array<std::array<std::uint32_t,PilotSurveyRows>,WorldPilotIndex> pilot_chart{};
     std::array<Point,WakeCapacity> wake{};
     std::uint8_t wake_head=0, wake_count=0;
@@ -324,7 +328,8 @@ inline constexpr std::size_t BerthSaveBytes=1664, HelmClockSaveBytes=1696, Skirm
 inline constexpr std::size_t ShoreSaveBytes=1960, LocalOrdersSaveBytes=1984, CargoSaveBytes=2016;
 inline constexpr int LegacyPilotRegionCount=5;
 inline constexpr std::size_t FirstSurveySaveBytes=CargoSaveBytes+LegacyPilotRegionCount*PilotSurveyRows*sizeof(std::uint32_t);
-inline constexpr std::size_t SaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
+inline constexpr std::size_t PreviousWorldSaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
+inline constexpr std::size_t SaveBytes=PreviousWorldSaveBytes+OuterChartBytes+3*sizeof(std::uint32_t);
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -475,6 +480,13 @@ struct Game {
     bool deliver_dispatch();
     bool cancel_dispatch();
     void survey();
+    void learn_ocean_routes();
+    Text field_requirement(int study) const;
+    bool sketch_field(int study,int type);
+    bool hunt_field(int study);
+    bool has_shore_supply() const;
+    bool shore_resupply(bool water);
+    int shore_provision_amount(bool water) const;
     void chapter_choice(int choice);
     void navigator();
     void encounter_action(int action);

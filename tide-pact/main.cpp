@@ -36,7 +36,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage, LandBriefing, SpecialtyInfo
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage, LandBriefing, SpecialtyInfo, WorldCatalog, WorldStudy, WorldTrail
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -105,7 +105,10 @@ enum Action {
     PilotWaterBuy, PilotFoodBuy, PilotBookOpen, PilotStoryOpen, PilotGuide, PilotAim, PilotOpenParcel,
     PilotHandleParcel, PilotSpeed, PilotCenterShip, PilotCoastHint,
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
-    LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, LandCellAction, PilotSiteEntry=LandCellAction+LandCells
+    LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, OpenWorldCatalog, OpenWorldStudy,
+    LandWorldTrail, FieldObserve, FieldStalk, FieldShoot, ShoreFood, ShoreWater,
+    FieldPlate, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
+    PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
 static_assert(TradeStartPreparation<DockService);
@@ -216,6 +219,11 @@ struct VoyageApp {
     int flag_item=MerchantColors, shore_item=GoldWash;
     Overlay shore_back=None;
     Overlay port_case_back=None;
+    int field_item=0, field_plate=0;
+    bool field_local=false, field_result=false;
+    FieldWalk field_walk;
+    Rect field_area{};
+    unsigned field_tick=0, field_painted=0;
     int nature_item=IslandLaurel;
     Overlay nature_page_back=NatureAlbum;
     int expedition_item=0;
@@ -664,6 +672,7 @@ struct VoyageApp {
                 dirty=true;
             }
         }
+        if (modal==WorldTrail && !title) tick_field();
         sea_picture.show(*context,visible_sea_picture(),dirty);
         if (pilot_pending>=0 && !title) {
             const bool world=pilot_pending==WorldPilotIndex;
@@ -1285,6 +1294,8 @@ struct VoyageApp {
         struct Geo { float lon,lat; Text label; bool land; int associated_port=-1; };
         constexpr Geo names[] = {
             {-25,79,"北冰洋",false}, {-89,43,"北美洲",true}, {-57,-16,"南美洲",true},
+            {101,48,"亚洲",true}, {134,-25,"澳大利亚",true}, {38,-76,"南极洲",true},
+            {177,8,"太平洋",false}, {113,16,"南海",false}, {-61,-60,"德雷克海峡",false},
             {17,34,"地中海",false}, {-26,15,"佛得角",false,ribeira}, {64,-7,"印度洋",false},
             {-43,35,"大西洋",false}, {-47,71,"格陵兰",true}, {20,51,"欧洲",true},
             {16,-10,"非洲",true}, {77,21,"印度半岛",true}, {-74,13,"加勒比海",false},
@@ -2938,6 +2949,10 @@ struct VoyageApp {
             next-=62;
         }
         if (escort) button(d,{next-58,desk.y+6,58,22},"陆战",OpenLandBriefing);
+        if (!at_port && game.s.origin>=PreviousPlaceCount) {
+            ocean_anchorage(d);
+            return;
+        }
         if (at_port) {
             const int dest=valid_contract ? game.s.contract : game.proposal();
             const int item=valid_contract ? game.s.contract_good : game.proposal_good();
@@ -2980,6 +2995,27 @@ struct VoyageApp {
                 button(d,{body.x+5,body.bottom()-52,75,21},"请求拖带",ShowTow);
         }
     }
+    void ocean_anchorage(Draw& d) {
+        const int x=body.x+6, w=body.w-12, y=body.y+43, bottom=body.bottom();
+        const int study=field_study_at(game.s.origin);
+        const bool supplied=game.has_shore_supply();
+        d.wrap({x,y,w,bottom-y-(supplied?58:32)},Places[game.s.origin].note,mist,15);
+        if (supplied) {
+            const auto provision=[&](Rect r, bool water) {
+                const int quantity=game.shore_provision_amount(water);
+                button(d,r,water?"兑淡水":"兑干粮",water?ShoreWater:ShoreFood,false,!quantity,
+                       quantity?Text(format("%d份 · %d金",quantity,quantity*3)):Text("无法补充"));
+            };
+            const int half=(w-5)/2;
+            provision({x,bottom-60,half,31},false);
+            provision({x+half+5,bottom-60,w-half-5,31},true);
+        }
+        const Text right=study>=0?"登岸考察":"回到海图";
+        const int half=(w-5)/2;
+        button(d,{x,bottom-26,half,23},"测绘",Survey,false,game.s.surveyed&place_bit(game.s.origin));
+        button(d,{x+half+5,bottom-26,w-half-5,23},right,study>=0?OpenWorldStudy:OpenChart,true);
+    }
+
     void journal(Draw& d) {
         const auto& s=game.s;
         const int half=(body.w-13)/2;
@@ -3010,8 +3046,8 @@ struct VoyageApp {
             d.label(body.x+5,body.y+99,format("委托  %s / %s",
                 GoodsNames[s.contract_good].data(),Places[s.contract].name.data()),mist,body.w-10);
         const int third=(body.w-16)/3, row=body.bottom()-27;
-        constexpr Text labels[]{"港口故事","海上纪事","岸上见闻","发现图鉴","自然图鉴","操作帮助"};
-        constexpr int actions[]{ShowTales,ShowSeaLog,OpenShoreJournal,ShowAtlas,OpenNatureAlbum,ShowHelp};
+        constexpr Text labels[]{"港口故事","海上纪事","岸上见闻","远洋考察","自然图鉴","操作帮助"};
+        constexpr int actions[]{ShowTales,ShowSeaLog,OpenShoreJournal,OpenWorldCatalog,OpenNatureAlbum,ShowHelp};
         constexpr int icons[]{PortStoryIcon,SeaRecordIcon,ShoreNewsIcon,DiscoveryIcon,NatureBookIcon,HandbookIcon};
         for (int i=0;i<int(std::size(labels));++i) {
             const int col=i%3;
@@ -3024,6 +3060,178 @@ struct VoyageApp {
     void nature_art(Draw& d, int entry, Rect picture) {
         d.image({art::nature},{(entry%2)*144,(entry/2)*96,144,96},picture);
         d.frame(picture,border);
+    }
+
+    void world_catalog(Draw& d) {
+        page_title(d,"远洋考察簿",ExpeditionBookIcon);
+        button(d,{body.right()-107,body.y+3,54,23},"地理图鉴",ShowAtlas);
+        const int rows=list_rows(), pages=(FieldStudyCount+rows-1)/rows;
+        page=std::clamp(page,0,pages-1);
+        for (int i=0;i<rows && i+page*rows<FieldStudyCount;++i) {
+            const int id=i+page*rows;
+            const auto& study=FieldStudies[id];
+            const int count=int(bool(game.s.world_notebook&field_note_bit(id,0)))+
+                            int(bool(game.s.world_notebook&field_note_bit(id,1)));
+            row(d,i,game.charted(study.place)?Places[study.place].name:study.region,
+                count?format("%d/2",count):game.charted(study.place)?Text("待考察"):Text("待探索"),
+                WorldStudyEntry+id,count==2);
+        }
+        if (pages>1) pager(d,pages);
+    }
+
+    void world_study(Draw& d) {
+        const auto& study=FieldStudies[field_item];
+        const bool known=game.charted(study.place) || field_local;
+        const int x=body.x+6, y=body.y+29, w=body.w-12, bottom=body.bottom();
+        page_title(d,known?Places[study.place].name:study.region,ExpeditionBookIcon);
+        const int art_w=std::min(w*43/100,std::max(1,bottom-y-41)*2);
+        const int art_h=std::min(bottom-y-56,art_w*52/100);
+        const Rect picture{x,y,art_w,art_h};
+        const bool recorded=field_plate && game.s.world_notebook&field_note_bit(field_item,field_plate-1);
+        if (known && (!field_plate || recorded))
+            sea_picture_panel(d,WorldFieldPictureBase+field_item*3+field_plate,picture);
+        const int text_x=known && (!field_plate || recorded)?picture.right()+7:x;
+        const int text_w=x+w-text_x;
+        Text copy=known?study.habitat:Text("这片海岸还没定位。从附近航区寻找线索，再沿岸测绘。");
+        if (field_plate) {
+            if (recorded) {
+                d.label(text_x,y,field_plate==1?study.animal:study.plant,gold,text_w);
+                copy=field_plate==1?study.animal_note:study.plant_note;
+            } else copy="尚无记录。上岸走到观察点附近后可写生。";
+        }
+        const int copy_y=recorded?y+16:y;
+        d.wrap({text_x,copy_y,text_w,bottom-copy_y-64},copy,ivory,15);
+        if (!known) return;
+        const Text plates[]{"地貌","动物","植物"};
+        for (int i=0;i<3;++i) {
+            const int left=x+i*w/3;
+            button(d,{left,bottom-49,x+(i+1)*w/3-4-left,20},plates[i],FieldPlate+i,i==field_plate);
+        }
+        if (field_local) {
+            const auto blocked=game.field_requirement(field_item);
+            if (!blocked.empty()) d.label(text_x,bottom-67,blocked,vermilion,text_w);
+            button(d,{x,bottom-26,w,23},field_result?"继续考察":"上岸走走",LandWorldTrail,true,!blocked.empty());
+        } else if (game.charted(study.place) && !game.sea())
+            button(d,{x,bottom-26,w,23},"在海图上标出",Destination+study.place,true);
+    }
+
+    Point field_pointer(Point p) const {
+        return {(p.x-field_area.x)*FieldColumns/field_area.w,(p.y-field_area.y)*FieldRows/field_area.h};
+    }
+
+    int field_subject() const {
+        if (field_range(field_walk.player,FieldAnimal)<=2) return 0;
+        if (field_range(field_walk.player,FieldPlant)<=2) return 1;
+        return -1;
+    }
+
+    void tick_field() {
+        if (now-field_tick>=105) {
+            const auto direction=[&]() {
+                using namespace pxa::input;
+                const int x=int(controller.down(controller_right))-int(controller.down(controller_left));
+                return Point{x,x?0:int(controller.down(controller_down))-int(controller.down(controller_up))};
+            }();
+            const auto& study=FieldStudies[field_item];
+            const auto sea=game.conditions();
+            int quarry=study.hunt;
+            if (quarry>=0 && game.s.trail_hunt_day[quarry]==game.s.day+1) quarry=-1;
+            field_walk.advance(study.ground,now,direction,quarry,sea.direction,sea.weather==Rain);
+            field_tick=now;
+        }
+        const bool active=FieldStudies[field_item].hunt>=0 && !field_walk.hunted;
+        if ((active || now-field_walk.moved_at<165 || (field_walk.shot_at && now-field_walk.shot_at<390)) &&
+            now-field_painted>=50) {
+            field_painted=now;
+            dirty=true;
+        }
+    }
+
+    void field_trail(Draw& d) {
+        const auto& study=FieldStudies[field_item];
+        page_title(d,Places[study.place].name,AstrolabeIcon);
+        const int x=body.x+5, w=body.w-10, y=body.y+28;
+        const int controls=body.bottom()-26;
+        field_area={x,y,w,std::max(1,controls-y-19)};
+        const auto bounds=[&](Point p) {
+            return Rect{x+p.x*w/FieldColumns,y+p.y*field_area.h/FieldRows,
+                 (p.x+1)*w/FieldColumns-p.x*w/FieldColumns,
+                 (p.y+1)*field_area.h/FieldRows-p.y*field_area.h/FieldRows};
+        };
+        const auto center=[&](Point p) {
+            const Rect tile=bounds(p);
+            return Point{tile.x+tile.w/2,tile.y+tile.h/2};
+        };
+        const auto old=d.clip;
+        d.clip=d.clipped(field_area);
+        const int ground=WorldGroundPictureBase+study.ground;
+        if (const auto* pixels=sea_picture.pixels(ground)) {
+            const Image texture{pixels};
+            d.image(texture,{0,0,texture.width(),texture.height()},field_area);
+        } else d.fill(field_area,rgb(0x314a41));
+        const auto spot=[&](Point at,int type,Color color) {
+            const auto c=center(at);
+            const bool marked=type>=0 && game.s.world_notebook&field_note_bit(field_item,type);
+            d.diamond(c,7,ink);
+            d.image({art::field_marks},{(type+1)*24,0,24,24},{c.x-8,c.y-9,16,16},true);
+            if (marked) d.dot(c.x+5,c.y+4,color);
+        };
+        spot(FieldCamp,-1,ivory);
+        spot(FieldAnimal,0,mint);
+        spot(FieldPlant,1,mint);
+        if (field_range(field_walk.target,field_walk.player)) {
+            const auto aim=center(field_walk.target);
+            d.diamond(aim,3,ivory);
+        }
+        const auto walk_point=[&](Point from,Point to,unsigned duration,unsigned started) {
+            const auto a=center(from), b=center(to);
+            const int t=std::min(duration,now-started);
+            return Point{a.x+(b.x-a.x)*t/int(duration),a.y+(b.y-a.y)*t/int(duration)};
+        };
+        if (study.hunt>=0 && !field_walk.hunted && game.s.trail_hunt_day[study.hunt]!=game.s.day+1) {
+            const auto prey=walk_point(field_walk.previous_quarry,field_walk.quarry,190,field_walk.animal_at);
+            const int phase=now/94%4;
+            const bool flip=field_walk.previous_quarry.x>field_walk.quarry.x;
+            d.image({art::field_marks},{72,0,24,24},{prey.x-16,prey.y-2,11,11},true,flip);
+            d.image({art::field_animals},{phase*24,study.hunt*20,24,20},{prey.x-9,prey.y-11,18,15},true,flip);
+        }
+        if (field_walk.shot_at && now-field_walk.shot_at<320) {
+            const auto a=center(field_walk.shot_from), b=center(field_walk.shot_to);
+            const int t=std::min(240U,now-field_walk.shot_at);
+            const Point arrow{a.x+(b.x-a.x)*t/240,a.y+(b.y-a.y)*t/240};
+            d.line({arrow.x+(a.x-b.x)/7,arrow.y+(a.y-b.y)/7},arrow,ivory);
+        }
+        const auto player=walk_point(field_walk.from,field_walk.player,105,field_walk.moved_at);
+        const int row=field_walk.facing.x?2:field_walk.facing.y>0?0:1;
+        const int phase=now-field_walk.moved_at<120?int(now/80%4):0;
+        d.diamond({player.x,player.y+2},4,rgb(0x263831));
+        d.image({art::field_traveler},{phase*24,row*32,24,32},
+                {player.x-9,player.y-19,18,24},true,field_walk.facing.x<0);
+        d.clip=old;
+        d.frame(field_area,border);
+
+        const int subject=field_subject();
+        const auto blocked=game.field_requirement(field_item);
+        const bool seen=subject>=0 && game.s.world_notebook&field_note_bit(field_item,subject);
+        const Text note=subject>=0?subject==0?study.animal:study.plant:
+                        study.hunt>=0?QuarryNames[study.hunt]:Text("点地面行走，靠近观察点");
+        const auto sea=game.conditions();
+        const auto breeze=format("风往%s",Bearings[sea.direction].data());
+        const int breeze_w=study.hunt>=0?d.measure(breeze):0;
+        d.label(x,controls-16,blocked.empty()?note:blocked,blocked.empty()?gold:vermilion,w-breeze_w-6);
+        if (breeze_w) d.label(x+w-breeze_w,controls-16,breeze,quiet,breeze_w);
+        const int count=study.hunt>=0?3:1;
+        auto action_rect=[&](int i) {
+            const int left=x+i*w/count;
+            return Rect{left,controls,x+(i+1)*w/count-left-4,23};
+        };
+        button(d,action_rect(0),seen?"看速写":"写生",FieldObserve,true,subject<0 || (!seen && !blocked.empty()));
+        if (study.hunt>=0) {
+            button(d,action_rect(1),field_walk.stalking?"起身":"蹲走",FieldStalk,field_walk.stalking);
+            const bool done=game.s.trail_hunt_day[study.hunt]==game.s.day+1;
+            button(d,action_rect(2),done?"今日已猎":"放箭",FieldShoot,false,
+                   done || !blocked.empty() || !field_walk.can_shoot(study.ground));
+        }
     }
 
     void nature_index(Draw& d, bool local) {
@@ -3167,6 +3375,8 @@ struct VoyageApp {
     }
     int visible_sea_picture() const {
         if (title) return Calm;
+        if (modal==WorldStudy) return WorldFieldPictureBase+3*field_item+field_plate;
+        if (modal==WorldTrail) return WorldGroundPictureBase+FieldStudies[field_item].ground;
         if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
         if (modal==PortStoryPage) return harbor_street_picture(PortStories[port_story_id].port);
         if (modal==PortDesk && guild_illustration_width()) return guild_picture(game.s.origin);
@@ -5183,6 +5393,12 @@ struct VoyageApp {
             return;
         }
         header(d);
+        if (modal==WorldTrail) {
+            body.h=safe.bottom()-body.y;
+            skin_box(d,body,0,6);
+            field_trail(d);
+            return;
+        }
         switch (modal) {
         case Routes: route_list(d); break;
         case StoryPage: story(d); break;
@@ -5221,6 +5437,9 @@ struct VoyageApp {
         case HaggleOutcomePage: haggle_outcome_page(d); break;
         case TimberTrailPage: timber_trail_page(d); break;
         case LandPage: land_page(d); break;
+        case WorldCatalog: world_catalog(d); break;
+        case WorldStudy: world_study(d); break;
+        case WorldTrail: break;
         case NatureWatch: nature_index(d,true); break;
         case NatureAlbum: nature_index(d,false); break;
         case NaturePage: nature_page(d); break;
@@ -5286,6 +5505,19 @@ struct VoyageApp {
         dirty=true;
         if (!title && game.s.land_fight.kind) {
             land_action(action);
+            return;
+        }
+        if (action>=WorldStudyEntry && action<WorldStudyEntry+FieldStudyCount) {
+            if (modal==WorldCatalog) {
+                field_item=action-WorldStudyEntry;
+                field_local=field_result=false;
+                field_plate=0;
+                set_modal(WorldStudy);
+            }
+            return;
+        }
+        if (action>=FieldPlate && action<FieldPlate+3) {
+            if (modal==WorldStudy) field_plate=action-FieldPlate;
             return;
         }
         if (action>=QuantityDigit && action<QuantityDigit+10) {
@@ -5627,6 +5859,58 @@ struct VoyageApp {
                 if (modal==ReserveSale && game.sell_reserve()) { changed(); set_modal(CharterDesk); }
                 break;
             case LocateBerth: if (game.berth_port()>=0) select(game.berth_port()); break;
+            case OpenWorldCatalog:
+                page=0;
+                set_modal(WorldCatalog);
+                break;
+            case OpenWorldStudy:
+                if (modal==None && screen==Office && !game.sea() && !game.encounter()) {
+                    const int id=field_study_at(game.s.origin);
+                    if (id<0) break;
+                    field_item=id;
+                    field_local=true;
+                    field_result=false;
+                    field_plate=0;
+                    set_modal(WorldStudy);
+                }
+                break;
+            case LandWorldTrail:
+                if (modal==WorldStudy && field_local && game.field_requirement(field_item).empty()) {
+                    if (!field_result) field_walk={};
+                    else field_walk.target=field_walk.player;
+                    field_tick=now;
+                    set_modal(WorldTrail);
+                }
+                break;
+            case FieldObserve:
+                if (modal==WorldTrail) {
+                    const int type=field_subject();
+                    if (type>=0 && ((game.s.world_notebook&field_note_bit(field_item,type)) ||
+                        game.sketch_field(field_item,type))) {
+                        field_plate=type+1;
+                        field_result=true;
+                        set_modal(WorldStudy);
+                        changed();
+                    }
+                }
+                break;
+            case FieldStalk:
+                if (modal==WorldTrail) field_walk.stalking=!field_walk.stalking;
+                break;
+            case FieldShoot:
+                if (modal==WorldTrail && field_walk.can_shoot(FieldStudies[field_item].ground) &&
+                    game.hunt_field(field_item)) {
+                    field_walk.hunted=true;
+                    field_walk.shot_from=field_walk.player;
+                    field_walk.shot_to=field_walk.quarry;
+                    field_walk.shot_at=now;
+                    audio.cue(Sound::Page);
+                    changed();
+                }
+                break;
+            case ShoreFood: case ShoreWater:
+                if (modal==None && screen==Office && game.shore_resupply(action==ShoreWater)) changed();
+                break;
             case OpenNatureWatch:
                 if (game.nature_site()==NoNatureSite) break;
                 if (game.s.helm) {
@@ -6380,6 +6664,12 @@ struct VoyageApp {
             else if (modal==PilotParcelPage) set_modal(PilotStory);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
             else if (modal==LandPage) set_modal(land_return);
+            else if (modal==WorldStudy) set_modal(field_local?None:WorldCatalog);
+            else if (modal==WorldTrail) {
+                field_result=false;
+                field_plate=0;
+                set_modal(WorldStudy);
+            }
             else if (modal==HarborTown && outside) change_outskirts(false);
             else if (modal==DispatchBoard) {
                 if (dispatch_page!=DispatchList) {
@@ -6435,6 +6725,13 @@ struct VoyageApp {
     void on_controller(pxa::Context&, const pxa::input::ControllerState& e) {
         using namespace pxa::input;
         if (!controller.update(e)) return;
+        if (modal==WorldTrail) {
+            if (controller.pressed(controller_a)) activate(FieldObserve);
+            if (controller.pressed(controller_x)) activate(FieldShoot);
+            if (controller.pressed(controller_y)) activate(FieldStalk);
+            if (controller.pressed(controller_b)) back();
+            return;
+        }
         if (controller.pressed(controller_up)) focus_move(0,-1);
         if (controller.pressed(controller_down)) focus_move(0,1);
         if (controller.pressed(controller_left)) focus_move(-1,0);
@@ -6457,6 +6754,12 @@ struct VoyageApp {
     void tap(Point p) {
         for (int i=0;i<button_count;++i) {
             if (buttons[i].rect.contains(p)) { activate(buttons[i].action); return; }
+        }
+        if (modal==WorldTrail && field_area.contains(p)) {
+            const auto tile=field_pointer(p);
+            if (field_walkable(FieldStudies[field_item].ground,tile)) field_walk.target=tile;
+            dirty=true;
+            return;
         }
         if (modal==HarborTown && town_area.contains(p)) {
             const Point world{(p.x-town_area.x)*TownExtent/town_area.w,
