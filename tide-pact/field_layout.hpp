@@ -91,6 +91,58 @@ inline constexpr char FieldLayout[][FieldRows][FieldColumns+1]{
         ".rrrr............rrrr.",
         "......................",
     },
+    { // beypore
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwww.......wwwwwwwwww",
+        ".rr.................r.",
+        "....................r.",
+        "......................",
+        ".r................rrr.",
+        ".rrr.............rrrr.",
+        "......................",
+    },
+    { // houzhu
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwww..rrrr.wwwwwwwwww",
+        "wrrr..................",
+        "......................",
+        "....................r.",
+        ".rr................rr.",
+        ".rrr.............rrrr.",
+        "......................",
+    },
+    { // tsushima
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwww...wwwwwwwwwwwww",
+        ".rr................www",
+        "...................rr.",
+        "...................rr.",
+        ".r................rrr.",
+        ".rrr..............rrr.",
+        "......................",
+    },
+    { // yeompo
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwwwwwwwwwwwwwwwww",
+        "wwwwwwrr.....wwwwwwwww",
+        ".rrr...............rr.",
+        ".rr.................r.",
+        "....................r.",
+        ".r..................r.",
+        ".rrrr.............rrr.",
+        "......................",
+    },
 };
 inline constexpr FieldSceneLandmarks FieldLandmarks[]{
     {{3,7}, {17,4}, {8,8}, {14,6}}, // boreal
@@ -100,4 +152,8 @@ inline constexpr FieldSceneLandmarks FieldLandmarks[]{
     {{5,8}, {13,4}, {7,5}, {10,6}}, // reef
     {{4,7}, {13,4}, {6,5}, {14,6}}, // sandstone
     {{3,5}, {16,4}, {9,8}, {14,6}}, // lava
+    {{3,7}, {7,5}, {15,5}, {13,6}}, // beypore
+    {{3,6}, {7,5}, {16,6}, {13,6}}, // houzhu
+    {{3,7}, {6,5}, {14,5}, {13,6}}, // tsushima
+    {{4,6}, {6,5}, {16,5}, {13,6}}, // yeompo
 };

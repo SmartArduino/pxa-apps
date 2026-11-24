@@ -88,11 +88,16 @@ PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，�
 
 在远洋锚地打开「港务 → 登岸考察」可以进入地形、动物与植物的考察页面。进入场地后可点地面行走，也可用手柄方向键移动。接近标记后用「写生」或 A 键记录。纽芬兰和奥里诺科有补给狩猎。蹲走或 Y 键可以降低移动声响，以「放箭」或 X 键行动，猎获按游戏日限量。写生记录可在「日志 → 远洋考察」查阅。
 
-打开海图「目的地」可按「全部」「邻近」「港口」「测绘点」筛选。「邻近」列出与当前地点直接相连的已知航段。到港后可从港务进入城图，点设施招牌或门口，角色会沿码头道路走过去。酒馆的见闻可以请口译、抄进日志，或在海图上标出相关地点。
+打开海图「目的地」可按「全部」「邻近」「港口」「村镇」「测绘点」筛选。「邻近」列出与当前地点直接相连的已知航段。到港后可从港务进入城图，点设施招牌或门口，角色会沿码头道路走过去。酒馆的见闻可以请口译、抄进日志，或在海图上标出相关地点。
 
 东地中海从威尼斯通往拉古萨、奥特朗托海峡和坎迪亚。印度西岸从卡利卡特去第乌，亚丁有通往索科特拉的支线，马六甲可沿爪哇海驶往格雷西克和卡里蒙爪哇群岛。城市街区画按各地历史建筑和贸易活动创作，设施位置服务于游戏操作。[拉古萨税关](https://carina.gov.hr/about-us-6672/customs-administration/organisation-of-the-customs-administration/history-of-the-customs-administration-6729/6729) · [坎迪亚港](https://portheraklion.gr/index.php/en/culture/1104-history-of-heraklion-port) · [第乌港史](https://journals.open.tudelft.nl/writingplace/article/download/2638/2860/7520) · [格雷西克考古](https://ejournal.brin.go.id/berkalaarkeologi/article/download/4628/3397/13258) · [索科特拉地貌](https://whc.unesco.org/en/list/1263)
 
 新增城图原画位于 `art/town-*.jpg`，设施门口和步道定义在 `town.hpp`。运行 `python3 tools/make_port_maps.py` 生成按需载入的游戏纹理。新增地点追加到原有地点之后以保留存档编号，市场数组通过 `port_index` 使用独立的港口索引。
+
+东向航线可从印度卡利卡特南下，经贝浦尔到科钦。沿锡兰、马六甲、文莱湾可到明朝泉州，自泉州经琉球到室町日本的博多，再过对马抵达朝鲜的釜山浦和盐浦。「目的地 → 村镇」显示已知的小泊地。到贝浦尔、后渚、对马府中或盐浦后，可从港务登岸访查，分两处记录人物和工艺。港内可点当地船只或「识船」，查看中式硬帆、日式方帆、马拉巴尔三角帆和朝鲜沿岸货船。船型帧图的源文件为 `art/port_boats.png`。
+
+东亚场景以 1498 年前后为背景。泉州港区使用石岸、灰瓦和木仓，仅以少量暗红砖点缀。现存较晚的红砖大厝和后来修建的城堡、商馆未用作复原参考。人物、对话、具体街区及玩家的跨港行程按史料创作，地理坐标和近岸水域沿用海图数据。[泉州红砖建筑研究](https://www.quanzhou.gov.cn/zfb/xxgk/zfxxgkzl/qzdt/qzyw/201612/t20161226_409805.htm) · [福船展览](https://yangbo.cctv.cn/2023/05/17/ARTIRg9Wi0rjFuBtb2cRw0GE230517.shtml) · [博多遗址](https://museum.city.fukuoka.jp/sp/exhibition/506/) · [对马宗家史料](https://emuseum.nich.go.jp/detail?content_base_id=101297&content_part_id=106&content_pict_id=0&langId=en&webView=) · [朝鲜三浦](https://sillok.history.go.kr/id/kda_10801018_003) · [贝浦尔造船](https://www.keralatourism.org/malabar/uru-beypore/92)
+
 
 陆上考察使用铺满视口的场景画和生成的角色、小动物帧。地貌画源位于 `art/field-scene-*.jpg`，通行区域和观察点位于 `field_layout.json`。修改后运行 `python3 tools/make_world_field.py --scenes`，工具会检查从营地到各观察点的路线，并重建索引图和碰撞表。地形和图鉴图片按需载入。
 

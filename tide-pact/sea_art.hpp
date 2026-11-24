@@ -2,13 +2,12 @@
 
 #include "draw.hpp"
 #include <pxa/app.hpp>
-#include <memory>
 
 namespace tide {
 
 inline constexpr int VesselFrames=8;
 inline constexpr unsigned VesselFrameMs=135;
-inline constexpr int SeaPictureWidth=160, SeaPictureHeight=104;
+inline constexpr int SeaPictureWidth=576, SeaPictureHeight=272;
 inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
 inline constexpr int HarborPictureBase=160, WorldFieldPictureBase=200, WorldGroundPictureBase=240;
@@ -18,7 +17,8 @@ inline constexpr int LisbonGuildPicture=HarborPictureBase+11, CalicutGuildPictur
 inline constexpr int NewHarborPictureBase=HarborPictureBase+13;
 
 inline int new_harbor_picture(int port) {
-    return is_port(port) && port>=FirstNewPort?NewHarborPictureBase+port-FirstNewPort:Calm;
+    const int index=port_index(port);
+    return index>=BasePortCount?NewHarborPictureBase+index-BasePortCount:Calm;
 }
 
 inline int harbor_picture(int port) {
@@ -53,7 +53,9 @@ inline Text sea_picture_path(int kind) {
     if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
     constexpr Text grounds[]{"assets/world/ground-boreal.pxi","assets/world/ground-mangrove.pxi",
         "assets/world/ground-ice.pxi","assets/world/ground-tropical.pxi","assets/world/ground-reef.pxi",
-        "assets/world/ground-sandstone.pxi","assets/world/ground-lava.pxi"};
+        "assets/world/ground-sandstone.pxi","assets/world/ground-lava.pxi",
+        "assets/world/ground-beypore.pxi","assets/world/ground-houzhu.pxi",
+        "assets/world/ground-tsushima.pxi","assets/world/ground-yeompo.pxi"};
     if (kind>=WorldGroundPictureBase && kind<WorldGroundPictureBase+int(std::size(grounds)))
         return grounds[kind-WorldGroundPictureBase];
     if (kind>=WorldFieldPictureBase && kind<WorldFieldPictureBase+3*FieldStudyCount) {
@@ -66,7 +68,9 @@ inline Text sea_picture_path(int kind) {
         "assets/ports/venice-streets.pxi","assets/ports/kilwa-streets.pxi","assets/ports/lisbon-streets.pxi",
         "assets/ports/lisbon-guild.pxi","assets/ports/calicut-guild.pxi",
         "assets/ports/ragusa-streets.pxi","assets/ports/candia-streets.pxi",
-        "assets/ports/diu-streets.pxi","assets/ports/gresik-streets.pxi"};
+        "assets/ports/diu-streets.pxi","assets/ports/gresik-streets.pxi",
+        "assets/ports/quanzhou-streets.pxi","assets/ports/hakata-streets.pxi",
+        "assets/ports/kochi-streets.pxi","assets/ports/busanpo-streets.pxi"};
     if (kind>=HarborPictureBase && kind<HarborPictureBase+int(std::size(ports)))
         return ports[kind-HarborPictureBase];
     switch (kind) {
@@ -96,8 +100,6 @@ public:
         }
         if (ready_==kind || loading_!=Calm || failed_) return;
         const Text path=sea_picture_path(kind);
-        if (path.empty() && !large_) return;
-        large_.reset();
         ready_=Calm;
         if (path.empty()) return;
         loading_=kind;
@@ -107,7 +109,7 @@ public:
     bool failed(int kind) const { return wanted_==kind && failed_; }
 
     const unsigned char* pixels(int kind) const {
-        return kind!=Calm && ready_==kind?(large_?large_.get():bytes_.data()):nullptr;
+        return kind!=Calm && ready_==kind?bytes_.data():nullptr;
     }
 
 private:
@@ -117,7 +119,7 @@ private:
             return std::equal(header.begin(),header.end(),magic.begin())?PilotMapBytes:0;
         }
         const auto width=pxa::wire::get16(header.data()),height=pxa::wire::get16(header.data()+2);
-        return width && width<=576 && height && height<=272?516+std::size_t(width)*height:0;
+        return width && width<=SeaPictureWidth && height && height<=SeaPictureHeight?516+std::size_t(width)*height:0;
     }
 
     pxa::Task<void> load(pxa::AssetService assets,int kind,Text path,bool& dirty) {
@@ -125,13 +127,8 @@ private:
         const auto first=co_await assets.read(path,0,header);
         const auto size=first && first->bytes==header.size()?image_size(header,pilot_picture(kind)):0;
         std::span<std::byte> output;
-        if (size && size==first->total_bytes && wanted_==kind) {
-            if (size<=bytes_.size()) output=std::as_writable_bytes(std::span(bytes_)).first(size);
-            else {
-                large_.reset(new (std::nothrow) unsigned char[size]);
-                if (large_) output=std::as_writable_bytes(std::span(large_.get(),size));
-            }
-        }
+        if (size && size==first->total_bytes && size<=bytes_.size() && wanted_==kind)
+            output=std::as_writable_bytes(std::span(bytes_)).first(size);
         std::size_t offset=0;
         if (!output.empty()) {
             std::copy(header.begin(),header.end(),output.begin());
@@ -145,18 +142,16 @@ private:
         }
         const bool complete=offset && offset==output.size() && wanted_==kind;
         if (complete) ready_=kind;
-        else {
-            large_.reset();
-            if (wanted_==kind) failed_=true;
-        }
+        else if (wanted_==kind) failed_=true;
         loading_=Calm;
         dirty=true;
         co_return pxa::Result<void>{};
     }
 
-    // A single streamed picture or pilotage grid is resident at a time.
+    // Stream every picture into one fixed buffer. Switching from a plate to the
+    // field map never needs a larger contiguous guest-heap allocation.
+    static_assert(PilotMapBytes<=516+SeaPictureWidth*SeaPictureHeight);
     std::array<unsigned char,516+SeaPictureWidth*SeaPictureHeight> bytes_{};
-    std::unique_ptr<unsigned char[]> large_;
     int wanted_=Calm,ready_=Calm,loading_=Calm;
     bool failed_=false;
 };

@@ -215,5 +215,129 @@
       14,
       6
     ]
+  },
+  "beypore": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwww.......wwwwwwwwww",
+      ".rr.................r.",
+      "....................r.",
+      "......................",
+      ".r................rrr.",
+      ".rrr.............rrrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      7
+    ],
+    "animal": [
+      7,
+      5
+    ],
+    "plant": [
+      15,
+      5
+    ],
+    "quarry": [
+      13,
+      6
+    ]
+  },
+  "houzhu": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwww..rrrr.wwwwwwwwww",
+      "wrrr..................",
+      "......................",
+      "....................r.",
+      ".rr................rr.",
+      ".rrr.............rrrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      6
+    ],
+    "animal": [
+      7,
+      5
+    ],
+    "plant": [
+      16,
+      6
+    ],
+    "quarry": [
+      13,
+      6
+    ]
+  },
+  "tsushima": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwww...wwwwwwwwwwwww",
+      ".rr................www",
+      "...................rr.",
+      "...................rr.",
+      ".r................rrr.",
+      ".rrr..............rrr.",
+      "......................"
+    ],
+    "camp": [
+      3,
+      7
+    ],
+    "animal": [
+      6,
+      5
+    ],
+    "plant": [
+      14,
+      5
+    ],
+    "quarry": [
+      13,
+      6
+    ]
+  },
+  "yeompo": {
+    "rows": [
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwwwwwwwwwwwwwwwww",
+      "wwwwwwrr.....wwwwwwwww",
+      ".rrr...............rr.",
+      ".rr.................r.",
+      "....................r.",
+      ".r..................r.",
+      ".rrrr.............rrr.",
+      "......................"
+    ],
+    "camp": [
+      4,
+      6
+    ],
+    "animal": [
+      6,
+      5
+    ],
+    "plant": [
+      16,
+      5
+    ],
+    "quarry": [
+      13,
+      6
+    ]
   }
 }

@@ -4,7 +4,8 @@
 
 namespace tide {
 
-enum FieldGround { BorealGround, MangroveGround, IceGround, TropicalGround, ReefGround, SandstoneGround, LavaGround };
+enum FieldGround { BorealGround, MangroveGround, IceGround, TropicalGround, ReefGround, SandstoneGround, LavaGround,
+                   BeyporeGround, HouzhuGround, TsushimaGround, YeompoGround };
 
 struct FieldStudy {
     int place;
@@ -12,6 +13,7 @@ struct FieldStudy {
     int hunt;
     Text region, habitat, animal, plant, animal_note, plant_note;
     std::array<Text,3> pictures;
+    bool culture=false;
 };
 
 #define FIELD_PLATES(name) {"assets/world/" name "-shore.pxi","assets/world/" name "-animal.pxi","assets/world/" name "-plant.pxi"}
@@ -43,6 +45,22 @@ inline constexpr FieldStudy FieldStudies[]{
     {galapagos,LavaGround,-1,"南美外海","熔岩凝成黑色岩阶。岸上几乎找不到水，背阴处却长着成片的仙人掌。",
      "海鬣蜥","加岛仙人掌","黑色蜥蜴在熔岩上晒热身体。有一只游进浪里去吃藻。",
      "老仙人掌生出木质主干。高处伸着扁平的茎片，边缘开了一朵黄花。",FIELD_PLATES("galapagos")},
+    {beypore,BeyporeGround,-1,"印度·马拉巴尔","木匠拉维让你走河边小路。他缺一根记号绳，正拿旧绳在新船架上比量。",
+     "比船架的拉维","船肋与木楔","拉维用绳在两边各比一次。左边多出一指，他叫徒弟把船肋卸下再刨。他说，船入水前，歪一点也藏不住。",
+     "徒弟用木片试探接缝，一面做记号一面请你画下顺序。他说，下次换坏船板，照这个顺序拆，隔壁的板就不会松动。",
+     FIELD_PLATES("beypore"),true},
+    {houzhu,HouzhuGround,-1,"中国·明朝福建","船到岸外时潮水正退。卸货的阿泉带你绕开泥滩，去看哪些瓷碗还能随下一船走。",
+     "拣瓷的阿泉","稻草垫与瓷碗","阿泉轻敲两只碗，一只清脆，一只闷。他捡出那只有暗裂的，又在筐边系了条绳。回程要把坏碗送给窑工验看。",
+     "大碗装在筐底，小碗之间塞稻草。草还能吸去潮气。阿泉要你画出筐盖的绑法，说到港时一眼就能查出有没有动过。",
+     FIELD_PLATES("houzhu"),true},
+    {tsushima,TsushimaGround,-1,"日本·室町对马","海湾外起雾。宗氏的船还没走，码头有一卷文书等人送过来。",
+     "守文书的弥七","等船的米袋","弥七三次看向湾口，唯独没敢先拆纸封。凭宗氏出具的文书才能办理通商，名字写错一个字，这趟就白跑。",
+     "两个袋口各拴着不同长短的绳。弥七凭绳结分出船上口粮和待交的米。雨到前先装粮，你顺手记下这套记号。",
+     FIELD_PLATES("tsushima"),true},
+    {yeompo,YeompoGround,-1,"朝鲜·蔚山湾","潮水已落。晾鱼架边有条小路，沿它走可以到查验货件的小棚。",
+     "查验的书吏","退潮后的鱼架","书吏收起纸簿，等另一条船送来对照的文书。他让你把货留在棚内，等查清再叫人来取。",
+     "岸边的渔户已把鱼翻过一面。他说，潮气一重，鱼得隔半掌晾。傍晚的接驳船一来，这批鱼就能换些布。",
+     FIELD_PLATES("yeompo"),true},
 };
 #undef FIELD_PLATES
 

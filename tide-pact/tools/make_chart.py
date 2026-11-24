@@ -152,25 +152,35 @@ def quote(value):
 
 
 def ordered_places(data):
-    # Preserve IDs already written in saved games.
-    return data["ports"] + data["sites"] + data["new_ports"] + data["new_sites"]
+    # The first four groups preserve the identifiers in existing voyage saves.
+    promoted = {record[0]: record[1:] for record in data["promoted_ports"]}
+    for entry in data["ports"] + data["sites"] + data["new_ports"] + data["new_sites"] + data["east_ports"] + data["villages"]:
+        if entry[0] in promoted:
+            name, region, zone, bias, note = promoted[entry[0]]
+            yield [entry[0], name, region, *entry[2:6], zone, bias, note]
+        else:
+            yield entry
+
+
+def port_names(data):
+    return [e[0] for key in ("ports", "new_ports", "promoted_ports", "east_ports") for e in data[key]]
 
 
 def world(data, mask):
     locations = []
     points = []
     ids = {}
-    port_bias = []
-    port_zone = []
+    ports = {}
+    port_order = port_names(data)
+    villages = {entry[0] for entry in data["villages"]}
     for entry in ordered_places(data):
         ident, name, *values = entry
         is_port = len(values) == 8
-        region = values.pop(0) if is_port else "测绘点"
+        region = values.pop(0) if is_port or ident in villages else "测绘点"
         lon, lat, anch_lon, anch_lat, *info = values
         if is_port:
             zone, bias, note = info
-            port_bias.append(bias)
-            port_zone.append(zone)
+            ports[ident] = (zone, bias)
         else:
             note, = info
         x, y = project(lon, lat)
@@ -201,6 +211,8 @@ def world(data, mask):
             if segment_path is None:
                 raise ValueError(f"No water path: {left} to {right} between {start} and {end}")
             path += segment_path[1:]
+        if len(path) < 2:
+            raise ValueError(f"{left} and {right} share a chart anchor")
         nm = round(sum(nautical(p, q) for p, q in zip(path, path[1:])))
         print(f"{left} → {right}: {nm} nmi, {len(path)} points")
         links.append(f"    {{{a}, {b}, {len(waypoints)}, {len(path)}, {nm}}},")
@@ -210,14 +222,17 @@ def world(data, mask):
         f"inline constexpr int ChartWidth = {W}, ChartHeight = {H}, ChartNorth = {NORTH}, ChartWest = {WEST};\n"
         f"inline constexpr int ChartLongitudeScale = {SX}, ChartLatitudeScale = {SY};",
         f"inline constexpr int BasePortCount = {len(data['ports'])};",
-        f"inline constexpr int PortCount = {len(data['ports']) + len(data['new_ports'])};",
+        f"inline constexpr int PreviousPortCount = {len(data['ports']) + len(data['new_ports'])};",
         "enum PlaceId {\n    " + ", ".join(ids) + "\n};",
         f"inline constexpr int FirstNewPort = {data['new_ports'][0][0]};",
+        f"inline constexpr int EastAsiaStart = {data['east_ports'][0][0]};",
+        "inline constexpr int PortPlaces[]{" + ", ".join(port_order) + "};",
+        "inline constexpr int Villages[]{" + ", ".join(e[0] for e in data["villages"]) + "};",
         "inline constexpr Location Places[] = {\n" + "\n".join(locations) + "\n};",
         "inline constexpr Point Anchor[] = {\n    " + ", ".join("{%d,%d}" % p for p in points) + "\n};",
-        "inline constexpr int Zone[] = {" + ", ".join(map(str, port_zone)) + "};",
+        "inline constexpr int Zone[] = {" + ", ".join(str(ports[name][0]) for name in port_order) + "};",
         "inline constexpr int Bias[][8] = {\n    " + ",\n    ".join(
-            "{" + ", ".join(map(str, b)) + "}" for b in port_bias) + "\n};",
+            "{" + ", ".join(map(str, b)) + "}" for b in (ports[name][1] for name in port_order)) + "\n};",
         "inline constexpr Point Waypoints[] = {\n    " + ",\n    ".join(
             ", ".join("{%d,%d}" % p for p in waypoints[i:i+8])
             for i in range(0, len(waypoints), 8)) + "\n};",

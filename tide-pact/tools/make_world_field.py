@@ -7,7 +7,8 @@ from PIL import Image, ImageOps
 
 from make_art import ASSETS, texture_bytes, write_texture
 
-LOCATIONS = ("newfoundland", "orinoco", "greenland", "shetlands", "malacca", "naha", "kimberley", "galapagos", "quanzhou")
+LOCATIONS = ("newfoundland", "orinoco", "greenland", "shetlands", "malacca", "naha", "kimberley", "galapagos", "quanzhou",
+             "beypore", "houzhu", "tsushima", "yeompo")
 
 
 def pack_study(name, image):
@@ -43,7 +44,8 @@ def pack_animals(image):
     write_texture(atlas, "field_animals")
 
 
-GROUNDS = ("boreal", "mangrove", "ice", "tropical", "reef", "sandstone", "lava")
+GROUNDS = ("boreal", "mangrove", "ice", "tropical", "reef", "sandstone", "lava",
+           "beypore", "houzhu", "tsushima", "yeompo")
 LANDMARKS = ("camp", "animal", "plant", "quarry")
 SCENE_SIZE = (480, 270)
 

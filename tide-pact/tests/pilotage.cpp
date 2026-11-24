@@ -229,6 +229,17 @@ int main() {
         }
         assert(ship.begin_pilot_docking(water,port+WorldPilotSite) && ship.s.origin==port && !ship.sea());
     }
+    for (const int village : Villages) {
+        Game ship;
+        const int id=WorldPilotSite+village;
+        check_world_berth(ship.pilot_atlas_site(id,true));
+        ship.s.origin=village;
+        assert(ship.start_helm(-1) && ship.pilot_region()==WorldPilotIndex);
+        const auto water=atlas.read(ship.starting_pilot_patch());
+        assert(ship.begin_pilotage(WorldPilotIndex,water));
+        assert(ship.pilot_site(id).kind==PilotVillage && ship.begin_pilot_docking(water,id));
+        assert(ship.s.origin==village && !ship.sea());
+    }
     Game crossing;
     assert(crossing.start_helm(-1));
     crossing.s.helm_x=30*24*16-2;
@@ -290,7 +301,7 @@ int main() {
         std::array<std::byte,FieldSaveBytes> previous{};
         auto source=visitor.s;
         source.pilot.moored-=PlaceCount-FirstNewPort;
-        source.chart_marks&=place_bit(FirstNewPort)-1;
+        source.chart_marks&=places_before(FirstNewPort);
         const auto current=encode(source);
         std::copy_n(current.begin(),previous.size()-4,previous.begin());
         previous[3]=std::byte{0x52};

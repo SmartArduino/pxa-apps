@@ -63,6 +63,7 @@ extern const unsigned char weather_motion[];
 extern const unsigned char field_animals[];
 extern const unsigned char field_traveler[];
 extern const unsigned char field_marks[];
+extern const unsigned char port_boats[];
 extern const unsigned char expedition_arguin[];
 extern const unsigned char expedition_vardo_thaw[];
 extern const unsigned char expedition_malabar_dry[];

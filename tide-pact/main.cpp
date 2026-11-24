@@ -36,7 +36,7 @@ enum Overlay {
     ExpeditionList, ExpeditionPage, Wardroom, OfficerPage, RumorList, RumorPage, AudioSettings,
     LanguageDesk, TideLedger, BargainPage, DriftStory, DriftRecovery, MerchantBoard, HarborTown, PortStoryPage,
     DispatchBoard, ForecastPage, RationsPage, MarketNews, TimberTrailPage, LandPage, TradeQuantityPage, HaggleOutcomePage,
-    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage, LandBriefing, SpecialtyInfo, WorldCatalog, WorldStudy, WorldTrail
+    NatureWatch, NatureAlbum, NaturePage, CharterDesk, CharterRegistry, ReserveOrder, ReserveSale, PortCasePage, FlagRack, FlagPage, ShorePage, ShoreJournal, FishBook, EnclaveRegistry, EnclavePage, MerchantRaidOffer, PilotBook, PilotStory, PilotParcelPage, LandBriefing, SpecialtyInfo, WorldCatalog, WorldStudy, WorldTrail, HarborBoatPage
 };
 enum NavIcon { MapIcon, ScaleIcon, ShipIcon, LedgerIcon, JournalIcon, CoinsIcon, HullIcon,
                FoodIcon, CompassIcon, CursorIcon, AnchorIcon, GlassIcon };
@@ -107,7 +107,7 @@ enum Action {
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
     LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, OpenWorldCatalog, OpenWorldStudy,
     LandWorldTrail, FieldObserve, FieldStalk, FieldShoot, ShoreFood, ShoreWater,
-    RouteFilter, FieldPlate=RouteFilter+4, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
+    ShowHarborBoat, RouteFilter, FieldPlate=RouteFilter+5, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
     PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
@@ -200,7 +200,7 @@ struct VoyageApp {
     Overlay port_story_back=TaleList;
     Overlay dispatch_back=None;
     int dispatch_page=DispatchList;
-    unsigned town_frame=0, town_hint_until=0;
+    unsigned town_frame=0, town_hint_until=0, town_boat_frame=0;
     bool inside_town_facility=false;
     bool outside=false, at_timber_river=false, inland_archive=false;
     Overlay land_return=None;
@@ -222,7 +222,7 @@ struct VoyageApp {
     int field_item=0, field_plate=0;
     bool field_local=false, field_result=false;
     FieldWalk field_walk;
-    Rect field_area{};
+    Rect field_area{}, harbor_vessel_hitbox{};
     unsigned field_tick=0, field_painted=0;
     int nature_item=IslandLaurel;
     Overlay nature_page_back=NatureAlbum;
@@ -566,6 +566,10 @@ struct VoyageApp {
             town_frame=now;
             const int door=town.update(now);
             if (door>=0) arrive_in_town(door);
+            dirty=true;
+        }
+        if (modal==HarborTown && !outside && local_vessel(game.s.origin)>=0 && now-town_boat_frame>=90) {
+            town_boat_frame=now;
             dirty=true;
         }
         if (town_hint_until && now>=town_hint_until) {
@@ -1357,7 +1361,7 @@ struct VoyageApp {
             if (!game.charted(i)) continue;
             const auto p=map_point(Places[i].map);
             if (!map.contains(p)) continue;
-            const bool landed=game.s.visited&place_bit(i);
+            const bool landed=bool(game.s.visited&place_bit(i));
             auto c=i==target()?gold:!is_port(i)?mint:landed?ivory:quiet;
             d.diamond(p,i==marked ? 6 : i==target() ? 4 : 3,ink);
             d.diamond(p,i==marked ? 4 : 2,c);
@@ -2938,6 +2942,10 @@ struct VoyageApp {
             button(d,{next-58,desk.y+6,58,22},"进城",OpenTown,true);
             next-=62;
         }
+        if (at_port && field_study_at(game.s.origin)>=0) {
+            button(d,{next-70,desk.y+6,70,22},"岸上考察",OpenWorldStudy);
+            next-=74;
+        }
         if (field) {
             const bool report=game.land_stage()==LandNotes || game.land_stage()==LandFullNotes;
             button(d,{next-70,desk.y+6,70,22},report?"交考察图":"城外考察",OpenFieldSurvey,report);
@@ -3011,7 +3019,7 @@ struct VoyageApp {
         }
         const Text right=study>=0?"登岸考察":"回到海图";
         const int half=(w-5)/2;
-        button(d,{x,bottom-26,half,23},"测绘",Survey,false,game.s.surveyed&place_bit(game.s.origin));
+        button(d,{x,bottom-26,half,23},"测绘",Survey,false,bool(game.s.surveyed&place_bit(game.s.origin)));
         button(d,{x+half+5,bottom-26,w-half-5,23},right,study>=0?OpenWorldStudy:OpenChart,true);
     }
 
@@ -3021,7 +3029,8 @@ struct VoyageApp {
         skin_box(d,body,0,6);
         const bool freight=s.dispatch.number || s.dispatch.last;
         d.label(body.x+5,body.y+3,format("声望%d 信任%d 测绘%d/%d",s.renown,s.trust,
-                s.charts,PlaceCount-PortCount),gold,body.w-(freight?122:67));
+                std::max(0,s.charts-(s.surveyed&(place_bit(quanzhou)|place_bit(hakata))).count()),
+                PlaceCount-PortCount),gold,body.w-(freight?122:67));
         button(d,{body.right()-57,body.y+2,53,20},"设置",ShowAudio,false,false,{},SettingsIcon);
         if (freight)
             button(d,{body.right()-112,body.y+2,51,20},"运单",OpenDispatch,bool(s.dispatch.number),
@@ -3103,7 +3112,7 @@ struct VoyageApp {
         d.wrap({text_x,copy_y,text_w,bottom-copy_y-(blocked.empty()?52:67)},
                copy,ivory,w<290?13:15);
         if (!known) return;
-        const Text plates[]{"地貌","动物","植物"};
+        const Text plates[]{"地貌",study.culture?"人物":"动物",study.culture?"工艺":"植物"};
         for (int i=0;i<3;++i) {
             const int left=x+i*w/3;
             button(d,{left,bottom-49,x+(i+1)*w/3-4-left,20},plates[i],FieldPlate+i,i==field_plate);
@@ -3203,7 +3212,9 @@ struct VoyageApp {
             const auto c=center(at);
             const bool marked=type>=0 && (game.s.world_notebook&field_note_bit(field_item,type));
             d.diamond({c.x,c.y+5},3,rgb(0x23372c));
-            d.image({art::field_marks},{(type+1)*24,0,24,24},{c.x-8,c.y-10,16,16},true);
+            const Rect icon{c.x-8,c.y-10,16,16};
+            if (study.culture && type>=0) voyage_icon(d,type==0?SpeechIcon:CargoIcon,icon);
+            else d.image({art::field_marks},{(type+1)*24,0,24,24},icon,true);
             d.dot(c.x,c.y+5,marked?mint:gold);
         };
         spot(landmarks.camp,-1);
@@ -3255,13 +3266,13 @@ struct VoyageApp {
             wind_w=d.measure(breeze)+10;
             scene_caption(d,{safe.right()-wind_w,row_y-21,wind_w,17},breeze,ivory);
         }
-        if (subject>=0) action(seen?"看速写":"写生",FieldObserve,true,!seen && !blocked.empty());
+        if (subject>=0) action(seen?"看记录":study.culture?"记录":"写生",FieldObserve,true,!seen && !blocked.empty());
 
         const Text note=!blocked.empty()?blocked:
                         notice_until && !game.notice.empty()?game.notice:
                         subject>=0?(subject==0?study.animal:study.plant):
                         hunt>=0?QuarryNames[hunt]:
-                        study.hunt>=0?Text("今日已猎"):Text("点地行走，靠近观察点");
+                        study.hunt>=0?Text("今日已猎"):Text(study.culture?"点地行走，靠近访查点":"点地行走，靠近观察点");
         int width=std::min(safe.w,d.measure(note)+10);
         const bool above_actions=width>right-safe.x;
         if (above_actions && wind_w) width=std::min(width,safe.w-wind_w-gap);
@@ -3692,6 +3703,23 @@ struct VoyageApp {
         return view;
     }
 
+    void harbor_boat(Draw& d,int id,Rect box,int phase,bool flip=false) {
+        d.image({art::port_boats},{phase*PortBoatWidth,id*PortBoatHeight,PortBoatWidth,PortBoatHeight},
+                box,true,flip);
+    }
+
+    void harbor_boat_page(Draw& d) {
+        const int id=local_vessel(game.s.origin);
+        if (id<0) return;
+        const auto& boat=LocalVessels[id];
+        page_title(d,boat.name,MooringIcon);
+        const int w=std::min(120,body.w/3);
+        const Rect art{body.x+5,body.y+33,w,w*3/4};
+        harbor_boat(d,id,art,1);
+        d.wrap({art.right()+5,art.y,body.right()-art.right()-12,body.bottom()-art.y-8},
+               boat.note,ivory,d.font.cell+1);
+    }
+
     void town_screen(Draw& d) {
         if (outside) { outskirts_screen(d); return; }
         const auto& layout=Towns[town_id];
@@ -3714,6 +3742,19 @@ struct VoyageApp {
         if (can_talk)
             harbor_button(d,{talk_left,y,talk_width,25},PortStories[story].invitation,FindPortStory,
                           true,false,{},roomy?LetterIcon:-1);
+
+        harbor_vessel_hitbox={};
+        if (const int id=local_vessel(layout.port); id>=0) {
+            const int march=int(now/90%151);
+            const int drift=march<76?march:151-march;
+            const auto water=town_on_screen({105+3*drift,950});
+            const int width=roomy?65:52, height=width*3/4;
+            const Rect boat{water.x-width/2,water.y-height,width,height};
+            constexpr int sequence[]{0,1,2,1};
+            harbor_boat(d,id,boat,sequence[now/180%4],march>=76);
+            harbor_vessel_hitbox=boat;
+            harbor_button(d,{safe.right()-59,safe.bottom()-24,59,22},"识船",ShowHarborBoat,false);
+        }
 
         draw_town_walker(d,roomy);
 
@@ -4121,11 +4162,11 @@ struct VoyageApp {
         button(d,{body.right()-169,body.y+3,36,23},"全图",WorldChart);
         button(d,{body.right()-129,body.y+3,37,23},"传闻",ShowRumors);
         button(d,{body.right()-89,body.y+3,37,23},"掌舵",StartExplore);
-        constexpr Text names[]{"全部","邻近","港口","测绘点"};
+        constexpr Text names[]{"全部","邻近","港口","村镇","测绘点"};
         const int x=body.x+4, width=body.w-8, y=body.y+28;
         for (int i=0;i<int(std::size(names));++i) {
-            const int left=x+width*i/4;
-            button(d,{left,y,x+width*(i+1)/4-left-3,20},names[i],RouteFilter+i,i==route_filter);
+            const int left=x+width*i/5;
+            button(d,{left,y,x+width*(i+1)/5-left-3,20},names[i],RouteFilter+i,i==route_filter);
         }
         std::array<int,PlaceCount> order{};
         int count=0;
@@ -4135,7 +4176,8 @@ struct VoyageApp {
                 return (leg.from==game.s.origin && leg.to==p) || (leg.to==game.s.origin && leg.from==p);
             })) return;
             if (route_filter==2 && !is_port(p)) return;
-            if (route_filter==3 && is_port(p)) return;
+            if (route_filter==3 && !is_village(p)) return;
+            if (route_filter==4 && (is_port(p) || is_village(p))) return;
             order[count++]=p;
         };
         if (target()!=game.s.origin) add(target());
@@ -5073,7 +5115,7 @@ struct VoyageApp {
         page=std::clamp(page,0,pages-1);
         for (int i=0;i<rows && page*rows+i<count;++i) {
             const int p=entries[page*rows+i];
-            bool seen=game.s.surveyed & place_bit(p);
+            const bool seen=bool(game.s.surveyed&place_bit(p));
             row(d,i,Places[p].name,seen?"已测绘":"待测绘",AtlasEntry+p,seen);
         }
         pager(d,pages);
@@ -5512,6 +5554,7 @@ struct VoyageApp {
         case WorldCatalog: world_catalog(d); break;
         case WorldStudy: world_study(d); break;
         case WorldTrail: break;
+        case HarborBoatPage: harbor_boat_page(d); break;
         case NatureWatch: nature_index(d,true); break;
         case NatureAlbum: nature_index(d,false); break;
         case NaturePage: nature_page(d); break;
@@ -5614,7 +5657,7 @@ struct VoyageApp {
             }
             return;
         }
-        if (action>=RouteFilter && action<RouteFilter+4) {
+        if (action>=RouteFilter && action<RouteFilter+5) {
             if (modal==Routes) {
                 route_filter=action-RouteFilter;
                 page=0;
@@ -5943,6 +5986,9 @@ struct VoyageApp {
             case OpenWorldCatalog:
                 page=0;
                 set_modal(WorldCatalog);
+                break;
+            case ShowHarborBoat:
+                if (modal==HarborTown && !outside && local_vessel(game.s.origin)>=0) set_modal(HarborBoatPage);
                 break;
             case OpenWorldStudy:
                 if (modal==None && screen==Office && !game.sea() && !game.encounter()) {
@@ -6747,6 +6793,7 @@ struct VoyageApp {
             else if (modal==PilotParcelPage) set_modal(PilotStory);
             else if (modal==TimberTrailPage) set_modal(HarborTown);
             else if (modal==LandPage) set_modal(land_return);
+            else if (modal==HarborBoatPage) set_modal(HarborTown);
             else if (modal==WorldStudy) set_modal(field_local?None:WorldCatalog);
             else if (modal==WorldTrail) {
                 field_result=false;
@@ -6846,6 +6893,7 @@ struct VoyageApp {
         }
         if (modal==HarborTown && town_area.contains(p)) {
             if (!outside) {
+                if (harbor_vessel_hitbox.contains(p)) { activate(ShowHarborBoat); return; }
                 const auto& layout=Towns[town_id];
                 int best=12*12, door=-1;
                 for (int i=0;i<TownFacilityCount;++i) {

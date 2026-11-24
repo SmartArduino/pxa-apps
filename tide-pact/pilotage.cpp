@@ -209,7 +209,7 @@ PilotSite Game::pilot_site(int site) const {
     const auto& info=Places[place];
     const bool transfer=std::find(std::begin(PilotTransferPorts),std::end(PilotTransferPorts),place)!=
                         std::end(PilotTransferPorts);
-    return {info.name,info.note,location,berth,is_port(place)?PilotCity:PilotPoint,transfer};
+    return {info.name,info.note,location,berth,is_port(place)?PilotCity:is_village(place)?PilotVillage:PilotPoint,transfer};
 }
 
 bool Game::pilot_site_visible(int site) const {
@@ -277,7 +277,7 @@ bool Game::reveal_pilot_chart() {
 bool Game::pilot_site_visited(int site) const {
     if (site<WorldPilotSite) return s.pilot_visits&(1U<<site);
     if (site>=CoastalPilotSite) return s.coast_visits&(std::uint64_t{1}<<(site-CoastalPilotSite));
-    return (s.visited|s.surveyed)&place_bit(site-WorldPilotSite);
+    return bool((s.visited|s.surveyed)&place_bit(site-WorldPilotSite));
 }
 
 int Game::pilot_coastal_hint() const {

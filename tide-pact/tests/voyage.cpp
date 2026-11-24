@@ -936,7 +936,7 @@ void merchant_raids_and_patrols() {
     patrol.s.day=patrol.s.patrol_after[Portugal];
     patrol.s.helm_x=(Anchor[lisbon].x-9)*16;
     patrol.s.helm_y=Anchor[lisbon].y*16;
-    patrol.s.chart_marks=(1ULL<<PlaceCount)-1;
+    patrol.s.chart_marks=places_before(PlaceCount);
     while (patrol.conditions().weather==Squall) ++patrol.s.day;
     patrol.s.sail_watch=3;
     patrol.s.helm_pulse=5;
@@ -1458,7 +1458,7 @@ void charter_and_reserve_vessel() {
 void aden_merchant_and_colors() {
     Game ship;
     ship.s.cargo[Wine]=2;
-    ship.s.chart_marks=place_bit(PlaceCount)-1;
+    ship.s.chart_marks=places_before(PlaceCount);
     assert(ship.start_helm(-1));
     const auto shore=Anchor[calicut];
     ship.s.heading=6;
@@ -2104,7 +2104,7 @@ void expanded_ports_trade_and_discovery() {
     assert(approach.charted(candia) && !approach.port());
 
     constexpr int goods[]{Salt,Wine,Cloth,Pepper};
-    for (int i=0;i<PortCount-BasePortCount;++i) {
+    for (int i=0;i<PreviousPortCount-BasePortCount;++i) {
         const int port=port_place(BasePortCount+i), good=goods[i];
         Game merchant;
         merchant.s.origin=port;
@@ -2125,9 +2125,43 @@ void expanded_ports_trade_and_discovery() {
     assert(market_notice(candia,Wine,55) && market_notice(diu,Cloth,36));
 }
 
+void east_asian_ports_and_records() {
+    constexpr int ports[]{quanzhou,hakata,kochi,busanpo};
+    constexpr int villages[]{houzhu,tsushima,beypore,yeompo};
+    for (int i=0;i<4;++i) {
+        const int port=ports[i], village=villages[i];
+        Game ship;
+        ship.s.origin=port;
+        ship.s.gold=10000;
+        assert(ship.port() && is_village(village) && !is_port(village));
+        assert(town_index(port)>=0 && local_vessel(port)>=0);
+        assert(!ship.charted(village));
+        ship.learn_ocean_routes();
+        assert(ship.charted(village) && passage(port,village).miles>0);
+        assert(ship.invest() && ship.hire_interpreter() && ship.take_lesson(port_language(port)));
+        const auto trade=ship.trade(ship.proposal_good(),false,2);
+        assert(trade.units==2);
+        State restored;
+        assert(decode(restored,encode(ship.s)));
+        assert(restored.chart_marks==ship.s.chart_marks && restored.guild_stakes==ship.s.guild_stakes &&
+               restored.stock_delta==ship.s.stock_delta && restored.language_skills==ship.s.language_skills);
+        ship.s.interpreter_port=-1;
+        ship.s.origin=village;
+        const int id=field_study_at(village);
+        assert(id>=0 && FieldStudies[id].culture && ship.has_shore_supply());
+        while (!ship.field_requirement(id).empty() && ship.s.day<365) ++ship.s.day;
+        assert(ship.sketch_field(id,0) && ship.sketch_field(id,1));
+        ship.survey();
+        assert(decode(restored,encode(ship.s)) && restored.origin==village &&
+               restored.surveyed==ship.s.surveyed && restored.world_notebook==ship.s.world_notebook);
+    }
+    assert(passage(hakata,busanpo).count==2 && passage(hakata,busanpo).miles<125);
+}
+
 int main() {
     world_routes_and_fieldwork();
     expanded_ports_trade_and_discovery();
+    east_asian_ports_and_records();
     for (int index=0;index<PortCount;++index) {
         const int port=port_place(index);
         Game game;

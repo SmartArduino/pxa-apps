@@ -271,7 +271,7 @@ const MarketNotice* market_notice(int port, int good, int day) {
 namespace {
 struct Specialty {
     int source, price, stock;
-    std::uint64_t buyers;
+    PlaceFlags buyers;
     Text note;
 };
 
@@ -289,13 +289,13 @@ constexpr Specialty specialties[]{
 };
 static_assert(std::size(specialties)==SpecialtyCount);
 static_assert(std::all_of(std::begin(specialties),std::end(specialties),[](const auto& item) {
-    return std::popcount(item.buyers)<=SpecialtyBuyerSlots && !(item.buyers&place_bit(item.source));
+    return item.buyers.count()<=SpecialtyBuyerSlots && !(item.buyers&place_bit(item.source));
 }));
 
 int specialty_buyer_slot(int port,int index) {
     if (!is_port(port)) return -1;
     const auto bit=place_bit(port), buyers=specialties[index].buyers;
-    return (buyers&bit)?std::popcount(buyers&(bit-1)):-1;
+    return (buyers&bit)?(buyers&places_before(port)).count():-1;
 }
 
 int specialty_stock_base(int index,int day) {
@@ -872,7 +872,8 @@ int Game::proposal() const {
                                 tangier, valencia, valencia, genoa, malindi, lisbon,
                                 ribeira, elmina, mpinda, elmina, kilwa, malindi, aden, kilwa,
                                 bruges, bergen, hormuz, muscat, malindi, canaries,
-                                venice, ragusa, calicut, calicut};
+                                venice, ragusa, calicut, calicut,
+                                hakata, busanpo, calicut, hakata};
     static_assert(std::size(outbound)==PortCount);
     return outbound[port_index(s.origin)];
 }
@@ -881,7 +882,10 @@ int Game::proposal_good() const {
     case ragusa: return Salt;
     case candia: return Wine;
     case diu: return Cloth;
-    case gresik: return Pepper;
+    case gresik: case kochi: return Pepper;
+    case quanzhou: return Porcelain;
+    case hakata: return Timber;
+    case busanpo: return Cloth;
     default: return (s.origin + s.day / 60) % GoodsCount;
     }
 }
@@ -2211,7 +2215,7 @@ bool Game::take_lesson(Language language) {
     if (!can_study(language) || fluency(language)==Fluent || s.gold<lesson_fee(language)) return false;
     earn(-lesson_fee(language));
     spend_day(lesson_days(language));
-    s.language_skills+=1U<<(2*language);
+    s.language_skills+=std::uint64_t{1}<<(2*language);
     notice=fluency(language)==Phrases?"学会了问路常用语":"已能通读手记和询问细节";
     return true;
 }
@@ -2487,7 +2491,7 @@ bool Game::deliver_escort(bool publish) {
 }
 
 bool Game::guild_stake(int port) const {
-    return is_port(port) && (s.guild_stakes & (1U<<port_index(port)));
+    return is_port(port) && (s.guild_stakes & (std::uint64_t{1}<<port_index(port)));
 }
 
 int Game::guild_cost() const { return port()?240+Zone[port_index(s.origin)]*40:0; }
@@ -2496,7 +2500,7 @@ bool Game::invest() {
     if (!port() || market_held() || guild_stake(s.origin)) return false;
     if (s.gold<guild_cost()) { notice="金币不足"; return false; }
     earn(-guild_cost());
-    s.guild_stakes |= 1U<<port_index(s.origin);
+    s.guild_stakes |= std::uint64_t{1}<<port_index(s.origin);
     ++s.renown;
     notice="商栈已入股，本港买价下调";
     return true;
@@ -3058,7 +3062,7 @@ constexpr int migrate_place(int place) {
 }
 
 constexpr std::uint64_t migrate_places(std::uint64_t places) {
-    const auto old_ports=place_bit(LegacyPortCount)-1;
+    const auto old_ports=places_before(LegacyPortCount).low;
     return (places&old_ports)|((places&~old_ports)<<AddedPorts);
 }
 
@@ -3086,12 +3090,12 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x53445054);
+    put(0x54445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
         s.contract,s.contract_good,s.deadline,s.weather,s.enemy,s.range,s.aim,s.stop_next}) put(field);
-    put_mask(s.visited); put_mask(s.surveyed);
+    put_mask(s.visited.low); put_mask(s.surveyed.low);
     put(s.rng); put(s.event_mask);
     for (int count : std::span(s.cargo).first<GoodsCount>()) bytes[offset++] = std::byte(count);
     for (auto delta : std::span(s.stock_delta).first<BasePortCount*GoodsCount>())
@@ -3101,7 +3105,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (auto event : s.sea_log) put(event);
     for (auto field : {s.naval_turn,s.needs_reload,s.duel_turn,s.vigor,s.rival,s.escort,s.cadiz_victory})
         bytes[offset++]=std::byte(field);
-    put(s.guild_stakes);
+    put(std::uint32_t(s.guild_stakes));
     put(s.helm_x); put(s.helm_y);
     for (auto value : {s.water,s.helm,s.heading,s.sail_watch}) bytes[offset++]=std::byte(value);
     for (const auto& record : s.expeditions) {
@@ -3111,13 +3115,13 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     }
     bytes[offset++]=std::byte(s.officer_roster);
     bytes[offset++]=std::byte(s.first_mate);
-    put_mask(s.chart_marks);
+    put_mask(s.chart_marks.low);
     put(s.heard_rumors);
     for (auto cell : s.coast) bytes[offset++]=std::byte(cell);
     bytes[offset++]=std::byte(s.wake_head);
     bytes[offset++]=std::byte(s.wake_count);
     for (const auto point : s.wake) put(std::uint32_t(point.x)|(std::uint32_t(point.y)<<16));
-    put(s.language_skills);
+    put(std::uint32_t(s.language_skills));
     bytes[offset++]=std::byte(s.interpreter_port+1);
     bytes[offset++]=std::byte(s.tide_ledger);
     // Earlier language saves left these reserved bytes at zero.
@@ -3217,6 +3221,9 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (const auto day : s.trail_hunt_day) put(day);
     for (auto delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>())
         bytes[offset++]=std::byte(delta+48);
+    for (const auto flags : {s.visited,s.surveyed,s.chart_marks}) put_mask(flags.high);
+    put(std::uint32_t(s.guild_stakes>>32));
+    put(std::uint32_t(s.language_skills>>32));
     offset=bytes.size()-4;
     put(checksum(bytes));
     return bytes;
@@ -3234,7 +3241,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
         bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
         bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes &&
-        bytes.size()!=FieldSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FieldSaveBytes && bytes.size()!=PortSaveBytes && bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3244,7 +3251,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool new_ports=version==0x53445054 && bytes.size()==SaveBytes;
+    const bool east_asia=version==0x54445054 && bytes.size()==SaveBytes;
+    const bool new_ports=east_asia || (version==0x53445054 && bytes.size()==PortSaveBytes);
     const bool expanded_world=new_ports || (version==0x52445054 && bytes.size()==FieldSaveBytes);
     const bool extended_survey=expanded_world || (version==0x51445054 && bytes.size()==PreviousWorldSaveBytes);
     const bool pilot_chart=extended_survey || (version==0x50445054 && bytes.size()==FirstSurveySaveBytes);
@@ -3277,6 +3285,17 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (!current && (bytes.size()!=LegacySaveBytes ||
         (version!=0x31445054 && version!=0x32445054))) return false;
     State s;
+    if (east_asia) {
+        // Extended flags follow the stock records. Read them before validating references.
+        offset=bytes.size()-4-3*sizeof(std::uint64_t)-2*sizeof(std::uint32_t);
+        for (auto* flags : {&s.visited,&s.surveyed,&s.chart_marks}) {
+            const std::uint64_t low=get();
+            flags->high=low|(std::uint64_t(get())<<32);
+        }
+        s.guild_stakes=std::uint64_t(get())<<32;
+        s.language_skills=std::uint64_t(get())<<32;
+        offset=4;
+    }
     bool legacy_sailing_time=true;
     for (auto* field : {
         &s.gold,&s.day,&s.hull,&s.stores,&s.spirits,&s.ship,&s.guns,&s.crew,&s.charts,&s.renown,&s.trust,
@@ -3287,9 +3306,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         s.origin=migrate_place(s.origin);
         s.destination=migrate_place(s.destination);
     }
-    s.visited=get_mask(); s.surveyed=get_mask();
+    s.visited.low=get_mask(); s.surveyed.low=get_mask();
     s.rng=get(); s.event_mask=get();
-    if ((s.visited|s.surveyed)>>PlaceCount) return false;
     for (auto& count : std::span(s.cargo).first<GoodsCount>()) count = std::to_integer<int>(bytes[offset++]);
     const int saved_ports=expanded?BasePortCount:LegacyPortCount;
     for (auto& delta : std::span{s.stock_delta}.first(saved_ports*GoodsCount)) {
@@ -3318,9 +3336,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (current) {
         for (auto* field : {&s.naval_turn,&s.needs_reload,&s.duel_turn,&s.vigor,&s.rival,&s.escort,&s.cadiz_victory})
             *field=std::to_integer<std::uint8_t>(bytes[offset++]);
-        s.guild_stakes=get();
+        s.guild_stakes|=get();
         if (s.naval_turn>2 || s.needs_reload>1 || s.duel_turn>2 || s.vigor>(with_officers?62:56) || s.rival>55 ||
-            s.escort>EscortSold || s.cadiz_victory>1 || s.guild_stakes>>PortCount) return false;
+            s.escort>EscortSold || s.cadiz_victory>1) return false;
     }
     if (with_helm) {
         s.helm_x=int(get()); s.helm_y=int(get());
@@ -3357,9 +3375,9 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             (s.first_mate!=NoOfficer && !(s.officer_roster & (1U<<(s.first_mate-1))))) return false;
     }
     if (with_coast) {
-        s.chart_marks=get_mask();
+        s.chart_marks.low=get_mask();
         s.heard_rumors=get();
-        if (s.chart_marks>>PlaceCount || s.heard_rumors>>RumorCount) return false;
+        if (std::bit_width(s.heard_rumors)>RumorCount) return false;
         if (expanded) {
             for (auto& cell : s.coast) cell=std::to_integer<std::uint8_t>(bytes[offset++]);
         } else {
@@ -3386,14 +3404,14 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         }
     }
     if (with_languages) {
-        s.language_skills=get();
+        s.language_skills|=get();
         s.interpreter_port=std::to_integer<int>(bytes[offset++])-1;
         s.tide_ledger=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.bargain_good=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.bargain_rate=std::to_integer<std::uint8_t>(bytes[offset++]);
         s.drift_stage=std::to_integer<std::uint8_t>(bytes[offset++]);
         const bool pending_deal=s.bargain_good>0 && s.bargain_good<=GoodsCount;
-        if (s.language_skills>>(2*LanguageCount) || (s.language_skills&3U) ||
+        if ((s.language_skills&3U) ||
             s.tide_ledger>LedgerReturned || s.drift_stage>DriftFiled || (s.interpreter_port!=-1 && !is_port(s.interpreter_port)) ||
             (s.interpreter_port>=0 && (s.interpreter_port!=s.origin || s.helm || s.destination>=0)))
             return false;
@@ -3401,8 +3419,6 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             (pending_deal ? s.bargain_rate!=4 && s.bargain_rate!=8 : s.bargain_rate!=0) ||
             (s.bargain_good && (!is_port(s.origin) || s.helm || s.destination>=0)))
             return false;
-        for (int language=1;language<LanguageCount;++language)
-            if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
     }
     if (with_merchants) {
         for (auto& ship : s.merchants) {
@@ -3482,7 +3498,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             for (auto* field : {&berth.port,&berth.vessel,&berth.hull,&berth.guns,&berth.sailors})
                 *field=std::to_integer<std::uint8_t>(bytes[offset++]);
             if (berth.port && (!harbor_charter(int(berth.port)-1) ||
-                !(s.guild_stakes&(1U<<port_index(berth.port-1))))) return false;
+                !(s.guild_stakes&(std::uint64_t{1}<<port_index(berth.port-1))))) return false;
             if (berth.vessel) {
                 if (!berth.port || berth.vessel>std::size(HullNames) || berth.hull<1 ||
                     berth.hull>100 || berth.guns>3 || berth.sailors>berths[2]-berths[0]) return false;
@@ -3616,8 +3632,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 return false;
             if (!extended_survey && s.pilot.region==LegacyPilotRegionCount+1)
                 s.pilot.region=WorldPilotIndex+1;
-            const int recorded_places=expanded_world?FirstNewPort:PreviousPlaceCount;
-            if (!new_ports && s.pilot.region==WorldPilotIndex+1 &&
+            const int recorded_places=new_ports?EastAsiaStart:expanded_world?FirstNewPort:PreviousPlaceCount;
+            if (!east_asia && s.pilot.region==WorldPilotIndex+1 &&
                 s.pilot.moored>WorldPilotSite+recorded_places) {
                 const int shift=PlaceCount-recorded_places;
                 if (s.pilot.moored+shift>PilotSiteEnd) return false;
@@ -3665,7 +3681,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 if (stock<-24 || stock>24) return false;
                 s.specialty_stock[i]=stock;
                 if (local_orders) {
-                    const int buyers=std::popcount(specialties[i].buyers);
+                    const int buyers=specialties[i].buyers.count();
                     for (int slot=0;slot<SpecialtyBuyerSlots;++slot) {
                         const auto demand=std::to_integer<std::uint8_t>(bytes[offset++]);
                         if (demand>SpecialtyOrderLimit || (slot>=buyers && demand)) return false;
@@ -3732,7 +3748,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             }
         }
         if (new_ports) {
-            for (auto& delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>()) {
+            const int count=east_asia?PortCount:PreviousPortCount;
+            for (auto& delta : std::span(s.stock_delta).subspan(BasePortCount*GoodsCount,(count-BasePortCount)*GoodsCount)) {
                 const int stock=std::to_integer<int>(bytes[offset++])-48;
                 if (stock>48 || stock<-48) return false;
                 delta=static_cast<std::int8_t>(stock);
@@ -3746,7 +3763,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.hull,1,100) || !bound(s.stores,0,provisions[s.ship]+(with_helm?20:0)) ||
         s.water>provisions[s.ship]+(with_helm?20:0) || s.stores+s.water>2*provisions[s.ship] ||
         !bound(s.spirits,0,100) || !bound(s.crew,4,berths[s.ship]) ||
-        !bound(s.guns,0,3) || !bound(s.charts,0,PlaceCount-PortCount) ||
+        !bound(s.guns,0,3) || !bound(s.charts,0,PlaceCount-PortCount+2) ||
         !bound(s.chapter,0,Chapters) || !bound(s.ending,0,2) ||
         !bound(s.origin,0,PlaceCount-1) || !bound(s.destination,-1,PlaceCount-1) ||
         (s.contract!=-1 && !is_port(s.contract)) || !bound(s.contract_good,0,GoodsCount-1) ||
@@ -3754,8 +3771,14 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    if (!new_ports && (s.origin>=FirstNewPort || s.destination>=FirstNewPort || s.contract>=FirstNewPort ||
-        (s.chart_marks|s.visited|s.surveyed)>>FirstNewPort || s.guild_stakes>>BasePortCount)) return false;
+    const int locations=east_asia?PlaceCount:new_ports?EastAsiaStart:FirstNewPort;
+    const int ports=east_asia?PortCount:new_ports?PreviousPortCount:BasePortCount;
+    const int languages=east_asia?LanguageCount:Hokkien;
+    if (s.origin>=locations || s.destination>=locations || s.contract>=locations ||
+        ((s.chart_marks|s.visited|s.surveyed)&~places_before(locations)) ||
+        s.guild_stakes>>ports || s.language_skills>>(2*languages)) return false;
+    for (int language=1;language<languages;++language)
+        if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
     int load = s.whale_oil+s.whale_blubber+(s.migrant_site?3:0)+
         (s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;

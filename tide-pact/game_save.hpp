@@ -13,9 +13,10 @@ struct VoyageSave {
     static constexpr const char* HeadKey="voyage-v2";
     static constexpr const char* TailKeys[]{"voyage-v2-tail-a","voyage-v2-tail-b"};
     static constexpr const char* EndKeys[]{"voyage-v2-end-a","voyage-v2-end-b"};
+    static constexpr const char* ExtraKeys[]{"voyage-v2-extra-a","voyage-v2-extra-b"};
     static constexpr std::size_t FirstTailBytes=960;
     static constexpr std::size_t TailBytes=SaveBytes+1-HeadBytes;
-    static_assert(TailBytes>FirstTailBytes && TailBytes<=2*FirstTailBytes);
+    static_assert(TailBytes>2*FirstTailBytes && TailBytes<=3*FirstTailBytes);
 
     std::array<std::byte,SaveBytes+1> bytes{};
     std::array<std::byte,std::max(HeadBytes,FirstTailBytes)+72> packet{};
@@ -33,19 +34,26 @@ struct VoyageSave {
         } else {
             if (!head) co_return std::unexpected(head.error());
             const auto descriptor=std::to_integer<unsigned>(bytes.front());
-            if (*head!=HeadBytes || descriptor>3) co_return std::unexpected(pxa::Error::protocol_error);
+            if (*head!=HeadBytes || descriptor>5) co_return std::unexpected(pxa::Error::protocol_error);
             slot=descriptor%2;
             const bool split_tail=descriptor>=2;
+            const bool has_extra=descriptor>=4;
             auto tail_buffer=all.subspan(HeadBytes);
             auto tail=co_await storage.get(TailKeys[slot],
-                split_tail ? tail_buffer.first(FirstTailBytes) : tail_buffer);
+                tail_buffer.first(FirstTailBytes));
             if (!tail) co_return std::unexpected(pxa::Error::protocol_error);
             std::size_t data_size=HeadBytes-1+*tail;
             if (split_tail) {
                 if (*tail!=FirstTailBytes) co_return std::unexpected(pxa::Error::protocol_error);
-                auto end=co_await storage.get(EndKeys[slot],tail_buffer.subspan(FirstTailBytes));
+                auto end=co_await storage.get(EndKeys[slot],tail_buffer.subspan(FirstTailBytes,FirstTailBytes));
                 if (!end) co_return std::unexpected(pxa::Error::protocol_error);
                 data_size+=*end;
+                if (has_extra) {
+                    if (*end!=FirstTailBytes) co_return std::unexpected(pxa::Error::protocol_error);
+                    auto extra=co_await storage.get(ExtraKeys[slot],tail_buffer.subspan(2*FirstTailBytes));
+                    if (!extra) co_return std::unexpected(pxa::Error::protocol_error);
+                    data_size+=*extra;
+                }
             }
             data=data.first(data_size);
         }
@@ -65,18 +73,20 @@ struct VoyageSave {
             if (!head && head.error()!=pxa::Error::not_found)
                 co_return std::unexpected(head.error());
             const auto descriptor=std::to_integer<unsigned>(bytes.front());
-            if (head && *head==HeadBytes && descriptor<=3) slot=descriptor%2;
+            if (head && *head==HeadBytes && descriptor<=5) slot=descriptor%2;
             refresh_slot=false;
         }
         snapshot(state);
         const unsigned next=1-slot;
-        bytes.front()=std::byte(2+next);
+        bytes.front()=std::byte(4+next);
         // Keep the active chunks untouched until the KV backend commits the new head.
         const auto tail_buffer=all.subspan(HeadBytes);
         auto tail=co_await storage.set(TailKeys[next],tail_buffer.first(FirstTailBytes),packet);
         if (!tail) co_return tail;
-        auto end=co_await storage.set(EndKeys[next],tail_buffer.subspan(FirstTailBytes),packet);
+        auto end=co_await storage.set(EndKeys[next],tail_buffer.subspan(FirstTailBytes,FirstTailBytes),packet);
         if (!end) co_return end;
+        auto extra=co_await storage.set(ExtraKeys[next],tail_buffer.subspan(2*FirstTailBytes),packet);
+        if (!extra) co_return extra;
         auto head=co_await storage.set(HeadKey,all.first(HeadBytes),packet);
         if (head) slot=next;
         else refresh_slot=true;

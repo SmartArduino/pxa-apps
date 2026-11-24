@@ -35,6 +35,10 @@ inline constexpr Rumor Rumors[] {
     {diu,calicut,Anchor[calicut],"织商哈桑","先送三匹棉布去卡利卡特。纱紧的留在船舱上层，海上潮气重，坏了布就赶不上布市。"},
     {gresik,karimunjawa,Anchor[karimunjawa],"爪哇领航员","别循渔舟直接穿礁。往西北去，那片群岛外礁有一道深色水口。日头高些再进，能看清水色。"},
     {aden,socotra,Anchor[socotra],"外海桨手","出亚丁一直往东。索科特拉在往印度的航线南侧，北岸能避风。天晴时，先看到的是岛上的高地。"},
+    {quanzhou,houzhu,Anchor[houzhu],"瓷行帮工","后渚那边有一筐瓷迟迟没来。潮退后大船靠不了，阿泉得把货分到小艇上。你若去，沿岸走，别跟船穿泥滩。"},
+    {hakata,tsushima,Anchor[tsushima],"船商弥助","小船等到午后才开。到了对马，先把文书交给守泊的人。要去釜山浦，就问他这阵风还能不能过海。"},
+    {kochi,beypore,Anchor[beypore],"回水船工","大船要换船板，可以沿海往北去贝浦尔。木料从河里运下来。拉维做工讲究，听一听他怎么量船肋。"},
+    {busanpo,yeompo,Anchor[yeompo],"管泊书吏","这封信要在盐浦的簿上核对。你从外湾绕过去，船到时就先在泊地候着，别把货提上岸。"},
 };
 inline constexpr int RumorCount=std::size(Rumors);
 static_assert(RumorCount<=32);
@@ -61,7 +65,9 @@ inline constexpr Text RumorFragments[]{
     "只听懂几个词：北海、木仓。","只听懂几个词：北角、岛。","只听懂几个词：岩山、向东北。",
     "只听懂几个词：海峡、红岛。","只听懂几个词：季风、胡椒。","只听懂几个词：向西、河口。",
     "只听懂几个词：盐袋、窄口。","只听懂几个词：酒桶、向北。","只听懂几个词：棉布、潮气。",
-    "只听懂几个词：西北、礁口。","只听懂几个词：向东、岛上的高地。"
+    "只听懂几个词：西北、礁口。","只听懂几个词：向东、岛上的高地。",
+    "只听懂几个词：瓷筐、退潮。","只听懂几个词：对马、文书。",
+    "只听懂几个词：木料、河口。","只听懂几个词：盐浦、核对。"
 };
 static_assert(std::size(RumorFragments)==RumorCount);
 

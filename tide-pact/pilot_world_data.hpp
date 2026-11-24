@@ -31,6 +31,10 @@ inline constexpr Point PilotWorldPortMarks[]{
     {134525,49828}, // candia
     {175598,64809}, // diu
     {212934,93348}, // gresik
+    {218301,60529}, // quanzhou
+    {228847,51599}, // hakata
+    {180320,75809}, // kochi
+    {227631,50043}, // busanpo
 };
 inline constexpr Point PilotWorldBerths[]{
     {12965,5799}, // lisbon
@@ -83,9 +87,9 @@ inline constexpr Point PilotWorldBerths[]{
     {24899,10073}, // pasai
     {25447,10491}, // malacca
     {26915,10107}, // brunei
-    {27317,7581}, // quanzhou
+    {27289,7569}, // quanzhou
     {28289,7397}, // naha
-    {28595,6431}, // hakata
+    {28601,6441}, // hakata
     {27359,11405}, // makassar
     {27749,12083}, // timor
     {27733,12849}, // kimberley
@@ -96,6 +100,12 @@ inline constexpr Point PilotWorldBerths[]{
     {16141,5617}, // otranto
     {20057,9113}, // socotra
     {26365,11509}, // karimunjawa
+    {22537,9475}, // kochi
+    {28451,6261}, // busanpo
+    {22489,9323}, // beypore
+    {27291,7569}, // houzhu
+    {28483,6375}, // tsushima
+    {28497,6209}, // yeompo
 };
 inline constexpr PilotSite PilotCoastalSites[]{
     {"波尔图", "杜罗河两岸的屋子沿坡而建。河口有沙洲，外海大船先在口外泊下。", {104281,43888}, {104216,43896}, PilotCity, true},

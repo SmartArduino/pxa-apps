@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <array>
+#include <bit>
 #include <cstddef>
 #include <cstdint>
 #include <string_view>
@@ -14,19 +15,43 @@ struct Point { int x, y; };
 struct Location { Text name, region, note; Point map; int longitude, latitude; };
 struct Leg { int from, to, offset, count, nautical_miles; };
 #include "world_data.hpp"
-inline constexpr int PlaceCount = std::size(Places);
-static_assert(PlaceCount<64 && PortCount<32);
+inline constexpr int PlaceCount=std::size(Places), PortCount=std::size(PortPlaces);
+static_assert(PlaceCount<128 && PortCount<64);
+inline constexpr auto PortIndices=[] {
+    std::array<int,PlaceCount> lookup{};
+    lookup.fill(-1);
+    for (int i=0;i<PortCount;++i) lookup[PortPlaces[i]]=i;
+    return lookup;
+}();
 constexpr int port_index(int place) {
-    if (place>=0 && place<BasePortCount) return place;
-    if (place>=FirstNewPort && place<FirstNewPort+PortCount-BasePortCount)
-        return BasePortCount+place-FirstNewPort;
-    return -1;
+    return place>=0 && place<PlaceCount?PortIndices[place]:-1;
 }
 constexpr bool is_port(int place) { return port_index(place)>=0; }
-constexpr int port_place(int index) {
-    return index<BasePortCount?index:FirstNewPort+index-BasePortCount;
+constexpr int port_place(int index) { return PortPlaces[index]; }
+constexpr bool is_village(int place) {
+    return std::ranges::find(Villages,place)!=std::ranges::end(Villages);
 }
-constexpr std::uint64_t place_bit(int place) { return std::uint64_t{1}<<place; }
+
+struct PlaceFlags {
+    std::uint64_t low=0, high=0;
+    constexpr PlaceFlags(std::uint64_t low=0,std::uint64_t high=0) : low(low), high(high) {}
+    constexpr explicit operator bool() const { return low || high; }
+    constexpr bool operator==(const PlaceFlags&) const = default;
+    constexpr PlaceFlags operator~() const { return {~low,~high}; }
+    friend constexpr PlaceFlags operator&(PlaceFlags a,PlaceFlags b) { return {a.low&b.low,a.high&b.high}; }
+    friend constexpr PlaceFlags operator|(PlaceFlags a,PlaceFlags b) { return {a.low|b.low,a.high|b.high}; }
+    constexpr PlaceFlags& operator|=(PlaceFlags other) { return *this=*this|other; }
+    constexpr PlaceFlags& operator&=(PlaceFlags other) { return *this=*this&other; }
+    constexpr int count() const { return std::popcount(low)+std::popcount(high); }
+};
+constexpr PlaceFlags place_bit(int place) {
+    if (place<0 || place>=128) return {};
+    return place<64?PlaceFlags{std::uint64_t{1}<<place}:PlaceFlags{0,std::uint64_t{1}<<(place-64)};
+}
+constexpr PlaceFlags places_before(int count) {
+    return count<64?PlaceFlags{(std::uint64_t{1}<<count)-1}:
+                    PlaceFlags{~std::uint64_t{0},(std::uint64_t{1}<<(count-64))-1};
+}
 inline constexpr int LegacyPortCount=20, LegacyPlaceCount=29, LegacyChartWidth=728, LegacyChartHeight=912;
 inline constexpr int LegacyMapX=(-45-ChartWest)*ChartLongitudeScale;
 inline constexpr int LegacyMapY=(ChartNorth-72)*ChartLatitudeScale;
@@ -79,6 +104,10 @@ inline constexpr MarketNotice MarketNotices[]{
     {candia,Wine,52,14,-18,13,"山村的新酒到港"},
     {diu,Cloth,34,11,-15,12,"织户的棉布入仓"},
     {gresik,Pepper,66,12,23,-9,"外海商船抢收胡椒"},
+    {quanzhou,Porcelain,17,11,-15,11,"内河瓷货入仓"},
+    {hakata,Timber,41,10,20,-7,"湾内商船换桅"},
+    {kochi,Pepper,57,13,-18,12,"回水船带来新晒的椒"},
+    {busanpo,Cloth,7,12,22,-8,"市棚收布备渡海"},
 };
 const MarketNotice* market_notice(int port, int good, int day);
 
@@ -278,7 +307,7 @@ struct State {
     int chapter = 0, ending = 0, patron = 0, allies = 0;
     int contract = -1, contract_good = 0, deadline = 0;
     int weather = 0, enemy = 0, range = 0, aim = 0, stop_next = 0;
-    std::uint64_t visited=1, surveyed=0;
+    PlaceFlags visited=1, surveyed=0;
     std::uint32_t rng=0x57980218, event_mask=0;
     std::array<int, MarketGoodsCount> cargo{0, 0, 0, 0, 0, 2, 0, 0};
     std::array<std::int8_t, PortCount * GoodsCount> stock_delta{};
@@ -291,13 +320,13 @@ struct State {
     std::array<std::uint32_t, 3> sea_log{};
     std::uint8_t naval_turn=0, needs_reload=0, duel_turn=0, vigor=0, rival=0;
     std::uint8_t escort=EscortOpen, cadiz_victory=0;
-    std::uint32_t guild_stakes=0;
+    std::uint64_t guild_stakes=0;
     int helm_x=0, helm_y=0;
     std::uint8_t water=74, helm=0, heading=0, sail_watch=0, helm_pulse=0;
     std::uint8_t ration_flags=0;
     std::array<ExpeditionProgress, ExpeditionCount> expeditions{};
     std::uint8_t officer_roster=0, first_mate=NoOfficer;
-    std::uint64_t chart_marks=StartingChart;
+    PlaceFlags chart_marks=StartingChart;
     std::uint32_t heard_rumors=0;
     std::array<std::uint8_t, ChartBytes> coast{};
     std::array<std::uint8_t, OuterChartBytes> outer_coast{};
@@ -306,7 +335,7 @@ struct State {
     std::array<std::array<std::uint32_t,PilotSurveyRows>,WorldPilotIndex> pilot_chart{};
     std::array<Point,WakeCapacity> wake{};
     std::uint8_t wake_head=0, wake_count=0;
-    std::uint32_t language_skills=0;
+    std::uint64_t language_skills=0;
     int interpreter_port=-1;
     std::uint8_t tide_ledger=LedgerUnseen;
     std::uint8_t bargain_good=0, bargain_rate=0;
@@ -344,7 +373,9 @@ inline constexpr int LegacyPilotRegionCount=5;
 inline constexpr std::size_t FirstSurveySaveBytes=CargoSaveBytes+LegacyPilotRegionCount*PilotSurveyRows*sizeof(std::uint32_t);
 inline constexpr std::size_t PreviousWorldSaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
 inline constexpr std::size_t FieldSaveBytes=PreviousWorldSaveBytes+OuterChartBytes+3*sizeof(std::uint32_t);
-inline constexpr std::size_t SaveBytes=FieldSaveBytes+(PortCount-BasePortCount)*GoodsCount;
+inline constexpr std::size_t PortSaveBytes=FieldSaveBytes+(PreviousPortCount-BasePortCount)*GoodsCount;
+inline constexpr std::size_t SaveBytes=PortSaveBytes+(PortCount-PreviousPortCount)*GoodsCount+
+                                       3*sizeof(std::uint64_t)+2*sizeof(std::uint32_t);
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
