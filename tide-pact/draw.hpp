@@ -2,6 +2,7 @@
 
 #include "assets.hpp"
 #include "game.hpp"
+#include "rgb565_blend.hpp"
 #include <pxa/pixels.hpp>
 
 #include <algorithm>
@@ -11,7 +12,6 @@
 
 namespace tide {
 
-using Color = std::uint16_t;
 constexpr Color rgb(unsigned v) {
     return ((v >> 8) & 0xf800) | ((v >> 5) & 0x07e0) | ((v >> 3) & 0x001f);
 }
@@ -278,19 +278,17 @@ struct Draw {
     }
     void darken(Rect box, int strength) {
         const auto r = pixel_rect(clipped(box));
+        const auto tint=Rgb565Blend::premultiply(rgb(0x08181d),strength);
+        const int inverse=15-strength;
         for (int y = r.y; y < r.bottom(); ++y) {
             auto* scan=row(y);
-            for (int x = r.x; x < r.right(); ++x) scan[x] = mix(scan[x], rgb(0x08181d), strength);
+            for (int x = r.x; x < r.right(); ++x) scan[x]=Rgb565Blend::over(scan[x],tint,inverse);
         }
     }
     static constexpr Color mix(Color a, Color b, int opacity) {
-        const int inv = 15-opacity;
-        const auto blend = [&](int shift, int mask) {
-            return ((((a >> shift) & mask)*inv + ((b >> shift) & mask)*opacity + 7) / 15) << shift;
-        };
-        return blend(11,31) | blend(5,63) | blend(0,31);
+        return Rgb565Blend::mix(a,b,opacity);
     }
-    void native_glyph(int x,int y,unsigned code,int advance,Color color,int scale) {
+    void native_glyph(int x,int y,unsigned code,int advance,const GlyphInk& paint,int scale) {
         const auto* glyph=NativeFace.glyph(code);
         const auto ink=NativeFace.ink_bounds(glyph);
         const int cell=font.cell*pixel_scale*scale;
@@ -309,12 +307,13 @@ struct Draw {
             for (int i=box.x;i<box.right();++i) {
                 const int sx=direct?i-u:(i-u)*NativeFace.cell/cell;
                 const int alpha=(line[sx/2]>>((sx&1)?0:4))&15;
-                if (alpha) scan[i]=alpha==15?color:mix(scan[i],color,alpha);
+                if (alpha) scan[i]=paint.over(scan[i],alpha);
             }
         }
     }
     void label(int x, int y, Text text, Color color, int max_width = 10000, int scale = 1) {
-        if (!clip.w || !clip.h) return;
+        if (text.empty() || !clip.w || !clip.h) return;
+        const GlyphInk paint(color);
         const int end = x+max_width;
         while (!text.empty()) {
             const auto code = next_char(text);
@@ -323,7 +322,7 @@ struct Draw {
             if (x+advance > end) return;
             if (code != ' ') {
                 if (pixel_scale>1) {
-                    native_glyph(x,y,code,advance,color,scale);
+                    native_glyph(x,y,code,advance,paint,scale);
                     x+=advance;
                     continue;
                 }
@@ -337,7 +336,7 @@ struct Draw {
                         for (int i=box.x;i<box.right();++i) {
                             const int column=i-x;
                             const int alpha=(line[column/2]>>((column&1)?0:4))&15;
-                            if (alpha) scan[i]=alpha==15?color:mix(scan[i],color,alpha);
+                            if (alpha) scan[i]=paint.over(scan[i],alpha);
                         }
                     }
                     x+=advance;
@@ -353,7 +352,7 @@ struct Draw {
                         for (int yy = r.y; yy < r.bottom(); ++yy) {
                             auto* scan=row(yy);
                             for (int xx = r.x; xx < r.right(); ++xx)
-                                scan[xx] = alpha == 15 ? color : mix(scan[xx],color,alpha);
+                                scan[xx]=paint.over(scan[xx],alpha);
                         }
                     }
                 }
