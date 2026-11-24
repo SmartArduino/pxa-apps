@@ -343,7 +343,8 @@ MarketAccess market_access(int port,int good) {
         return special.buyers&place_bit(port)?MarketAccess::Buyer:MarketAccess::Closed;
     }
     if ((good==Porcelain && (port==vardo || port==santo_domingo)) ||
-        (good==Wool && (port==mpinda || port==gresik))) return MarketAccess::Closed;
+        (good==Wool && (port==mpinda || port==gresik || port==malacca || port==naha ||
+                        port==ningbo || port==sakai))) return MarketAccess::Closed;
     return MarketAccess::Trading;
 }
 
@@ -873,7 +874,8 @@ int Game::proposal() const {
                                 ribeira, elmina, mpinda, elmina, kilwa, malindi, aden, kilwa,
                                 bruges, bergen, hormuz, muscat, malindi, canaries,
                                 venice, ragusa, calicut, calicut,
-                                hakata, busanpo, calicut, hakata};
+                                hakata, busanpo, calicut, hakata,
+                                gresik, quanzhou, quanzhou, hakata};
     static_assert(std::size(outbound)==PortCount);
     return outbound[port_index(s.origin)];
 }
@@ -885,7 +887,10 @@ int Game::proposal_good() const {
     case gresik: case kochi: return Pepper;
     case quanzhou: return Porcelain;
     case hakata: return Timber;
-    case busanpo: return Cloth;
+    case busanpo: case naha: return Cloth;
+    case malacca: return Pepper;
+    case ningbo: return Porcelain;
+    case sakai: return Timber;
     default: return (s.origin + s.day / 60) % GoodsCount;
     }
 }
@@ -1046,13 +1051,32 @@ bool Game::meet_port_story(int id) {
     if (id<0 || id>=PortStoryCount || !port() ||
         s.origin!=PortStories[id].port || port_story_stage(id)!=PortStoryUnknown) return false;
     s.port_stories|=PortStoryMet<<(2*id);
+    if (const int job=PortStories[id].dispatch; job>=0) {
+        const auto& order=DispatchOrders[job];
+        s.chart_marks|=place_bit(order.stop)|place_bit(order.to);
+    }
     notice="新见闻已记在日志";
     return true;
+}
+
+bool Game::port_story_needs_interpreter(int id) const {
+    const int port=PortStories[id].port;
+    const auto second=port_second_language(port);
+    return !understands(port_language(port)) && (second>=LanguageCount || !understands(second));
 }
 
 Text Game::port_story_requirement(int id, int choice) const {
     if (id<0 || id>=PortStoryCount || choice<0 || choice>1 || !port() ||
         s.origin!=PortStories[id].port || port_story_stage(id)!=PortStoryMet) return "在当地交谈";
+    if (const int job=PortStories[id].dispatch; job>=0) {
+        if (port_story_needs_interpreter(id)) return "需要口译";
+        if (choice==0) return dispatch_requirement(job);
+        if (id==WetPorcelain && !s.cargo[Cloth]) return "缺一件织锦";
+        if (id==TideCopy && s.day==99999) return "无法再等一日";
+        if (id==SampleWeights && s.gold<18) return "不够18金";
+        if (id==SpareMast && !s.cargo[Timber]) return "缺一件木料";
+        return {};
+    }
     if (id==TideSkiff) {
         if (choice==0 && !s.cargo[Timber]) return "缺一件木料";
         if (choice==1 && s.spirits<8) return "船员太累";
@@ -1071,8 +1095,25 @@ Text Game::port_story_requirement(int id, int choice) const {
 
 bool Game::resolve_port_story(int id, int choice) {
     if (!port_story_requirement(id,choice).empty()) return false;
+    if (PortStories[id].dispatch>=0 && choice==0) return accept_dispatch(PortStories[id].dispatch);
     int renown=0;
     switch (id) {
+    case WetPorcelain:
+        --s.cargo[Cloth];
+        s.trust=std::min(999999,s.trust+2);
+        break;
+    case TideCopy:
+        spend_day(1);
+        renown=3;
+        break;
+    case SampleWeights:
+        earn(-18);
+        s.trust=std::min(999999,s.trust+2);
+        break;
+    case SpareMast:
+        --s.cargo[Timber];
+        renown=3;
+        break;
     case TideSkiff:
         if (choice==0) {
             --s.cargo[Timber];
@@ -1786,10 +1827,12 @@ void Game::arrive() {
         notice="拓居者已抵达，可在村镇安置";
     if (s.dispatch.number) {
         const auto& order=DispatchOrders[dispatch_order()];
-        if (s.origin==order.stop && !s.dispatch.stopped) {
-            s.dispatch.stopped=1;
+        if (s.origin==order.stop && s.dispatch.stopped==DispatchUnderway) {
+            s.dispatch.stopped=DispatchReachedStop;
             notice="已在中途港停靠";
-        } else if (s.origin==dispatch_target()) notice="可以在港务交付运单";
+        }
+        if (dispatch_stop_pending()) notice="货件已到中途港，在运单里决定如何处理";
+        else if (s.origin==order.to && dispatch_target()==order.to) notice="可以在港务交付运单";
     }
 }
 
@@ -1958,7 +2001,8 @@ void Game::deliver() {
 int Game::dispatch_target() const {
     if (!s.dispatch.number) return -1;
     const auto& order=DispatchOrders[dispatch_order()];
-    return order.stop>=0 && !s.dispatch.stopped?order.stop:order.to;
+    const bool cleared=s.dispatch.stopped>=(order.waypoint.empty()?DispatchReachedStop:DispatchInspected);
+    return order.stop>=0 && !cleared?order.stop:order.to;
 }
 
 int Game::dispatch_space() const {
@@ -1968,8 +2012,10 @@ int Game::dispatch_space() const {
 bool Game::dispatch_board_here() const {
     if (!port()) return false;
     if (s.dispatch.number) return true;
-    return std::any_of(std::begin(DispatchOrders),std::end(DispatchOrders),
-                       [this](const auto& order) { return order.from==s.origin; });
+    for (int id=0;id<DispatchCount;++id)
+        if (DispatchOrders[id].from==s.origin && (story_for_dispatch(id)<0 || dispatch_offer_here(id)))
+            return true;
+    return false;
 }
 
 DispatchQuote Game::dispatch_quote(int id) const {
@@ -1990,16 +2036,19 @@ DispatchQuote Game::dispatch_quote(int id) const {
 }
 
 bool Game::dispatch_offer_here(int id) const {
-    return id>=0 && id<DispatchCount && port() && DispatchOrders[id].from==s.origin &&
+    if (id<0 || id>=DispatchCount || !port() || DispatchOrders[id].from!=s.origin) return false;
+    const int story=story_for_dispatch(id);
+    return (story<0 || port_story_stage(story)==PortStoryMet) &&
            (id!=RoadFreight || (road_timber_bonus()>0 && !s.road_delivery));
 }
 
 Text Game::dispatch_requirement(int id) const {
     if (id<0 || id>=DispatchCount || !port() || DispatchOrders[id].from!=s.origin) return "在发单港接单";
-    if (!dispatch_offer_here(id)) return "暂无驿道货运";
+    if (!dispatch_offer_here(id)) return id==RoadFreight?"暂无驿道货运":"先找托运人";
     const auto& order=DispatchOrders[id];
     const auto& rate=DispatchRates[order.kind];
     if (s.dispatch.number) return "已有一份运单";
+    if (const int story=story_for_dispatch(id); story>=0 && port_story_needs_interpreter(story)) return "需要口译";
     if (!charted(order.to) || (order.stop>=0 && !charted(order.stop))) return "先定位沿途港口";
     if (capacity()-load()<rate.space) return "舱位不足";
     if (s.gold<rate.bond) return "押金不足";
@@ -2017,7 +2066,29 @@ bool Game::accept_dispatch(int id) {
     if (order.stop>=0) s.chart_marks|=place_bit(order.stop);
     s.dispatch={.due=std::min(99999,s.day+quote.days+rate.slack), .number=std::uint8_t(id+1),
                 .last=s.dispatch.last, .outcome=s.dispatch.outcome};
+    if (const int story=story_for_dispatch(id); story>=0) {
+        const unsigned shift=2*story;
+        s.port_stories=(s.port_stories&~(3U<<shift))|(PortStoryFirst<<shift);
+    }
     notice="已接运单，货件装船";
+    return true;
+}
+
+bool Game::dispatch_stop_pending() const {
+    if (!port() || !s.dispatch.number || s.dispatch.stopped!=DispatchReachedStop) return false;
+    const auto& order=DispatchOrders[dispatch_order()];
+    return s.origin==order.stop && !order.waypoint.empty();
+}
+
+bool Game::choose_dispatch_stop(bool inspect) {
+    if (!dispatch_stop_pending()) return false;
+    if (inspect) {
+        if (s.gold<DispatchInspectionCost || s.day==99999) return false;
+        earn(-DispatchInspectionCost);
+        spend_day(1);
+    }
+    s.dispatch.stopped=inspect?DispatchInspected:DispatchSealed;
+    notice=inspect?"已验货重封，付清工钱":"已保留原封，可以继续航行";
     return true;
 }
 
@@ -2029,7 +2100,8 @@ bool Game::deliver_dispatch() {
     const auto& rate=DispatchRates[order.kind];
     const auto quote=dispatch_quote(id);
     const bool on_time=s.day<=s.dispatch.due;
-    earn(rate.bond+(on_time?quote.fee:quote.fee/2));
+    const bool bonus=on_time && s.dispatch.stopped==DispatchInspected;
+    earn(rate.bond+(on_time?quote.fee:quote.fee/2)+(bonus?DispatchInspectionBonus:0));
     if (on_time) s.renown=std::min(999999,s.renown+rate.renown);
     if (id==RoadFreight) {
         const int base=stock_base(s.origin,Timber,s.day,road_timber_bonus());
@@ -2037,8 +2109,8 @@ bool Game::deliver_dispatch() {
         s.stock_delta[port_index(s.origin)*GoodsCount+Timber]=std::min(cap,stock(Timber)+rate.space)-base;
         s.road_delivery=true;
     }
-    finish_dispatch(on_time?DispatchOnTime:DispatchLate);
-    notice=on_time?"按期交付，押金已退":"逾期交付，运费减半";
+    finish_dispatch(bonus?DispatchInspectedOnTime:on_time?DispatchOnTime:DispatchLate);
+    notice=bonus?"按期交付，验货赏金已入账":on_time?"按期交付，押金已退":"逾期交付，运费减半";
     return true;
 }
 
@@ -3090,7 +3162,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
         put(std::uint32_t(mask));
         put(std::uint32_t(mask>>32));
     };
-    put(0x54445054);
+    put(0x55445054);
     for (const int field : {
         s.gold,s.day,s.hull,s.stores,s.spirits,s.ship,s.guns,s.crew,s.charts,s.renown,s.trust,
         s.origin,s.destination,s.leg,s.progress,s.reefed,s.chapter,s.ending,s.patron,s.allies,
@@ -3135,7 +3207,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
             bytes[offset++]=std::byte(value);
     }
     // Reuse one padding byte. Existing merchant saves initialized it to zero.
-    bytes[offset++]=std::byte(s.port_stories);
+    bytes[offset++]=std::byte(std::uint8_t(s.port_stories));
     for (auto field : {s.dispatch.number,s.dispatch.stopped,s.dispatch.last,s.dispatch.outcome})
         bytes[offset++]=std::byte(field);
     put(s.dispatch.due);
@@ -3221,6 +3293,7 @@ std::array<std::byte, SaveBytes> encode(const State& s) {
     for (const auto day : s.trail_hunt_day) put(day);
     for (auto delta : std::span(s.stock_delta).subspan<BasePortCount*GoodsCount>())
         bytes[offset++]=std::byte(delta+48);
+    bytes[offset++]=std::byte(s.port_stories>>8);
     for (const auto flags : {s.visited,s.surveyed,s.chart_marks}) put_mask(flags.high);
     put(std::uint32_t(s.guild_stakes>>32));
     put(std::uint32_t(s.language_skills>>32));
@@ -3241,7 +3314,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         bytes.size()!=CoastalSaveBytes && bytes.size()!=ShoreSaveBytes &&
         bytes.size()!=LocalOrdersSaveBytes && bytes.size()!=CargoSaveBytes &&
         bytes.size()!=FirstSurveySaveBytes && bytes.size()!=PreviousWorldSaveBytes &&
-        bytes.size()!=FieldSaveBytes && bytes.size()!=PortSaveBytes && bytes.size()!=SaveBytes) return false;
+        bytes.size()!=FieldSaveBytes && bytes.size()!=PortSaveBytes && bytes.size()!=EastSaveBytes &&
+        bytes.size()!=SaveBytes) return false;
     std::size_t offset=bytes.size()-4;
     auto get = [&]() {
         std::uint32_t value = 0;
@@ -3251,7 +3325,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
     if (get() != std::uint32_t(checksum(bytes))) return false;
     offset = 0;
     const auto version=get();
-    const bool east_asia=version==0x54445054 && bytes.size()==SaveBytes;
+    const bool strait_voyage=version==0x55445054 && bytes.size()==SaveBytes;
+    const bool east_asia=strait_voyage || (version==0x54445054 && bytes.size()==EastSaveBytes);
     const bool new_ports=east_asia || (version==0x53445054 && bytes.size()==PortSaveBytes);
     const bool expanded_world=new_ports || (version==0x52445054 && bytes.size()==FieldSaveBytes);
     const bool extended_survey=expanded_world || (version==0x51445054 && bytes.size()==PreviousWorldSaveBytes);
@@ -3445,13 +3520,17 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         for (auto* field : {&order.number,&order.stopped,&order.last,&order.outcome})
             *field=std::to_integer<std::uint8_t>(bytes[offset++]);
         const auto due=get();
-        if (order.number>DispatchCount || order.last>DispatchCount || order.stopped>1 ||
-            order.outcome>DispatchLost || bool(order.last)!=bool(order.outcome) || due>99999 ||
+        const int limit=strait_voyage?DispatchCount:FirstStoryDispatch;
+        if (order.number>limit || order.last>limit || order.stopped>DispatchSealed ||
+            order.outcome>(strait_voyage?DispatchInspectedOnTime:DispatchLost) ||
+            (order.outcome==DispatchInspectedOnTime && story_for_dispatch(order.last-1)<0) ||
+            bool(order.last)!=bool(order.outcome) || due>99999 ||
             (!order.number && (due || order.stopped)) ||
             (order.number && (!due || (order.stopped && DispatchOrders[order.number-1].stop<0)))) return false;
         if (order.number) {
             const auto& cargo=DispatchOrders[order.number-1];
-            if (!(s.chart_marks & place_bit(cargo.to)) ||
+            if ((cargo.waypoint.empty() && order.stopped>DispatchReachedStop) ||
+                !(s.chart_marks & place_bit(cargo.to)) ||
                 (cargo.stop>=0 && !(s.chart_marks & place_bit(cargo.stop)))) return false;
         }
         order.due=int(due);
@@ -3632,8 +3711,8 @@ bool decode(State& output, std::span<const std::byte> bytes) {
                 return false;
             if (!extended_survey && s.pilot.region==LegacyPilotRegionCount+1)
                 s.pilot.region=WorldPilotIndex+1;
-            const int recorded_places=new_ports?EastAsiaStart:expanded_world?FirstNewPort:PreviousPlaceCount;
-            if (!east_asia && s.pilot.region==WorldPilotIndex+1 &&
+            const int recorded_places=east_asia?StraitStart:new_ports?EastAsiaStart:expanded_world?FirstNewPort:PreviousPlaceCount;
+            if (!strait_voyage && s.pilot.region==WorldPilotIndex+1 &&
                 s.pilot.moored>WorldPilotSite+recorded_places) {
                 const int shift=PlaceCount-recorded_places;
                 if (s.pilot.moored+shift>PilotSiteEnd) return false;
@@ -3748,13 +3827,14 @@ bool decode(State& output, std::span<const std::byte> bytes) {
             }
         }
         if (new_ports) {
-            const int count=east_asia?PortCount:PreviousPortCount;
+            const int count=strait_voyage?PortCount:east_asia?EastPortCount:PreviousPortCount;
             for (auto& delta : std::span(s.stock_delta).subspan(BasePortCount*GoodsCount,(count-BasePortCount)*GoodsCount)) {
                 const int stock=std::to_integer<int>(bytes[offset++])-48;
                 if (stock>48 || stock<-48) return false;
                 delta=static_cast<std::int8_t>(stock);
             }
         }
+        if (strait_voyage) s.port_stories|=std::uint16_t(std::to_integer<unsigned>(bytes[offset++])<<8);
         if (s.bargain_warnings && (s.helm || s.destination>=0 || !is_port(s.origin) ||
             (s.bargain_warnings==HagglePatience && s.bargain_good!=BargainUsed))) return false;
     }
@@ -3763,7 +3843,7 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.hull,1,100) || !bound(s.stores,0,provisions[s.ship]+(with_helm?20:0)) ||
         s.water>provisions[s.ship]+(with_helm?20:0) || s.stores+s.water>2*provisions[s.ship] ||
         !bound(s.spirits,0,100) || !bound(s.crew,4,berths[s.ship]) ||
-        !bound(s.guns,0,3) || !bound(s.charts,0,PlaceCount-PortCount+2) ||
+        !bound(s.guns,0,3) || !bound(s.charts,0,PlaceCount-PortCount+4) ||
         !bound(s.chapter,0,Chapters) || !bound(s.ending,0,2) ||
         !bound(s.origin,0,PlaceCount-1) || !bound(s.destination,-1,PlaceCount-1) ||
         (s.contract!=-1 && !is_port(s.contract)) || !bound(s.contract_good,0,GoodsCount-1) ||
@@ -3771,14 +3851,16 @@ bool decode(State& output, std::span<const std::byte> bytes) {
         !bound(s.renown,0,999999) || !bound(s.trust,0,999999) ||
         !bound(s.deadline,0,100300) || !bound(s.reefed,0,1) ||
         !bound(s.stop_next,0,1) || !bound(s.aim,0,1) || !bound(s.allies,0,3) || !bound(s.patron,0,1)) return false;
-    const int locations=east_asia?PlaceCount:new_ports?EastAsiaStart:FirstNewPort;
-    const int ports=east_asia?PortCount:new_ports?PreviousPortCount:BasePortCount;
-    const int languages=east_asia?LanguageCount:Hokkien;
+    const int locations=strait_voyage?PlaceCount:east_asia?StraitStart:new_ports?EastAsiaStart:FirstNewPort;
+    const int ports=strait_voyage?PortCount:east_asia?EastPortCount:new_ports?PreviousPortCount:BasePortCount;
+    const int languages=strait_voyage?LanguageCount:east_asia?Malay:Hokkien;
     if (s.origin>=locations || s.destination>=locations || s.contract>=locations ||
         ((s.chart_marks|s.visited|s.surveyed)&~places_before(locations)) ||
         s.guild_stakes>>ports || s.language_skills>>(2*languages)) return false;
     for (int language=1;language<languages;++language)
         if (((s.language_skills>>(2*language))&3U)>Fluent) return false;
+    if (const int story=story_for_dispatch(s.dispatch.number-1); story>=0 &&
+        ((s.port_stories>>(2*story))&3U)!=PortStoryFirst) return false;
     int load = s.whale_oil+s.whale_blubber+(s.migrant_site?3:0)+
         (s.dispatch.number?DispatchRates[DispatchOrders[s.dispatch.number-1].kind].space:0);
     for (const int count : s.cargo) load += count;

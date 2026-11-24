@@ -61,6 +61,10 @@ def mask_from_land(path):
     draw.line([project(lon, lat) for lon, lat in [
         (103.30, 1.32), (103.51, 1.18), (103.67, 1.15), (103.90, 1.20),
         (104.07, 1.27), (104.14, 1.25), (104.29, 1.38), (104.52, 1.54), (104.72, 1.33)]], fill=0, width=1)
+    # Keep the Kitan Strait between Awaji and the Kii Peninsula navigable
+    # on the overview. The finer shoreline still preserves the islands.
+    draw.line([project(lon, lat) for lon, lat in [
+        (135.01, 33.83), (135.05, 34.06), (135.05, 34.29), (135.03, 34.38)]], fill=0, width=1)
     return mask
 
 
@@ -153,8 +157,8 @@ def quote(value):
 
 def ordered_places(data):
     # The first four groups preserve the identifiers in existing voyage saves.
-    promoted = {record[0]: record[1:] for record in data["promoted_ports"]}
-    for entry in data["ports"] + data["sites"] + data["new_ports"] + data["new_sites"] + data["east_ports"] + data["villages"]:
+    promoted = {record[0]: record[1:] for record in data["promoted_ports"] + data["strait_promoted_ports"]}
+    for entry in data["ports"] + data["sites"] + data["new_ports"] + data["new_sites"] + data["east_ports"] + data["villages"] + data["strait_ports"]:
         if entry[0] in promoted:
             name, region, zone, bias, note = promoted[entry[0]]
             yield [entry[0], name, region, *entry[2:6], zone, bias, note]
@@ -163,7 +167,7 @@ def ordered_places(data):
 
 
 def port_names(data):
-    return [e[0] for key in ("ports", "new_ports", "promoted_ports", "east_ports") for e in data[key]]
+    return [e[0] for key in ("ports", "new_ports", "promoted_ports", "east_ports", "strait_promoted_ports", "strait_ports") for e in data[key]]
 
 
 def world(data, mask):
@@ -226,6 +230,8 @@ def world(data, mask):
         "enum PlaceId {\n    " + ", ".join(ids) + "\n};",
         f"inline constexpr int FirstNewPort = {data['new_ports'][0][0]};",
         f"inline constexpr int EastAsiaStart = {data['east_ports'][0][0]};",
+        f"inline constexpr int StraitStart = {data['strait_ports'][0][0]};",
+        f"inline constexpr int EastPortCount = {len(port_order)-len(data['strait_ports'])-len(data['strait_promoted_ports'])};",
         "inline constexpr int PortPlaces[]{" + ", ".join(port_order) + "};",
         "inline constexpr int Villages[]{" + ", ".join(e[0] for e in data["villages"]) + "};",
         "inline constexpr Location Places[] = {\n" + "\n".join(locations) + "\n};",

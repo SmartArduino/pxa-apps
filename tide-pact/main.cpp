@@ -107,7 +107,7 @@ enum Action {
     ToggleSpecialties, ShowSpecialty, OpenLandBriefing, StartRoadEscort, DefendEnclave,
     LandBrace, LandEndRound, LandRetreat, OpenFieldSurvey, WaitLandWeather, OpenWorldCatalog, OpenWorldStudy,
     LandWorldTrail, FieldObserve, FieldStalk, FieldShoot, ShoreFood, ShoreWater,
-    ShowHarborBoat, RouteFilter, FieldPlate=RouteFilter+5, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
+    ShowHarborBoat, InspectDispatchStop, SealDispatchStop, RouteFilter, FieldPlate=RouteFilter+5, WorldStudyEntry=FieldPlate+3, LandCellAction=WorldStudyEntry+FieldStudyCount,
     PilotSiteEntry=LandCellAction+LandCells
 };
 enum DispatchPage { DispatchList=-1, DispatchReceipt=-2, DispatchConfirmCancel=-3 };
@@ -3029,7 +3029,8 @@ struct VoyageApp {
         skin_box(d,body,0,6);
         const bool freight=s.dispatch.number || s.dispatch.last;
         d.label(body.x+5,body.y+3,format("声望%d 信任%d 测绘%d/%d",s.renown,s.trust,
-                std::max(0,s.charts-(s.surveyed&(place_bit(quanzhou)|place_bit(hakata))).count()),
+                std::max(0,s.charts-(s.surveyed&
+                    (place_bit(quanzhou)|place_bit(hakata)|place_bit(malacca)|place_bit(naha))).count()),
                 PlaceCount-PortCount),gold,body.w-(freight?122:67));
         button(d,{body.right()-57,body.y+2,53,20},"设置",ShowAudio,false,false,{},SettingsIcon);
         if (freight)
@@ -3424,7 +3425,10 @@ struct VoyageApp {
         if (modal==WorldStudy) return WorldFieldPictureBase+3*field_item+field_plate;
         if (modal==WorldTrail) return WorldGroundPictureBase+FieldStudies[field_item].ground;
         if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
-        if (modal==PortStoryPage) return harbor_street_picture(PortStories[port_story_id].port);
+        if (modal==PortStoryPage) {
+            if (port_story_id>=WetPorcelain) return PortStoryPictureBase+port_story_id-WetPorcelain;
+            return harbor_street_picture(PortStories[port_story_id].port);
+        }
         if (modal==PortDesk && guild_illustration_width()) return guild_picture(game.s.origin);
         if (screen==Office && modal==None && game.port() && !game.s.land_fight.kind)
             return harbor_picture(game.s.origin);
@@ -3689,16 +3693,11 @@ struct VoyageApp {
         const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
         constexpr int scene_w=288, scene_h=136;
         if (outside) d.image({art::outskirts},{0,0,scene_w,scene_h},view);
-        else if (const int picture=harbor_street_picture(Towns[city].port); picture!=Calm) {
-            if (const auto* bytes=sea_picture.pixels(picture)) {
-                const Image image{bytes};
-                d.image(image,{0,0,image.width(),image.height()},view);
-            } else if (picture==LisbonStreetPicture)
-                d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
-            else d.fill(view,ocean);
-        }
         else if (Towns[city].port==calicut) d.image({art::calicut},{0,0,scene_w,scene_h},view);
-        else d.image({art::towns},{0,city*scene_h,scene_w,scene_h},view);
+        else if (const auto* bytes=sea_picture.pixels(harbor_street_picture(Towns[city].port))) {
+            const Image image{bytes};
+            d.image(image,{0,0,image.width(),image.height()},view);
+        } else d.fill(view,ocean);
         d.frame(view,rgb(0x342921));
         return view;
     }
@@ -4627,15 +4626,18 @@ struct VoyageApp {
             if (!record.last) { dispatch_page=DispatchList; }
             else {
                 const auto& order=DispatchOrders[record.last-1];
-                constexpr Text outcomes[]{"","按期交付","逾期交付","已退回运单","航程中断"};
+                constexpr Text outcomes[]{"","按期交付","逾期交付","已退回运单","航程中断","按期交付 · 验货赏金入账"};
                 page_title(d,"最近运单",LetterIcon);
                 d.label(x,y+34,order.title,gold,width);
                 d.label(x,y+54,outcomes[record.outcome],ivory,width);
                 const auto& rate=DispatchRates[order.kind];
-                if (record.outcome==DispatchOnTime || record.outcome==DispatchLate) {
+                if (record.outcome==DispatchOnTime || record.outcome==DispatchLate ||
+                    record.outcome==DispatchInspectedOnTime) {
                     const auto fee=game.dispatch_quote(record.last-1).fee;
-                    d.label(x,y+74,format("运费 %d金 · 退回押金 %d金",
-                            record.outcome==DispatchOnTime?fee:fee/2,rate.bond),mint,width);
+                    const int bonus=record.outcome==DispatchInspectedOnTime?DispatchInspectionBonus:0;
+                    d.label(x,y+74,format("入账%d金 · 已含退押金",
+                            rate.bond+(record.outcome==DispatchLate?fee/2:fee)+bonus),mint,width);
+                    d.wrap({x,y+94,width,bottom.y-y-98},order.delivery,ivory,14);
                 } else d.label(x,y+74,format("扣除押金 %d金",rate.bond),vermilion,width);
                 button(d,bottom,"返回运单簿",Close);
                 return;
@@ -4660,9 +4662,29 @@ struct VoyageApp {
         const auto& order=DispatchOrders[id];
         const auto& rate=DispatchRates[order.kind];
         page_title(d,order.title,LetterIcon);
-        if (active>=0 && record.last)
-            button(d,{body.right()-103,y+3,49,23},"回执",ViewDispatchReceipt);
+        const bool at_stop=game.dispatch_stop_pending();
+        if (at_stop)
+            button(d,{body.right()-103,y+3,49,23},"退单",AskCancelDispatch);
+        if (active>=0 && record.last && (!at_stop || body.w>=255))
+            button(d,{body.right()-(at_stop?157:103),y+3,49,23},"回执",ViewDispatchReceipt);
         const auto known=[&](int p) { return game.charted(p)?Places[p].name.data():"未定位"; };
+        const bool overdue=active>=0 && game.s.day>record.due;
+        if (at_stop) {
+            d.label(x,y+30,format("%s 中转 · 送往%s",known(order.stop),known(order.to)),gold,width);
+            const auto eta=game.forecast(passage(order.stop,order.to));
+            d.label(x,y+48,format("余期%d日 · 后程约%d日 · 按期验货赏%d金",
+                    std::max(0,record.due-game.s.day),eta.days,DispatchInspectionBonus),
+                    overdue?vermilion:mint,width);
+            d.wrap({x,y+68,width,bottom.y-y-76},order.waypoint,ivory,14);
+            const int half=(width-5)/2;
+            const Rect actions{bottom.x,bottom.y-4,width,bottom.h+4};
+            button(d,{actions.x,actions.y,half,actions.h},"验货重封",InspectDispatchStop,true,
+                   game.s.gold<DispatchInspectionCost || game.s.day==99999,
+                   format("%d金 · 耗1日",DispatchInspectionCost),CargoIcon);
+            button(d,{actions.x+half+5,actions.y,width-half-5,actions.h},"保留原封",SealDispatchStop,
+                   false,false,"当天可走",LetterIcon);
+            return;
+        }
         d.image({art::dispatch_icons},{int(order.kind)*32,0,32,32},{x,y+27,27,27},true);
         d.label(x+32,y+30,format("%s · 送往%s",rate.name.data(),known(order.to)),gold,width-32);
         if (active<0) {
@@ -4678,7 +4700,6 @@ struct VoyageApp {
             button(d,bottom,"交押金接单",AcceptDispatch,true,!requirement.empty());
             return;
         }
-        const bool overdue=game.s.day>record.due;
         d.label(x+32,y+47,format("限第%d日 · 占舱%d",record.due+1,rate.space),
                 overdue?vermilion:mist,width-32);
         const int next=game.dispatch_target();
@@ -4686,12 +4707,17 @@ struct VoyageApp {
         const auto quote=game.dispatch_quote(id);
         if (next!=order.to)
             d.label(x,y+66,format("先在%s靠港",known(next)),gold,width);
+        else if (record.stopped==DispatchInspected)
+            d.label(x,y+66,"已验货重封",mint,width);
+        else if (record.stopped==DispatchSealed)
+            d.label(x,y+66,"已保留原封",mint,width);
         else if (order.stop>=0)
             d.label(x,y+66,format("已在%s停靠",known(order.stop)),mint,width);
         else if (overdue) d.label(x,y+66,format("已逾期%d日",game.s.day-record.due),vermilion,width);
         else d.label(x,y+66,format("余%d日",record.due-game.s.day),mint,width);
         d.label(x,y+84,format("%s%d金 · 退押金%d金",overdue?"逾期运费":"运费",
-                overdue?quote.fee/2:quote.fee,rate.bond),overdue?vermilion:ivory,width);
+                overdue?quote.fee/2:quote.fee+(record.stopped==DispatchInspected?DispatchInspectionBonus:0),
+                rate.bond),overdue?vermilion:ivory,width);
         if (game.port()) {
             const int half=(width-5)/2;
             button(d,{bottom.x,bottom.y,half,bottom.h},ready?"交付运单":"标记下一港",
@@ -4936,7 +4962,61 @@ struct VoyageApp {
         }
         pager(d,pages);
     }
+    void strait_story_page(Draw& d) {
+        const auto& story=PortStories[port_story_id];
+        const auto stage=game.port_story_stage(port_story_id);
+        const bool finished=stage>=PortStoryFirst;
+        const bool local=game.port() && game.s.origin==story.port;
+        const bool active=stage==PortStoryFirst && game.dispatch_order()==story.dispatch;
+        const bool translation=local && !finished &&
+                               game.port_story_requirement(port_story_id,0)=="需要口译";
+        const bool actions=active || (!finished && !game.sea());
+        const Text copy=translation?"货主指了指海图上的两处港口。请位口译来听清托付。":
+                        finished?story.endings[stage-PortStoryFirst]:story.opening;
+        constexpr Color ink=rgb(0x312117), note=rgb(0x795022);
+        const auto frame=d.clip.inset(2);
+        if (const auto* pixels=sea_picture.pixels(PortStoryPictureBase+port_story_id-WetPorcelain))
+            d.cover({pixels},frame);
+        else d.fill(frame,ocean);
+        harbor_panel(d,frame,HarborTrim);
+        harbor_button(d,{safe.right()-51,safe.y+1,51,24},"返回",Close);
+        const int inset=safe.w>=345?9:4;
+        const int x=safe.x+inset, width=safe.w-2*inset;
+        const Rect buttons{x,safe.bottom()-33,width,32};
+        const int end=actions?buttons.y-4:safe.bottom()-2;
+        const int text_w=width-20;
+        const int text_h=d.wrap({0,0,text_w,512},copy,ink,15,false);
+        const int y=std::max(safe.y+30,end-text_h-34);
+        harbor_panel(d,{x,y,width,end-y},HarborPaper);
+        voyage_icon(d,LetterIcon,{x+9,y+9,14,14});
+        const int title_w=std::min(d.measure(story.title)+6,text_w-20);
+        d.label(x+28,y+8,story.title,ink,title_w);
+        d.label(x+33+title_w,y+8,story.person,note,text_w-title_w-26);
+        d.wrap({x+10,y+27,text_w,end-y-30},copy,ink,15);
+
+        if (active) {
+            harbor_button(d,buttons,"查看运单",OpenDispatch,true,false,{},LetterIcon);
+        } else if (!finished && !game.sea()) {
+            if (!local) {
+                harbor_button(d,buttons,format("标记%s",Places[story.port].name.data()),
+                              Destination+story.port,true,false,{},SeaChartIcon);
+            } else if (translation) {
+                harbor_button(d,buttons,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
+                              game.s.gold<Game::InterpreterFee,{},SpeechIcon);
+            } else {
+                const int half=(width-5)/2;
+                for (int choice=0;choice<2;++choice) {
+                    const auto requirement=game.port_story_requirement(port_story_id,choice);
+                    const Rect area{x+choice*(half+5),buttons.y,choice?width-half-5:half,buttons.h};
+                    harbor_button(d,area,story.choices[choice],PortStoryChooseFirst+choice,choice==0,
+                                  !requirement.empty(),requirement.empty()?story.effects[choice]:requirement,
+                                  choice==0?LetterIcon:CrewIcon);
+                }
+            }
+        }
+    }
     void port_story_page(Draw& d) {
+        if (port_story_id>=WetPorcelain) { strait_story_page(d); return; }
         const auto& story=PortStories[port_story_id];
         const auto stage=game.port_story_stage(port_story_id);
         const bool finished=stage>=PortStoryFirst;
@@ -4997,7 +5077,7 @@ struct VoyageApp {
             harbor_button(d,options,format("请口译 %d金",Game::InterpreterFee),HireInterpreter,true,
                           game.s.gold<Game::InterpreterFee,{},SpeechIcon);
         } else if (!finished) {
-            constexpr int choice_icons[PortStoryCount][2]{{RepairIcon,CrewIcon},{CargoIcon,SpeechIcon},
+            constexpr int choice_icons[WetPorcelain][2]{{RepairIcon,CrewIcon},{CargoIcon,SpeechIcon},
                                                         {SeaChartIcon,AstrolabeIcon},{LetterIcon,PennantIcon}};
             const int half=(options.w-5)/2;
             for (int choice=0;choice<2;++choice) {
@@ -6260,6 +6340,12 @@ struct VoyageApp {
                 dispatch_back=modal;
                 dispatch_page=DispatchList;
                 set_modal(DispatchBoard);
+                break;
+            case InspectDispatchStop: case SealDispatchStop:
+                if (modal==DispatchBoard && game.choose_dispatch_stop(action==InspectDispatchStop)) {
+                    audio.cue(Sound::Page);
+                    changed();
+                }
                 break;
             case ViewDispatchReceipt:
                 dispatch_page=DispatchReceipt;

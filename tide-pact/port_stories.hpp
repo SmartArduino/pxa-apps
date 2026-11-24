@@ -2,13 +2,14 @@
 
 namespace tide {
 
-enum PortStoryId { TideSkiff, LastSugar, TornChart, TwoLetters, PortStoryCount };
+enum PortStoryId { TideSkiff, LastSugar, TornChart, TwoLetters, WetPorcelain, TideCopy, SampleWeights, SpareMast, PortStoryCount };
 enum PortStoryStage : std::uint8_t { PortStoryUnknown, PortStoryMet, PortStoryFirst, PortStorySecond };
 struct PortStory {
     int port;
     Text title, person, invitation;
     Text opening;
     std::array<Text,2> choices, effects, endings;
+    int dispatch=-1;
 };
 
 inline constexpr PortStory PortStories[]{
@@ -36,8 +37,33 @@ inline constexpr PortStory PortStories[]{
      {"84金","声望+4 · 信任+2"},
      {"大商号封好信，当面付清八十四金。小船的船主收起空信封，打算直接去外港试试。",
       "三位小船主把名字写在你旁边。他们约好结伴出湾，到外港时也好替彼此说句话。"}},
+    {malacca,"潮湿的瓷箱","瓷商伊斯迈尔","找瓷商",
+     "伊斯迈尔撩起一角潮湿的草垫。他想托你经泉州把瓷送去那霸，也缺一块干布给留港的货换垫。",
+     {"接下瓷箱运单","留一件织锦"},
+     {"押45金 · 经泉州","织锦-1 · 信任+2"},
+     {"他把箱号写进运单，托你在泉州看一眼草垫。","你留下干布。伊斯迈尔换好垫子，把箱子移到仓屋的高处。"},FirstStoryDispatch},
+    {naha,"迟来的潮表","船商阿真","找船商",
+     "一页潮表被海水溅湿了。阿真想寄给宁波的接货人，或留在港里，请你帮她另抄一份。",
+     {"送潮表去宁波","留下帮忙抄"},
+     {"押18金 · 经泉州","耗一日 · 声望+3"},
+     {"阿真把抄件装进布套，嘱你在泉州看看还有没有字洇开。","你们对着旧表抄了一天。日落前，阿真把清楚的一份借给了候潮的船工。"},FirstStoryDispatch+1},
+    {ningbo,"两边一样重","管货的徐禾","找管货人",
+     "徐禾在两本账上看见了不同的斤数。他想请你经博多送一套样秤去堺，或先给码头留一笔校秤钱。",
+     {"接下样秤运单","付钱校秤"},
+     {"押45金 · 经博多","付18金 · 信任+2"},
+     {"徐禾把秤装进箱，让你在博多对过秤再往东走。","你付了工钱，徐禾当着几条船的管事重新校秤。原先争吵的人也来帮着举秤杆。"},FirstStoryDispatch+2},
+    {sakai,"渡海的桅木","船匠弥兵卫","找船匠",
+     "弥兵卫挑出几根直木，要送给釜山浦的船工。他还缺一件木料，可以先修好本港的小艇。",
+     {"接下桅木运单","给一件木料"},
+     {"押45金 · 经博多","木料-1 · 声望+3"},
+     {"弥兵卫在绳结上系了布条。他说，到了博多，看看桅木有没有被绳勒出印。","你把木料留在棚里。弥兵卫锯下合用的一段，剩下的也给邻船修了条护舷。"},FirstStoryDispatch+3},
 };
-static_assert(std::size(PortStories)==PortStoryCount && PortStoryCount==4);
+static_assert(std::size(PortStories)==PortStoryCount && PortStoryCount*2<=16);
+static_assert(DispatchCount-FirstStoryDispatch==PortStoryCount-WetPorcelain);
+
+inline constexpr int story_for_dispatch(int id) {
+    return id>=FirstStoryDispatch && id<DispatchCount?WetPorcelain+id-FirstStoryDispatch:-1;
+}
 
 inline int port_story_at(int port) {
     for (int i=0;i<PortStoryCount;++i)

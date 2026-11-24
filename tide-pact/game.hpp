@@ -108,6 +108,10 @@ inline constexpr MarketNotice MarketNotices[]{
     {hakata,Timber,41,10,20,-7,"湾内商船换桅"},
     {kochi,Pepper,57,13,-18,12,"回水船带来新晒的椒"},
     {busanpo,Cloth,7,12,22,-8,"市棚收布备渡海"},
+    {malacca,Pepper,22,12,19,-8,"远洋客商来港收椒"},
+    {naha,Cloth,34,10,-15,11,"南洋船送来织物"},
+    {ningbo,Porcelain,50,11,-18,12,"瓷船卸货入仓"},
+    {sakai,Timber,64,10,21,-9,"工棚收料换桅"},
 };
 const MarketNotice* market_notice(int port, int good, int day);
 
@@ -341,7 +345,7 @@ struct State {
     std::uint8_t bargain_good=0, bargain_rate=0;
     std::uint8_t bargain_warnings=0, timber_trail=TrailUnknown, land_stage=LandUnvisited;
     std::uint8_t drift_stage=DriftUnheard;
-    std::uint8_t port_stories=0;
+    std::uint16_t port_stories=0;
     bool road_delivery=false;
     std::array<std::uint8_t,std::size(RegionalSurveys)> inland_stages{};
     std::uint8_t nature_records=0;
@@ -374,8 +378,9 @@ inline constexpr std::size_t FirstSurveySaveBytes=CargoSaveBytes+LegacyPilotRegi
 inline constexpr std::size_t PreviousWorldSaveBytes=CargoSaveBytes+WorldPilotIndex*PilotSurveyRows*sizeof(std::uint32_t);
 inline constexpr std::size_t FieldSaveBytes=PreviousWorldSaveBytes+OuterChartBytes+3*sizeof(std::uint32_t);
 inline constexpr std::size_t PortSaveBytes=FieldSaveBytes+(PreviousPortCount-BasePortCount)*GoodsCount;
-inline constexpr std::size_t SaveBytes=PortSaveBytes+(PortCount-PreviousPortCount)*GoodsCount+
+inline constexpr std::size_t EastSaveBytes=PortSaveBytes+(EastPortCount-PreviousPortCount)*GoodsCount+
                                        3*sizeof(std::uint64_t)+2*sizeof(std::uint32_t);
+inline constexpr std::size_t SaveBytes=EastSaveBytes+(PortCount-EastPortCount)*GoodsCount+1;
 std::array<std::byte, SaveBytes> encode(const State& state);
 bool decode(State& state, std::span<const std::byte> bytes);
 
@@ -524,6 +529,8 @@ struct Game {
     Text dispatch_requirement(int id) const;
     bool accept_dispatch(int id);
     bool deliver_dispatch();
+    bool dispatch_stop_pending() const;
+    bool choose_dispatch_stop(bool inspect);
     bool cancel_dispatch();
     void survey();
     void learn_ocean_routes();
@@ -659,6 +666,7 @@ struct Game {
     bool hear_rumor(int id);
     PortStoryStage port_story_stage(int id) const;
     bool meet_port_story(int id);
+    bool port_story_needs_interpreter(int id) const;
     Text port_story_requirement(int id, int choice) const;
     bool resolve_port_story(int id, int choice);
 private:

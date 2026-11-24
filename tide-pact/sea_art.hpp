@@ -11,6 +11,8 @@ inline constexpr int SeaPictureWidth=576, SeaPictureHeight=272;
 inline constexpr int FisheryPicture=101, MachicoPicture=102, VilaFrancaPicture=103;
 inline constexpr int HelmIconSize=22, PilotPictureBase=120;
 inline constexpr int HarborPictureBase=160, WorldFieldPictureBase=200, WorldGroundPictureBase=240;
+inline constexpr int PortStoryPictureBase=260;
+inline constexpr int MadeiraStreetPicture=270, CanariesStreetPicture=271, CadizStreetPicture=272;
 inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture=HarborPictureBase+9;
 inline constexpr int LisbonStreetPicture=HarborPictureBase+10;
 inline constexpr int LisbonGuildPicture=HarborPictureBase+11, CalicutGuildPicture=HarborPictureBase+12;
@@ -35,6 +37,9 @@ inline int harbor_picture(int port) {
 inline int harbor_street_picture(int port) {
     switch (port) {
     case lisbon: return LisbonStreetPicture;
+    case madeira: return MadeiraStreetPicture;
+    case canaries: return CanariesStreetPicture;
+    case cadiz: return CadizStreetPicture;
     case venice: return VeniceStreetPicture;
     case kilwa: return KilwaStreetPicture;
     default: return new_harbor_picture(port);
@@ -70,10 +75,21 @@ inline Text sea_picture_path(int kind) {
         "assets/ports/ragusa-streets.pxi","assets/ports/candia-streets.pxi",
         "assets/ports/diu-streets.pxi","assets/ports/gresik-streets.pxi",
         "assets/ports/quanzhou-streets.pxi","assets/ports/hakata-streets.pxi",
-        "assets/ports/kochi-streets.pxi","assets/ports/busanpo-streets.pxi"};
+        "assets/ports/kochi-streets.pxi","assets/ports/busanpo-streets.pxi",
+        "assets/ports/malacca-streets.pxi","assets/ports/naha-streets.pxi",
+        "assets/ports/ningbo-streets.pxi","assets/ports/sakai-streets.pxi"};
+    static_assert(std::size(ports)==NewHarborPictureBase-HarborPictureBase+PortCount-BasePortCount);
+    constexpr Text stories[]{"assets/ports/malacca-story.pxi","assets/ports/naha-story.pxi",
+                             "assets/ports/ningbo-story.pxi","assets/ports/sakai-story.pxi"};
+    static_assert(std::size(stories)==PortStoryCount-WetPorcelain);
+    if (kind>=PortStoryPictureBase && kind<PortStoryPictureBase+int(std::size(stories)))
+        return stories[kind-PortStoryPictureBase];
     if (kind>=HarborPictureBase && kind<HarborPictureBase+int(std::size(ports)))
         return ports[kind-HarborPictureBase];
     switch (kind) {
+    case MadeiraStreetPicture: return "assets/ports/madeira-streets.pxi";
+    case CanariesStreetPicture: return "assets/ports/canaries-streets.pxi";
+    case CadizStreetPicture: return "assets/ports/cadiz-streets.pxi";
     case Castaways: return "assets/sea/castaways.pxi";
     case FalseBeacon: return "assets/sea/false-beacon.pxi";
     case Rigging: return "assets/sea/rigging.pxi";

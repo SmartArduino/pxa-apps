@@ -1871,7 +1871,7 @@ void port_dispatches() {
         const auto& order=DispatchOrders[i];
         Game game;
         game.s.origin=order.from;
-        assert(game.dispatch_board_here());
+        assert(game.dispatch_board_here()==(i<FirstStoryDispatch));
         assert(game.dispatch_quote(i).days>0 && game.dispatch_quote(i).fee>0);
     }
 
@@ -2158,10 +2158,65 @@ void east_asian_ports_and_records() {
     assert(passage(hakata,busanpo).count==2 && passage(hakata,busanpo).miles<125);
 }
 
+void strait_port_dispatches() {
+    constexpr int ports[]{malacca,naha,ningbo,sakai};
+    constexpr int trade_goods[]{Pepper,Cloth,Porcelain,Timber};
+    for (int index=0;index<4;++index) {
+        const int port=ports[index], story=WetPorcelain+index;
+        const int id=PortStories[story].dispatch;
+        const auto& order=DispatchOrders[id];
+        const auto& rate=DispatchRates[order.kind];
+        Game ship;
+        ship.s.origin=port;
+        ship.s.gold=10000;
+        ship.s.cargo[Cloth]=ship.s.cargo[Timber]=1;
+        assert(ship.port() && town_index(port)>=0 && ship.proposal_good()==trade_goods[index]);
+        assert(market_access(port,Wool)==MarketAccess::Closed);
+        assert(ship.invest() && ship.trade(trade_goods[index],false,2).units==2);
+        assert(!ship.dispatch_offer_here(id) && !ship.accept_dispatch(id));
+        assert(ship.meet_port_story(story) && ship.dispatch_offer_here(id));
+        assert(ship.charted(order.to) && ship.charted(order.stop));
+        assert(!ship.resolve_port_story(story,1) && !ship.accept_dispatch(id));
+        assert(ship.hire_interpreter());
+
+        Game helping=ship;
+        assert(helping.resolve_port_story(story,1) && helping.port_story_stage(story)==PortStorySecond);
+        assert(!helping.accept_dispatch(id) && !helping.resolve_port_story(story,1));
+        State saved;
+        assert(decode(saved,encode(helping.s)) && saved.port_stories==helping.s.port_stories &&
+               saved.stock_delta==helping.s.stock_delta && saved.guild_stakes==helping.s.guild_stakes);
+
+        assert(ship.resolve_port_story(story,0) && ship.dispatch_order()==id);
+        assert(ship.port_story_stage(story)==PortStoryFirst && ship.dispatch_space()==rate.space);
+        assert(!ship.choose_dispatch_stop(true));
+        sail_to(ship,order.stop);
+        assert(ship.dispatch_target()==order.stop && ship.dispatch_stop_pending());
+        assert(decode(saved,encode(ship.s)) && saved.dispatch.stopped==DispatchReachedStop);
+        const bool inspect=index!=1;
+        const int gold=ship.s.gold, day=ship.s.day;
+        assert(ship.choose_dispatch_stop(inspect) && !ship.choose_dispatch_stop(inspect));
+        assert(ship.s.gold==gold-(inspect?DispatchInspectionCost:0) && ship.s.day==day+(inspect?1:0));
+        assert(decode(saved,encode(ship.s)) && saved.dispatch.stopped==(inspect?DispatchInspected:DispatchSealed));
+        assert(ship.dispatch_target()==order.to);
+        ship.service(1);
+        sail_to(ship,order.to);
+        const int fee=ship.dispatch_quote(id).fee, arrival_gold=ship.s.gold;
+        const bool late=index==3;
+        ship.s.day=ship.s.dispatch.due+int(late);
+        assert(ship.deliver_dispatch() && !ship.deliver_dispatch());
+        const int bonus=inspect && !late?DispatchInspectionBonus:0;
+        assert(ship.s.gold==arrival_gold+rate.bond+(late?fee/2:fee)+bonus);
+        assert(ship.s.dispatch.outcome==(late?DispatchLate:inspect?DispatchInspectedOnTime:DispatchOnTime));
+        assert(decode(saved,encode(ship.s)) && saved.dispatch.outcome==ship.s.dispatch.outcome);
+        assert(!ship.dispatch_space());
+    }
+}
+
 int main() {
     world_routes_and_fieldwork();
     expanded_ports_trade_and_discovery();
     east_asian_ports_and_records();
+    strait_port_dispatches();
     for (int index=0;index<PortCount;++index) {
         const int port=port_place(index);
         Game game;

@@ -9,7 +9,8 @@
 namespace tide {
 
 enum TownFacility { TownMarket, TownShipyard, TownGuild, TownArchive, TownTavern, TownDock, TownFacilityCount };
-inline constexpr TownFacility PortStoryDoors[]{TownShipyard,TownMarket,TownTavern,TownGuild};
+inline constexpr TownFacility PortStoryDoors[]{TownShipyard,TownMarket,TownTavern,TownGuild,
+                                              TownMarket,TownGuild,TownGuild,TownShipyard};
 static_assert(std::size(PortStoryDoors)==PortStoryCount);
 inline constexpr Text TownNames[]{"市场","船坞","商会","档案室","酒馆","码头"};
 inline constexpr int TownExtent=1000;
@@ -41,6 +42,10 @@ inline constexpr TownLayout Towns[]{
     {hakata, 613, {{{253,569},{897,606},{589,571},{804,572},{101,574},{498,815}}}},
     {kochi, 590, {{{256,565},{926,587},{793,560},{650,565},{437,565},{501,796}}}},
     {busanpo, 598, {{{193,552},{898,580},{363,551},{602,550},{741,543},{500,797}}}},
+    {malacca, 612, {{{556,569},{863,557},{307,569},{421,568},{112,586},{486,775}}}},
+    {naha, 577, {{{130,553},{861,550},{631,532},{735,531},{353,538},{483,785}}}},
+    {ningbo, 597, {{{155,571},{348,553},{628,551},{779,566},{927,557},{502,769}}}},
+    {sakai, 602, {{{344,555},{136,563},{645,552},{739,551},{881,552},{508,767}}}},
 };
 
 struct LocalVessel {

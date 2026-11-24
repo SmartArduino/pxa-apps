@@ -7,14 +7,18 @@ inline constexpr int BasePortCount = 26;
 inline constexpr int PreviousPortCount = 30;
 
 enum PlaceId {
-    lisbon, bristol, bruges, bordeaux, cadiz, tangier, valencia, genoa, tunis, venice, alexandria, madeira, canaries, ribeira, elmina, mpinda, mozambique, kilwa, malindi, aden, bergen, vardo, muscat, hormuz, calicut, santo_domingo, gibraltar, azores, arguin, equator, benguela, cape, agulhas, madagascar, mandeb, newfoundland, greenland, iceland, orinoco, pernambuco, catarina, horn, shetlands, chiloe, tumbes, galapagos, ceylon, pasai, malacca, brunei, quanzhou, naha, hakata, makassar, timor, kimberley, ragusa, candia, diu, gresik, otranto, socotra, karimunjawa, kochi, busanpo, beypore, houzhu, tsushima, yeompo
+    lisbon, bristol, bruges, bordeaux, cadiz, tangier, valencia, genoa, tunis, venice, alexandria, madeira, canaries, ribeira, elmina, mpinda, mozambique, kilwa, malindi, aden, bergen, vardo, muscat, hormuz, calicut, santo_domingo, gibraltar, azores, arguin, equator, benguela, cape, agulhas, madagascar, mandeb, newfoundland, greenland, iceland, orinoco, pernambuco, catarina, horn, shetlands, chiloe, tumbes, galapagos, ceylon, pasai, malacca, brunei, quanzhou, naha, hakata, makassar, timor, kimberley, ragusa, candia, diu, gresik, otranto, socotra, karimunjawa, kochi, busanpo, beypore, houzhu, tsushima, yeompo, ningbo, sakai
 };
 
 inline constexpr int FirstNewPort = ragusa;
 
 inline constexpr int EastAsiaStart = kochi;
 
-inline constexpr int PortPlaces[]{lisbon, bristol, bruges, bordeaux, cadiz, tangier, valencia, genoa, tunis, venice, alexandria, madeira, canaries, ribeira, elmina, mpinda, mozambique, kilwa, malindi, aden, bergen, vardo, muscat, hormuz, calicut, santo_domingo, ragusa, candia, diu, gresik, quanzhou, hakata, kochi, busanpo};
+inline constexpr int StraitStart = ningbo;
+
+inline constexpr int EastPortCount = 34;
+
+inline constexpr int PortPlaces[]{lisbon, bristol, bruges, bordeaux, cadiz, tangier, valencia, genoa, tunis, venice, alexandria, madeira, canaries, ribeira, elmina, mpinda, mozambique, kilwa, malindi, aden, bergen, vardo, muscat, hormuz, calicut, santo_domingo, ragusa, candia, diu, gresik, quanzhou, hakata, kochi, busanpo, malacca, naha, ningbo, sakai};
 
 inline constexpr int Villages[]{beypore, houzhu, tsushima, yeompo};
 
@@ -67,10 +71,10 @@ inline constexpr Location Places[] = {
     {"加拉帕戈斯群岛", "测绘点", "赤道以西的火山群岛。浅湾可停船，岛上淡水稀少。", {243,678}, -9031, -75},
     {"锡兰·加勒", "测绘点", "印度洋岛屿南岸的旧泊地。往东可穿过孟加拉湾。", {1437,624}, 8022, 603},
     {"苏门答腊·巴赛", "测绘点", "苏门答腊北岸的海贸聚落。沿东北岸往东航行，逐渐进入马六甲海峡。", {1555,631}, 9718, 515},
-    {"马六甲", "测绘点", "海峡东岸的马六甲苏丹国都城。商船借潮水进河，沿岸仓屋之间有小船卸货。", {1591,654}, 10224, 219},
+    {"马六甲", "马六甲苏丹国·海峡东岸", "十五世纪的马六甲苏丹国都城。商船借季风会集，货由小船越过河口，再分到沿岸的仓屋。", {1591,654}, 10224, 219},
     {"文莱湾", "测绘点", "婆罗洲北岸的大湾。浅水河口和外海之间常有小船接驳。", {1680,633}, 11500, 493},
     {"泉州", "明朝·福建晋江口", "明代泉州仍有沿海货流。琉球贡使曾由此入境，私家出海与互市受海禁和查验约束。城外石桥、河道和旧码头通向泉州湾。", {1705,473}, 11864, 2489},
-    {"琉球·那霸", "测绘点", "琉球王国的海贸港。航线经附近浅礁，连通福建和日本诸港。", {1769,462}, 12766, 2621},
+    {"琉球·那霸", "琉球王国·冲绳岛", "琉球王国的海贸港。浮岛和近岸浅礁围出航道，船只来往明朝、日本和东南亚。", {1769,462}, 12766, 2621},
     {"博多", "室町日本·九州北岸", "室町时期的海贸港。来自日本各地的货船在湾里停泊，商人也经此参加往明朝的勘合贸易。", {1788,403}, 13041, 3361},
     {"苏拉威西西南岸", "测绘点", "苏拉威西的西南端近望马卡萨海峡。从这一侧南下可往小巽他群岛。", {1711,713}, 11940, -514},
     {"帝汶·古邦湾", "测绘点", "帝汶西端的宽湾。隔着帝汶海便是澳洲西北海岸。", {1740,753}, 12360, -1016},
@@ -88,13 +92,15 @@ inline constexpr Location Places[] = {
     {"后渚", "明朝·泉州湾", "泉州湾北岸的旧港。船能顺水到港外，但潮退后浅滩会露出来。", {1706,473}, 11868, 2488},
     {"对马·府中", "室町日本·对马岛", "今对马岛严原一带。宗氏居此，对马岛的船班往来九州和朝鲜，办理贸易还要带上文书。", {1780,398}, 12929, 3420},
     {"盐浦", "朝鲜王朝·蔚山湾", "今蔚山一带。盐浦在1426年获准接待来贸易的日本船，是朝鲜三浦之一。湾里还有渔户沿岸谋生。", {1781,388}, 12939, 3553},
+    {"宁波", "明朝·浙江甬江", "城在甬江内侧。外海船经招宝山附近的河口进出，朝贡与勘合贸易按明廷规制办理。", {1726,433}, 12155, 2988},
+    {"堺", "室町日本·大阪湾东岸", "海湾东岸的商港。十五世纪后半参与对明勘合贸易，货物也经陆路往大和和纪伊。", {1823,395}, 13547, 3459},
 };
 
 inline constexpr Point Anchor[] = {
-    {808,363}, {849,261}, {898,260}, {866,307}, {829,380}, {834,385}, {874,357}, {937,318}, {948,376}, {963,310}, {1084,421}, {757,412}, {768,446}, {710,554}, {866,633}, {960,721}, {1162,792}, {1153,744}, {1158,698}, {1191,571}, {907,186}, {1093,108}, {1286,482}, {1271,457}, {1404,582}, {386,525}, {836,384}, {696,371}, {757,507}, {783,672}, {951,856}, {1003,948}, {1015,952}, {1174,850}, {1180,573}, {502,282}, {515,118}, {715,159}, {446,593}, {632,737}, {537,893}, {405,1121}, {452,1175}, {354,1013}, {310,700}, {244,679}, {1437,625}, {1556,629}, {1590,656}, {1682,631}, {1707,474}, {1768,461}, {1786,402}, {1710,713}, {1734,755}, {1733,803}, {1001,332}, {1050,388}, {1372,508}, {1664,727}, {1009,351}, {1253,570}, {1647,719}, {1408,592}, {1780,391}, {1404,583}, {1708,474}, {1782,398}, {1782,388}
+    {808,363}, {849,261}, {898,260}, {866,307}, {829,380}, {834,385}, {874,357}, {937,318}, {948,376}, {963,310}, {1084,421}, {757,412}, {768,446}, {710,554}, {866,633}, {960,721}, {1162,792}, {1153,744}, {1158,698}, {1191,571}, {907,186}, {1093,108}, {1286,482}, {1271,457}, {1404,582}, {386,525}, {836,384}, {696,371}, {757,507}, {783,672}, {951,856}, {1003,948}, {1015,952}, {1174,850}, {1180,573}, {502,282}, {515,118}, {715,159}, {446,593}, {632,737}, {537,893}, {405,1121}, {452,1175}, {354,1013}, {310,700}, {244,679}, {1437,625}, {1556,629}, {1590,656}, {1682,631}, {1707,474}, {1768,461}, {1786,402}, {1710,713}, {1734,755}, {1733,803}, {1001,332}, {1050,388}, {1372,508}, {1664,727}, {1009,351}, {1253,570}, {1647,719}, {1408,592}, {1780,391}, {1404,583}, {1708,474}, {1782,398}, {1782,388}, {1727,431}, {1821,396}
 };
 
-inline constexpr int Zone[] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 3, 3, 3, 2, 1, 1, 3, 3, 3, 3, 3, 3};
+inline constexpr int Zone[] = {0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 2, 2, 2, 2, 3, 3, 3, 3, 0, 0, 3, 3, 3, 2, 1, 1, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3};
 
 inline constexpr int Bias[][8] = {
     {1, 2, 0, 0, -1, -1, -2, -2},
@@ -130,7 +136,11 @@ inline constexpr int Bias[][8] = {
     {-2, 0, 1, -2, 0, 0, -1, 2},
     {-2, -1, 0, -1, 1, 1, -1, -1},
     {-2, 0, 1, -2, 0, 0, 2, -1},
-    {-2, -2, 0, -2, 0, 2, -1, -1}
+    {-2, -2, 0, -2, 0, 2, -1, -1},
+    {-2, 1, 1, -2, -1, 1, 2, 1},
+    {-2, 1, 1, -2, 0, 1, 0, 1},
+    {-2, 0, 1, -2, 0, 0, -1, 2},
+    {-1, -2, 1, -1, 2, 0, -1, -1}
 };
 
 inline constexpr Point Waypoints[] = {
@@ -177,7 +187,11 @@ inline constexpr Point Waypoints[] = {
     {1614,682}, {1617,683}, {1633,693}, {1634,695}, {1633,698}, {1629,701}, {1637,716}, {1647,720},
     {1660,724}, {1664,727}, {1664,727}, {1652,721}, {1649,721}, {1647,719}, {1404,582}, {1404,583},
     {1404,583}, {1404,589}, {1408,592}, {1707,474}, {1708,474}, {1786,402}, {1782,398}, {1782,398},
-    {1782,395}, {1780,391}, {1780,391}, {1781,391}, {1782,388}
+    {1782,395}, {1780,391}, {1780,391}, {1781,391}, {1782,388}, {1707,474}, {1710,474}, {1716,468},
+    {1716,462}, {1719,459}, {1728,447}, {1732,435}, {1738,426}, {1732,423}, {1729,426}, {1726,426},
+    {1727,431}, {1786,402}, {1783,399}, {1774,408}, {1774,411}, {1777,414}, {1781,412}, {1781,418},
+    {1785,422}, {1782,425}, {1785,431}, {1791,431}, {1804,414}, {1819,404}, {1820,400}, {1820,397},
+    {1821,396}
 };
 
 inline constexpr Leg Legs[] = {
@@ -258,4 +272,6 @@ inline constexpr Leg Legs[] = {
     {52, 67, 341, 2, 41},
     {67, 64, 343, 3, 56},
     {64, 68, 346, 3, 31},
+    {50, 69, 349, 12, 596},
+    {52, 70, 361, 16, 778},
 };

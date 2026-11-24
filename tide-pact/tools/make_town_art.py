@@ -4,17 +4,21 @@ from pathlib import Path
 
 from PIL import Image
 
-from make_art import ASSETS, write_texture
+from make_art import ASSETS, texture_bytes, write_texture
 
 
 def build_maps(paths):
     width, height = 288, 136
     atlas = Image.new("RGB", (width, height * len(paths)))
-    for index, path in enumerate(paths):
-        scene = Image.open(path).convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
+    ports = ("lisbon", "madeira", "canaries", "cadiz")
+    for index, (port, path) in enumerate(zip(ports, paths, strict=True)):
+        with Image.open(path) as source:
+            scene = source.convert("RGB").resize((width, height), Image.Resampling.LANCZOS)
         atlas.paste(scene, (0, index * height))
+        if port != "lisbon":
+            target = ASSETS.parent / "assets" / "ports" / f"{port}-streets.pxi"
+            target.write_bytes(texture_bytes(scene))
     atlas.save(ASSETS / "towns.jpg", quality=91, optimize=True)
-    write_texture(atlas, "towns")
 
 
 def build_sprites(path, rows, size, name, feet=False):
