@@ -54,6 +54,9 @@ struct PrisonNews {
     constexpr explicit operator bool() const {return escaped || returned || enemiesFled || troopsReturned;}
 };
 enum class Offer {unavailable, refused, joined};
+enum class DispatchBlock {
+    none, noRoute, theaterClosed, orders, leader, columns, reserve, destinationCapacity, target, blockade, grain
+};
 enum FindKind { noFind, moneyFound, grainFound, gearFound, loreFound, talentFound };
 struct SearchOdds {
     int talent=0, localItem=0, equipment=0, money=0, grain=0;
@@ -372,19 +375,23 @@ struct Campaign {
         return std::clamp(base+diplomacy()+(90-loyalty[p.side][p.officer])/2+
                           std::min(26,9*(turn-p.since)),12,95);
     }
+    static constexpr int admitCost=220, refusedAdmitCost=55, captiveRansom=110;
+    static constexpr int releaseGeneralApproval=12, maxEnlist=180;
+    static int enlistGrain(int count) {return (count+1)/2;}
+    int releaseTroopsApproval(int city) const {return std::min(15,4+cities[city].prisoners/25);}
     bool mayAdmit(int index) const {
         const auto& p=prisoners[index];
-        return p && p.offered!=turn && freeGuest()>=0 && gold>=220;
+        return p && p.offered!=turn && freeGuest()>=0 && gold>=admitCost;
     }
     Offer admit(int index) {
         if (!mayAdmit(index)) return Offer::unavailable;
         auto& p=prisoners[index];
         p.offered=turn;
         if (roll(p.side*officerCount+p.officer,1)>=admitChance(index)) {
-            gold-=55;
+            gold-=refusedAdmitCost;
             return Offer::refused;
         }
-        gold-=220;
+        gold-=admitCost;
         guests[freeGuest()]={p.side,p.officer,-1};
         p={};
         return Offer::joined;
@@ -395,8 +402,8 @@ struct Campaign {
     bool disposeCaptive(int index,bool ransom) {
         auto& p=prisoners[index];
         if (!p || (ransom && !mayRansom(index))) return false;
-        if (ransom) gold=std::min(9999,gold+110);
-        else cities[p.city].order=std::min(100,cities[p.city].order+12);
+        if (ransom) gold=std::min(9999,gold+captiveRansom);
+        else cities[p.city].order=std::min(100,cities[p.city].order+releaseGeneralApproval);
         p={};
         return true;
     }
@@ -454,14 +461,14 @@ struct Campaign {
     int enlistCapacity(int city) const {
         if (!actions || !own(city)) return 0;
         const auto& camp=cities[city];
-        return std::min({camp.prisoners,std::max(0,armyLimit-camp.troops),180,2*grain});
+        return std::min({camp.prisoners,std::max(0,armyLimit-camp.troops),maxEnlist,2*grain});
     }
     bool enlistPrisoners(int city) {
         const int count=enlistCapacity(city);
         if (!count) return false;
         auto& camp=cities[city];
         --actions;
-        grain-=(count+1)/2;
+        grain-=enlistGrain(count);
         camp.prisoners-=count;
         camp.troops+=count;
         return true;
@@ -469,7 +476,7 @@ struct Campaign {
     bool releasePrisoners(int city) {
         if (!own(city) || !cities[city].prisoners) return false;
         auto& camp=cities[city];
-        camp.order=std::min(100,camp.order+std::min(15,4+camp.prisoners/25));
+        camp.order=std::min(100,camp.order+releaseTroopsApproval(city));
         camp.prisoners=0;
         return true;
     }
@@ -791,14 +798,21 @@ struct Campaign {
         for (int i=0;i<columnCount;++i) if (!columns[i]) return i;
         return -1;
     }
-    bool canSend(const MarchRoute& route,DispatchSize size,int lead,bool blockade=false) const {
-        if (!route || won || defense || !actions || !available(lead) || freeColumn()<0)
-            return false;
+    DispatchBlock dispatchBlock(const MarchRoute& route,DispatchSize size,int lead,bool blockade=false) const {
+        if (!route) return DispatchBlock::noRoute;
+        if (won || defense) return DispatchBlock::theaterClosed;
+        if (!actions) return DispatchBlock::orders;
+        if (!available(lead)) return DispatchBlock::leader;
+        if (freeColumn()<0) return DispatchBlock::columns;
         const auto [from,to]=route.endpoints();
-        if (dispatchTo(from,to,size)<180) return false;
-        for (const auto& unit:columns) if (unit && unit.road.to==to) return false;
-        if (own(to) && blockade) return false;
-        return grain>=supplyCost(route,size,lead,blockade);
+        if (dispatch(from,size)<180) return DispatchBlock::reserve;
+        if (own(to) && armyLimit-cities[to].troops<180) return DispatchBlock::destinationCapacity;
+        for (const auto& unit:columns) if (unit && unit.road.to==to) return DispatchBlock::target;
+        if (own(to) && blockade) return DispatchBlock::blockade;
+        return grain<supplyCost(route,size,lead,blockade)?DispatchBlock::grain:DispatchBlock::none;
+    }
+    bool canSend(const MarchRoute& route,DispatchSize size,int lead,bool blockade=false) const {
+        return dispatchBlock(route,size,lead,blockade)==DispatchBlock::none;
     }
     bool canSend(int from,int to,DispatchSize size,int lead,bool blockade=false) const {
         return canSend(marchRoute(from,to),size,lead,blockade);

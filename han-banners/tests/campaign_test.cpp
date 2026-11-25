@@ -1,4 +1,5 @@
 #include "battle.hpp"
+#include "route_geometry.hpp"
 #include "save.hpp"
 #include <string_view>
 #include <cassert>
@@ -394,13 +395,21 @@ static void checkAlliedTransit() {
     const int base=campaign.marchCost(campaign.dispatch(xiakou,vanguard));
     assert(cost==base+base/2);
     campaign.grain=cost-1;
+    assert(campaign.dispatchBlock(route,vanguard,0)==DispatchBlock::grain);
     assert(!campaign.canSend(xiakou,hefei,vanguard,0));
+    const auto before=encode(campaign);
+    assert(campaign.send(xiakou,hefei,vanguard,0,false)<0 && encode(campaign)==before);
     campaign.grain=food;
 
     auto transfer=campaign;
     transfer.cities[hefei].owner=transfer.player;
-    assert(!transfer.canSend(xiakou,hefei,vanguard,0,true));
+    const auto friendlyRoute=transfer.marchRoute(xiakou,hefei);
     const int atDestination=transfer.cities[hefei].troops;
+    transfer.cities[hefei].troops=armyLimit-40;
+    assert(transfer.dispatchBlock(friendlyRoute,vanguard,0)==DispatchBlock::destinationCapacity);
+    transfer.cities[hefei].troops=atDestination;
+    assert(transfer.dispatchBlock(friendlyRoute,vanguard,0,true)==DispatchBlock::blockade);
+    assert(!transfer.canSend(xiakou,hefei,vanguard,0,true));
     const int reinforcements=transfer.dispatch(xiakou,vanguard);
     const int moving=transfer.send(xiakou,hefei,vanguard,0,false);
     assert(moving>=0 && !transfer.canSend(xiakou,hefei,vanguard,1,false));
@@ -1504,8 +1513,48 @@ static void checkHistoricalExpansion() {
     checkSave(c);
 }
 
+static void checkRoundedRoads() {
+    std::array<MapPoint,roadPointCapacity()> points;
+    std::array<float,roadPointCapacity()> distance;
+    for (int year:{208,212}) for (const auto& road:roads) {
+        const auto count=roundedRoad(road,year,points);
+        assert(count>=2 && points[0]==cityMapPoint(road.from,year) &&
+               points[count-1]==cityMapPoint(road.to,year));
+        std::array<MapPoint,roadBends+2> raw;
+        size_t rawCount=0;
+        raw[rawCount++]=cityMapPoint(road.from,year);
+        for (const auto& p:road.bends) {
+            if (!p.lon) break;
+            raw[rawCount++]={worldX(p.lon),worldY(p.lat)};
+        }
+        raw[rawCount++]=cityMapPoint(road.to,year);
+        distance[0]=0;
+        for (size_t i=1;i<count;++i) {
+            const auto [x,y]=points[i];
+            distance[i]=distance[i-1]+std::hypot(x-points[i-1].first,y-points[i-1].second);
+            assert(distance[i]>distance[i-1]);
+            float nearest=1000;
+            for (size_t j=1;j<rawCount;++j) {
+                const auto [a,b]=raw[j-1];
+                const float dx=raw[j].first-a,dy=raw[j].second-b;
+                const float length=dx*dx+dy*dy;
+                const float t=length>0?std::clamp(((x-a)*dx+(y-b)*dy)/length,0.f,1.f):0;
+                nearest=std::min(nearest,std::hypot(x-a-t*dx,y-b-t*dy));
+            }
+            assert(nearest<1.2f);
+        }
+        const auto path=std::span(points).first(count);
+        const auto lengths=std::span(distance).first(count);
+        assert(roadPosition(path,lengths,0)==path.front());
+        assert(roadPosition(path,lengths,1)==path.back());
+        const auto [x,y]=roadPosition(path,lengths,.51f);
+        assert(std::isfinite(x) && std::isfinite(y));
+    }
+}
+
 int main() {
     checkMigration();
+    checkRoundedRoads();
     checkHistoricalExpansion();
     checkSearchAndTalents();
     checkSeasonAndRegionalGoals();

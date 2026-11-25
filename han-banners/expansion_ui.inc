@@ -221,23 +221,29 @@
         std::snprintf(period,sizeof period,"%d年 · %s",start.year,start.name);
         fillBackground(f,art::warHall);
         header(f,"城池志",location);
-        skinFrame(f,{10,41,364,81});
-        text(f,"古城地望",23,49,13,gold);
-        boxText(f,place.anchor,{23,62,337,20},16);
-        bookText(f,place.context,{23,83,337,35},dim);
+        const int extra=pageExtra();
+        const int first=extra/2,second=extra-first;
+        const int bodySize=extra?17:14;
+        skinFrame(f,{10,41,364,81+first});
+        text(f,"古城地望",23,49+first/9,13,gold);
+        boxText(f,place.anchor,{23,62+first/5,337,20},extra?18:16);
+        bookText(f,place.context,{23,83+first/3,337,35+2*first/3},dim,bodySize);
 
-        skinFrame(f,{10,127,364,102});
-        boxText(f,"史载官员与守将",{23,132,158,20},13,gold);
-        boxText(f,period,{185,132,175,20},12,dim,2);
-        boxText(f,official?official->title:"开局时当地长吏未详",{23,151,337,20},16);
-        bookText(f,official?official->details:"城池内政处可查看和任免本局太守。",{23,172,337,35},dim);
-        if (official) boxText(f,official->source,{23,207,337,17},12,gold,2);
+        const auto lower=[&](Rect r) {return r.shiftY(first);};
+        skinFrame(f,lower({10,127,364,102+second}));
+        boxText(f,"史载官员与守将",lower({23,132+second/9,158,20}),13,gold);
+        boxText(f,period,lower({185,132+second/9,175,20}),12,dim,2);
+        boxText(f,official?official->title:"开局时当地长吏未详",lower({23,151+second/5,337,20}),extra?18:16);
+        bookText(f,official?official->details:"城池内政处可查看和任免本局太守。",
+                 lower({23,172+second/3,337,35+2*second/3}),dim,bodySize);
+        if (official) boxText(f,official->source,{23,207+extra,337,17},12,gold,2);
 
-        button(f,{10,235,91,24},"返回",Command::back);
+        const auto footer=[&](Rect r) {return r.shiftY(extra);};
+        button(f,footer({10,235,91,24}),"返回",Command::back);
         if (latestChronicle(campaign.year(),campaign.season(),gazetteerCity)>=0)
-            button(f,{109,235,77,24},"城中纪事",Command::chronicle,1);
-        button(f,{195,235,84,24},"上一城",Command::browseCity,-1);
-        button(f,{290,235,84,24},"下一城",Command::browseCity,1);
+            button(f,footer({109,235,77,24}),"城中纪事",Command::chronicle,1);
+        button(f,footer({195,235,84,24}),"上一城",Command::browseCity,-1);
+        button(f,footer({290,235,84,24}),"下一城",Command::browseCity,1);
     }
 
     int nearbyChronicle(int step) const {
@@ -253,52 +259,61 @@
         char line[88];
         std::snprintf(line,sizeof line,"%d年 %s",campaign.year(),seasons[campaign.season()]);
         header(f,chronicleFrom==Page::gazetteer?"城中纪事":"天下纪事",line);
-        skinFrame(f,{10,45,364,178});
+        const int extra=pageExtra();
+        const auto footer=[&](Rect r) {return r.shiftY(extra);};
+        skinFrame(f,{10,45,364,178+extra});
         if (chronicleCursor>=0) {
             const auto& entry=chronicle[chronicleCursor];
             std::snprintf(line,sizeof line,"%d年 %s · %s",entry.year,seasons[entry.season],
                           cityLabel(entry.city,entry.year,entry.season));
-            boxText(f,line,{25,49,334,24},13,mint);
-            boxText(f,entry.title,{25,74,334,29},21,gold);
-            bookText(f,entry.body,{25,107,332,53},ivory);
-            boxText(f,entry.source,{25,161,333,20},12,dim);
+            boxText(f,line,{25,49+extra/10,334,24},13,mint);
+            boxText(f,entry.title,{25,74+extra/6,334,29},extra?24:21,gold);
+            bookText(f,entry.body,{25,107+extra/4,332,53+3*extra/4},ivory,extra?19:14);
+            boxText(f,entry.source,footer({25,161,333,20}),12,dim);
             if (entry.deed.bit) {
                 const bool done=campaign.chronicleDeeds&entry.deed.bit;
                 const bool own=campaign.own(entry.city);
-                button(f,{25,187,130,26},done?"差事已办":entry.deed.label,
+                button(f,footer({25,187,130,26}),done?"差事已办":entry.deed.label,
                        Command::chronicleDeed,chronicleCursor,campaign.canDispatchDeed(chronicleCursor));
                 boxText(f,done?"":own?entry.deed.terms:"领有此城可办",
-                        {162,188,96,25},11,dim,1);
+                        footer({162,188,96,25}),11,dim,1);
             }
-            button(f,{263,187,95,26},"地图定位",Command::chronicleMap,entry.city);
+            button(f,footer({263,187,95,26}),"地图定位",Command::chronicleMap,entry.city);
         } else {
-            boxText(f,"本季暂无纪事",{26,88,332,31},19,gold,1);
-            boxText(f,"推进战役后，可在此阅读对应年代的故事。",{26,128,332,28},13,ivory,1);
+            boxText(f,"本季暂无纪事",{26,88+extra/2,332,31},19,gold,1);
+            boxText(f,"推进战役后，可在此阅读对应年代的故事。",{26,128+extra/2,332,28},13,ivory,1);
         }
-        button(f,{10,234,83,25},"返回",Command::back);
+        button(f,footer({10,234,83,25}),"返回",Command::back);
         const int previous=nearbyChronicle(-1),next=nearbyChronicle(1);
-        button(f,{172,234,96,25},"上一篇",Command::chronicleStep,previous,previous>=0);
-        button(f,{278,234,96,25},"下一篇",Command::chronicleStep,next,next>=0);
+        button(f,footer({172,234,96,25}),"上一篇",Command::chronicleStep,previous,previous>=0);
+        button(f,footer({278,234,96,25}),"下一篇",Command::chronicleStep,next,next>=0);
     }
 
     void drawCityDesk(pxa::game::Frame& f) {
         const auto& c=campaign.cities[selected];
         const int mayor=campaign.governor(selected);
-        fillBackground(f,art::cityCourtyard,.88f);
-        header(f,"城池内政",cityName(selected));
-        skinFrame(f,{10,43,172,84});
-        if (mayor>=0) portrait(f,campaign.leader(mayor).portrait,{19,50,34,34});
-        text(f,mayor>=0?campaign.leader(mayor).name:"本局未任太守",mayor>=0?61:20,52,15,gold);
+        const int extraWidth=illustrationWidthExtra();
+        const int footer=illustrationHeightExtra();
+        const auto body=[&](Rect r) {return cityContent(r);};
+        drawIllustratedBackdrop(f);
+        header(f,"城池内政",cityName(selected),extraWidth);
+        skinFrame(f,body({10,43,172,84}));
+        if (mayor>=0) {
+            const auto photo=body({19,50,34,34});
+            portrait(f,campaign.leader(mayor).portrait,{photo.x,photo.y,photo.w,photo.w});
+        }
+        const int nameX=mayor>=0?61:20;
+        boxText(f,mayor>=0?campaign.leader(mayor).name:"本局未任太守",body({nameX,51,171-nameX,19}),15,gold);
         char stats[60];
         std::snprintf(stats,sizeof stats,"守军 %d",c.troops);
-        text(f,stats,mayor>=0?61:20,72,13,ivory);
+        boxText(f,stats,body({nameX,71,171-nameX,17}),13,ivory);
         std::snprintf(stats,sizeof stats,"民心%d  城防%d",c.order,c.fort);
-        text(f,stats,20,89,12,ivory);
+        boxText(f,stats,body({20,88,151,17}),12,ivory);
         std::snprintf(stats,sizeof stats,"田产%d  市集%d",c.fields,c.market);
-        text(f,stats,20,106,12,ivory);
+        boxText(f,stats,body({20,105,151,17}),12,ivory);
 
-        skinFrame(f,{190,43,184,84});
-        boxText(f,"太守自治",{199,47,166,21},15,gold);
+        skinFrame(f,body({190,43,184,84}));
+        boxText(f,"太守自治",body({199,47,166,21}),15,gold);
         const auto delegated=campaign.stewardship(selected,mayor);
         if (mayor<0) std::snprintf(stats,sizeof stats,"%s",c.policy==CityPolicy::manual?"任命太守后可设置":"暂无太守 · 自治暂停");
         else if (c.policy==CityPolicy::livelihoods)
@@ -306,25 +321,25 @@
         else if (c.policy==CityPolicy::garrison)
             std::snprintf(stats,sizeof stats,"季末额外补兵%d",delegated.troops);
         else std::snprintf(stats,sizeof stats,"手动经营 · 自治免耗政令");
-        boxText(f,stats,{199,71,166,18},12,dim);
+        boxText(f,stats,body({199,71,166,18}),12,dim);
         for (int i=0;i<int(std::size(cityPolicies));++i)
-            button(f,{198+56*i,96,52,24},cityPolicies[i],Command::cityPolicy,i,
+            button(f,body({198+56*i,96,52,24}),cityPolicies[i],Command::cityPolicy,i,
                    mayor>=0 || i==int(CityPolicy::manual),i==int(c.policy));
 
         constexpr const char* choices[]={"征募","屯田","筑城","兴市","安民","寻访"};
         constexpr const char* price[]={"80金 50粮","95金","105金","125金","25金 65粮","人才物资"};
         constexpr UiIcon icons[]={recruitIcon,farmIcon,wallsIcon,marketIcon,pacifyIcon,surveyIcon};
         for (int i=0;i<6;++i) {
-            const Rect tileBox{10+122*(i%3),132+47*(i/3),118,43};
+            const Rect tileBox=body({10+122*(i%3),132+47*(i/3),118,43});
             const bool enabled=i==5 || campaign.canWork(selected,Work(i));
             const bool focused=registerControl(tileBox,i==5?Command::openSearch:Command::work,i,enabled);
             plaque(f,tileBox,enabled,focused);
             contain(f,art::commandIcons[icons[i]],{tileBox.x+7,tileBox.y+7,29,29},true);
-            boxText(f,choices[i],{tileBox.x+39,tileBox.y+3,72,19},15,enabled?ivory:dim,1);
-            boxText(f,price[i],{tileBox.x+39,tileBox.y+22,72,18},12,enabled?gold:dim,1);
+            boxText(f,choices[i],{tileBox.x+39,tileBox.y+3,tileBox.w-46,19},15,enabled?ivory:dim,1);
+            boxText(f,price[i],{tileBox.x+39,tileBox.y+22,tileBox.w-46,18},12,enabled?gold:dim,1);
         }
-        button(f,{10,235,91,24},"返回",Command::back);
-        button(f,{228,233,146,27},"太守任免",Command::roster,0,true,true,sealIcon);
+        button(f,{10,234+footer,91,26},"返回",Command::back);
+        button(f,{228+extraWidth,234+footer,146,26},"太守任免",Command::roster,0,true,true,sealIcon);
     }
 
     void drawSearch(pxa::game::Frame& f) {
@@ -335,20 +350,24 @@
         const auto local=localFinds(selected);
         const auto odds=campaign.searchOdds(selected,searchingOfficer);
         char line[96];
-        fillBackground(f,art::cityCourtyard,.88f);
-        header(f,"城中寻访",cityName(selected));
+        const int extraWidth=illustrationWidthExtra();
+        const int footer=234+illustrationHeightExtra();
+        const auto body=[&](Rect r) {return cityContent(r);};
+        drawIllustratedBackdrop(f);
+        header(f,"城中寻访",cityName(selected),extraWidth);
 
-        skinFrame(f,{10,41,364,57});
+        skinFrame(f,body({10,42,364,56}));
         if (searchingOfficer>=0) {
             const auto& officer=campaign.leader(searchingOfficer);
-            portrait(f,officer.portrait,{18,47,43,43});
-            boxText(f,officer.name,{70,47,185,22},16,gold);
+            const auto photo=body({18,48,43,43});
+            portrait(f,officer.portrait,{photo.x,photo.cy()-photo.w/2,photo.w,photo.w});
+            boxText(f,officer.name,body({70,47,185,22}),16,gold);
             std::snprintf(line,sizeof line,"智%d  疲劳%d",officer.counsel,campaign.generals[searchingOfficer].fatigue);
-            boxText(f,line,{70,72,185,17},12,dim);
-        } else boxText(f,"无人可出访",{20,56,235,26},15,dim);
-        button(f,{271,54,92,28},"换访将",Command::searchOfficer);
+            boxText(f,line,body({70,72,185,17}),12,dim);
+        } else boxText(f,"无人可出访",body({20,56,235,26}),15,dim);
+        button(f,body({271,54,92,28}),"换访将",Command::searchOfficer);
 
-        skinFrame(f,{10,104,364,60});
+        skinFrame(f,body({10,104,364,60}));
         const bool talentLead=candidate>=0 && !discovered;
         if (talentLead && !done && searchingOfficer>=0)
             std::snprintf(line,sizeof line,"人才线索  %s  %d%%",talents[candidate].officer.name,odds.talent);
@@ -356,7 +375,7 @@
             std::snprintf(line,sizeof line,"%s  %s",talents[candidate].officer.name,
                           hired?"已入帐":discovered?"可延揽":"有乡里传闻");
         else std::snprintf(line,sizeof line,"本地寻访可得钱粮、军械或历练");
-        boxText(f,line,{21,109,342,21},14,talentLead?gold:ivory);
+        boxText(f,line,body({21,109,342,21}),14,talentLead?gold:ivory);
         if (local.item!=noGear && !done && searchingOfficer>=0 && odds.localItem)
             std::snprintf(line,sizeof line,"地方特产  %s  %d%%",gearSpecs[local.item].name,odds.localItem);
         else if (local.item!=noGear) {
@@ -364,9 +383,9 @@
             std::snprintf(line,sizeof line,"地方特产  %s%s",gearSpecs[local.item].name,note);
         }
         else std::snprintf(line,sizeof line,"智力较高的访将更易找到军械");
-        boxText(f,line,{21,136,342,20},13,mint);
+        boxText(f,line,body({21,136,342,20}),13,mint);
 
-        plaque(f,{10,171,364,53});
+        plaque(f,body({10,171,364,53}));
         switch (discovery.kind) {
             case talentFound:std::snprintf(line,sizeof line,"寻得人才  %s",talents[discovery.value].officer.name);break;
             case moneyFound:std::snprintf(line,sizeof line,"寻得 %d 金",discovery.value);break;
@@ -384,22 +403,23 @@
             std::snprintf(line,sizeof line,"%s已入帐，可在名册任用",talents[candidate].officer.name);
         else if (discovered && (campaign.talentOffered&(1u<<candidate)))
             std::snprintf(line,sizeof line,"婉拒入帐，已花%d金，下季可再访",talents[candidate].fee/4);
-        boxText(f,line,{21,177,342,20},13,discovery.kind==noFind?ivory:mint,1);
-        if (discovered) boxText(f,talents[candidate].service,{21,199,342,18},12,dim,1);
+        boxText(f,line,body({21,177,342,20}),13,discovery.kind==noFind?ivory:mint,1);
+        if (discovered) boxText(f,talents[candidate].service,body({21,199,342,18}),12,dim,1);
         else if (talentLead) {
             const bool fictional=candidate<legacyTalentCount || candidate==legacyTalentCount+2;
             boxText(f,fictional?"此人为游戏人物":"据籍贯或行迹安排的寻访线索",
-                    {21,199,342,18},12,dim,1);
+                    body({21,199,342,18}),12,dim,1);
         } else if (local.item>=twinJian)
-            boxText(f,"特产取材于地方故事",{21,199,342,18},12,dim,1);
+            boxText(f,"特产取材于地方故事",body({21,199,342,18}),12,dim,1);
 
-        button(f,{10,234,73,25},"返回",Command::back);
-        button(f,{90,234,127,25},done?"本季已访":"寻访35金",
+        const bool mayInvite=discovered && !hired;
+        button(f,{10,footer,75,26},"返回",Command::back);
+        button(f,{(mayInvite?91:247)+extraWidth,footer,127,26},done?"本季已访":"寻访35金",
             Command::survey,0,campaign.canSearch(selected,searchingOfficer),!discovered);
-        if (discovered && !hired) {
+        if (mayInvite) {
             std::snprintf(line,sizeof line,"延揽%d金 %d%%",talents[candidate].fee,
                           campaign.welcomeChance(selected,candidate));
-            button(f,{225,234,149,25},line,Command::welcomeTalent,candidate,
+            button(f,{225+extraWidth,footer,149,26},line,Command::welcomeTalent,candidate,
                    campaign.canWelcome(selected,candidate),true);
         }
     }
@@ -410,44 +430,69 @@
         const char* goal=cityName(departure.to);
         const auto route=campaign.marchRoute(departure.from,departure.to);
         const int ally=campaign.alliedWaypoint(route);
+        const auto blocked=campaign.dispatchBlock(route,dispatchSize,dispatchLead,stageSiege);
+        const auto& origin=campaign.cities[departure.from];
+        const auto& target=campaign.cities[departure.to];
         char stats[70];
         std::snprintf(stats,sizeof stats,"%s → %s",cityName(departure.from),goal);
         header(f,enemy?"军队开拔":"守军调拨",stats);
         skinFrame(f,{10,43,364,60});
         if (dispatchLead>=0) portrait(f,campaign.leader(dispatchLead).portrait,{18,50,46,46});
-        text(f,dispatchLead>=0?campaign.leader(dispatchLead).name:"无闲将",76,52,16,gold);
+        boxText(f,dispatchLead>=0?campaign.leader(dispatchLead).name:"无闲将",{76,48,168,24},16,gold);
         if (route.legs()>1)
             std::snprintf(stats,sizeof stats,"%s%s · %d段",ally>=0?"借道":"经",
                           cityName(ally>=0?ally:route.cities[1]),route.legs());
-        else std::snprintf(stats,sizeof stats,"目的地守军 %d",campaign.cities[departure.to].troops);
+        else if (route) {
+            const auto* road=findRoad(route.leg(0));
+            std::snprintf(stats,sizeof stats,"%s",road && road->name?road->name:"区域通路");
+        } else std::snprintf(stats,sizeof stats,"道路不通");
         boxText(f,stats,{76,77,168,17},13,ally>=0?mint:dim);
         button(f,{252,60,109,29},"选择领军",Command::roster);
 
         for (int i=0;i<3;++i) {
             Rect r{10+122*i,112,118,52};
-            bool hi=registerControl(r,Command::chooseSize,i);
+            const bool hi=registerControl(r,Command::chooseSize,i);
             plaque(f,r,true,hi||dispatchSize==i);
-            text(f,dispatchNames[i],r.cx(),r.y+5,14,ivory,1);
-            number(f,campaign.dispatchTo(departure.from,departure.to,DispatchSize(i)),r.cx(),r.y+28,16,mint,1);
+            boxText(f,dispatchNames[i],{r.x+5,r.y+3,r.w-10,16},14,ivory,1);
+            const int troops=campaign.dispatchTo(departure.from,departure.to,DispatchSize(i));
+            std::snprintf(stats,sizeof stats,"%d",troops);
+            boxText(f,stats,{r.x+5,r.y+20,r.w-10,16},16,troops>=180?mint:coral,1);
+            std::snprintf(stats,sizeof stats,"留守%d",origin.troops-troops);
+            boxText(f,stats,{r.x+5,r.y+36,r.w-10,14},12,dim,1);
         }
         button(f,{11,172,115,28},"急行抵达",Command::approach,0,true,!stageSiege,horseIcon);
-        if (enemy) button(f,{135,172,115,28},"扎营围城",Command::approach,1,true,stageSiege,wallsIcon);
-        else {
-            const int moving=campaign.dispatchTo(departure.from,departure.to,dispatchSize);
-            std::snprintf(stats,sizeof stats,"留守%d · 目标余位%d",
-                          campaign.cities[departure.from].troops-moving,armyLimit-campaign.cities[departure.to].troops);
-            boxText(f,stats,{135,175,229,22},13,mint,1);
+        if (enemy) {
+            button(f,{135,172,115,28},"扎营围城",Command::approach,1,true,stageSiege,wallsIcon);
+            std::snprintf(stats,sizeof stats,"守军%d",target.troops);
+            boxText(f,stats,{256,175,109,22},13,dim,2);
+        } else {
+            std::snprintf(stats,sizeof stats,"目标余位%d",std::max(0,armyLimit-target.troops));
+            boxText(f,stats,{135,175,230,22},13,mint,2);
+        }
+        const char* readiness=stageSiege?"次季抵达，城防减二":enemy?"抵达后可立即布阵":"抵达后补入守军";
+        switch (blocked) {
+            case DispatchBlock::none:break;
+            case DispatchBlock::noRoute:readiness="道路不通";break;
+            case DispatchBlock::theaterClosed:readiness="当前无法调动军队";break;
+            case DispatchBlock::orders:readiness="政令不足，待下季";break;
+            case DispatchBlock::leader:readiness="无闲将，可更换领军";break;
+            case DispatchBlock::columns:readiness="军列已满，可召回一队";break;
+            case DispatchBlock::reserve:readiness="可派兵力不足180";break;
+            case DispatchBlock::destinationCapacity:readiness="目标余位不足180";break;
+            case DispatchBlock::target:readiness="已有军队前往";break;
+            case DispatchBlock::blockade:readiness="己方城池请选择调兵";break;
+            case DispatchBlock::grain:readiness="粮不足，无法开拔";break;
         }
         plaque(f,{10,204,364,22});
-        boxText(f,stageSiege?"次季抵达，城防减二":enemy?"抵达后可立即布阵":"抵达后补入守军",
-                {18,207,232,16},12,ivory);
-        if (dispatchLead>=0) {
-            std::snprintf(stats,sizeof stats,"耗粮 %d",campaign.supplyCost(route,dispatchSize,dispatchLead,stageSiege));
-            boxText(f,stats,{253,207,112,16},12,gold,2);
+        boxText(f,readiness,{18,207,218,16},12,blocked==DispatchBlock::none?ivory:coral);
+        if (route && dispatchLead>=0) {
+            const int food=campaign.supplyCost(route,dispatchSize,dispatchLead,stageSiege);
+            std::snprintf(stats,sizeof stats,"耗粮%d / %d",food,campaign.grain);
+            boxText(f,stats,{239,207,126,16},12,campaign.grain>=food?gold:coral,2);
         }
         button(f,{10,231,91,25},"返回",Command::back);
         button(f,{244,229,130,28},enemy?"下令开拔":"下令调兵",Command::send,0,
-               campaign.canSend(route,dispatchSize,dispatchLead,stageSiege),true);
+               blocked==DispatchBlock::none,true);
     }
 
     void drawFiefs(pxa::game::Frame& f) {
@@ -584,129 +629,298 @@
         button(f,{298,229,76,27},"装备",Command::equip,gearCursor,campaign.mayEquip(officerSlot,Gear(gearCursor)),true);
     }
 
-    int prisonEntries() const {
-        return prisonTab==0?int(campaign.prisoners.size()):prisonTab==1?commanderSlots:cityCount;
+    int prisonEntries(int tab) const {
+        return tab==0?int(campaign.prisoners.size()):tab==1?commanderSlots:cityCount;
     }
-    bool hasPrisonEntry(int entry) const {
-        if (entry<0) return false;
-        if (prisonTab==0) return bool(campaign.prisoners[entry]);
-        if (prisonTab==1) return campaign.held(entry);
+    bool hasPrisonEntry(int tab,int entry) const {
+        if (entry<0 || entry>=prisonEntries(tab)) return false;
+        if (tab==0) return bool(campaign.prisoners[entry]);
+        if (tab==1) return campaign.held(entry);
         return campaign.cities[entry].prisoners>0;
     }
     int nextPrisoner(int entry,int step) const {
-        const int size=prisonEntries();
+        const int size=prisonEntries(prisonTab);
         for (int n=0;n<size;++n) {
             entry=(entry+step+size)%size;
-            if (hasPrisonEntry(entry)) return entry;
+            if (hasPrisonEntry(prisonTab,entry)) return entry;
         }
         return -1;
     }
+    int reportPrisonTab() const {
+        if (hasPrisonEntry(0,aftermath.captive)) return 0;
+        if (hasPrisonEntry(1,aftermath.ourCaptive)) return 1;
+        if ((aftermath.enemyPrisoners || aftermath.ourPrisoners) && hasPrisonEntry(2,reportCity)) return 2;
+        return -1;
+    }
     const Officer* prisonOfficer() const {
-        if (!hasPrisonEntry(prisonIndex) || prisonTab==2) return nullptr;
-        if (prisonTab==1) return &campaign.leader(prisonIndex);
-        const auto& person=campaign.prisoners[prisonIndex];
+        const int entry=prisonSelection[prisonTab];
+        if (!hasPrisonEntry(prisonTab,entry) || prisonTab==2) return nullptr;
+        if (prisonTab==1) return &campaign.leader(entry);
+        const auto& person=campaign.prisoners[entry];
         return &officers[person.side][person.officer];
     }
-    void openPrison(int tab) {
-        prisonFrom=page==Page::council?Page::council:Page::map;
-        prisonMessage=nullptr;
+    void selectPrisonTab(int tab) {
         prisonTab=tab;
-        prisonIndex=nextPrisoner(-1,1);
-        if (page==Page::report) {
-            if (tab==0 && aftermath.captive>=0) prisonIndex=aftermath.captive;
-            if (tab==1 && aftermath.ourCaptive>=0) prisonIndex=aftermath.ourCaptive;
-            if (tab==2 && campaign.cities[reportCity].prisoners) prisonIndex=reportCity;
-        }
-        show(Page::captive);
+        auto& entry=prisonSelection[tab];
+        if (!hasPrisonEntry(tab,entry)) entry=nextPrisoner(-1,1);
+        prisonMessage[0]='\0';
     }
-    void actOnPrisoner(int action) {
-        if (!hasPrisonEntry(prisonIndex)) return;
-        if (prisonTab==0) {
-            if (action==2) {
-                const auto result=campaign.admit(prisonIndex);
-                if (result==Offer::unavailable) return;
-                prisonMessage=result==Offer::joined?"俘将已归顺":"拒绝归顺，已花55金";
-                logState(result==Offer::joined?"guest":"captive-refused");
-            } else {
-                if (!campaign.disposeCaptive(prisonIndex,action==1)) return;
-                prisonMessage=action==1?"收取110金，俘将已放回":"俘将已放归，城中民心回升";
-                logState("captive-released");
-            }
-        } else if (prisonTab==1) {
-            if (!campaign.ransomGeneral(prisonIndex)) return;
-            prisonMessage="我将已归队";
-            logState("our-ransomed");
-        } else {
-            if (!(action==0?campaign.releasePrisoners(prisonIndex):campaign.enlistPrisoners(prisonIndex))) return;
-            prisonMessage=action==0?"俘兵已遣返，城中民心回升":"俘兵已编入守军";
-            logState(action==0?"prisoners-released":"prisoners-enlisted");
+    void openPrison(int tab) {
+        prisonFrom=page==Page::council || page==Page::report?page:Page::map;
+        prisonReview.reset();
+        prisonSelection.fill(-1);
+        selectPrisonTab(tab);
+        if (prisonFrom==Page::report) {
+            const int entries[]={aftermath.captive,aftermath.ourCaptive,reportCity};
+            if (hasPrisonEntry(tab,entries[tab])) prisonSelection[tab]=entries[tab];
         }
-        if (!hasPrisonEntry(prisonIndex)) prisonIndex=nextPrisoner(prisonIndex,1);
+        show(Page::captive,tab);
+    }
+    bool canPrisonAction(PrisonAction action) const {
+        const int entry=prisonSelection[prisonTab];
+        if (!hasPrisonEntry(prisonTab,entry)) return false;
+        switch (action) {
+            case PrisonAction::releaseEnemy: return prisonTab==0;
+            case PrisonAction::ransomEnemy: return prisonTab==0 && campaign.mayRansom(entry);
+            case PrisonAction::admit: return prisonTab==0 && campaign.mayAdmit(entry);
+            case PrisonAction::ransomFriendly: return prisonTab==1 && campaign.gold>=Campaign::friendlyRansom;
+            case PrisonAction::releaseTroops: return prisonTab==2 && campaign.own(entry);
+            case PrisonAction::enlist: return prisonTab==2 && campaign.enlistCapacity(entry)>0;
+        }
+        return false;
+    }
+    void beginPrisonReview(PrisonAction action) {
+        if (!canPrisonAction(action)) return;
+        prisonReview=action;
+        prisonReviewFocus=focus;
+        focus=0;
+    }
+    void confirmPrisonReview() {
+        if (!prisonReview) return;
+        const auto action=*prisonReview;
+        prisonReview.reset();
+        focus=prisonTab;
+        if (!canPrisonAction(action)) return;
+
+        auto& entry=prisonSelection[prisonTab];
+        const auto* officer=prisonOfficer();
+        const char* name=officer?officer->name:cityName(entry);
+        switch (action) {
+            case PrisonAction::admit: {
+                const auto result=campaign.admit(entry);
+                if (result==Offer::unavailable) return;
+                if (result==Offer::joined)
+                    std::snprintf(prisonMessage,sizeof prisonMessage,"%s已归顺",name);
+                else
+                    std::snprintf(prisonMessage,sizeof prisonMessage,"%s婉拒 · 已花%d金",name,Campaign::refusedAdmitCost);
+                logState(result==Offer::joined?"guest":"captive-refused");
+                break;
+            }
+            case PrisonAction::releaseEnemy:
+            case PrisonAction::ransomEnemy: {
+                const bool ransom=action==PrisonAction::ransomEnemy;
+                const int gold=campaign.gold;
+                if (!campaign.disposeCaptive(entry,ransom)) return;
+                if (ransom)
+                    std::snprintf(prisonMessage,sizeof prisonMessage,"%s已放回 · 收取%d金",name,campaign.gold-gold);
+                else std::snprintf(prisonMessage,sizeof prisonMessage,"%s已放归",name);
+                logState("captive-released");
+                break;
+            }
+            case PrisonAction::ransomFriendly:
+                if (!campaign.ransomGeneral(entry)) return;
+                std::snprintf(prisonMessage,sizeof prisonMessage,"%s已归队",name);
+                logState("our-ransomed");
+                break;
+            case PrisonAction::releaseTroops:
+                if (!campaign.releasePrisoners(entry)) return;
+                std::snprintf(prisonMessage,sizeof prisonMessage,"%s俘兵已遣返",name);
+                logState("prisoners-released");
+                break;
+            case PrisonAction::enlist: {
+                const int count=campaign.enlistCapacity(entry);
+                if (!campaign.enlistPrisoners(entry)) return;
+                std::snprintf(prisonMessage,sizeof prisonMessage,"%s守军增加%d人",name,count);
+                logState("prisoners-enlisted");
+                break;
+            }
+        }
+        if (!hasPrisonEntry(prisonTab,entry)) entry=nextPrisoner(entry,1);
         audio.cue(confirmSound);
         checkpoint();
     }
+    void drawPrisonReview(pxa::game::Frame& f,int extraWidth,int extraHeight) {
+        const auto action=*prisonReview;
+        const int entry=prisonSelection[prisonTab];
+        const auto* officer=prisonOfficer();
+        const char* name=officer?officer->name:cityName(entry);
+        const Rect sheet{36+extraWidth/2,55+extraHeight/2,312,156};
+        skinFrame(f,sheet);
+        char title[64]{},detail[96]{},second[80]{};
+        switch (action) {
+            case PrisonAction::releaseEnemy: {
+                const int city=campaign.prisoners[entry].city;
+                const int gain=std::min(Campaign::releaseGeneralApproval,100-campaign.cities[city].order);
+                std::snprintf(title,sizeof title,"放归%s?",name);
+                std::snprintf(detail,sizeof detail,"%s民心 +%d · 俘将离营",cityName(city),gain);
+                break;
+            }
+            case PrisonAction::ransomEnemy:
+                std::snprintf(title,sizeof title,"索赎放回%s?",name);
+                std::snprintf(detail,sizeof detail,"收取%d金 · 俘将离营",std::min(Campaign::captiveRansom,9999-campaign.gold));
+                break;
+            case PrisonAction::admit:
+                std::snprintf(title,sizeof title,"劝%s归顺?",name);
+                std::snprintf(detail,sizeof detail,"招降率 %d%% · 本季可试一次",campaign.admitChance(entry));
+                std::snprintf(second,sizeof second,"归顺%d金 · 婉拒%d金",Campaign::admitCost,Campaign::refusedAdmitCost);
+                break;
+            case PrisonAction::ransomFriendly:
+                std::snprintf(title,sizeof title,"赎回%s?",name);
+                std::snprintf(detail,sizeof detail,"消耗%d金 · 武将归队",Campaign::friendlyRansom);
+                break;
+            case PrisonAction::releaseTroops: {
+                const auto& city=campaign.cities[entry];
+                const int gain=std::min(campaign.releaseTroopsApproval(entry),100-city.order);
+                std::snprintf(title,sizeof title,"遣返%s俘兵?",name);
+                std::snprintf(detail,sizeof detail,"遣返%d人 · 民心 +%d",city.prisoners,gain);
+                break;
+            }
+            case PrisonAction::enlist: {
+                const int count=campaign.enlistCapacity(entry);
+                std::snprintf(title,sizeof title,"整编%s俘兵?",name);
+                std::snprintf(detail,sizeof detail,"补充守军%d人",count);
+                std::snprintf(second,sizeof second,"消耗%d粮与1政令",Campaign::enlistGrain(count));
+                break;
+            }
+        }
+        boxText(f,title,{sheet.x+16,sheet.y+10,sheet.w-32,28},20,gold,1);
+        if (officer) portrait(f,officer->portrait,{sheet.x+17,sheet.y+46,60,60});
+        else contain(f,iconTile(captiveIcon),{sheet.x+20,sheet.y+50,52,52},true);
+        const int left=sheet.x+90;
+        boxText(f,detail,{left,sheet.y+(second[0]?50:65),sheet.w-106,23},14,ivory);
+        if (second[0]) boxText(f,second,{left,sheet.y+77,sheet.w-106,23},13,mint);
+        button(f,{sheet.x+17,sheet.y+118,133,27},"取消",Command::back);
+        button(f,{sheet.x+162,sheet.y+118,133,27},"确认",Command::confirmCaptive,0,canPrisonAction(action),true);
+    }
     void drawCaptive(pxa::game::Frame& f) {
+        const int extraWidth=illustrationWidthExtra();
+        const int extraHeight=illustrationHeightExtra();
+        const int right=374+extraWidth;
+        char line[96];
         fillBackground(f,art::warHall);
-        header(f,"俘虏营");
-        constexpr const char* tabs[]={"敌方俘将","我方被俘","双方俘兵"};
-        for (int i=0;i<3;++i)
-            button(f,{10+123*i,39,118,24},tabs[i],Command::prisonTab,i,true,i==prisonTab);
-        skinFrame(f,{10,68,364,122});
-        char line[72];
-        const int entry=prisonIndex;
+        std::snprintf(line,sizeof line,"%d金  ·  %d粮",campaign.gold,campaign.grain);
+        header(f,"俘虏营",line,extraWidth);
+        if (prisonReview) {drawPrisonReview(f,extraWidth,extraHeight);return;}
+
+        const int entry=prisonSelection[prisonTab];
+        int total=0,position=0;
+        constexpr const char* tabs[]={"敌方俘将","我方被俘","俘兵城池"};
+        const int tabWidth=(right-10-12)/3;
+        for (int tab=0;tab<3;++tab) {
+            int count=0;
+            for (int i=0;i<prisonEntries(tab);++i) if (hasPrisonEntry(tab,i)) {
+                ++count;
+                if (tab==prisonTab && i==entry) position=count;
+            }
+            if (tab==prisonTab) total=count;
+            std::snprintf(line,sizeof line,"%s %d",tabs[tab],count);
+            button(f,{10+(tabWidth+6)*tab,39,tab==2?right-10-2*(tabWidth+6):tabWidth,24},line,
+                   Command::prisonTab,tab,true,tab==prisonTab);
+        }
+        const Rect card{10,68,right-10,126+extraHeight};
+        skinFrame(f,card);
+        if (total) {
+            std::snprintf(line,sizeof line,"%d / %d",position,total);
+            boxText(f,line,{right-78,card.y+7,66,18},12,dim,2);
+        }
+        const int imageSize=(extraWidth?104:94)+extraHeight/2;
+        const Rect picture{22,card.cy()-imageSize/2,imageSize,imageSize};
+        const auto border=[&] {
+            frame(f,{picture.x-2,picture.y-2,picture.w+4,picture.h+4},edge,ink);
+        };
+        const int x=picture.x+picture.w+14,w=right-x-13;
         if (const auto* actor=prisonOfficer()) {
             const int city=prisonTab==0?campaign.prisoners[entry].city:campaign.detained[entry].city;
-            portrait(f,actor->portrait,{23,81,89,89});
-            boxText(f,actor->name,{124,79,215,28},21,gold);
+            border();
+            portrait(f,actor->portrait,picture);
+            const int y=card.cy()-49;
+            boxText(f,actor->name,{x,y,w-66,27},23,gold);
             std::snprintf(line,sizeof line,"关押于 %s",cityName(city));
-            boxText(f,line,{124,107,230,20},14,ivory);
+            iconText(f,wallsIcon,line,{x,y+28,w,20},14,ivory);
             if (prisonTab==0) {
                 const auto& person=campaign.prisoners[entry];
-                std::snprintf(line,sizeof line,"%s  ·  招降率 %d%%",factions[person.side].title,
-                              campaign.admitChance(entry));
-                boxText(f,line,{124,131,229,19},13,mint);
-                std::snprintf(line,sizeof line,"下季逃脱率 %d%%",campaign.escapeChance(entry,1));
-                boxText(f,line,{124,153,229,20},13,dim);
+                boxText(f,factions[person.side].title,{x,y+49,w,18},13,dim);
+                const int half=(w-5)/2;
+                const Rect offer{x,y+72,half,26},escape{x+half+5,y+72,w-half-5,26};
+                battlePanel(f,offer,jadePlaque);
+                battlePanel(f,escape,vermilionPlaque);
+                std::snprintf(line,sizeof line,"招降率 %d%%",campaign.admitChance(entry));
+                boxText(f,line,offer.inset(5,3),13,mint,1);
+                std::snprintf(line,sizeof line,"下季逃脱 %d%%",campaign.escapeChance(entry,1));
+                boxText(f,line,escape.inset(5,3),13,coral,1);
             } else {
-                boxText(f,"被俘期间无法领军或理政",{124,132,232,21},13,coral);
-                boxText(f,"可赎回、夺城救出，亦可能自行脱身",{124,154,232,21},12,dim);
+                boxText(f,"被俘期间无法领军或理政",{x,y+54,w,20},13,coral);
+                boxText(f,"可赎回、夺城救出，亦可能自行脱身",{x,y+79,w,21},12,dim);
             }
         } else if (prisonTab==2 && entry>=0) {
             const bool ours=campaign.own(entry);
-            boxText(f,cityName(entry),{23,77,334,29},20,gold,1);
+            auto courtyard=art::cityCourtyard;
+            courtyard.x+=(courtyard.w-courtyard.h)*3/4;
+            courtyard.w=courtyard.h;
+            border();
+            tile(f,courtyard,picture);
+            boxText(f,cityName(entry),{x,card.cy()-45,w-66,27},21,gold);
             std::snprintf(line,sizeof line,ours?"收押敌兵 %d 人":"我方被俘 %d 人",campaign.cities[entry].prisoners);
-            boxText(f,line,{23,112,334,25},17,ours?mint:coral,1);
-            boxText(f,ours?"可整编或遣返，拖延可能有俘兵逃散":"夺城可救回，部分俘兵也会就近脱身",
-                    {23,145,334,22},13,dim,1);
+            iconText(f,captiveIcon,line,{x,card.cy()-14,w,24},16,ours?mint:coral);
+            const char* routes=ours?"可整编或遣返":"夺城可救回";
+            const char* risks=ours?"拖延可能有俘兵逃散":"部分俘兵会就近脱身";
+            boxText(f,routes,{x,card.cy()+12,w,20},13,ivory);
+            boxText(f,risks,{x,card.cy()+34,w,18},12,dim);
         } else {
             constexpr const char* empty[]={"当前没有敌方俘将","我方武将均未被俘","当前没有收押的士兵"};
-            boxText(f,empty[prisonTab],{23,113,338,27},16,dim,1);
+            contain(f,iconTile(captiveIcon),{card.cx()-22,card.cy()-38,44,44},true);
+            boxText(f,empty[prisonTab],{23,card.cy()+12,right-46,26},16,dim,1);
         }
-        const char* detail=prisonMessage;
+
+        const int pagerY=198+extraHeight;
+        const char* detail=prisonMessage[0]?prisonMessage:nullptr;
         if (!detail && entry>=0 && prisonTab==0) {
             const auto& p=campaign.prisoners[entry];
-            detail=p.offered==campaign.turn?"本季已劝降，下季可再试":
-                campaign.freeGuest()<0?"客将席位已满":"招降成功220金，遭拒55金";
+            if (p.offered==campaign.turn) detail="本季已劝降，下季可再试";
+            else if (campaign.freeGuest()<0) detail="客将席位已满";
+            else if (campaign.gold<Campaign::admitCost) detail="金不足，无法招降";
+        } else if (!detail && entry>=0 && prisonTab==1 && campaign.gold<Campaign::friendlyRansom)
+            detail="金不足，无法赎回";
+        else if (!detail && entry>=0 && prisonTab==2 && campaign.own(entry)) {
+            if (!campaign.actions) detail="政令不足，无法整编";
+            else if (!campaign.grain) detail="粮不足，无法整编";
+            else if (campaign.cities[entry].troops>=armyLimit) detail="守军已满";
         }
-        if (!detail && entry>=0 && prisonTab==2 && campaign.own(entry)) detail="每次最多整编180人，消耗1政令与粮食";
-        if (detail) boxText(f,detail,{55,193,274,26},12,gold,1);
-        const bool canPage=entry>=0 && nextPrisoner(entry,1)!=entry;
-        button(f,{10,193,40,25},"<",Command::prisonPage,-1,canPage);
-        button(f,{334,193,40,25},">",Command::prisonPage,1,canPage);
-        button(f,{10,228,62,28},"返回",Command::back);
+        if (detail) boxText(f,detail,{59,pagerY,right-108,24},13,prisonMessage[0]?mint:gold,1);
+        if (total>1) {
+            button(f,{10,pagerY,42,24},"<",Command::prisonPage,-1);
+            button(f,{right-42,pagerY,42,24},">",Command::prisonPage,1);
+        }
+        const int footer=230+extraHeight;
+        button(f,{10,footer,75,28},prisonFrom==Page::report?"战报":"返回",Command::back);
         if (entry<0) return;
+        const auto choice=[&](Rect box,const char* label,PrisonAction action,bool primary=false) {
+            button(f,box,label,Command::captiveChoice,int(action),canPrisonAction(action),primary);
+        };
         if (prisonTab==0) {
-            button(f,{78,228,76,28},"放归",Command::captiveChoice,0);
-            button(f,{160,228,101,28},"索赎110金",Command::captiveChoice,1,campaign.mayRansom(entry));
-            button(f,{267,228,107,28},"招降",Command::captiveChoice,2,campaign.mayAdmit(entry),true);
+            const int span=(right-91-12)/3;
+            choice({91,footer,span,28},"放归",PrisonAction::releaseEnemy);
+            std::snprintf(line,sizeof line,"索赎%d金",Campaign::captiveRansom);
+            choice({97+span,footer,span,28},line,PrisonAction::ransomEnemy);
+            choice({103+2*span,footer,right-103-2*span,28},"招降",PrisonAction::admit,true);
         } else if (prisonTab==1) {
-            button(f,{243,228,131,28},"赎回160金",Command::captiveChoice,0,
-                   campaign.gold>=Campaign::friendlyRansom,true);
+            std::snprintf(line,sizeof line,"赎回%d金",Campaign::friendlyRansom);
+            choice({right-129,footer,129,28},line,PrisonAction::ransomFriendly,true);
         } else if (campaign.own(entry)) {
             const int count=campaign.enlistCapacity(entry);
-            button(f,{179,228,76,28},"遣返",Command::captiveChoice,0);
+            choice({right-207,footer,91,28},"遣返",PrisonAction::releaseTroops);
             std::snprintf(line,sizeof line,"整编%d人",count);
-            button(f,{261,228,113,28},count?line:"整编",Command::captiveChoice,1,count>0,true);
+            choice({right-110,footer,110,28},count?line:"整编",PrisonAction::enlist,true);
         }
     }
 
@@ -784,7 +998,7 @@
             std::snprintf(label,sizeof label,"%s  我军 %d · 敌军 %d",rankNames[lane],
                           battle.ranks[0][lane],battle.ranks[1][lane]);
         } else std::snprintf(label,sizeof label,"全军号令");
-        boxText(f,label,{51,64,282,23},16,gold,1);
+        boxText(f,label,center({51,64,282,23}),16,gold,1);
         for (int i=-1;i<Battle::rankCount;++i)
             button(f,center({51+72*(i+1),91,66,21}),i<0?"全军":rankNames[i],
                    Command::battleRank,i,true,lane==i);
@@ -804,7 +1018,7 @@
         if (scoped && battle.coordinating() && battle.aid.target==lane)
             std::snprintf(label,sizeof label,"%s%s · 余%d合",rankNames[battle.aid.source],
                           battle.shieldCover()?"掩护":"协战",battle.aid.rounds);
-        boxText(f,label,{51,113,282,17},12,dim,1);
+        boxText(f,label,center({51,113,282,17}),12,dim,1);
         constexpr UiIcon icons[]={wedgeIcon,squareIcon,flankIcon,withdrawIcon};
         const auto activeOrder=scoped?battle.stance(0,lane):battle.maneuver;
         for (int i=press;i<=fallBack;++i)
@@ -829,17 +1043,17 @@
             }
             std::snprintf(label,sizeof label,"%s预计 · 耗%d令 · 余%d令",
                           battle.round?"下合":"接敌",preview->cost,battle.signal-preview->cost);
-            boxText(f,label,{51,195,282,18},12,gold,1);
+            boxText(f,label,center({51,195,282,18}),12,gold,1);
             button(f,center({51,217,138,25}),"取消",Command::cancelOrder);
             button(f,center({195,217,138,25}),"下令",Command::maneuver,*proposedOrder,true,true,ordersIcon);
-            if (intent) boxText(f,intent,{51,244,282,13},12,coral,1);
+            if (intent) boxText(f,intent,center({51,244,282,13}),12,coral,1);
             return;
         }
         std::snprintf(label,sizeof label,"令%d · %s预计  我损%d · 敌损%d",
                       battle.signal,battle.round?"下合":"接敌",ours,theirs);
-        boxText(f,label,{51,scoped?222:198,282,20},13,
+        boxText(f,label,center({51,scoped?222:198,282,20}),13,
                 ours>theirs?coral:ours<theirs?mint:dim,1);
-        if (intent) boxText(f,intent,{51,scoped?242:218,282,16},12,coral,1);
+        if (intent) boxText(f,intent,center({51,scoped?242:218,282,16}),12,coral,1);
         if (!scoped) {
             button(f,center({51,167,84,27}),"单挑",Command::duel,0,battle.mayDuel(),true,duelIcon);
             button(f,center({141,167,60,27}),"驻守",Command::anchorArmy,0,!battle.anchored,battle.anchored);
@@ -865,7 +1079,7 @@
             button(f,center({x,197,138,22}),label,Command::rankAssist,source,battle.mayAid(source,lane));
             x+=144;
         }
-        if (lane!=1) boxText(f,"邻路协战两合",{195,198,138,19},12,dim,1);
+        if (lane!=1) boxText(f,"邻路协战两合",center({195,198,138,19}),12,dim,1);
     }
 
     void drawDuel(pxa::game::Frame& f) {

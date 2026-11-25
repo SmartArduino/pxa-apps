@@ -12,8 +12,8 @@
     "触屏",
     "手柄"
   ],
-  "description": "选择刘备、曹操或孙权，在赤壁前夕、益州攻守和襄樊相持三个剧本中争夺六十四处城关。任命太守、调拨兵粮，或借道盟城与请盟友出兵。各地寻访有不同的人才线索和特产，派将前可查看概率。城名与年号按历史时序变化，十七则纪事可定位到地图，部分故事附有可办理的地方差事。\n\n会战从阵前发令开始，可以按兵待敌、分路协战或带器械攻城。武将可配兵器、盔甲、坐骑与军策。全图支持缩放和直达城志，观战模式收起指挥界面。支持触屏双指缩放和手柄操作。",
+  "description": "选择刘备、曹操或孙权，在赤壁前夕、益州攻守和襄樊相持三个剧本中争夺六十四处城关。任命太守、调拨兵粮，或借道盟城与请盟友出兵。各地寻访有不同的人才线索和特产，派将前可查看概率。城名与年号按历史时序变化，十七则纪事可定位到地图，部分故事附有可办理的地方差事。\n\n会战从阵前发令开始，可以按兵待敌、分路协战或带器械攻城。武将可配兵器、盔甲、坐骑与军策。全图支持缩放和直达城志，观战模式收起指挥界面。支持触屏双指缩放和手柄操作。\n\n出征和调兵可先核对各编制的出兵、留守兵力及粮耗。宽屏布阵把地形图与编队并排排布，方屏在上方展示预览。俘虏处置前会列出费用与结果，可从俘虏营返回原战报。",
   "icon": "art/store-icon.png",
   "cover": "art/store-cover.png",
-  "changelog": "城关增至64处，加入樊城、上庸、涪城、秭归、皖城、濡须口、临淄和祁山。寻访显示地方人才与特产概率。城名、郡名和年号随历史时序变化，新增十七则纪事和三项地方差事。全图可直接打开城志，观战可收起指挥界面。更新会战场景、士兵与武将动画、音效和语音。兼容旧战役存档。\n\nThe campaign now has 64 locations, with regional recruit and item odds shown before scouting. Historical place names and era names change over time. Read 17 chronicle entries and take on three local assignments. Open city records from the full-map view and hide the command interface in spectator mode. Updated battlefield art, troop and officer animations, sound effects, and voice cues. Existing campaign saves carry forward."
+  "changelog": "舆图道路与行军路线更平滑，宽屏舆图与战场利用更多可用屏幕。布阵、内政、寻访和战报为插图留出位置，并针对宽屏与方屏调整布局。出征前可核对各编制的留守兵力、粮耗及无法出兵的原因。俘虏营显示分类数量、清晰立绘与逃脱率，处置前可确认结果，并可返回原战报。兼容旧战役存档。\n\nRoads and march routes are smoother, with wider map and battlefield views on supported screens. Deployment, city management, scouting, and battle reports give illustrations dedicated space on wide and square screens. Review garrison strength, supplies, and any dispatch blockers before marching. The prisoner camp shows counts, clearer portraits, and escape odds. Review actions before confirming and return to the original battle report. Existing campaign saves carry forward."
 }

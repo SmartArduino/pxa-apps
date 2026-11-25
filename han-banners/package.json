@@ -2,8 +2,8 @@
   "format": "pxa-package-source-0.2",
   "id": "pxa-han-banners",
   "name": "三国逐城",
-  "version": "2.2.0",
-  "release_sequence": 26,
+  "version": "2.3.0",
+  "release_sequence": 27,
   "description": "原创三国策略。争夺六十四处城关，寻访地方人才与特产，统领三路混编部队。",
   "icon": "assets/icon.png",
   "min_sdk": [
