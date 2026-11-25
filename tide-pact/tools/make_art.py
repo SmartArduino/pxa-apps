@@ -83,10 +83,13 @@ def build_logo(image):
     write_texture(source, "wordmark")
 
 
-def pack_scene(path, name, size):
+def pack_scene(path, name, size, *, texture_path=None):
     image = ImageOps.fit(Image.open(path).convert("RGB"), size, Image.Resampling.LANCZOS)
     image.save(ASSETS / f"{name}.jpg", quality=89, optimize=True)
-    write_texture(image, name)
+    if texture_path is None:
+        write_texture(image, name)
+    else:
+        texture_path.write_bytes(texture_bytes(image))
 
 
 def pack_icons(path, name, cols, rows, size, alpha_cutoff=100):

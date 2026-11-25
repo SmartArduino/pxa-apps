@@ -857,12 +857,13 @@ struct VoyageApp {
     }
     void port_scene(Draw& d, Rect area, int port) {
         if (!is_port(port) || area.w<1 || area.h<1) return;
-        if (const auto* view=sea_picture.pixels(harbor_picture(port))) {
+        const int kind=harbor_picture(port);
+        if (const auto* view=sea_picture.pixels(kind)) {
             const Image picture{view};
             const int width=std::min(picture.width(),picture.height()*area.w/area.h);
             const int height=std::min(picture.height(),picture.width()*area.h/area.w);
             d.image(picture,{(picture.width()-width)/2,(picture.height()-height)*2/5,width,height},area);
-        } else d.fill(area,ocean);
+        } else sea_picture_panel(d,kind,area);
     }
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
                 Text price={}, int glyph=-1) {
@@ -3424,10 +3425,24 @@ struct VoyageApp {
         const int width=std::min(room*42/100,room-170);
         return body.h>=134 && width>=70?width:0;
     }
+    int land_picture(const RegionalSurvey* survey, ClimateSeason season) const {
+        if (!survey) return inland_archive?int(Calm):EstuaryPicture;
+        if (survey->environment==BarentsCoast && season!=Winter) return VardoThawPicture;
+        if (survey->environment==MalabarHills && season!=SouthwestMonsoon) return MalabarDryPicture;
+        constexpr int scenes[]{Calm,Calm,ForestPicture,WadiPicture,VardoPicture,MalabarPicture,SabakiPicture};
+        static_assert(std::size(scenes)==SabakiValley+1);
+        return scenes[survey->environment];
+    }
     int visible_sea_picture() const {
         if (title) return Calm;
         if (modal==WorldStudy) return WorldFieldPictureBase+3*field_item+field_plate;
         if (modal==WorldTrail) return WorldGroundPictureBase+FieldStudies[field_item].ground;
+        if (modal==LandPage) {
+            const int region=regional_survey_at(game.s.origin);
+            return land_picture(region<0?nullptr:&RegionalSurveys[region],game.land_season());
+        }
+        if (modal==ExpeditionPage && expedition_item==BirdsAtLowWater &&
+            game.expedition_here()==expedition_item) return ArguinPicture;
         if (modal==HarborTown && !outside && town_id>=0) return harbor_street_picture(Towns[town_id].port);
         if (modal==PortStoryPage) {
             if (port_story_id>=WetPorcelain) return PortStoryPictureBase+port_story_id-WetPorcelain;
@@ -3696,12 +3711,14 @@ struct VoyageApp {
         const int h=std::min(inside.h,inside.w*5/8);
         const Rect view{inside.x,inside.y+(inside.h-h)/2,inside.w,h};
         constexpr int scene_w=288, scene_h=136;
+        const int kind=harbor_street_picture(Towns[city].port);
         if (outside) d.image({art::outskirts},{0,0,scene_w,scene_h},view);
         else if (Towns[city].port==calicut) d.image({art::calicut},{0,0,scene_w,scene_h},view);
-        else if (const auto* bytes=sea_picture.pixels(harbor_street_picture(Towns[city].port))) {
+        else if (const auto* bytes=sea_picture.pixels(kind)) {
             const Image image{bytes};
             d.image(image,{0,0,image.width(),image.height()},view);
-        } else d.fill(view,ocean);
+        } else if (kind!=Calm) sea_picture_panel(d,kind,view);
+        else d.fill(view,ocean);
         d.frame(view,rgb(0x342921));
         return view;
     }
@@ -3875,18 +3892,14 @@ struct VoyageApp {
                    inland_archive?"里斯本 · 驿道图":"里斯本 · 旧驿道",AstrolabeIcon,!game.land_away());
         if (!inland_archive && game.nature_site()!=NoNatureSite)
             button(d,{body.right()-77,body.y+3,73,23},"自然观察",OpenNatureWatch,true);
-        const unsigned char* scenes[]{art::levada,art::marsh,art::expedition_forest,
-                                      art::expedition_wadi,art::expedition_vardo,art::expedition_malabar,
-                                      art::expedition_sabaki};
         const auto season=game.land_season();
-        const auto* landscape=survey?scenes[survey->environment]:inland_archive?art::inland:art::expedition_estuary;
-        if (survey && survey->environment==BarentsCoast && season!=Winter) landscape=art::expedition_vardo_thaw;
-        if (survey && survey->environment==MalabarHills && season!=SouthwestMonsoon) landscape=art::expedition_malabar_dry;
-        const Image scene{landscape};
         if (picture.h && picture.w) {
-            const int width=std::min(scene.width(),scene.height()*picture.w/picture.h);
-            const int height=std::min(scene.height(),scene.width()*picture.h/picture.w);
-            d.image(scene,{(scene.width()-width)/2,(scene.height()-height)/2,width,height},picture);
+            const int kind=land_picture(survey,season);
+            if (kind!=Calm) sea_picture_panel(d,kind,picture);
+            else {
+                const auto* image=!survey?art::inland:survey->environment==Levada?art::levada:art::marsh;
+                d.cover({image},picture);
+            }
             weather_marks(d,picture,weather_animation(),3,2);
             if (!inland_archive) {
                 const Rect status{picture.x+1,picture.bottom()-17,picture.w-2,16};
@@ -5309,8 +5322,8 @@ struct VoyageApp {
             const int art_w=large?std::min(w/3,126):46;
             const int art_y=y+25, art_h=art_w/2;
             const Rect picture{x+w-art_w,art_y,art_w,art_h};
-            if (on_site && expedition_item==BirdsAtLowWater)
-                d.image({art::expedition_arguin},{0,0,320,160},picture);
+            const auto* arguin=on_site && expedition_item==BirdsAtLowWater?sea_picture.pixels(ArguinPicture):nullptr;
+            if (arguin) d.image({arguin},{0,0,320,160},picture);
             else d.image({art::discoveries},{expedition_item*160,0,160,80},picture);
             d.frame({x+w-art_w,art_y,art_w,art_h},border);
             if (on_site) {

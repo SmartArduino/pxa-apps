@@ -2,6 +2,7 @@
 
 #include "draw.hpp"
 #include <pxa/app.hpp>
+#include <cstdio>
 
 namespace tide {
 
@@ -17,6 +18,10 @@ inline constexpr int VeniceStreetPicture=HarborPictureBase+8, KilwaStreetPicture
 inline constexpr int LisbonStreetPicture=HarborPictureBase+10;
 inline constexpr int LisbonGuildPicture=HarborPictureBase+11, CalicutGuildPicture=HarborPictureBase+12;
 inline constexpr int NewHarborPictureBase=HarborPictureBase+13;
+enum ExpeditionPicture {
+    EstuaryPicture=280, ForestPicture, WadiPicture, VardoPicture, MalabarPicture,
+    SabakiPicture, VardoThawPicture, MalabarDryPicture, ArguinPicture
+};
 
 inline int new_harbor_picture(int port) {
     const int index=port_index(port);
@@ -56,6 +61,12 @@ inline bool pilot_picture(int kind) {
 
 inline Text sea_picture_path(int kind) {
     if (pilot_picture(kind)) return PilotRegions[kind-PilotPictureBase].asset;
+    constexpr Text expeditions[]{"assets/expeditions/estuary.pxi","assets/expeditions/forest.pxi",
+        "assets/expeditions/wadi.pxi","assets/expeditions/vardo.pxi","assets/expeditions/malabar.pxi",
+        "assets/expeditions/sabaki.pxi","assets/expeditions/vardo-thaw.pxi",
+        "assets/expeditions/malabar-dry.pxi","assets/expeditions/arguin.pxi"};
+    static_assert(std::size(expeditions)==ArguinPicture-EstuaryPicture+1);
+    if (kind>=EstuaryPicture && kind<=ArguinPicture) return expeditions[kind-EstuaryPicture];
     constexpr Text grounds[]{"assets/world/ground-boreal.pxi","assets/world/ground-mangrove.pxi",
         "assets/world/ground-ice.pxi","assets/world/ground-tropical.pxi","assets/world/ground-reef.pxi",
         "assets/world/ground-sandstone.pxi","assets/world/ground-lava.pxi",
@@ -119,7 +130,7 @@ public:
         ready_=Calm;
         if (path.empty()) return;
         loading_=kind;
-        if (!ctx.tasks().start(load(ctx.assets(),kind,path,dirty))) loading_=Calm;
+        if (!ctx.tasks().start(load(ctx,kind,path,dirty))) loading_=Calm;
     }
 
     bool failed(int kind) const { return wanted_==kind && failed_; }
@@ -138,9 +149,11 @@ private:
         return width && width<=SeaPictureWidth && height && height<=SeaPictureHeight?516+std::size_t(width)*height:0;
     }
 
-    pxa::Task<void> load(pxa::AssetService assets,int kind,Text path,bool& dirty) {
+    pxa::Task<void> load(pxa::Context& ctx,int kind,Text path,bool& dirty) {
+        auto assets=ctx.assets();
         std::array<std::byte,4> header{};
         const auto first=co_await assets.read(path,0,header);
+        auto error=first?pxa::Error::protocol_error:first.error();
         const auto size=first && first->bytes==header.size()?image_size(header,pilot_picture(kind)):0;
         std::span<std::byte> output;
         if (size && size==first->total_bytes && size<=bytes_.size() && wanted_==kind)
@@ -153,12 +166,22 @@ private:
         while (offset<output.size() && wanted_==kind) {
             const auto length=std::min<std::size_t>(output.size()-offset,4064);
             auto read=co_await assets.read(path,offset,output.subspan(offset,length));
-            if (!read || read->total_bytes!=output.size() || !read->bytes || read->bytes>length) break;
+            if (!read) {
+                error=read.error();
+                break;
+            }
+            if (read->total_bytes!=output.size() || !read->bytes || read->bytes>length) break;
             offset+=read->bytes;
         }
         const bool complete=offset && offset==output.size() && wanted_==kind;
         if (complete) ready_=kind;
-        else if (wanted_==kind) failed_=true;
+        else if (wanted_==kind) {
+            failed_=true;
+            char message[180];
+            std::snprintf(message,sizeof(message),"Tide Pact picture unavailable: %.*s (%d)",
+                          int(path.size()),path.data(),int(error));
+            (void)ctx.log().write(pxa::LogLevel::warning,message);
+        }
         loading_=Calm;
         dirty=true;
         co_return pxa::Result<void>{};

@@ -36,11 +36,14 @@ def main():
     for name in (*SCENES, "weather"):
         parser.add_argument("--" + name.replace("_", "-"), type=Path)
     args = parser.parse_args()
+    output = ASSETS.parent / "assets" / "expeditions"
+    output.mkdir(parents=True, exist_ok=True)
     for name in SCENES:
         source = getattr(args, name)
         if source:
             size = (320, 160) if name == "arguin" else (384, 228)
-            pack_scene(source, f"expedition_{name}", size)
+            texture_path = output / (name.replace("_", "-") + ".pxi")
+            pack_scene(source, f"expedition_{name}", size, texture_path=texture_path)
     if args.weather:
         pack_weather(args.weather)
 

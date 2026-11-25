@@ -52,18 +52,9 @@ extern const unsigned char marsh[];
 extern const unsigned char nature[];
 extern const unsigned char flags[];
 extern const unsigned char shore_tasks[];
-extern const unsigned char expedition_estuary[];
-extern const unsigned char expedition_forest[];
-extern const unsigned char expedition_wadi[];
-extern const unsigned char expedition_vardo[];
-extern const unsigned char expedition_malabar[];
-extern const unsigned char expedition_sabaki[];
 extern const unsigned char weather_motion[];
 extern const unsigned char field_animals[];
 extern const unsigned char field_traveler[];
 extern const unsigned char field_marks[];
 extern const unsigned char port_boats[];
-extern const unsigned char expedition_arguin[];
-extern const unsigned char expedition_vardo_thaw[];
-extern const unsigned char expedition_malabar_dry[];
 }
