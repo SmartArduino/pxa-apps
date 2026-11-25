@@ -867,6 +867,9 @@ struct VoyageApp {
     void button(Draw& d, Rect r, Text text, int action, bool accent=false, bool inactive=false,
                 Text price={}, int glyph=-1) {
         const bool chosen=pad_focus && button_count==focused && !inactive;
+        if (!inactive && button_count<int(buttons.size())) buttons[button_count++]={r,action};
+        // Cached map panels keep their buttons even when their pixels are reused.
+        if (!d.clip.w || !d.clip.h) return;
         const bool down=!inactive && pressed(r);
         plate(d,r,accent && !inactive ? ActionPlate : StandardPlate);
         if (inactive || down) d.darken(r.inset(3),inactive?6:3);
@@ -901,7 +904,6 @@ struct VoyageApp {
             d.center(content,text,color);
         }
         d.clip=previous_clip;
-        if (!inactive && button_count<int(buttons.size())) buttons[button_count++]={r,action};
     }
     void pair(Draw& d, Rect r, Text a, int aa, Text b, int bb, bool accent=false) {
         const int half=(r.w-5)/2;
@@ -1019,6 +1021,8 @@ struct VoyageApp {
             const bool focused_tab=pad_focus && button_count==focused;
             const bool active=screen==i;
             const bool town_return=inside_town_facility && i==Office;
+            buttons[button_count++]={hit,town_return?ReturnTown:OpenChart+i};
+            if (!d.clip.w || !d.clip.h) continue;
             const Text title=town_return?"回城":tabs[i];
             const bool down=pressed(hit);
             harbor_panel(d,r,active || down ? HarborGoldWood : HarborPlaque,5);
@@ -1037,7 +1041,6 @@ struct VoyageApp {
                 d.image(images,sprite,{r.x+(r.w-size)/2,y,size,size},true);
                 d.center_run({content.x,y+size+1,content.w,caption.ink.h},caption,label);
             }
-            buttons[button_count++]={hit,town_return?ReturnTown:OpenChart+i};
         }
     }
 
@@ -5564,7 +5567,7 @@ struct VoyageApp {
         layout(d);
         drawn_map=map_view();
         button_count=0;
-        if (drawn_map!=MapView::None && d.pixel_scale>1 && !game.land_away()) {
+        if (drawn_map!=MapView::None && !game.land_away()) {
             if (chrome.bounds!=safe || chrome.mode!=drawn_map) {
                 chrome={};
                 chrome.bounds=safe;

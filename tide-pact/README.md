@@ -78,7 +78,7 @@ pxa build . --offline --target wasm,simulator,esp32s3,esp32s31,esp32p4
 
 PXADB 安装器要求应用 ID 以 `pxa-` 开头。在 ESPP4-A 上测试时，先用 `pxa build . --target esp32p4 --aot-only --output out/tide-pact` 构建设备产物，再用 SDK 自带的 Python 执行 `tools/pack_espp4.py out/tide-pact out/pxa-tide-pact.pxa --sdk SDK目录`。设备包采用 `pxa-tide-pact`，通用包沿用 `tide-pact`。PXA 按应用 ID 保存进度，两种包各用自己的存档。
 
-商城版沿用设备包的 `pxa-tide-pact` 标识和签名。发布时在独立的发布工作区复制本应用与相邻的 `common/`，将副本的 `package.json` 的 `id` 改为 `pxa-tide-pact`，再用 Agent Kit 的 `store build --targets wasm esp32p4` 和 `store publish-targets` 构建并提交。商城文字使用 `store.json`。
+商城版沿用设备包的 `pxa-tide-pact` 标识和签名。发布时在独立的发布工作区复制本应用与相邻的 `common/`，将副本的 `package.json` 的 `id` 改为 `pxa-tide-pact`，再用 Agent Kit 的 `store build --targets wasm esp32p4 esp32s31` 和 `store publish-targets` 构建并提交。GameKit 2 使用 ESP32-S31 AOT 包。商城文字使用 `store.json`。
 
 `game.cpp` 管理航行、经济、委托、剧情选择和存档；`main.cpp` 处理 PXA 生命周期、界面和输入。记录格式版本和固定地标编号保存在游戏逻辑中，扩充 `world.json` 时应保留旧地标的顺序。
 
