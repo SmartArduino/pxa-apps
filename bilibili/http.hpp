@@ -3,28 +3,71 @@
 #include "pxa_http.h"
 #include <algorithm>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <memory>
 #include <string_view>
 #include <string>
-#include <vector>
 namespace bili {
 struct Http {
     uint64_t token=0,handle=0,deadline=0;
-    uint8_t packet[4096]{},headers[4096]{};
-    std::vector<uint8_t> data;
     std::string response_cookies;bool capture_cookies=false;
     size_t used=0,limit=0;
-    uint64_t start=0;
+    uint64_t start=0,range_total=0;
     unsigned status=0;
     bool active=false,done=false,failed=false,have_headers=false,ranged=false;
+    // A media sample at the start of a paged range still has room for its
+    // synchronous Host I/O header. The padding is outside HTTP byte offsets.
+    static constexpr size_t headroom=16;
+    uint8_t* data() { return body ? body.get()+headroom : nullptr; }
+    const uint8_t* data() const { return body ? body.get()+headroom : nullptr; }
+    size_t body_capacity() const { return capacity; }
+    void release_body() { body.reset(); capacity=used=0; }
+    void discard_cached_prefix(size_t bytes) {
+        if (active || done || failed || bytes>=used) return;
+        const size_t remaining=used-bytes;
+        if (bytes) std::memmove(data(),data()+bytes,remaining);
+        used=limit=remaining;start+=bytes;
+        if (auto* resized=static_cast<uint8_t*>(std::realloc(body.get(),remaining+headroom))) {
+            body.release();body.reset(resized);capacity=remaining;
+        }
+    }
+    void accept_body(Http& source) {
+        cancel();
+        body=std::move(source.body);
+        capacity=source.capacity; used=source.used; limit=source.limit; start=source.start;
+        range_total=source.range_total;
+        token=source.token; handle=source.handle; deadline=source.deadline;
+        status=source.status; have_headers=source.have_headers; ranged=source.ranged;
+        active=source.active; done=source.done; failed=source.failed;
+        capture_cookies=source.capture_cookies; response_cookies=std::move(source.response_cookies);
+        source.token=source.handle=0;
+        source.capacity=source.used=0;
+        source.active=source.done=false;
+    }
     void cancel() {
+        retry_at=0;
         if (token) pxa_cancel(token); if (handle) pxa_close_handle(handle);
         token=handle=0; active=done=failed=false;
     }
     bool begin(uint64_t id,const char *url,uint64_t permission,uint64_t now,
-        size_t bytes=65536,bool range=false,uint64_t offset=0,const char *cookie=nullptr,const char *referer=nullptr) {
+        size_t bytes=65536,bool range=false,uint64_t offset=0,const char *cookie=nullptr,const char *referer=nullptr,
+        uint32_t timeout_ms=60000,int32_t *submit_status=nullptr) {
+        if (submit_status) *submit_status=PXA_STATUS_INVALID_ARGUMENT;
         if (!url || !*url || std::strlen(url)>2048 || bytes>4*1024*1024 || !bytes || bytes-1>UINT64_MAX-offset) return false;
-        cancel(); data.resize(bytes); used=0; limit=bytes; start=offset; ranged=range;
+        cancel();
+        if (range && bytes>capacity) {
+            // The request is replacing the old window. Release it before
+            // allocating the exact new size in bounded guest memory.
+            release_body();
+            body.reset(static_cast<uint8_t*>(std::malloc(bytes+headroom)));
+            if (!body) {
+                if (submit_status) *submit_status=PXA_STATUS_RESOURCE_LIMIT;
+                return false;
+            }
+            capacity=bytes;
+        }
+        used=0; limit=bytes; start=offset; ranged=range;range_total=0;
         have_headers=false; status=0;response_cookies.clear();
         capture_cookies=std::string_view(url).starts_with("https://passport.bilibili.com/x/passport-login/web/qrcode/poll?");
         char range_value[80]; std::snprintf(range_value,sizeof(range_value),"bytes=%llu-%llu",
@@ -41,10 +84,45 @@ struct Http {
         if(authenticated && !range)fields[3]=fields[4];
         unsigned count=(range?4:3)+(authenticated?1:0);if(referer)fields[count++]=fields[5];
         r.headers=fields; r.header_count=count; r.wanted_headers=wanted; r.wanted_header_sizes=wanted_sizes;
-        r.wanted_header_count=capture_cookies?2:1; r.buffer_bytes=32768; r.max_body_bytes=bytes; r.header_bytes=2048; r.timeout_ms=60000;
-        token=id; deadline=now+65000;
-        if (pxa_http_open(token,&r,packet,sizeof(packet))) { token=0; failed=done=true; return false; }
+        r.wanted_header_count=capture_cookies?2:1; r.buffer_bytes=32768; r.max_body_bytes=bytes; r.header_bytes=2048; r.timeout_ms=timeout_ms;
+        token=id; deadline=now+timeout_ms+5000;
+        const int32_t result=pxa_http_open(token,&r,header_packet,sizeof(header_packet));
+        if (submit_status) *submit_status=result;
+        if (result) { token=0; failed=done=true; return false; }
         active=true; return true;
+    }
+    bool shorten_received_range(size_t bytes) {
+        if (active || !ranged || !have_headers || status!=206 || !bytes || bytes>=limit)
+            return false;
+        limit=bytes;
+        used=std::min(used,limit);
+        if (used==limit) failed=false;
+        return true;
+    }
+    static constexpr unsigned max_range_retries=4;
+    bool can_resume_range() const {
+        return !active && ranged && used<limit && capacity>=limit &&
+            (!status || status>=500 || (status==206 && have_headers));
+    }
+    // A transport error can arrive before Wi-Fi has an IP again. Keep done
+    // set so playback can consume the prefix without replacing this window.
+    bool defer_retry(uint64_t now,unsigned attempts) {
+        if (!attempts || attempts>=max_range_retries || !can_resume_range()) return false;
+        if (!retry_at) retry_at=now+(1500u << (attempts-1));
+        return now<retry_at;
+    }
+    bool resume_range(uint64_t id,const char *url,uint64_t permission,uint64_t now,uint32_t timeout_ms) {
+        if (!can_resume_range()) return false;
+        const auto offset=start,total=range_total;
+        const size_t prefix=used,bytes=limit;
+        int32_t result;
+        const bool started=begin(id,url,permission,now,bytes-prefix,true,offset+prefix,nullptr,nullptr,timeout_ms,&result);
+        // Indexed samples still point into this window if Host admission fails.
+        start=offset; used=prefix; limit=bytes; range_total=total;
+        if (started) return true;
+        fail();
+        // done schedules the same bounded retry/backoff as a delayed open error.
+        return result==PXA_STATUS_WOULD_BLOCK || result==PXA_STATUS_BUSY || result==PXA_STATUS_RESOURCE_LIMIT;
     }
     bool event(const pxa_event_t& e) {
         if (e.service!=PXA_NET_SERVICE || e.opcode!=PXA_HTTP_OPEN) return false;
@@ -54,15 +132,25 @@ struct Http {
     }
     void fail() { cancel(); failed=done=true; }
     void finish() { if (handle) pxa_close_handle(handle); handle=0; active=false; done=true; }
+    void pump_with_idle(uint64_t now,uint64_t idle_ms) {
+        const size_t previous=used;
+        const bool had_headers=have_headers;
+        pump(now);
+        if (idle_ms && active && (used>previous || (!had_headers && have_headers)))
+            deadline=now+idle_ms;
+    }
     void pump(uint64_t now) {
         if (!active) return;
         if (now>deadline) { fail(); return; } if (!handle) return;
         if (!have_headers) {
-            int n=pxa_http_read_response(handle,headers,sizeof(headers)); if (n==PXA_STATUS_WOULD_BLOCK) return;
-            pxa_http_response_t r{}; if (n<0 || !pxa_http_parse_response(headers,n,&r)) { fail(); return; }
+            int n=pxa_http_read_response(handle,header_packet,sizeof(header_packet)); if (n==PXA_STATUS_WOULD_BLOCK) return;
+            pxa_http_response_t r{}; if (n<0 || !pxa_http_parse_response(header_packet,n,&r)) { fail(); return; }
             status=r.status_code;
             if ((!ranged && status!=200) || (ranged && status!=206)) { fail(); return; }
-            if (r.body_length_known && r.body_length>limit) { fail(); return; }
+            if (r.body_length_known && r.body_length>limit-used) { fail(); return; }
+            if (!ranged && r.body_length_known && !reserve_body(size_t(r.body_length))) {
+                fail(); return;
+            }
             if (ranged) {
                 bool valid=false; size_t at=0; pxa_net_header_t h{};
                 while (pxa_http_header_next(&r,&at,&h)) {
@@ -79,9 +167,10 @@ struct Http {
                     };
                     uint64_t first=0,last=0,total=0;
                     if (!number(first) || p==end || *p++!='-' || !number(last) || p==end || *p++!='/' ||
-                        !number(total) || p!=end || first!=start || last<first || last-first>=limit || total<=last ||
+                        !number(total) || p!=end || first!=start+used || last<first || last-first>=limit-used || total<=last ||
+                        (range_total && total!=range_total) ||
                         (r.body_length_known && r.body_length!=last-first+1)) break;
-                    valid=true; break;
+                    range_total=total; valid=true; break;
                 }
                 if (!valid) { fail(); return; }
             }
@@ -94,12 +183,36 @@ struct Http {
         }
         for (unsigned work=0;work<8;++work) {
             if (ranged && used==limit) { finish(); return; }
-            uint8_t overflow=0; size_t count=std::min<size_t>(16384,limit-used);
-            int n=pxa_http_read(handle,count ? data.data()+used : &overflow,count ? count : 1);
+            const size_t room=limit-used;
+            const size_t count=std::min({size_t(16384),room,capacity-used});
+            // A chunked response can end exactly at capacity. Read ahead in
+            // scratch before reserving more, including the EOF/overflow probe.
+            const size_t request=count ? count : std::max<size_t>(1,std::min(room,sizeof(header_packet)));
+            int n=pxa_http_read(handle,count ? data()+used : header_packet,request);
             if (n==PXA_STATUS_WOULD_BLOCK) return;
-            if (n<0 || (n>0 && !count)) { fail(); return; }
-            if (!n) { finish(); return; } used+=size_t(n);
+            if (n<0 || size_t(n)>request || size_t(n)>room) { fail(); return; }
+            if (!n) { finish(); return; }
+            if (!count) {
+                const size_t next=std::min(limit,std::max(used+size_t(n),2*capacity));
+                if (!reserve_body(next)) { fail(); return; }
+                std::memcpy(data()+used,header_packet,size_t(n));
+            }
+            used+=size_t(n);
         }
     }
+private:
+    // Billy processes one guest callback at a time. Request serialization and
+    // response header parsing both finish before control leaves that callback.
+    static inline uint8_t header_packet[4096];
+    bool reserve_body(size_t bytes) {
+        if (bytes<=capacity) return true;
+        auto* resized=static_cast<uint8_t*>(std::realloc(body.get(),bytes+headroom));
+        if (!resized) return false;
+        body.release(); body.reset(resized); capacity=bytes;
+        return true;
+    }
+    uint64_t retry_at=0;
+    std::unique_ptr<uint8_t,decltype(&std::free)> body{nullptr,&std::free};
+    size_t capacity=0;
 };
 }

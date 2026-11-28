@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
 project(pxa_bilibili C CXX)
 include(../common/cpp/Application.cmake)
-pxa_add_callback_component(pxa_main ALLOCATOR COMPONENT_ID main SOURCES main.cpp vendor/qrcodegen/qrcodegen.c)
+pxa_add_callback_component(pxa_main ALLOCATOR COMPONENT_ID main SOURCES main.cpp nal_zbb.cpp vendor/qrcodegen/qrcodegen.c)
 target_link_options(pxa_main PRIVATE -Wl,-z,stack-size=65536)

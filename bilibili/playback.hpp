@@ -24,6 +24,29 @@ inline Fit fit(unsigned sw,unsigned sh,unsigned dw,unsigned dh) {
     if(h>dh){h=dh;w=std::max<uint64_t>(1,uint64_t(sw)*dh/sh);}
     return {(dw-w)/2,(dh-h)/2,w,h};
 }
+inline bool compact_video_window(unsigned sw,unsigned sh,unsigned dw,unsigned dh) {
+    // Small square panels normally pad both RGB565 buffers for scanout.
+    // Preserve keyframe working memory when their bars alone cost a DASH page.
+    if (dw!=dh || !dw || dw>480 || uint64_t(sw)*sh<=256u*1024u) return false;
+    const auto content=fit(sw,sh,dw,dh);
+    return (size_t(dw)*dh-size_t(content.width)*content.height)*4>=256u*1024u;
+}
+inline bool letterboxed_host_surface(unsigned width,unsigned height,unsigned dw,unsigned dh) {
+    // Retain the video rows on small square panels. The UI owns the two bars.
+    return dw==dh && dw>320 && dw<=480 && width==dw && height && height<=dh*3u/4u;
+}
+// Input occupies the start of the same buffer. Expand from the last row so
+// writing the matte never overwrites a row that still needs to be copied.
+inline void pad_rgb565_rows(uint8_t* pixels,unsigned width,unsigned video_width,
+                            unsigned height,unsigned left) {
+    const size_t stride=size_t(width)*2, video_stride=size_t(video_width)*2;
+    for (unsigned y=height;y--;) {
+        auto* row=pixels+y*stride;
+        std::memmove(row+left*2,pixels+y*video_stride,video_stride);
+        std::memset(row,0,left*2);
+        std::memset(row+left*2+video_stride,0,stride-left*2-video_stride);
+    }
+}
 inline uint64_t duration(const Track& t) {
     uint64_t end=0;for(const auto& s:t.samples)end=std::max(end,s.pts+s.duration);return end;
 }

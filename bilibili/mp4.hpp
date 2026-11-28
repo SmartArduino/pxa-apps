@@ -1,15 +1,22 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 #include <algorithm>
+#include <bit>
 #include <cstdint>
 #include <cstring>
 #include <span>
 #include <vector>
 namespace bili {
 using Bytes=std::span<const uint8_t>;
-inline uint32_t be32(const uint8_t *p) { return uint32_t(p[0])<<24|uint32_t(p[1])<<16|uint32_t(p[2])<<8|p[3]; }
+inline uint32_t be32(const uint8_t *p) {
+    uint32_t word;
+    std::memcpy(&word, p, sizeof(word));
+    if constexpr (std::endian::native == std::endian::big) return word;
+    return (word >> 24) | ((word >> 8) & 0xff00u) |
+           ((word & 0xff00u) << 8) | (word << 24);
+}
 inline uint64_t be64(const uint8_t *p) { return uint64_t(be32(p))<<32|be32(p+4); }
-struct Box { uint32_t type=0; Bytes data{}; };
+struct Box { uint32_t type=0; Bytes data{}; size_t header=8; };
 inline uint32_t tag(const char *p) { return be32(reinterpret_cast<const uint8_t*>(p)); }
 template<class Fn> bool boxes(Bytes bytes,Fn fn) {
     while (!bytes.empty()) {
@@ -18,7 +25,7 @@ template<class Fn> bool boxes(Bytes bytes,Fn fn) {
         if (n==1) { if (bytes.size()<16) return false; n=be64(bytes.data()+8); head=16; }
         if (!n) n=bytes.size();
         if (n<head || n>bytes.size()) return false;
-        if (!fn(Box{be32(bytes.data()+4),bytes.subspan(head,size_t(n)-head)})) return false;
+        if (!fn(Box{be32(bytes.data()+4),bytes.subspan(head,size_t(n)-head),head})) return false;
         bytes=bytes.subspan(size_t(n));
     } return true;
 }
@@ -39,14 +46,15 @@ inline bool table(Bytes b,size_t row,uint32_t& n) {
     if (b.size()<8) return false;
     n=be32(b.data()+4); return n<=100000 && n<=(b.size()-8)/row;
 }
-inline bool parse_track(Bytes trak,Track& t) {
+inline bool parse_track_description(Bytes trak,Track& t,Bytes& stbl) {
     auto mdia=child(trak,"mdia"), mdhd=child(mdia,"mdhd"), handler=child(mdia,"hdlr");
     if (mdhd.size()<24 || handler.size()<12) return false;
     t.video=be32(handler.data()+8)==tag("vide"); t.audio=be32(handler.data()+8)==tag("soun");
     if (!t.video && !t.audio) return true;
     size_t scale_at=mdhd[0] ? 20 : 12;
     if (mdhd.size()<scale_at+4 || !(t.timescale=be32(mdhd.data()+scale_at))) return false;
-    auto stbl=child(child(mdia,"minf"),"stbl"), stsd=child(stbl,"stsd");
+    stbl=child(child(mdia,"minf"),"stbl");
+    auto stsd=child(stbl,"stsd");
     if (stsd.size()<16 || be32(stsd.data()+4)!=1) return false;
     uint32_t entry_size=be32(stsd.data()+8), codec=be32(stsd.data()+12);
     if (entry_size<8 || entry_size>stsd.size()-8) return false;
@@ -75,6 +83,12 @@ inline bool parse_track(Bytes trak,Track& t) {
         if (it==std::end(rates) || !t.channels || t.channels>2) return false;
         t.aac_rate_index=unsigned(it-std::begin(rates));
     }
+    return true;
+}
+inline bool parse_track(Bytes trak,Track& t) {
+    Bytes stbl;
+    if (!parse_track_description(trak,t,stbl)) return false;
+    if (!t.video && !t.audio) return true;
     auto sz=child(stbl,"stsz"), sc=child(stbl,"stsc"), co=child(stbl,"stco");
     bool wide=co.empty(); if (wide) co=child(stbl,"co64");
     if (sz.size()<12) return false;
@@ -137,20 +151,128 @@ inline bool parse_moov(Bytes bytes,Track& video,Track& audio) {
         return true;
     }) && !video.samples.empty();
 }
-inline bool annexb(Bytes input,unsigned nal,std::vector<uint8_t>& out,size_t maximum,bool *non_reference=nullptr) {
-    out.assign(16,0);bool vcl=false,disposable=true;
-    if(non_reference)*non_reference=false;
-    while (!input.empty()) {
-        if (!nal || nal>4 || input.size()<nal) return false;
-        uint32_t n=0; for (unsigned i=0;i<nal;++i) n=n<<8|input[i]; input=input.subspan(nal);
-        if (!n || n>input.size() || out.size()+n+4>maximum+16) return false;
-        if(input[0]&0x80)return false;
-        unsigned type=input[0]&31;
-        if(type==1){vcl=true;if(input[0]&0x60)disposable=false;}
-        else if(type!=6 && type!=9 && type!=10 && type!=11 && type!=12)disposable=false;
-        out.insert(out.end(),{0,0,0,1}); out.insert(out.end(),input.begin(),input.begin()+n); input=input.subspan(n);
+inline void classify_nal(unsigned header,bool& vcl,bool& disposable) {
+    const unsigned type=header&31;
+    if (type==1) {vcl=true;if (header&0x60) disposable=false;}
+    else if (type!=6 && type!=9 && type!=10 && type!=11 && type!=12) disposable=false;
+}
+// Return -1 for a malformed access unit, 1 for a disposable VCL unit.
+using ScanNal4 = int (*)(const uint8_t *, size_t, uint8_t *);
+inline __attribute__((always_inline)) int scan_nal4(const uint8_t *data,size_t bytes,uint8_t *output) {
+    bool vcl=false,disposable=true;
+    for (size_t at=0; at<bytes;) {
+        if (bytes-at<5) return -1;
+        const uint32_t n=be32(data+at);
+        const unsigned header=data[at+4];
+        if (!n || n>bytes-at-4 || (header&0x80)) return -1;
+        classify_nal(header,vcl,disposable);
+        if (output) {
+            const uint8_t prefix[4]={0,0,0,1};
+            std::memcpy(output+at,prefix,4);
+        }
+        at+=4+n;
     }
-    if(non_reference)*non_reference=vcl && disposable;
-    return out.size()>16;
+    return vcl && disposable;
+}
+
+// The Guest runs one callback at a time and the video Host consumes or copies
+// its input during the import. Temporarily framing an indexed cache window
+// avoids a second AU-sized allocation, including on a large keyframe.
+class CachedAvcPacket {
+    size_t offsets[8], count=0;
+    std::span<uint8_t> window;
+public:
+    static constexpr size_t header_bytes=16;
+    bool bind(std::span<uint8_t> storage,size_t maximum,bool& disposable) {
+        window={};count=0;
+        if (storage.size()<=header_bytes || storage.size()-header_bytes>maximum) return false;
+        const auto au=storage.subspan(header_bytes);
+        bool vcl=false,all_disposable=true;
+        for (size_t at=0;at<au.size();) {
+            if (count==std::size(offsets) || au.size()-at<5) return false;
+            const auto n=be32(au.data()+at);
+            const unsigned header=au[at+4];
+            if (!n || n>au.size()-at-4 || (header&0x80)) return false;
+            classify_nal(header,vcl,all_disposable);
+            offsets[count++]=at;
+            at+=4+size_t(n);
+        }
+        disposable=vcl && all_disposable;
+        window=storage;
+        return true;
+    }
+    template<class Import>
+    int submit(Import import,std::span<uint8_t> fallback) const {
+        if (window.empty()) return import(fallback.data(),fallback.size());
+        uint8_t saved[header_bytes];
+        std::memcpy(saved,window.data(),header_bytes);
+        const auto au=window.subspan(header_bytes);
+        for (size_t i=0;i<count;++i) {
+            const uint8_t start_code[]={0,0,0,1};
+            std::memcpy(au.data()+offsets[i],start_code,4);
+        }
+        const int result=import(window.data(),window.size());
+        for (size_t i=0;i<count;++i) {
+            const size_t end=i+1<count ? offsets[i+1] : au.size();
+            const uint32_t n=uint32_t(end-offsets[i]-4);
+            const uint8_t length[]={uint8_t(n>>24),uint8_t(n>>16),uint8_t(n>>8),uint8_t(n)};
+            std::memcpy(au.data()+offsets[i],length,4);
+        }
+        std::memcpy(window.data(),saved,header_bytes);
+        return result;
+    }
+};
+
+inline bool annexb(Bytes input,unsigned nal,std::vector<uint8_t>& out,size_t maximum,
+                   bool *non_reference=nullptr,bool skip_disposable=false,ScanNal4 scan=scan_nal4) {
+    if (non_reference) *non_reference=false;
+    out.clear();
+    if (input.empty() || !nal || nal>4) return false;
+    if (nal==4) {
+        if (input.size()>maximum || input.size()>out.max_size()-16) return false;
+        if (skip_disposable) {
+            const int result=scan(input.data(),input.size(),nullptr);
+            if (result<0) return false;
+            if (result) { if (non_reference) *non_reference=true; return true; }
+        }
+        out.reserve(16+input.size());
+        out.resize(16);
+        out.insert(out.end(),input.begin(),input.end());
+        const int result=scan(out.data()+16,input.size(),out.data()+16);
+        if (result<0) { out.clear(); return false; }
+        if (non_reference) *non_reference=result!=0;
+        return true;
+    }
+    auto read_length=[nal](Bytes bytes) {
+        uint32_t n=0;
+        for (unsigned i=0;i<nal;++i) n=(n<<8)|bytes[i];
+        return n;
+    };
+    size_t payload=0;
+    bool vcl=false,disposable=true;
+    for (auto remaining=input; !remaining.empty();) {
+        if (remaining.size()<nal) return false;
+        const uint32_t n=read_length(remaining);
+        remaining=remaining.subspan(nal);
+        if (!n || n>remaining.size() || maximum-payload<4 || n>maximum-payload-4 ||
+            (remaining[0]&0x80)) return false;
+        classify_nal(remaining[0],vcl,disposable);
+        payload+=4;
+        payload+=n;
+        remaining=remaining.subspan(n);
+    }
+    if (non_reference) *non_reference=vcl && disposable;
+    if (skip_disposable && vcl && disposable) return true;
+    if (payload>out.max_size()-16) return false;
+    out.reserve(16+payload);
+    out.resize(16);
+    while (!input.empty()) {
+        const uint32_t n=read_length(input);
+        input=input.subspan(nal);
+        out.insert(out.end(),{0,0,0,1});
+        out.insert(out.end(),input.begin(),input.begin()+n);
+        input=input.subspan(n);
+    }
+    return true;
 }
 }

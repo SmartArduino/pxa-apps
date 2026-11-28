@@ -19,7 +19,22 @@ int main() {
         assert(uint64_t(f.height)*sw<=uint64_t(f.width)*sh+std::max(sw,sh));
     }
     assert(!bili::fit(0,360,854,480).width);
+    assert(bili::compact_video_window(852,480,480,480));
+    assert(bili::compact_video_window(480,852,480,480));
+    assert(!bili::compact_video_window(640,360,480,480));
+    assert(!bili::compact_video_window(852,480,320,240));
+    assert(!bili::compact_video_window(852,480,854,480));
+    assert(!bili::compact_video_window(640,640,480,480));
+    assert(bili::letterboxed_host_surface(480,270,480,480));
+    assert(!bili::letterboxed_host_surface(480,480,480,480));
+    assert(!bili::letterboxed_host_surface(360,480,480,480));
+    assert(!bili::letterboxed_host_surface(320,180,320,320));
+    assert(!bili::letterboxed_host_surface(480,270,854,480));
     auto portrait=bili::fit(480,360,480,854);assert(portrait.width==480 && portrait.height==360 && portrait.y==247);
+    uint8_t padded[24]{1,1,2,2,3,3,4,4,5,5,6,6};
+    const uint8_t expected[]{0,0,1,1,2,2,3,3,0,0,0,0,0,0,4,4,5,5,6,6,0,0,0,0};
+    bili::pad_rgb565_rows(padded,6,3,2,1);
+    assert(std::equal(std::begin(padded),std::end(padded),std::begin(expected)));
     bili::Track t;for(unsigned i=0;i<12;++i)t.samples.push_back({i*10,i*1000,10,1000});
     t.sync_samples={0,4,8};assert(bili::keyframe(t,7000)==4 && bili::keyframe(t,0)==0 && bili::keyframe(t,99000)==8);
     assert(bili::duration(t)==12000);t.sync_samples.clear();assert(bili::keyframe(t,7000)==7);

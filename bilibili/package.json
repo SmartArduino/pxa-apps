@@ -1,8 +1,8 @@
 {
   "format": "pxa-package-source-0.2",
   "id": "pxa-bilibili",
-  "version": "0.4.0",
-  "release_sequence": 12,
+  "version": "0.4.82",
+  "release_sequence": 94,
   "min_sdk": [
     2,
     1
@@ -31,8 +31,11 @@
     "system": "cmake",
     "source_dir": ".",
     "linear_memory": {
-      "maximum_bytes": 8388608,
-      "pinned": true
+      "maximum_bytes": 3145728,
+      "maximum_bytes_by_target": {"esp32s31": 2359296, "esp32p4": 3145728},
+      "initial_bytes_by_target": {"esp32s31": 1441792},
+      "pinned": true,
+      "pinned_by_target": {"esp32s31": false}
     }
   },
   "components": [
@@ -57,7 +60,7 @@
           ],
           "max_version": [
             0,
-            3
+            4
           ]
         },
         "storage",
@@ -98,7 +101,7 @@
           "tap": "tap"
         },
         "min_width": 320,
-        "min_height": 320
+        "min_height": 240
       }
     ]
   }

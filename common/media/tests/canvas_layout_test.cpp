@@ -197,6 +197,20 @@ int main() {
     assert(canvas.environment(env) && !canvas.initialized);
   }
   assert(frames == 8);
+  for (uint64_t mask : {UINT64_C(0),PXA_UI_EVENT_MASK_CONTROLLER_STATE}) {
+    media::Canvas canvas(mask);
+    assert(canvas.initialize_surface());
+    unsigned masks=0;
+    for (const auto& record : records(transaction)) {
+      if (record.type!=PXA_UI_COMMAND_SET_PROPERTY || record.size!=14 ||
+          pxa_read_u16(record.value+4)!=PXA_UI_PROPERTY_EVENT_MASK) continue;
+      const auto node=pxa_read_u32(record.value);
+      assert(node==1 || node==2);
+      assert(pxa_load_u64(record.value+6)==(node==1 ? mask : PXA_UI_EVENT_MASK_POINTER));
+      ++masks;
+    }
+    assert(masks==2);
+  }
   std::puts("media Canvas: full background, presented/hit coordinate agreement, "
             "left gesture exclusion, native input placement and metric updates "
             "at 120/125/160/205 DPI passed");

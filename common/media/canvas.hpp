@@ -13,6 +13,9 @@ struct Hit {
   unsigned id;
 };
 struct Canvas {
+  explicit Canvas(uint64_t root_events = PXA_UI_EVENT_MASK_CONTROLLER_STATE)
+      : root_event_mask(root_events) {}
+  uint64_t root_event_mask;
   uint8_t data[16384]{}, scratch[4096]{};
   pxa_canvas_frame_t frame{};
   uint32_t generation = 0, ui_generation = 0;
@@ -191,7 +194,7 @@ struct Canvas {
     ok = ok && pxa_ui_set_u8(&tx, 2, PXA_UI_PROPERTY_POSITION, 1) &&
          pxa_ui_set_length(&tx, 2, PXA_UI_PROPERTY_X, PXA_UI_LENGTH_PX, 0) &&
          pxa_ui_set_length(&tx, 2, PXA_UI_PROPERTY_Y, PXA_UI_LENGTH_PX, 0) &&
-         pxa_ui_set_event_mask(&tx, 1, PXA_UI_EVENT_MASK_CONTROLLER_STATE) &&
+         pxa_ui_set_event_mask(&tx, 1, root_event_mask) &&
          pxa_ui_set_event_mask(&tx, 2, PXA_UI_EVENT_MASK_POINTER) &&
          pxa_ui_transaction_commit(&tx);
     if (!ok) {
@@ -218,7 +221,7 @@ struct Canvas {
     uint8_t frame_initialized = 1;
     return pxa_canvas_present_regions(
         2, &frame, &generation, &frame_initialized,
-        PXA_UI_EVENT_MASK_CONTROLLER_STATE, scratch, sizeof(scratch), scratch,
+        root_event_mask, scratch, sizeof(scratch), scratch,
         sizeof(scratch), dirty, dirty_count);
   }
   bool input(unsigned id, int x, int y, int width, const char *value,

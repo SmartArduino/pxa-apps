@@ -113,7 +113,7 @@ class Client {
     void complete() {
         auto old_job=job;job=Job::none;
         if(api.failed){std::snprintf(error,sizeof(error),"网络连接失败，请重试");dirty=true;return;}
-        media::json::Value root{api.data.data(),api.used};
+        media::json::Value root{api.data(),api.used};
         if(old_job==Job::nav){
             auto data=root.get("data"),wbi=data.get("wbi_img");char img[256]{},sub[256]{};wbi.get("img_url").string(img,sizeof(img));wbi.get("sub_url").string(sub,sizeof(sub));mixin=mixin_key(img,sub);
             if(account.logged_in()&&data.get("isLogin").boolean())data.get("uname").string(account.name,sizeof(account.name));
@@ -139,7 +139,7 @@ class Client {
         else if(old_job==Job::popular)popular=parse_list(root,false);
         else if(old_job==Job::search)results=parse_list(root,true);
         else if(old_job==Job::view){if(!apply_view_data(root))std::snprintf(error,sizeof(error),"视频信息不完整，请重试");}
-        std::vector<uint8_t>().swap(api.data);dirty=true;
+        api.release_body();dirty=true;
     }
     void save_pump() {
         if(save_token)return;
@@ -280,7 +280,7 @@ public:
         uint32_t seconds=finished?selected.duration:uint32_t(std::min<uint64_t>(UINT32_MAX,position_us/1000000));
         history.put(selected,seconds);history_dirty=true;
     }
-    void begin_player(){in_player=true;cancel_api();covers.stop();std::vector<uint8_t>().swap(api.data);dirty=true;}
+    void begin_player(){in_player=true;cancel_api();covers.stop();api.release_body();dirty=true;}
     void leave_player(){in_player=false;play_request=false;page=Page::detail;dirty=true;}
     bool back() {
         logout_confirm=false;cancel_api();if(page==Page::login)login={};
